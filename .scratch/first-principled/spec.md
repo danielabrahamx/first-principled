@@ -131,6 +131,16 @@ provider errors and the key never reach the client.
 
 Internals: the model returns `{reply, learnerMap, probe}` per turn, where probe reports what the turn was about (`{nodeId, kind: observe|probe|explain|converse}`). The function computes `diff` deterministically from the previous and updated learner maps (the model is never trusted to compute it) and carries `failedAttempts` forward (node id to count). `failedAttempts` is client-held session state sent with every request.
 
+The explanation fallback (principle 8) is a code-level rule, not just a
+prompt instruction (ticket 12 acceptance found the model deferring an
+explicit request): `explanationRequested(utterance)` matches
+explanation-seeking phrasings conservatively, and `explainDirective(state)`
+declares the fallback due when a node has two or more failed attempts (gate
+takes priority) or the learner asked. When due, the turn is validated so
+`probe.kind` must be `explain` and the reply IS the explanation - no new
+question at the end. `validateTurn` rejects a non-explain probe while the
+explanation is due.
+
 ## 9. UX
 
 Visual style (ticket 13): the "chapel" design - a light slate ground with one
