@@ -23,6 +23,14 @@
   box-sizing: border-box;
 }
 
+/* The hidden attribute must always win over display rules. Author display
+   rules (e.g. .error-banner { display: flex }) otherwise override the UA's
+   [hidden] { display: none } and permanently render error banners, forms,
+   and panels that are meant to be toggled via the hidden property. */
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   height: 100%;
