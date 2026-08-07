@@ -11,6 +11,7 @@ dist/
 build/
 .netlify/
 .functions/
+deno.lock
 
 # Local state
 *.local

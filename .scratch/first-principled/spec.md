@@ -91,15 +91,43 @@ Phases:
 
 - Init: the learner types a word; the agent generates the Reality Map (first turn, `src/lib/agent/realityMap.js`). Generation runs in JSON mode with one repair retry (validation-gated), thinking off for latency; a non-teachable input (gibberish, empty phrase) is refused gracefully, not mapped.
 - Active: Socratic turns (engine: `src/lib/agent/socratic.js`). Opening rule: empty learner map means observation-first (what have you seen, used, or noticed about this thing); a populated map means gap-first (probe the biggest gaps in dependency order, lower layers before abstractions). Each turn: ask a question, update the learner map, choose the next gap. Explanation fallback: when the learner asks, or after two failed attempts on the same point. A failed attempt is an answer that leaves the point non-correct; asking a question is not a failure, and after the fallback the count restarts. If the learner has no model of a concept, the agent teaches observationally before questioning it.
-- End: the agent asks a transfer question, a novel problem that requires the corrected model. The learner answers; the agent records pass or fail against the reality map. The comparison view unlocks.
+- End: the orchestrator triggers it when every reality node is known, or the turn cap (24 learner messages) is reached. The agent asks a transfer question, a novel problem that requires the corrected model. The learner answers; the agent records pass or fail against the reality map. The comparison view unlocks.
 
 Turn contract:
 
 ```
 POST /api/agent
 request:  {word?, realityMap?, learnerMap?, failedAttempts?, history, phase}
-response: {reply, learnerMap, diff, phase, sessionEnded?, transferResult?}
+response: {reply, learnerMap, diff, phase, failedAttempts, sessionEnded?, transferResult?, realityMap?}
 ```
+
+The orchestrator (`src/lib/agent/orchestrator.js`) dispatches by phase; the
+Netlify function (`netlify/functions/agent/agent.mjs`) is a thin HTTP wrapper.
+All session state travels in the request and the response; the function stores
+nothing.
+
+- init: word required, no realityMap. The function generates the Reality Map
+  (realityMap.js), then runs the observation-first opening turn (socratic.js),
+  and returns phase "active" with the reality map in the response - the client
+  holds it from here on and sends it back with every request. A refused word
+  (gibberish, empty phrase) returns phase "init" with a refusal reply and no
+  reality map, so the client can ask again.
+- active: the client sends the held reality map, learner map, failedAttempts
+  and history; the function runs one Socratic turn and returns the updated
+  learner map, the deterministic diff and the carried failedAttempts. When
+  every reality node is known - or the session passes the turn cap (24 learner
+  messages) - the function asks the transfer question instead and returns
+  phase "end".
+- end: history ends with the learner's answer to the transfer question (the
+  assistant message before it is the question). The function grades the answer
+  against the reality map and returns sessionEnded: true with transferResult
+  {passed, assessment}; the reply is the assessment.
+
+Errors use a stable envelope - `{"error": {"code", "message"}}` - with status
+400 bad_request (malformed request), 500 config_error (missing LLM_API_KEY) or
+internal, 502 upstream_error (provider failure) or invalid_model_output (the
+model could not produce valid output after the internal repair retry). Raw
+provider errors and the key never reach the client.
 
 Internals: the model returns `{reply, learnerMap, probe}` per turn, where probe reports what the turn was about (`{nodeId, kind: observe|probe|explain|converse}`). The function computes `diff` deterministically from the previous and updated learner maps (the model is never trusted to compute it) and carries `failedAttempts` forward (node id to count). `failedAttempts` is client-held session state sent with every request.
 

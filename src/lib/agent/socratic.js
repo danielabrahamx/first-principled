@@ -63,6 +63,10 @@ import { validateLearnerMap } from "../mmg/validator.js";
  * @property {"init" | "active" | "end"} phase - this engine drives active
  *   turns; init (reality map generation) and end (transfer question) are
  *   other tickets.
+ * @property {string | null} [learnerUtterance] - the learner's latest message,
+ *   verbatim. The orchestrator (ticket 06) passes the word for the opening
+ *   turn and the last user message from history on later turns; null when no
+ *   utterance is available.
  */
 
 /**
@@ -231,6 +235,8 @@ export function buildSocraticUserPrompt(state) {
   return `Current state (json):
 
 ${stateJson}
+
+Latest learner message: "${state.learnerUtterance ?? ""}"
 
 This turn: ${buildDirective(state)}
 

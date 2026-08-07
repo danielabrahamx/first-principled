@@ -18,7 +18,8 @@ mental model and reality.** See `docs/MISSION.md`.
   closeness score, fixtures), imported by both the frontend and the function.
 - `src/lib/agent/` - the agent engine: LLM transport (llm.js), defensive JSON
   parsing (jsonParse.js), reality map generation (realityMap.js, ticket 04),
-  and the Socratic engine with learner map updates (socratic.js, ticket 05).
+  the Socratic engine with learner map updates (socratic.js, ticket 05), and
+  the stateless phase orchestrator (orchestrator.js, ticket 06).
 - `netlify/functions/agent/` - the one serverless function, `POST /api/agent`
   (rewritten from `/.netlify/functions/agent` by `netlify.toml`). Stateless:
   it receives the full session state with every call and stores nothing.
