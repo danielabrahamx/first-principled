@@ -73,6 +73,12 @@ export function createRouter(options = {}) {
 
   if (location && typeof location.addEventListener === "function") {
     location.addEventListener("hashchange", emit);
+  } else if (typeof globalThis.addEventListener === "function") {
+    // Some embedded or sandboxed Chrome contexts expose a Location object
+    // without addEventListener; window still dispatches hashchange there.
+    /** @type {{ addEventListener: (type: string, listener: () => void) => void }} */
+    const windowTarget = /** @type {any} */ (globalThis);
+    windowTarget.addEventListener("hashchange", emit);
   }
 
   return {

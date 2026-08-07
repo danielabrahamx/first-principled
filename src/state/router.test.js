@@ -83,3 +83,36 @@ test("the browser hashchange event drives the router too", () => {
   assert.equal(router.route, "map");
   assert.deepEqual(seen, ["map"]);
 });
+
+test("a Location without addEventListener falls back to globalThis", () => {
+  // Some embedded Chrome contexts expose a Location object without
+  // addEventListener; the router must attach to the window instead.
+  const bareLocation = { hash: "" };
+  const originalAdd = globalThis.addEventListener;
+  /** @type {Map<string, Set<() => void>>} */
+  const listeners = new Map();
+  globalThis.addEventListener = /** @type {any} */ ((
+    /** @type {string} */ type,
+    /** @type {() => void} */ listener
+  ) => {
+    const set = listeners.get(type);
+    if (set === undefined) {
+      listeners.set(type, new Set([listener]));
+    } else {
+      set.add(listener);
+    }
+  });
+  try {
+    const router = createRouter({ location: bareLocation });
+    /** @type {string[]} */
+    const seen = [];
+    router.subscribe((route) => seen.push(route));
+
+    bareLocation.hash = "#map";
+    for (const listener of listeners.get("hashchange") ?? []) listener();
+    assert.equal(router.route, "map");
+    assert.deepEqual(seen, ["map"]);
+  } finally {
+    globalThis.addEventListener = originalAdd;
+  }
+});

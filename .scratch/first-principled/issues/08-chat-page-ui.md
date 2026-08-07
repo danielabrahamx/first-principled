@@ -1,7 +1,7 @@
 # 08 - Chat page UI
 
 **Type:** task
-**Status:** claimed (agent, 2026-08-07)
+**Status:** resolved (2026-08-07)
 **Blocked by:** 07
 **Related:** spec sections 8, 9; `src/pages/chat.tsx` or equivalent
 
