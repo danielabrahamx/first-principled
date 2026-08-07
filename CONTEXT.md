@@ -15,6 +15,11 @@ Current architecture (v1):
   model's knowledge, contiguous layer chain) and the Learner Mental Model
   (node states, confidence, evidence, updated each turn).
 - DeepSeek via OpenAI-compatible API. No DB, no auth, no framework.
+- `src/lib/agent/` holds the engine: reality map generation, the Socratic
+  turn loop (question, infer, update the learner map, track failed attempts
+  for the explanation fallback), and the LLM transport. The model replies
+  with `{reply, learnerMap, probe}`; the function computes the diff and
+  carries the failed-attempt counts.
 
 Source of truth: `.scratch/first-principled/spec.md` (product) and
 `.scratch/first-principled/map.md` (build state). Immutable mission:

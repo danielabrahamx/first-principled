@@ -90,16 +90,18 @@ Closeness score: fraction of known learner nodes matching reality, per session. 
 Phases:
 
 - Init: the learner types a word; the agent generates the Reality Map (first turn).
-- Active: Socratic turns. Opening rule: empty learner map means observation-first (what have you seen, used, or noticed about this thing); a populated map means gap-first (probe the biggest gaps in dependency order, lower layers before abstractions). Each turn: ask a question, update the learner map, choose the next gap. Explanation fallback: when the learner asks, or after two failed attempts on the same point. If the learner has no model of a concept, the agent teaches observationally before questioning it.
+- Active: Socratic turns (engine: `src/lib/agent/socratic.js`). Opening rule: empty learner map means observation-first (what have you seen, used, or noticed about this thing); a populated map means gap-first (probe the biggest gaps in dependency order, lower layers before abstractions). Each turn: ask a question, update the learner map, choose the next gap. Explanation fallback: when the learner asks, or after two failed attempts on the same point. A failed attempt is an answer that leaves the point non-correct; asking a question is not a failure, and after the fallback the count restarts. If the learner has no model of a concept, the agent teaches observationally before questioning it.
 - End: the agent asks a transfer question, a novel problem that requires the corrected model. The learner answers; the agent records pass or fail against the reality map. The comparison view unlocks.
 
 Turn contract:
 
 ```
 POST /api/agent
-request:  {word?, realityMap?, learnerMap?, history, phase}
+request:  {word?, realityMap?, learnerMap?, failedAttempts?, history, phase}
 response: {reply, learnerMap, diff, phase, sessionEnded?, transferResult?}
 ```
+
+Internals: the model returns `{reply, learnerMap, probe}` per turn, where probe reports what the turn was about (`{nodeId, kind: observe|probe|explain|converse}`). The function computes `diff` deterministically from the previous and updated learner maps (the model is never trusted to compute it) and carries `failedAttempts` forward (node id to count). `failedAttempts` is client-held session state sent with every request.
 
 ## 9. UX
 
