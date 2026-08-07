@@ -88,6 +88,7 @@ ephemeral sessions, no accounts.
 10. [Session end comparison and transfer question](issues/10-session-end-comparison-and-transfer-question.md) - blocked by 08, 09
 11. [Deploy to Netlify or Vercel](issues/11-deploy-to-netlify-or-vercel.md) - blocked by 10 - Netlify chosen, CLI authed, key in .env; no human gate
 12. [End to end acceptance and demo session](issues/12-end-to-end-acceptance-and-demo-session.md) - blocked by 11
+13. [UI redesign from Paper design](issues/13-ui-redesign-from-paper-design.md) - `ready-for-agent` - rebuild chat/map UI from Danny's Paper design (MCP wired); keep all behavior contracts + no-leak rule; Netlify deploy unchanged; human design in progress
 
 ## Ticket sequence (dependency overview)
 
