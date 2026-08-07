@@ -1,7 +1,7 @@
 # 11 - Deploy to Netlify or Vercel
 
 **Type:** task
-**Status:** ready-for-agent (unblocked by 10)
+**Status:** claimed (wayfinder-agent, 2026-08-07)
 **Blocked by:** 10 (resolved)
 **Related:** spec sections 6, 11; `netlify.toml`
 
