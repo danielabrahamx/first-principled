@@ -133,8 +133,36 @@ Internals: the model returns `{reply, learnerMap, probe}` per turn, where probe 
 
 ## 9. UX
 
-- Chat page: word input, conversation, sending state, phase indicator.
-- Map page: separate route. Renders the learner's model only: nodes colored by state (untested gray, missing red, misconception orange, correct green), edges, confidence. Animates changes from each turn's diff. Never shows reality map content mid-session.
+- Chat page (`src/pages/chat.js`, ticket 08): starts on a word or phrase
+  input; after an init refusal the input returns with a "try a different
+  word" hint (a new word starts a new session). Then a message list (learner
+  and agent turns), a composer (Enter sends, Shift+Enter newlines), and a
+  sending state that disables the composer and shows "Thinking..." while the
+  call is in flight. A phase pill shows: Starting (phase init), Exploring
+  (active with an empty learner map - the observation-first opening), Refining
+  (active with a populated learner map - gap-first), Session end (phase end).
+  The exploring/refining split mirrors the engine's opening rule in section 8.
+  Errors render as one friendly line plus a Retry button that re-sends the
+  exact failed request; raw JSON and provider text never reach the learner.
+  Session end: the transfer question appears as a normal message, the learner
+  answers, and a result panel shows passed or not passed plus the comparison
+  entry point (a link to the map page). No reality map content ever renders
+  here.
+- Map page (`src/pages/map.js`, ticket 09): separate route. Renders the
+  learner's model only: nodes colored by state (untested gray, missing red,
+  misconception orange, correct green), edges with their own state, confidence
+  shown per node (bar plus percent). A node's label comes from the held
+  reality map ONLY when the node is already in the learner model - the label
+  join is the sole reality data the page may use, so unengaged nodes, layer
+  names and descriptions can never render. Nodes flow into a responsive grid
+  (no graph library; an SVG overlay draws the edges between cards) in the
+  order the learner engaged with them; no reality structure (layers) is used
+  for layout. Changes from each turn's diff animate: new nodes pop in, state
+  flips transition color on the same element, evidence or confidence changes
+  flash, edge colors transition. The page makes no network requests - every
+  update comes from the shared session store. Session end: the final learner
+  model stays visible with a session-complete note; the comparison view
+  itself is ticket 10.
 - Session end: comparison view - reality map vs learner map, closed-gap summary, closeness score, transfer result.
 
 ## 10. Metrics

@@ -22,6 +22,8 @@
  *   and the comparison data (maps, transferResult) is kept until the next
  *   startSession.
  * - toRequest(): serializes to the exact request shape in spec section 8.
+ * - subscribe(listener): notifies after every successful startSession and
+ *   applyResponse, so views (the map page) can re-render live as turns land.
  *
  * Nothing is written to disk, localStorage, or any server. The store is a
  * module singleton (sessionStore): both pages import the same instance, so
@@ -70,6 +72,7 @@ import { closenessScore } from "../lib/mmg/closeness.js";
  * @property {(content: string) => boolean} appendUserMessage
  * @property {(response: any) => boolean} applyResponse
  * @property {() => any} toRequest
+ * @property {(listener: () => void) => () => void} subscribe
  */
 
 /**
@@ -110,6 +113,16 @@ function freshState() {
 export function createSessionStore() {
   /** @type {SessionState} */
   let current = freshState();
+  /** @type {Set<() => void>} */
+  const listeners = new Set();
+
+  /**
+   * Notify subscribers that the store changed. Called after every
+   * successful startSession and applyResponse.
+   */
+  function notify() {
+    for (const listener of listeners) listener();
+  }
 
   return {
     /**
@@ -124,6 +137,7 @@ export function createSessionStore() {
       if (typeof word !== "string" || word.trim().length === 0) return false;
       current = freshState();
       current.word = word.trim();
+      notify();
       return true;
     },
 
@@ -190,6 +204,7 @@ export function createSessionStore() {
           current.transferResult = response.transferResult;
         }
       }
+      notify();
       return true;
     },
 
@@ -213,6 +228,21 @@ export function createSessionStore() {
         learnerMap: current.learnerMap,
         failedAttempts: current.failedAttempts,
         ...common,
+      };
+    },
+
+    /**
+     * Subscribe to store changes. The listener fires with no arguments after
+     * every successful startSession and applyResponse; re-read getState() in
+     * it. Returns an unsubscribe function.
+     *
+     * @param {() => void} listener
+     * @returns {() => void}
+     */
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
       };
     },
   };

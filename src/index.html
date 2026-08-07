@@ -17,11 +17,53 @@
         <a href="#map" data-route="map">Map</a>
       </nav>
       <section id="view-chat" class="view">
-        <p class="note">Chat UI arrives with the chat page ticket.</p>
+        <div class="chat">
+          <div class="chat-topbar">
+            <span id="phase-indicator" class="pill" data-phase="starting">Starting</span>
+          </div>
+          <div id="message-list" class="messages" aria-live="polite"></div>
+          <div id="start-panel" class="start-panel">
+            <h2>What would you like to understand?</h2>
+            <p id="start-hint" class="hint" hidden>
+              That input did not work. Try a different word or phrase.
+            </p>
+            <form id="start-form" class="composer-row">
+              <textarea
+                id="word-input"
+                class="composer-input"
+                rows="2"
+                placeholder="A word or phrase - laptop, recursion, photosynthesis"
+                autocomplete="off"
+              ></textarea>
+              <button id="begin-button" type="submit" class="send-button">Begin</button>
+            </form>
+            <p class="note">
+              The tutor builds a reality map of the concept, then questions you
+              to expose and refine what you actually know.
+            </p>
+          </div>
+          <div id="error-banner" class="error-banner" role="alert" hidden>
+            <p id="error-text" class="error-text"></p>
+            <button id="retry-button" type="button" class="retry-button">Retry</button>
+          </div>
+          <form id="composer" class="composer-row" hidden>
+            <textarea
+              id="message-input"
+              class="composer-input"
+              rows="1"
+              placeholder="Your answer..."
+              autocomplete="off"
+            ></textarea>
+            <button id="send-button" type="submit" class="send-button">Send</button>
+          </form>
+          <div id="end-panel" class="end-panel" hidden>
+            <h2>Session complete</h2>
+            <p id="end-status" class="end-status"></p>
+            <a class="compare-link" href="#map">Compare your model with reality</a>
+          </div>
+        </div>
       </section>
-      <section id="view-map" class="view" hidden>
-        <p class="note">Map UI arrives with the map page ticket.</p>
-      </section>
+      <section id="view-map" class="view" hidden></section>
     </main>
     <script type="module" src="app.js"></script>
   </body>

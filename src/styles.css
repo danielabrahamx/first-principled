@@ -3,6 +3,10 @@
   --fg: #e8e6e3;
   --muted: #8a8f98;
   --accent: #4f8cff;
+  --ok: #3dd68c;
+  --warn: #e0a93e;
+  --panel: #1a1f27;
+  --border: #262b33;
 }
 
 * {
@@ -52,4 +56,392 @@ h1 {
 
 .routes a:hover {
   text-decoration: underline;
+}
+
+/* Phase indicator */
+
+.pill {
+  display: inline-block;
+  padding: 0.15rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.pill[data-phase="exploring"] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.pill[data-phase="refining"] {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+
+.pill[data-phase="end"] {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+
+/* Chat page */
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 62vh;
+  min-height: 22rem;
+}
+
+.chat-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-right: 0.25rem;
+}
+
+.message {
+  max-width: 82%;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.75rem;
+}
+
+.message p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.message-user {
+  align-self: flex-end;
+  background: var(--accent);
+  color: #0f1115;
+  border-bottom-right-radius: 0.2rem;
+}
+
+.message-assistant {
+  align-self: flex-start;
+  background: var(--panel);
+  border-bottom-left-radius: 0.2rem;
+}
+
+.start-panel h2 {
+  font-size: 1.25rem;
+  margin: 0 0 0.75rem;
+}
+
+.hint {
+  color: var(--warn);
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem;
+}
+
+.composer-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.composer-input {
+  flex: 1;
+  resize: none;
+  font: inherit;
+  line-height: 1.5;
+  background: var(--panel);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+}
+
+.composer-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.composer-input:disabled {
+  opacity: 0.6;
+}
+
+.send-button {
+  background: var(--accent);
+  color: #0f1115;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.send-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #2a1715;
+  border: 1px solid #7a3226;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.9rem;
+}
+
+.error-text {
+  flex: 1;
+  margin: 0;
+  color: #f2b8a8;
+  font-size: 0.9rem;
+}
+
+.retry-button {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid #7a3226;
+  border-radius: 0.4rem;
+  padding: 0.35rem 0.8rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.retry-button:hover {
+  border-color: #a8543f;
+}
+
+.end-panel {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+}
+
+.end-panel h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.end-status {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+}
+
+.compare-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.compare-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .shell {
+    padding: 2.5rem 1rem;
+  }
+
+  .chat {
+    height: 70vh;
+  }
+}
+
+/* Map page (ticket 09) */
+
+.map-heading {
+  font-size: 1.25rem;
+  margin: 0 0 0.25rem;
+}
+
+.map-word {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0 0 1.25rem;
+}
+
+.map-empty {
+  margin: 1.5rem 0 0;
+}
+
+.map-ended {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  margin: 1.5rem 0 0;
+  color: var(--ok);
+  font-size: 0.95rem;
+}
+
+.map-scroll {
+  overflow-x: auto;
+  padding: 0.5rem 0 1rem;
+}
+
+.map-stage {
+  position: relative;
+}
+
+.map-stage svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.map-nodes {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.map-card {
+  position: absolute;
+  width: 168px;
+  height: 96px;
+  padding: 0.6rem 0.75rem;
+  background: var(--panel);
+  border: 1px solid var(--state);
+  border-radius: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  justify-content: space-between;
+  transition:
+    background-color 0.6s ease,
+    border-color 0.6s ease,
+    left 0.5s ease,
+    top 0.5s ease;
+}
+
+.map-card.state-untested {
+  --state: #8a8f98;
+  background: color-mix(in srgb, var(--state) 8%, var(--panel));
+}
+
+.map-card.state-missing {
+  --state: #f25555;
+  background: color-mix(in srgb, var(--state) 8%, var(--panel));
+}
+
+.map-card.state-misconception {
+  --state: #f5a623;
+  background: color-mix(in srgb, var(--state) 8%, var(--panel));
+}
+
+.map-card.state-correct {
+  --state: #3ecf6e;
+  background: color-mix(in srgb, var(--state) 8%, var(--panel));
+}
+
+.map-card-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.map-card-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-state-name {
+  color: var(--state);
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.map-conf {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.map-conf-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.map-conf-fill {
+  display: block;
+  height: 100%;
+  background: var(--state);
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+
+.map-conf-text {
+  color: var(--muted);
+  font-size: 0.7rem;
+  min-width: 2.4em;
+  text-align: right;
+}
+
+.map-edge {
+  fill: none;
+  stroke-width: 2;
+  opacity: 0.75;
+  transition: stroke 0.6s ease;
+}
+
+.map-edge.state-untested {
+  stroke: #8a8f98;
+}
+
+.map-edge.state-missing {
+  stroke: #f25555;
+}
+
+.map-edge.state-misconception {
+  stroke: #f5a623;
+}
+
+.map-edge.state-correct {
+  stroke: #3ecf6e;
+}
+
+.map-card.added {
+  animation: map-pop 0.4s ease-out;
+}
+
+.map-card.flash {
+  animation: map-flash 0.9s ease-out;
+}
+
+@keyframes map-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes map-flash {
+  0% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--state) 60%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
 }

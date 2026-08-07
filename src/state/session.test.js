@@ -239,3 +239,34 @@ test("the exported singleton is a working store and is shared", () => {
   assert.equal(typeof sessionStore.applyResponse, "function");
   assert.equal(typeof sessionStore.toRequest, "function");
 });
+
+test("subscribe fires on startSession and applyResponse, and unsubscribes", () => {
+  const store = createSessionStore();
+  let calls = 0;
+  const unsubscribe = store.subscribe(() => {
+    calls += 1;
+  });
+
+  store.startSession("laptop");
+  assert.equal(calls, 1);
+
+  store.applyResponse({
+    reply: "What have you noticed about how what you type becomes letters on the screen?",
+    learnerMap: EMPTY_LEARNER_MAP,
+    diff: { added: [], flipped: [], updated: [] },
+    phase: "active",
+    failedAttempts: {},
+    realityMap: laptopRealityMap,
+  });
+  assert.equal(calls, 2);
+
+  // Failed operations do not notify.
+  store.startSession("   ");
+  assert.equal(calls, 2);
+  store.applyResponse(null);
+  assert.equal(calls, 2);
+
+  unsubscribe();
+  store.startSession("recursion");
+  assert.equal(calls, 2);
+});
