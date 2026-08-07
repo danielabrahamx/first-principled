@@ -1,8 +1,8 @@
 # 10 - Session end comparison and transfer question
 
 **Type:** task
-**Status:** ready-for-agent (blocked)
-**Blocked by:** 08, 09
+**Status:** claimed (agent, 2026-08-07)
+**Blocked by:** 08 (resolved), 09 (resolved)
 **Related:** spec sections 8, 9, 10; `src/lib/agent/` and `src/pages/map.tsx`
 
 ## Question
