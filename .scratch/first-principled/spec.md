@@ -38,7 +38,7 @@ Founders building things, learning as they build, avoiding technical debt. v1: o
 ## 6. Architecture
 
 - Static frontend, minimal web UI, two pages: chat and map.
-- One stateless serverless function, POST /api/agent, on Netlify or Vercel. It receives the full session state with every call, calls DeepSeek, returns the reply plus the updated learner map and diffs. It stores nothing.
+- One stateless serverless function, POST /api/agent, on Netlify. It receives the full session state with every call, calls DeepSeek, returns the reply plus the updated learner map and diffs. It stores nothing.
 - No database, no auth, no agent framework.
 - Client holds session state in memory (`src/state/session.js`: word, reality map, learner map, history, failedAttempts, phase, gap closures, transfer result, metrics) and sends it with every request. The chat and map pages are hash routes (`#chat`, `#map`) sharing one store instance, so navigation keeps the session. Nothing is written to disk, localStorage, or any server.
 - DeepSeek via the OpenAI-compatible API. Provider, model, base URL are environment configuration.
@@ -185,7 +185,13 @@ Internals: the model returns `{reply, learnerMap, probe}` per turn, where probe 
 
 ## 11. Deployment
 
-Netlify or Vercel: static frontend plus one function. Environment: LLM_API_KEY, LLM_MODEL, LLM_BASE_URL. The key is a platform secret, never client-side. Live URL recorded in README.
+Netlify: static frontend plus one function. Live:
+https://first-principled.netlify.app. Environment: LLM_API_KEY, LLM_MODEL,
+LLM_BASE_URL, set as platform secrets with `netlify env:set` (from `.env`,
+gitignored). The key is a platform secret, never client-side; the published
+`src/` bundle is verified key-free before release. Deploy is
+`netlify deploy --prod` (no build step; `netlify.toml` publishes `src/` and
+wires `/api/agent` to the function). Live URL recorded in README.
 
 ## 12. Out of scope (v2)
 

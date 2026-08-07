@@ -1,7 +1,7 @@
 # 12 - End to end acceptance and demo session
 
 **Type:** task
-**Status:** ready-for-agent (blocked)
+**Status:** ready-for-agent (unblocked by 11)
 **Blocked by:** 11
 **Related:** spec sections 8-11; map.md
 

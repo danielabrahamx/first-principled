@@ -48,10 +48,19 @@ Requirements: Node 18+, Netlify CLI (installed globally as
 
 ## Deploy
 
-Netlify, site and env secrets managed via `netlify.toml` + the Netlify CLI
-(account danielftabraham@outlook.com). The `LLM_*` variables must be set as
-Netlify env secrets - the key is a platform secret, never client-side. The
-live URL is recorded here after the deploy ticket (ticket 11) lands.
+Live: **https://first-principled.netlify.app** (site id `1a5638ca-2cd1-418a-9110-4f4fbd092480`,
+account danielftabraham@outlook.com, team danielabrahamx).
+
+One-time setup: `netlify sites:create --name first-principled` (creates and
+links the site), then set the platform secrets from `.env`:
+`netlify env:set LLM_API_KEY <key>`, `netlify env:set LLM_MODEL <model>`,
+`netlify env:set LLM_BASE_URL <base url>`. The key is a platform secret, never
+client-side - the function reads it from the environment, and the published
+`src/` bundle must never contain it.
+
+Deploy: `netlify deploy --prod` publishes `src/` plus
+`netlify/functions/` per `netlify.toml` (no build step). New env values
+require a redeploy to take effect.
 
 ## Stack (v1)
 
