@@ -23,6 +23,11 @@ import {
   stateClass,
 } from "../lib/mapview/viewmodel.js";
 import {
+  comparisonMetrics,
+  realityEdgeList,
+  realitySections,
+} from "../lib/mapview/comparison.js";
+import {
   CARD_WIDTH,
   CARD_HEIGHT,
   GAP,
@@ -100,7 +105,12 @@ export function renderMapPage(root, store, options = {}) {
   );
   const ended = el("p", "map-ended", "Session complete. This is your final mental model.");
 
-  root.append(heading, word, scroll, noSession, empty, ended);
+  const cmpRow = el("div", "map-cmp-row");
+  const cmpReality = el("section", "cmp-reality");
+  cmpReality.hidden = true;
+  cmpRow.append(scroll, cmpReality);
+
+  root.append(heading, word, cmpRow, noSession, empty, ended);
 
   /** @type {Map<string, HTMLElement>} node id -> card element */
   const nodeEls = new Map();
@@ -194,6 +204,10 @@ function updateCard(node, card, delta) {
 
     word.textContent = state.word ? `concept: ${state.word}` : "";
 
+    const compare = state.ended && state.realityMap !== null;
+    cmpReality.hidden = !compare;
+    if (compare) renderComparison(cmpReality, state);
+
     if (!state.word) {
       noSession.hidden = false;
       empty.hidden = true;
@@ -274,6 +288,75 @@ function updateCard(node, card, delta) {
 
     if (diffActive) renderedDiff = state.lastDiff;
     ended.hidden = state.ended ? false : true;
+  }
+
+  /**
+   * A metrics chip: "Closeness 83%", "Gaps closed 4", "Transfer passed".
+   *
+   * @param {string} label
+   * @param {string} value
+   * @returns {HTMLElement}
+   */
+  function chip(label, value) {
+    const c = el("span", "cmp-chip");
+    c.append(label, " ", el("strong", "cmp-chip-value", value));
+    return c;
+  }
+
+  /**
+   * Fill the comparison panel (session end only): the metrics row, the
+   * reality map as layered sections with an edge list, and the transfer
+   * assessment. This is the mission made visible - here is reality, here
+   * is what the learner's model became. Ground truth is allowed here
+   * because the session is over (the no-leak rule binds mid-session only).
+   *
+   * @param {HTMLElement} section - the .cmp-reality panel.
+   * @param {import("../state/session.js").SessionState} state
+   */
+  function renderComparison(section, state) {
+    section.replaceChildren();
+    section.appendChild(el("h3", "cmp-title", "Reality map"));
+
+    const metrics = comparisonMetrics(state);
+    const chips = el("div", "cmp-metrics");
+    chips.append(
+      chip("Closeness", `${Math.round(metrics.closeness * 100)}%`),
+      chip("Gaps closed", String(metrics.gapClosures)),
+      chip(
+        "Transfer",
+        metrics.transferPassed === null ? "-" : metrics.transferPassed ? "passed" : "not passed"
+      )
+    );
+    section.appendChild(chips);
+
+    section.appendChild(el("p", "cmp-sub", "Layers, from foundations up"));
+    const layers = el("div", "cmp-layers");
+    for (const sectionModel of realitySections(state.realityMap)) {
+      const block = el("section", "cmp-layer");
+      block.appendChild(el("h4", "cmp-layer-name", sectionModel.name));
+      for (const node of sectionModel.nodes) {
+        const card = el("div", "cmp-node");
+        card.appendChild(el("span", "cmp-node-label", node.label));
+        if (node.description) {
+          card.appendChild(el("p", "cmp-node-desc", node.description));
+        }
+        block.appendChild(card);
+      }
+      layers.appendChild(block);
+    }
+    section.appendChild(layers);
+
+    section.appendChild(el("p", "cmp-sub", "How the parts relate"));
+    const edges = el("ul", "cmp-edges");
+    for (const edge of realityEdgeList(state.realityMap)) {
+      const item = el("li", "", `${edge.sourceLabel} ${edge.type} ${edge.targetLabel}`);
+      edges.appendChild(item);
+    }
+    section.appendChild(edges);
+
+    if (metrics.transferAssessment.length > 0) {
+      section.appendChild(el("p", "cmp-transfer", metrics.transferAssessment));
+    }
   }
 
   const unsubscribe = store.subscribe(sync);

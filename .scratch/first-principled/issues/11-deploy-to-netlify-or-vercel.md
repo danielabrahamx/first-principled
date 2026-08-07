@@ -1,8 +1,8 @@
 # 11 - Deploy to Netlify or Vercel
 
 **Type:** task
-**Status:** ready-for-agent (blocked)
-**Blocked by:** 10
+**Status:** ready-for-agent (unblocked by 10)
+**Blocked by:** 10 (resolved)
 **Related:** spec sections 6, 11; `netlify.toml`
 
 ## Question

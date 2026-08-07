@@ -39,6 +39,7 @@ test("a fresh store starts empty, in phase init", () => {
   assert.equal(state.ended, false);
   assert.equal(state.transferResult, null);
   assert.equal(state.closeness, null);
+  assert.equal(state.gapClosures, 0);
 });
 
 test("startSession rejects a blank word and changes nothing", () => {
@@ -159,6 +160,54 @@ test("failedAttempts and diff are adopted from responses", () => {
   });
 });
 
+test("gapClosures accumulates only missing/misconception to correct flips", () => {
+  const store = createSessionStore();
+  store.startSession("laptop");
+  store.applyResponse({
+    reply: "What have you noticed about how what you type becomes letters on the screen?",
+    learnerMap: EMPTY_LEARNER_MAP,
+    diff: { added: [], flipped: [], updated: [] },
+    phase: "active",
+    failedAttempts: {},
+    realityMap: laptopRealityMap,
+  });
+
+  // Turn 1: one closure, one non-closure (untested -> correct), one flip away.
+  store.appendUserMessage("I press keys and letters appear");
+  store.applyResponse(
+    turnResponse({
+      diff: {
+        added: ["n-electricity"],
+        flipped: [
+          { id: "n-transistor", from: "misconception", to: "correct" },
+          { id: "n-electricity", from: "untested", to: "correct" },
+          { id: "n-circuit", from: "correct", to: "misconception" },
+        ],
+        updated: [],
+      },
+    })
+  );
+  assert.equal(store.getState().gapClosures, 1);
+
+  // Turn 2: another closure accumulates on top.
+  store.appendUserMessage("gates are circuits, and bits ride on gates");
+  store.applyResponse(
+    turnResponse({
+      diff: {
+        added: [],
+        flipped: [{ id: "n-app", from: "missing", to: "correct" }],
+        updated: [],
+      },
+    })
+  );
+  assert.equal(store.getState().gapClosures, 2);
+
+  // A response with no diff leaves the count untouched.
+  store.appendUserMessage("nothing changed here");
+  store.applyResponse(turnResponse());
+  assert.equal(store.getState().gapClosures, 2);
+});
+
 test("sessionEnded freezes the store and keeps comparison data", () => {
   const store = createSessionStore();
   store.startSession("laptop");
@@ -230,6 +279,7 @@ test("startSession resets all state - no cross-session leakage", () => {
   assert.equal(state.ended, false);
   assert.equal(state.transferResult, null);
   assert.equal(state.closeness, null);
+  assert.equal(state.gapClosures, 0);
 });
 
 test("the exported singleton is a working store and is shared", () => {

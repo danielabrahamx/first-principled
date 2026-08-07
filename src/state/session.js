@@ -34,6 +34,7 @@
  */
 
 import { closenessScore } from "../lib/mmg/closeness.js";
+import { gapClosuresInDiff } from "../lib/mmg/metrics.js";
 
 /** @typedef {import("../lib/mmg/types.js").RealityMap} RealityMap */
 /** @typedef {import("../lib/mmg/types.js").LearnerMentalModel} LearnerMentalModel */
@@ -63,6 +64,9 @@ import { closenessScore } from "../lib/mmg/closeness.js";
  *   response.
  * @property {number | null} closeness - closeness score of the current
  *   learner map, recomputed on every response (0 before the first turn).
+ * @property {number} gapClosures - the session metric (spec section 10):
+ *   how many nodes have flipped from missing or misconception to correct
+ *   so far, accumulated from each turn's diff. Reset by startSession.
  */
 
 /**
@@ -101,6 +105,7 @@ function freshState() {
     lastDiff: null,
     lastReply: null,
     closeness: null,
+    gapClosures: 0,
   };
 }
 
@@ -191,6 +196,7 @@ export function createSessionStore() {
       }
       if (response.diff && typeof response.diff === "object") {
         current.lastDiff = response.diff;
+        current.gapClosures += gapClosuresInDiff(response.diff);
       }
       if (response.failedAttempts && typeof response.failedAttempts === "object") {
         current.failedAttempts = response.failedAttempts;

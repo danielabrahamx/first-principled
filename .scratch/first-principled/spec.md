@@ -40,7 +40,7 @@ Founders building things, learning as they build, avoiding technical debt. v1: o
 - Static frontend, minimal web UI, two pages: chat and map.
 - One stateless serverless function, POST /api/agent, on Netlify or Vercel. It receives the full session state with every call, calls DeepSeek, returns the reply plus the updated learner map and diffs. It stores nothing.
 - No database, no auth, no agent framework.
-- Client holds session state in memory (`src/state/session.js`: word, reality map, learner map, history, failedAttempts, phase, end result) and sends it with every request. The chat and map pages are hash routes (`#chat`, `#map`) sharing one store instance, so navigation keeps the session. Nothing is written to disk, localStorage, or any server.
+- Client holds session state in memory (`src/state/session.js`: word, reality map, learner map, history, failedAttempts, phase, gap closures, transfer result, metrics) and sends it with every request. The chat and map pages are hash routes (`#chat`, `#map`) sharing one store instance, so navigation keeps the session. Nothing is written to disk, localStorage, or any server.
 - DeepSeek via the OpenAI-compatible API. Provider, model, base URL are environment configuration.
 - No web grounding in v1. The reality map comes from the model's knowledge only.
 
@@ -160,16 +160,28 @@ Internals: the model returns `{reply, learnerMap, probe}` per turn, where probe 
   for layout. Changes from each turn's diff animate: new nodes pop in, state
   flips transition color on the same element, evidence or confidence changes
   flash, edge colors transition. The page makes no network requests - every
-  update comes from the shared session store. Session end: the final learner
-  model stays visible with a session-complete note; the comparison view
-  itself is ticket 10.
+  update comes from the shared session store. Session end (ticket 10): the
+  final learner model stays visible and the comparison view unlocks next to
+  it - a reality panel (layers from foundations up, each node with its
+  description, plus the typed edge list) side by side with the learner's
+  final model, over a metrics row of closeness score, gap closures closed and
+  the transfer result, ending with the transfer assessment. The comparison is
+  the one place the page may show full reality content, because the session
+  is over.
 - Session end: comparison view - reality map vs learner map, closed-gap summary, closeness score, transfer result.
 
 ## 10. Metrics
 
-- Gap closure per session: count of flips from missing or misconception to correct.
+- Gap closure per session: count of flips from missing or misconception to
+  correct.
 - Transfer question pass or fail per session.
 - Closeness score trend across turns.
+- All three are recorded client-side in the session store
+  (`src/state/session.js`): gap closures accumulate deterministically from
+  each turn's diff (`src/lib/mmg/metrics.js`, untested-to-correct is a first
+  discovery, not a closure), the transfer result arrives with the graded end
+  response, and closeness is recomputed on every response. They reset on a
+  new session, and a future analytics surface can read them from the store.
 
 ## 11. Deployment
 

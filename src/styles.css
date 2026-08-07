@@ -445,3 +445,102 @@ h1 {
     box-shadow: 0 0 0 0 transparent;
   }
 }
+
+/* Session-end comparison (ticket 10) */
+
+.map-cmp-row {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.map-cmp-row .map-scroll {
+  flex: 1 1 19rem;
+  min-width: 0;
+}
+
+.cmp-reality {
+  flex: 1 1 17rem;
+  min-width: 0;
+}
+
+.cmp-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+}
+
+.cmp-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+
+.cmp-chip {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.cmp-chip-value {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.cmp-sub {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 1.1rem 0 0.45rem;
+}
+
+.cmp-layers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.cmp-layer {
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.cmp-layer-name {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+
+.cmp-node {
+  margin: 0.3rem 0;
+}
+
+.cmp-node-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.cmp-node-desc {
+  margin: 0.1rem 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.cmp-edges {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.cmp-transfer {
+  margin: 1rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.9rem;
+}
