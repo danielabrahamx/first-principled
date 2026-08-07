@@ -14,6 +14,8 @@ mental model and reality.** See `docs/MISSION.md`.
 
 - `src/` - static frontend (plain HTML/CSS/JS, no build step). Chat and map
   pages live here.
+- `src/lib/mmg/` - the shared Mental Model Graph schema (types, validators,
+  closeness score, fixtures), imported by both the frontend and the function.
 - `netlify/functions/agent/` - the one serverless function, `POST /api/agent`
   (rewritten from `/.netlify/functions/agent` by `netlify.toml`). Stateless:
   it receives the full session state with every call and stores nothing.
@@ -27,12 +29,18 @@ mental model and reality.** See `docs/MISSION.md`.
 Requirements: Node 18+, Netlify CLI (installed globally as
 `$APPDATA/npm/netlify.cmd`).
 
-1. `npm install` - creates the lockfile; no dependencies are required.
+1. `npm install` - installs the lockfile; the only dependencies are the
+   dev-only type checker (typescript, @types/node) for `npm run typecheck`.
 2. Copy `.env.example` to `.env` and fill in `LLM_API_KEY` (see
    `~/.local/share/opencode/auth.json` for the deepseek entry). `LLM_MODEL` and
    `LLM_BASE_URL` are pre-filled for DeepSeek.
 3. `npm run dev` - serves `src/` at `http://localhost:8888` with the function
    available at `/api/agent`.
+
+## Checks
+
+- `npm test` - unit tests (built-in node:test runner).
+- `npm run typecheck` - JSDoc type checking over `src/` (tsc --noEmit).
 
 ## Deploy
 

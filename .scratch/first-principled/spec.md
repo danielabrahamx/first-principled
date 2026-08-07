@@ -50,11 +50,11 @@ The central data structure is the Mental Model Graph, which has two sides.
 
 Reality Map (canonical): typed nodes and edges describing the thing as it actually is, organized in layers. Edge types: part-of, depends-on, built-on, abstraction-of, predicts, contradicts. Layer chain is contiguous: every layer connects to its neighbors, no skipped intermediate steps. The model decides the depth with a soft cap.
 
-Learner Mental Model: mirrors the reality map. Each node carries a state: untested, missing, misconception, correct. Confidence 0..1. Evidence: learner quotes supporting the current state. Edges carry state too. The agent updates it after every turn.
+Learner Mental Model: mirrors the reality map. Each node carries a state: untested, missing, misconception, correct. Confidence 0..1. Evidence: learner quotes supporting the current state. Edges carry state, confidence and evidence too. The agent updates it after every turn.
 
 Diff: what changed this turn - nodes added, states flipped, edges added or corrected.
 
-Closeness score: fraction of known learner nodes matching reality, per session.
+Closeness score: fraction of known learner nodes matching reality, per session. Known = state is not untested; a correct node matches reality. 0 when nothing is known yet.
 
 ```json
 {
@@ -77,7 +77,7 @@ Closeness score: fraction of known learner nodes matching reality, per session.
       {"id": "n1", "state": "misconception", "confidence": 0.3, "evidence": ["user said X"]}
     ],
     "edges": [
-      {"source": "n1", "target": "n2", "state": "correct", "confidence": 0.8}
+      {"source": "n1", "target": "n2", "state": "correct", "confidence": 0.8, "evidence": ["user said Y"]}
     ]
   },
   "diff": {"added": [], "flipped": [{"id": "n1", "from": "misconception", "to": "correct"}], "updated": []},

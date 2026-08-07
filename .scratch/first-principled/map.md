@@ -65,11 +65,12 @@ ephemeral sessions, no accounts.
 <!-- one line per resolved ticket; empty until tickets resolve -->
 
 - [01 - Project scaffold and docs](issues/01-project-scaffold-and-docs.md) - src/ + netlify/functions/agent stub, netlify.toml with /api/agent rewrite, zero-dep plain ES modules (no bundler), MISSION.md verbatim from spec 1-3, README; npm install and netlify build verified on Windows.
+- [02 - Mental model graph schema](issues/02-mental-model-graph-schema.md) - shared schema at src/lib/mmg/ as JSDoc-typed ES modules (JSDoc over .ts: no runtime consumer runs .ts without a build step; dev-only tsc --checkJs verifies types, runtime stays zero-dep), validators incl. layer-chain contiguity rejection, closenessScore (correct/known, known = not untested), laptop fixtures; node:test 24/24 green on Windows. Learner edges carry evidence; spec 7 updated.
 
 ## Open frontier
 
-1. [Project scaffold and docs](issues/01-project-scaffold-and-docs.md) - `ready-for-agent` - repo skeleton, MISSION.md, tracker config
-2. [Mental model graph schema](issues/02-mental-model-graph-schema.md) - `ready-for-agent` - types, fixtures, closeness score
+1. [Project scaffold and docs](issues/01-project-scaffold-and-docs.md) - `resolved`
+2. [Mental model graph schema](issues/02-mental-model-graph-schema.md) - `resolved` - types, fixtures, closeness score
 3. [DeepSeek API capability research](issues/03-deepseek-api-capability-research.md) - `ready-for-agent` - research; key available at `~/.local/share/opencode/auth.json`
 4. [Reality map generation](issues/04-reality-map-generation.md) - blocked by 01, 02, 03
 5. [Socratic engine and learner map updates](issues/05-socratic-engine-and-learner-map-updates.md) - blocked by 01, 02, 03
