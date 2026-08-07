@@ -81,7 +81,7 @@ ephemeral sessions, no accounts.
 5. [Socratic engine and learner map updates](issues/05-socratic-engine-and-learner-map-updates.md) - `resolved` - socratic.js: code-gated explanation (2 failed attempts, counted on answers not probes), code-computed diff, model reply {reply, learnerMap, probe}, thinking-off repair retry
 6. [Stateless agent orchestrator](issues/06-stateless-agent-orchestrator.md) - `resolved` - orchestrator.js dispatches init/active/end, stable error envelope, transfer question + grading turns, sessionEndDue (all nodes known or 24-turn cap), learnerUtterance wiring; live-verified end to end + netlify dev
 7. [Client session state](issues/07-client-session-state.md) - `resolved` - session.js in-memory store + singleton, hash router (#chat/#map), app.js view toggle, session freeze on sessionEnded, spec-8 exact serialization
-8. [Chat page UI](issues/08-chat-page-ui.md) - `ready-for-agent` (was blocked by 07)
+8. [Chat page UI](issues/08-chat-page-ui.md) - `claimed (agent, 2026-08-07)` (was blocked by 07)
 9. [Map page UI](issues/09-map-page-ui.md) - `ready-for-agent` (was blocked by 07)
 10. [Session end comparison and transfer question](issues/10-session-end-comparison-and-transfer-question.md) - blocked by 08, 09
 11. [Deploy to Netlify or Vercel](issues/11-deploy-to-netlify-or-vercel.md) - blocked by 10 - Netlify chosen, CLI authed, key in .env; no human gate
