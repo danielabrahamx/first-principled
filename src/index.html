@@ -4,60 +4,82 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>first-principled</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="shell">
-      <h1>first-principled</h1>
-      <p class="tagline">
-        Reduce the cognitive distance between your mental model and reality.
-      </p>
-      <nav class="routes" aria-label="Pages">
-        <a href="#chat" data-route="chat">Chat</a>
-        <a href="#map" data-route="map">Map</a>
-      </nav>
       <section id="view-chat" class="view">
-        <div class="chat">
-          <div class="chat-topbar">
+        <div id="chat" class="chat">
+          <header class="chat-header">
+            <div class="logo-row" aria-label="first-principled">
+              <span class="orb logo-dot" aria-hidden="true"></span>
+              <span class="wordmark">first-principled</span>
+            </div>
             <span id="phase-indicator" class="pill" data-phase="starting">Starting</span>
+          </header>
+          <div id="chat-hero" class="chat-hero" hidden>
+            <span class="orb hero-orb" aria-hidden="true"></span>
+            <div class="hero-copy">
+              <p id="hero-eyebrow" class="hero-eyebrow"></p>
+              <h1 id="hero-word" class="hero-word"></h1>
+            </div>
           </div>
           <div id="message-list" class="messages" aria-live="polite"></div>
           <div id="start-panel" class="start-panel">
-            <h2>What would you like to understand?</h2>
+            <span class="orb start-orb" aria-hidden="true"></span>
+            <p class="start-eyebrow">The Socratic orb is listening</p>
+            <h2 class="start-headline">What would you like to understand?</h2>
+            <p class="start-sub">
+              A word or phrase - laptop, recursion, photosynthesis. The orb will help you map
+              what you actually know.
+            </p>
             <p id="start-hint" class="hint" hidden>
               That input did not work. Try a different word or phrase.
             </p>
-            <form id="start-form" class="composer-row">
+            <form id="start-form" class="start-form">
               <textarea
                 id="word-input"
                 class="composer-input"
-                rows="2"
-                placeholder="A word or phrase - laptop, recursion, photosynthesis"
+                rows="1"
+                placeholder="Type a word or phrase..."
                 autocomplete="off"
               ></textarea>
-              <button id="begin-button" type="submit" class="send-button">Begin</button>
+              <button id="begin-button" type="submit" class="begin-button">Begin</button>
             </form>
-            <p class="note">
-              The tutor builds a reality map of the concept, then questions you
-              to expose and refine what you actually know.
-            </p>
           </div>
           <div id="error-banner" class="error-banner" role="alert" hidden>
             <p id="error-text" class="error-text"></p>
             <button id="retry-button" type="button" class="retry-button">Retry</button>
           </div>
-          <form id="composer" class="composer-row" hidden>
-            <textarea
-              id="message-input"
-              class="composer-input"
-              rows="1"
-              placeholder="Your answer..."
-              autocomplete="off"
-            ></textarea>
-            <button id="send-button" type="submit" class="send-button">Send</button>
-          </form>
+          <div id="composer-wrap" class="composer-wrap">
+            <p id="composer-status" class="composer-status" hidden>Thinking...</p>
+            <form id="composer" class="composer" hidden>
+              <textarea
+                id="message-input"
+                class="composer-input"
+                rows="1"
+                placeholder="Your answer... (Enter to send)"
+                autocomplete="off"
+              ></textarea>
+              <button
+                id="send-button"
+                type="submit"
+                class="orb send-button"
+                aria-label="Send"
+                title="Send"
+              >
+                &#8593;
+              </button>
+            </form>
+          </div>
           <div id="end-panel" class="end-panel" hidden>
-            <h2>Session complete</h2>
+            <h2 class="end-title">Session complete</h2>
             <p id="end-status" class="end-status"></p>
             <a class="compare-link" href="#map">Compare your model with reality</a>
           </div>

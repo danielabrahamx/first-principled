@@ -9,10 +9,11 @@
  */
 
 /**
- * The default card metrics shared by the page.
+ * The default card metrics shared by the page (280x88 per the ticket 13
+ * design spec: a 280px card with an 18px-padded title and status line).
  */
-export const CARD_WIDTH = 168;
-export const CARD_HEIGHT = 96;
+export const CARD_WIDTH = 280;
+export const CARD_HEIGHT = 88;
 export const GAP = 24;
 
 /** The most columns the grid uses on a wide screen. */

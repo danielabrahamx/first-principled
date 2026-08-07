@@ -28,7 +28,9 @@ function element(id) {
 const router = createRouter();
 const chatView = element("view-chat");
 const mapView = element("view-map");
-const mapPage = renderMapPage(mapView, sessionStore);
+const mapPage = renderMapPage(mapView, sessionStore, {
+  navigate: (route) => router.navigate(route),
+});
 initChatPage(chatView);
 
 /**

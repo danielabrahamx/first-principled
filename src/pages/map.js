@@ -1,14 +1,27 @@
 /**
- * The map page (ticket 09): the learner watches their mental model
- * converge without ever seeing the answers.
+ * The map page (tickets 09, 10, 13): the learner watches their mental model
+ * converge without ever seeing the answers - now in the "chapel" design from
+ * the ticket 13 spec (research/13-ui-design-spec.md).
  *
- * What renders is exactly the learner's model - the learner map nodes
- * joined with reality labels ONLY for nodes already in the model (see
- * lib/mapview/viewmodel.js, which owns that no-leak rule), colored by
- * state, confidence per node, edges drawn between cards with their own
- * state. Reality layers, descriptions and unengaged nodes are never
- * consulted for rendering, so they cannot appear. The page makes no
- * network requests at all: every update comes from the session store.
+ * What renders mid-session is exactly the learner's model - the learner map
+ * nodes joined with reality labels ONLY for nodes already in the model (see
+ * lib/mapview/viewmodel.js, which owns that no-leak rule), colored by state,
+ * confidence per node, edges drawn between cards with their own state.
+ * Reality layers, descriptions and unengaged nodes are never consulted for
+ * rendering, so they cannot appear. The page makes no network requests at
+ * all: every update comes from the session store.
+ *
+ * Three states, per the ticket 13 spec:
+ * - Learner model grid: a segmented header (Chat / Map), a title row with
+ *   the concept word and a Closeness number + progress bar, a legend, and
+ *   the responsive card grid with the SVG edge overlay.
+ * - Session end: the header gains a Reality segment; selecting it swaps the
+ *   grid for the reality phylogenetic tree (lib/mapview/tree.js) - the
+ *   concept as the crown, its layers branching down like ancestry. The
+ *   comparison metrics row and transfer assessment render on both tabs.
+ *   Ground truth is allowed here because the session is over.
+ * - The no-leak rule binds mid-session only: the Reality segment and tree
+ *   appear only when state.ended and a reality map is held.
  *
  * Updates are diff-driven: the store's lastDiff tells us which nodes
  * appeared (pop-in), flipped state (color transition on the same DOM
@@ -22,15 +35,14 @@ import {
   nodeDelta,
   stateClass,
 } from "../lib/mapview/viewmodel.js";
+import { comparisonMetrics } from "../lib/mapview/comparison.js";
 import {
-  comparisonMetrics,
-  realityEdgeList,
-  realitySections,
-} from "../lib/mapview/comparison.js";
+  TREE_CARD_WIDTH,
+  cladogramPaths,
+  realityTree,
+  treeLayout,
+} from "../lib/mapview/tree.js";
 import {
-  CARD_WIDTH,
-  CARD_HEIGHT,
-  GAP,
   columnCount,
   gridMetrics,
   nodePositions,
@@ -70,6 +82,24 @@ function svgEl() {
 }
 
 /**
+ * @param {number} confidence
+ * @returns {string}
+ */
+function pct(confidence) {
+  return `${Math.round(confidence * 100)}%`;
+}
+
+/**
+ * @param {ReturnType<typeof learnerCards>[number]} card
+ * @returns {string}
+ */
+function tooltip(card) {
+  const lines = [`${card.label}: ${card.state}, ${pct(card.confidence)} confident`];
+  for (const quote of card.evidence) lines.push(`evidence: ${quote}`);
+  return lines.join("\n");
+}
+
+/**
  * Mount the map page into `root`, driven by the shared session store.
  * Returns a handle with `sync()` for route changes; the page also
  * subscribes to the store, so it re-renders live as turns land.
@@ -80,19 +110,108 @@ function svgEl() {
  * @param {object} [options]
  * @param {boolean} [options.responsive] - listen to window resize (true in
  *   the browser; tests can disable).
+ * @param {(route: string) => void} [options.navigate] - route to another
+ *   page (used by the segmented control); defaults to setting location.hash.
  * @returns {{ sync: () => void; destroy: () => void }}
  */
 export function renderMapPage(root, store, options = {}) {
   const responsive = options.responsive !== false;
+  const navigate =
+    options.navigate ??
+    ((route) => {
+      /** @type {{ hash: string }} */
+      const location = /** @type {any} */ (globalThis.location);
+      location.hash = `#${route}`;
+    });
 
-  const heading = el("h2", "map-heading", "Your mental model");
-  const word = el("p", "map-word");
+  /** The active tab within the map page: "model" or "reality". */
+  let tab = "model";
+  /** The word the last render saw; a new word resets the tab to the model. */
+  let lastWord = /** @type {string | null} */ (null);
+
+  const page = el("div", "map-page");
+
+  /* Header: logo row + segmented control. */
+  const header = el("header", "map-header");
+  const logo = el("div", "logo-row");
+  logo.append(el("span", "orb logo-dot"), el("span", "wordmark", "first-principled"));
+  const tabs = el("nav", "seg");
+  tabs.setAttribute("aria-label", "Pages");
+  const chatTab = el("button", "seg-item", "Chat");
+  const modelTab = el("button", "seg-item", "Map");
+  const realityTab = el("button", "seg-item", "Reality");
+  chatTab.dataset.tab = "chat";
+  modelTab.dataset.tab = "model";
+  realityTab.dataset.tab = "reality";
+  realityTab.hidden = true;
+  chatTab.addEventListener("click", () => navigate("chat"));
+  modelTab.addEventListener("click", () => {
+    tab = "model";
+    sync();
+  });
+  realityTab.addEventListener("click", () => {
+    tab = "reality";
+    sync();
+  });
+  tabs.append(chatTab, modelTab, realityTab);
+  header.append(logo, tabs);
+
+  /* Title row: eyebrow + concept word, closeness on the right. */
+  const titleRow = el("div", "map-title-row");
+  const titleLeft = el("div", "map-title-left");
+  const word = el("h1", "map-word");
+  titleLeft.append(el("p", "map-eyebrow", "Your mental model"), word);
+  const closeness = el("div", "map-closeness");
+  const closenessFrac = el("span", "map-closeness-frac");
+  const progress = el("div", "map-progress");
+  const closenessFill = el("i", "map-progress-fill");
+  progress.appendChild(closenessFill);
+  closeness.append(
+    el("span", "map-closeness-label", "Closeness"),
+    closenessFrac,
+    progress
+  );
+  titleRow.append(titleLeft, closeness);
+
+  /* Legend. */
+  const legend = el("div", "map-legend");
+  legend.appendChild(el("span", "map-legend-label", "Legend"));
+  const LEGEND = [
+    ["correct", "correct"],
+    ["misconception", "misconception"],
+    ["missing", "missing"],
+    ["untested", "untested"],
+  ];
+  for (const [state, label] of LEGEND) {
+    const item = el("span", "map-legend-item");
+    item.append(el("i", `legend-swatch ${state}`), document.createTextNode(label));
+    legend.appendChild(item);
+  }
+
+  /* Learner model grid: scrollable stage + SVG edge overlay. */
   const scroll = el("div", "map-scroll");
   const stage = el("div", "map-stage");
   const svg = svgEl();
   const nodesLayer = el("div", "map-nodes");
   stage.append(svg, nodesLayer);
   scroll.appendChild(stage);
+
+  /* Reality phylogenetic tree panel (session end, Reality tab). */
+  const treePanel = el("div", "tree-panel");
+  treePanel.hidden = true;
+  const treeScroll = el("div", "tree");
+  const treeStage = el("div", "tree-stage");
+  const treeSvg = svgEl();
+  treeSvg.setAttribute("class", "tree-svg");
+  const treeLayer = el("div", "tree-nodes");
+  treeStage.append(treeSvg, treeLayer);
+  treeScroll.appendChild(treeStage);
+  treePanel.appendChild(treeScroll);
+
+  /* Session-end comparison: metrics row + transfer assessment. */
+  const cmpBlock = el("section", "cmp-block");
+  cmpBlock.hidden = true;
+
   const noSession = el(
     "p",
     "note map-empty",
@@ -103,14 +222,14 @@ export function renderMapPage(root, store, options = {}) {
     "note map-empty",
     "No mental model yet. Answer a question in chat and watch it take shape here."
   );
-  const ended = el("p", "map-ended", "Session complete. This is your final mental model.");
+  const ended = el(
+    "p",
+    "map-note",
+    "Session complete. This is your final mental model."
+  );
 
-  const cmpRow = el("div", "map-cmp-row");
-  const cmpReality = el("section", "cmp-reality");
-  cmpReality.hidden = true;
-  cmpRow.append(scroll, cmpReality);
-
-  root.append(heading, word, cmpRow, noSession, empty, ended);
+  page.append(header, titleRow, legend, scroll, treePanel, cmpBlock, noSession, empty, ended);
+  root.append(page);
 
   /** @type {Map<string, HTMLElement>} node id -> card element */
   const nodeEls = new Map();
@@ -119,59 +238,44 @@ export function renderMapPage(root, store, options = {}) {
   /** The last diff reference whose animation has been replayed. */
   let renderedDiff = /** @type {import("../lib/mmg/types.js").Diff | null} */ (null);
 
-/** @typedef {ReturnType<typeof learnerCards>[number]} MapCard */
-/** @typedef {ReturnType<typeof nodeDelta>} NodeDelta */
+  /** @typedef {ReturnType<typeof learnerCards>[number]} MapCard */
+  /** @typedef {ReturnType<typeof nodeDelta>} NodeDelta */
 
-/**
- * @param {number} confidence
- * @returns {string}
- */
-function pct(confidence) {
-  return `${Math.round(confidence * 100)}%`;
-}
+  /**
+   * @param {MapCard} card
+   * @returns {HTMLElement}
+   */
+  function buildCard(card) {
+    const node = el("div", `map-card ${stateClass(card.state)}`);
+    node.dataset.nodeId = card.id;
+    const top = el("div", "map-card-top");
+    top.appendChild(el("span", "map-card-label", card.label));
+    const status = el(
+      "span",
+      "map-status",
+      `${card.state} - ${card.confidence.toFixed(1)}`
+    );
+    const conf = el("div", "map-conf");
+    const bar = el("div", "map-conf-bar");
+    const fill = el("i", "map-conf-fill");
+    fill.style.width = pct(card.confidence);
+    bar.appendChild(fill);
+    node.append(top, status, bar);
+    return node;
+  }
 
-/**
- * @param {MapCard} card
- * @returns {string}
- */
-function tooltip(card) {
-  const lines = [`${card.label}: ${card.state}, ${pct(card.confidence)} confident`];
-  for (const quote of card.evidence) lines.push(`evidence: ${quote}`);
-  return lines.join("\n");
-}
-
-/**
- * @param {MapCard} card
- * @returns {HTMLElement}
- */
-function buildCard(card) {
-  const node = el("div", `map-card ${stateClass(card.state)}`);
-  node.dataset.nodeId = card.id;
-  const top = el("div", "map-card-top");
-  top.appendChild(el("span", "map-card-label", card.label));
-  top.appendChild(el("span", "map-state-name", card.state));
-  const conf = el("div", "map-conf");
-  const bar = el("div", "map-conf-bar");
-  const fill = el("i", "map-conf-fill");
-  fill.style.width = pct(card.confidence);
-  bar.appendChild(fill);
-  conf.append(bar, el("span", "map-conf-text", pct(card.confidence)));
-  node.append(top, conf);
-  return node;
-}
-
-/**
- * @param {HTMLElement} node
- * @param {MapCard} card
- * @param {NodeDelta} delta
- */
-function updateCard(node, card, delta) {
+  /**
+   * @param {HTMLElement} node
+   * @param {MapCard} card
+   * @param {NodeDelta} delta
+   */
+  function updateCard(node, card, delta) {
     const label = asEl(node.querySelector(".map-card-label"));
-    const name = asEl(node.querySelector(".map-state-name"));
+    const status = asEl(node.querySelector(".map-status"));
     const fill = asEl(node.querySelector(".map-conf-fill"));
-    const text = asEl(node.querySelector(".map-conf-text"));
     if (label && label.textContent !== card.label) label.textContent = card.label;
-    if (name && name.textContent !== card.state) name.textContent = card.state;
+    const statusText = `${card.state} - ${card.confidence.toFixed(1)}`;
+    if (status && status.textContent !== statusText) status.textContent = statusText;
     node.className = `map-card ${stateClass(card.state)}`;
     if (delta.added) node.classList.add("added");
     if (delta.updated) {
@@ -183,7 +287,6 @@ function updateCard(node, card, delta) {
       );
     }
     if (fill && fill.style.width !== pct(card.confidence)) fill.style.width = pct(card.confidence);
-    if (text && text.textContent !== pct(card.confidence)) text.textContent = pct(card.confidence);
     node.title = tooltip(card);
     node.setAttribute(
       "aria-label",
@@ -192,8 +295,131 @@ function updateCard(node, card, delta) {
   }
 
   /**
-   * Sync the page with the store: stage geometry, keyed node cards, keyed
-   * SVG edges, diff animation, empty and ended states.
+   * The title-row closeness number: "known/total" with the progress bar at
+   * the closeness percentage (the ticket 13 spec's 4/11 + 38% example).
+   *
+   * @param {import("../state/session.js").SessionState} state
+   */
+  function updateCloseness(state) {
+    const total =
+      state.realityMap && Array.isArray(state.realityMap.nodes)
+        ? state.realityMap.nodes.length
+        : 0;
+    const closeness = typeof state.closeness === "number" ? state.closeness : 0;
+    const known = total > 0 ? Math.round(closeness * total) : 0;
+    closenessFrac.textContent = `${known}/${total}`;
+    closenessFill.style.width = `${Math.round(closeness * 100)}%`;
+  }
+
+  /**
+   * The segmented control per session state: mid-session Chat | Map; at
+   * session end the Map segment becomes "Learner map" and a Reality segment
+   * appears (the one place ground truth may be shown).
+   *
+   * @param {import("../state/session.js").SessionState} state
+   */
+  function updateTabs(state) {
+    const compare = state.ended && state.realityMap !== null;
+    modelTab.textContent = compare ? "Learner map" : "Map";
+    realityTab.hidden = !compare;
+    chatTab.classList.remove("active");
+    modelTab.classList.toggle("active", !compare || tab === "model");
+    realityTab.classList.toggle("active", compare && tab === "reality");
+  }
+
+  /**
+   * A metrics chip: "Closeness 83%", "Gaps closed 4", "Transfer passed".
+   *
+   * @param {string} label
+   * @param {string} value
+   * @returns {HTMLElement}
+   */
+  function chip(label, value) {
+    const c = el("span", "cmp-chip");
+    c.append(label, " ", el("strong", "cmp-chip-value", value));
+    return c;
+  }
+
+  /**
+   * The session-end comparison: the metrics row (closeness, gap closures,
+   * transfer) and the transfer assessment. Shown on both map tabs, because
+   * this is the mission made visible.
+   *
+   * @param {HTMLElement} block
+   * @param {import("../state/session.js").SessionState} state
+   */
+  function renderComparison(block, state) {
+    block.replaceChildren();
+    const metrics = comparisonMetrics(state);
+    const chips = el("div", "cmp-metrics");
+    chips.append(
+      chip("Closeness", `${Math.round(metrics.closeness * 100)}%`),
+      chip("Gaps closed", String(metrics.gapClosures)),
+      chip(
+        "Transfer",
+        metrics.transferPassed === null ? "-" : metrics.transferPassed ? "passed" : "not passed"
+      )
+    );
+    block.appendChild(chips);
+    if (metrics.transferAssessment.length > 0) {
+      block.appendChild(el("p", "cmp-transfer", metrics.transferAssessment));
+    }
+  }
+
+  /**
+   * The reality phylogenetic tree: root card (the concept, as the crown) and
+   * the layer branches below it, with cladogram elbow connectors. Session end
+   * only - this is full ground truth.
+   *
+   * @param {import("../state/session.js").SessionState} state
+   */
+  function renderTree(state) {
+    const tree = realityTree(state.realityMap);
+    const layout = treeLayout(tree);
+
+    treeStage.style.width = `${layout.width}px`;
+    treeStage.style.height = `${layout.height}px`;
+    treeSvg.setAttribute("viewBox", `0 0 ${layout.width} ${layout.height}`);
+
+    treeLayer.replaceChildren();
+    const root = el("div", "tree-root-card");
+    root.style.left = `${layout.root.x}px`;
+    root.style.top = `${layout.root.y}px`;
+    root.style.width = `${layout.root.width}px`;
+    root.append(
+      el("p", "tree-root-eyebrow", "ROOT - THE CONCEPT"),
+      el("h2", "tree-root-word", tree.rootLabel || "the concept")
+    );
+    treeLayer.appendChild(root);
+
+    for (const branch of layout.branches) {
+      const label = el("p", "tree-branch-label", `BRANCH - ${branch.name}`);
+      label.style.left = `${branch.cx}px`;
+      label.style.top = `${branch.labelY}px`;
+      treeLayer.appendChild(label);
+      for (const card of branch.cards) {
+        const node = el("div", "tree-branch-card", card.label);
+        node.style.left = `${card.x}px`;
+        node.style.top = `${card.y}px`;
+        node.style.width = `${TREE_CARD_WIDTH}px`;
+        treeLayer.appendChild(node);
+      }
+    }
+
+    treeSvg.replaceChildren();
+    for (const d of cladogramPaths(layout)) {
+      const path = document.createElementNS(SVG_NS, "path");
+      path.setAttribute("d", d);
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", "#B9B3E8");
+      path.setAttribute("stroke-width", "2");
+      treeSvg.appendChild(path);
+    }
+  }
+
+  /**
+   * Sync the page with the store: segmented control, title row, legend,
+   * learner grid or reality tree, comparison block, empty and ended states.
    */
   function sync() {
     const state = store.getState();
@@ -202,13 +428,28 @@ function updateCard(node, card, delta) {
     const diffActive = state.lastDiff !== null && state.lastDiff !== renderedDiff;
     const diff = diffActive ? state.lastDiff : null;
 
-    word.textContent = state.word ? `concept: ${state.word}` : "";
+    if (state.word !== lastWord) {
+      lastWord = state.word;
+      tab = "model";
+    }
 
+    const hasWord = state.word !== null;
     const compare = state.ended && state.realityMap !== null;
-    cmpReality.hidden = !compare;
-    if (compare) renderComparison(cmpReality, state);
+    const showTree = compare && tab === "reality";
 
-    if (!state.word) {
+    word.textContent = state.word ?? "";
+    titleRow.hidden = !hasWord;
+    legend.hidden = !hasWord;
+    updateCloseness(state);
+    updateTabs(state);
+
+    cmpBlock.hidden = !compare;
+    if (compare) renderComparison(cmpBlock, state);
+
+    treePanel.hidden = !showTree;
+    if (showTree) renderTree(state);
+
+    if (!hasWord) {
       noSession.hidden = false;
       empty.hidden = true;
       scroll.hidden = true;
@@ -223,7 +464,9 @@ function updateCard(node, card, delta) {
       return;
     }
     empty.hidden = true;
-    scroll.hidden = false;
+    scroll.hidden = showTree;
+    if (showTree) return;
+    ended.hidden = state.ended ? false : true;
 
     const cols = columnCount(stage.clientWidth || root.clientWidth || 480);
     const metrics = gridMetrics(cards.length, cols);
@@ -287,82 +530,14 @@ function updateCard(node, card, delta) {
     }
 
     if (diffActive) renderedDiff = state.lastDiff;
-    ended.hidden = state.ended ? false : true;
-  }
-
-  /**
-   * A metrics chip: "Closeness 83%", "Gaps closed 4", "Transfer passed".
-   *
-   * @param {string} label
-   * @param {string} value
-   * @returns {HTMLElement}
-   */
-  function chip(label, value) {
-    const c = el("span", "cmp-chip");
-    c.append(label, " ", el("strong", "cmp-chip-value", value));
-    return c;
-  }
-
-  /**
-   * Fill the comparison panel (session end only): the metrics row, the
-   * reality map as layered sections with an edge list, and the transfer
-   * assessment. This is the mission made visible - here is reality, here
-   * is what the learner's model became. Ground truth is allowed here
-   * because the session is over (the no-leak rule binds mid-session only).
-   *
-   * @param {HTMLElement} section - the .cmp-reality panel.
-   * @param {import("../state/session.js").SessionState} state
-   */
-  function renderComparison(section, state) {
-    section.replaceChildren();
-    section.appendChild(el("h3", "cmp-title", "Reality map"));
-
-    const metrics = comparisonMetrics(state);
-    const chips = el("div", "cmp-metrics");
-    chips.append(
-      chip("Closeness", `${Math.round(metrics.closeness * 100)}%`),
-      chip("Gaps closed", String(metrics.gapClosures)),
-      chip(
-        "Transfer",
-        metrics.transferPassed === null ? "-" : metrics.transferPassed ? "passed" : "not passed"
-      )
-    );
-    section.appendChild(chips);
-
-    section.appendChild(el("p", "cmp-sub", "Layers, from foundations up"));
-    const layers = el("div", "cmp-layers");
-    for (const sectionModel of realitySections(state.realityMap)) {
-      const block = el("section", "cmp-layer");
-      block.appendChild(el("h4", "cmp-layer-name", sectionModel.name));
-      for (const node of sectionModel.nodes) {
-        const card = el("div", "cmp-node");
-        card.appendChild(el("span", "cmp-node-label", node.label));
-        if (node.description) {
-          card.appendChild(el("p", "cmp-node-desc", node.description));
-        }
-        block.appendChild(card);
-      }
-      layers.appendChild(block);
-    }
-    section.appendChild(layers);
-
-    section.appendChild(el("p", "cmp-sub", "How the parts relate"));
-    const edges = el("ul", "cmp-edges");
-    for (const edge of realityEdgeList(state.realityMap)) {
-      const item = el("li", "", `${edge.sourceLabel} ${edge.type} ${edge.targetLabel}`);
-      edges.appendChild(item);
-    }
-    section.appendChild(edges);
-
-    if (metrics.transferAssessment.length > 0) {
-      section.appendChild(el("p", "cmp-transfer", metrics.transferAssessment));
-    }
   }
 
   const unsubscribe = store.subscribe(sync);
   if (responsive) {
     window.addEventListener("resize", sync);
   }
+
+  sync();
 
   return {
     /** Re-sync on demand (route changes, after the view becomes visible). */

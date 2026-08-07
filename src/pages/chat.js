@@ -102,6 +102,8 @@ export function initChatPage(root, options = {}) {
   const store = options.store ?? sessionStore;
   const callAgent = options.callAgent ?? defaultCallAgent;
 
+  /** @type {HTMLElement} */
+  const chatEl = get(root, "chat");
   /** @type {HTMLTextAreaElement} */
   const wordInput = get(root, "word-input");
   /** @type {HTMLFormElement} */
@@ -114,8 +116,18 @@ export function initChatPage(root, options = {}) {
   const phaseIndicator = get(root, "phase-indicator");
   /** @type {HTMLElement} */
   const messageList = get(root, "message-list");
+  /** @type {HTMLElement} */
+  const hero = get(root, "chat-hero");
+  /** @type {HTMLElement} */
+  const heroEyebrow = get(root, "hero-eyebrow");
+  /** @type {HTMLElement} */
+  const heroWord = get(root, "hero-word");
   /** @type {HTMLFormElement} */
   const composer = get(root, "composer");
+  /** @type {HTMLElement} */
+  const composerWrap = get(root, "composer-wrap");
+  /** @type {HTMLElement} */
+  const composerStatus = get(root, "composer-status");
   /** @type {HTMLTextAreaElement} */
   const messageInput = get(root, "message-input");
   /** @type {HTMLButtonElement} */
@@ -221,6 +233,28 @@ export function initChatPage(root, options = {}) {
   }
 
   /**
+   * The hero row's eyebrow text per phase kind. "You're exploring" mirrors
+   * the observation-first opening (empty learner map), "You're refining"
+   * the gap-first probing (populated learner map), matching the phase pill
+   * split from spec section 9.
+   *
+   * @param {string} kind
+   * @returns {string}
+   */
+  function heroEyebrowText(kind) {
+    switch (kind) {
+      case "exploring":
+        return "You're exploring";
+      case "refining":
+        return "You're refining";
+      case "end":
+        return "Session complete";
+      default:
+        return "";
+    }
+  }
+
+  /**
    * @param {boolean} on
    */
   function setSending(on) {
@@ -230,13 +264,13 @@ export function initChatPage(root, options = {}) {
     beginButton.textContent = on ? "Thinking..." : "Begin";
     messageInput.disabled = on;
     sendButton.disabled = on;
-    sendButton.textContent = on ? "Thinking..." : "Send";
+    composerStatus.hidden = !on;
     composer.setAttribute("aria-busy", String(on));
   }
 
   /**
-   * Rebuild the whole page from the store: phase indicator, message list,
-   * which input surface is visible, and the end panel.
+   * Rebuild the whole page from the store: phase indicator, hero, message
+   * list, which input surface is visible, and the end panel.
    */
   function render() {
     const state = store.getState();
@@ -244,18 +278,24 @@ export function initChatPage(root, options = {}) {
     phaseIndicator.textContent = phase.label;
     phaseIndicator.dataset.phase = phase.kind;
 
+    const starting = state.phase === "init" && !state.ended;
+    chatEl.classList.toggle("starting", starting);
     renderMessages(state);
 
-    const starting = state.phase === "init" && !state.ended;
     startForm.hidden = !starting;
     startHint.hidden = !(starting && state.history.length > 0);
 
     const composing = !starting && !state.ended;
     composer.hidden = !composing;
+    composerWrap.hidden = !composing;
     messageInput.placeholder =
       state.phase === "end"
         ? "Your answer to the transfer question..."
-        : "Your answer...";
+        : "Your answer... (Enter to send)";
+
+    hero.hidden = starting;
+    heroWord.textContent = state.word ?? "";
+    heroEyebrow.textContent = heroEyebrowText(phase.kind);
 
     endPanel.hidden = !(state.ended && state.transferResult);
     if (state.ended && state.transferResult) {
@@ -271,12 +311,27 @@ export function initChatPage(root, options = {}) {
   function renderMessages(state) {
     messageList.replaceChildren();
     for (const message of state.history) {
+      const row = document.createElement("div");
+      row.className = `message message-${message.role}`;
+      const body = document.createElement("div");
+      body.className = "message-body";
+      const label = document.createElement("span");
+      label.className = "message-label";
+      label.textContent = message.role === "assistant" ? "TUTOR" : "YOU";
       const bubble = document.createElement("div");
-      bubble.className = `message message-${message.role}`;
+      bubble.className = "bubble";
       const text = document.createElement("p");
       text.textContent = message.content;
       bubble.appendChild(text);
-      messageList.appendChild(bubble);
+      body.append(label, bubble);
+      if (message.role === "assistant") {
+        const orb = document.createElement("span");
+        orb.className = "orb orb-avatar";
+        orb.setAttribute("aria-hidden", "true");
+        row.appendChild(orb);
+      }
+      row.appendChild(body);
+      messageList.appendChild(row);
     }
     messageList.scrollTop = messageList.scrollHeight;
   }
