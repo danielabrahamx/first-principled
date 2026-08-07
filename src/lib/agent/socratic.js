@@ -104,8 +104,7 @@ export function conversationMode(learnerMap) {
 /**
  * The explanation fallback (principle 8): due when a node has two or more
  * failed attempts. Failed attempts are counted per node by
- * updateFailedAttempts; whether the learner asked for an explanation is the
- * model's judgement, instructed in the prompts.
+ * updateFailedAttempts.
  *
  * @param {FailedAttempts} failedAttempts
  * @param {string} nodeId
@@ -113,6 +112,60 @@ export function conversationMode(learnerMap) {
  */
 export function explanationDue(failedAttempts, nodeId) {
   return (failedAttempts[nodeId] ?? 0) >= 2;
+}
+
+/**
+ * Whether the learner's latest message asks for an explanation. The spec
+ * (section 8) makes "when the learner asks" a trigger of the explanation
+ * fallback; the hard directive below turns that into a code-level rule the
+ * model cannot silently defer (found by the ticket 12 end-to-end pass: a
+ * learner who asked "can you explain how a keypress becomes a letter?" was
+ * told to keep observing instead).
+ *
+ * Conservative matcher: only obvious explanation-seeking phrasings fire it,
+ * so ordinary answers (which rarely contain "explain", "how", "why" or a
+ * "what is X" question) are not misread as requests.
+ *
+ * @param {string | null | undefined} utterance
+ * @returns {boolean}
+ */
+export function explanationRequested(utterance) {
+  if (typeof utterance !== "string") return false;
+  const u = utterance.trim().toLowerCase();
+  if (u.length === 0) return false;
+  return (
+    u.includes("explain") ||
+    u.includes("help me understand") ||
+    u.includes("i don't understand") ||
+    u.includes("i do not understand") ||
+    u.includes("i don't get") ||
+    /(^|[^a-z])(why|how)('s|'d)? (do|does|did|is|are|can|could|would|should)?/.test(u) ||
+    /what (is|are|does|do|happens)/.test(u) ||
+    /what does [^?]{1,60}\bmean\b/.test(u)
+  );
+}
+
+/**
+ * Whether this turn's directive must be an explanation: a node has two or
+ * more failed attempts (the gate), or the learner asked for one. When due,
+ * the turn is validated so probe.kind must be "explain" - the model cannot
+ * override the fallback. Returns the stuck node when both apply (the gate
+ * point takes priority over an open-ended request).
+ *
+ * @param {SocraticState} state
+ * @returns {{ due: boolean; nodeId: string | null; count: number; reason: string }}
+ */
+export function explainDirective(state) {
+  const stuck = Object.entries(state.failedAttempts ?? {})
+    .filter(([, count]) => count >= 2)
+    .sort((a, b) => b[1] - a[1]);
+  if (stuck.length > 0) {
+    return { due: true, nodeId: stuck[0][0], count: stuck[0][1], reason: "failed attempts" };
+  }
+  if (explanationRequested(state.learnerUtterance)) {
+    return { due: true, nodeId: null, count: 0, reason: "learner asked" };
+  }
+  return { due: false, nodeId: null, count: 0, reason: "none" };
 }
 
 /**
@@ -205,7 +258,7 @@ Hard rules:
 6. A misconception is a learner belief that conflicts with reality. Work it through questions that let the learner discover the conflict themselves (principle 6); never correct it by stating the fact.
 7. If the learner has no model of a probed concept, teach observationally first - connect it to something they have observed (principle 7) - then re-ask.
 8. Productive struggle is valuable when it reveals the learner's model (principle 7). Do not rush to explain.
-9. The explanation fallback exists to minimize unnecessary cognitive load (principle 8). Use it ONLY when the learner asks for an explanation, or when the directive says it is due (two failed attempts on the same point). Then explain that ONE concept accurately, in plain first-principles language built from what the learner has said. Still never quote the reality map.
+9. The explanation fallback exists to minimize unnecessary cognitive load (principle 8). Use it ONLY when the learner asks for an explanation, or when the directive says it is due (two failed attempts on the same point). When it fires, the reply IS the explanation - a direct, plain explanation of that ONE concept built from what the learner has said; do not end it with a new question. Still never quote the reality map.
 10. Reconnect new knowledge to what the learner already showed (principle 9). Never skip intermediate steps (principle 12): do not introduce an abstraction the learner has not observed.
 11. If the learner asks a clarifying question or needs a short aside, answer briefly without changing the model (kind "converse").`;
 }
@@ -255,16 +308,16 @@ Rules for the reply object: "reply" is your message to the learner. "learnerMap"
  */
 export function buildDirective(state) {
   const concept = state.realityMap.concept;
+  const explain = explainDirective(state);
+  if (explain.due) {
+    if (explain.nodeId !== null) {
+      const label = nodeLabel(state.realityMap, explain.nodeId) ?? explain.nodeId;
+      return `The explanation fallback is due: the learner has failed on "${label}" (${explain.nodeId}) ${explain.count} times. Explain that ONE concept in plain first-principles language - accurate, concise, built from what the learner has said. This reply must BE the explanation: do not ask the learner a new question. probe.kind must be "explain".`;
+    }
+    return `The learner asked for an explanation. Explain the concept they asked about in plain first-principles language - accurate, concise, built from what the learner has said. This reply must BE the explanation: do not ask the learner a new question. probe.kind must be "explain".`;
+  }
   if (conversationMode(state.learnerMap) === "observe") {
     return `Opening move: nothing is known yet about this learner's model of "${concept}". Ask an observation question - what they have seen, used, or noticed about it - before any theory. Do not present theory yet.`;
-  }
-  const stuck = Object.entries(state.failedAttempts)
-    .filter(([, count]) => count >= 2)
-    .sort((a, b) => b[1] - a[1]);
-  if (stuck.length > 0) {
-    const [nodeId, count] = stuck[0];
-    const label = nodeLabel(state.realityMap, nodeId) ?? nodeId;
-    return `The explanation fallback is due: the learner has failed on "${label}" (${nodeId}) ${count} times. Explain that ONE concept in plain first-principles language - accurate, concise, built from what the learner has said. probe.kind must be "explain".`;
   }
   return `The learner has a partial model. Probe the biggest gap in dependency order: lower layers before abstractions; within the lowest affected layer, misconception over missing over untested. Ask ONE question that reveals their model of that node.`;
 }
@@ -350,6 +403,11 @@ export function validateTurn(state, turn) {
   if (turn.probe.nodeId !== null) {
     const exists = state.realityMap.nodes.some((node) => node.id === turn.probe.nodeId);
     if (!exists) errors.push(`probe.nodeId does not exist in the reality map: ${turn.probe.nodeId}`);
+  }
+
+  const explain = explainDirective(state);
+  if (explain.due && turn.probe.kind !== "explain") {
+    errors.push(`probe.kind must be "explain" (explanation ${explain.reason})`);
   }
 
   const prevIds = new Set(state.learnerMap.nodes.map((node) => node.id));

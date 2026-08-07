@@ -7,6 +7,8 @@ import { closenessScore } from "../mmg/closeness.js";
 import {
   conversationMode,
   explanationDue,
+  explanationRequested,
+  explainDirective,
   updateFailedAttempts,
   computeDiff,
   buildSocraticSystemPrompt,
@@ -278,6 +280,93 @@ test("the directive picks the most-failed node when several are stuck", () => {
     failedAttempts: { "n-os": 2, "n-transistor": 4 },
   });
   assert.match(buildDirective(state), /n-transistor/);
+});
+
+test("a learner who asks for an explanation triggers the directive with zero failures", () => {
+  const plain = baseState({
+    learnerMap: laptopLearnerMap,
+    learnerUtterance: "I use it for email and spreadsheets.",
+  });
+  assert.doesNotMatch(buildSocraticUserPrompt(plain), /explanation fallback is due/);
+  assert.doesNotMatch(buildSocraticUserPrompt(plain), /learner asked for an explanation/);
+
+  const asks = baseState({
+    learnerMap: laptopLearnerMap,
+    learnerUtterance: "Can you explain how a keypress becomes a letter on the screen?",
+  });
+  const prompt = buildSocraticUserPrompt(asks);
+  assert.match(prompt, /learner asked for an explanation/);
+  assert.match(prompt, /probe.kind must be "explain"/);
+  assert.match(prompt, /must BE the explanation/);
+  assert.match(prompt, /do not ask the learner a new question/);
+});
+
+test("explanationRequested is conservative about ordinary answers", () => {
+  assert.equal(explanationRequested(null), false);
+  assert.equal(explanationRequested("I use it for email and spreadsheets."), false);
+  assert.equal(explanationRequested("A transistor is a switch you flick by hand."), false);
+  assert.equal(explanationRequested("I don't know - some kind of chip?"), false);
+  assert.equal(explanationRequested("I don't really know what a logic gate is."), false);
+  assert.equal(explanationRequested("the screen dims when I unplug the charger"), false);
+  assert.equal(explanationRequested("Can you explain how a keypress becomes a letter?"), true);
+  assert.equal(explanationRequested("What is a transistor?"), true);
+  assert.equal(explanationRequested("Why does it get warm?"), true);
+  assert.equal(explanationRequested("help me understand the operating system"), true);
+  assert.equal(explanationRequested("I don't understand"), true);
+});
+
+test("explainDirective prioritises the failed-attempts gate over a request", () => {
+  const state = baseState({
+    learnerMap: laptopLearnerMap,
+    failedAttempts: { "n-transistor": 2 },
+    learnerUtterance: "Can you explain how a keypress becomes a letter?",
+  });
+  const d = explainDirective(state);
+  assert.equal(d.due, true);
+  assert.equal(d.nodeId, "n-transistor");
+  assert.equal(d.reason, "failed attempts");
+});
+
+test("the explanation fallback beats the observation opening even with an all-untested map", () => {
+  const allUntested = baseState({
+    learnerMap: {
+      nodes: [
+        { id: "n-transistor", state: "untested", confidence: 0.5, evidence: [] },
+      ],
+      edges: [],
+    },
+  });
+  assert.match(buildDirective(allUntested), /Opening move/);
+
+  const asked = baseState({
+    learnerMap: allUntested.learnerMap,
+    learnerUtterance: "Can you explain what a transistor is?",
+  });
+  const askedPrompt = buildDirective(asked);
+  assert.match(askedPrompt, /learner asked for an explanation/);
+  assert.doesNotMatch(askedPrompt, /Opening move/);
+
+  const stuck = baseState({
+    learnerMap: allUntested.learnerMap,
+    failedAttempts: { "n-transistor": 2 },
+  });
+  const stuckPrompt = buildDirective(stuck);
+  assert.match(stuckPrompt, /explanation fallback is due/);
+  assert.doesNotMatch(stuckPrompt, /Opening move/);
+});
+
+test("validateTurn rejects a probe when an explanation is due and demands explain", () => {
+  const state = baseState({
+    learnerMap: laptopLearnerMap,
+    learnerUtterance: "Can you explain what a transistor is?",
+  });
+  const turn = {
+    reply: "So a transistor is a switch you flick by hand, right?",
+    learnerMap: clone(laptopLearnerMap),
+    probe: { nodeId: "n-transistor", kind: /** @type {"probe"} */ ("probe") },
+  };
+  const errors = validateTurn(state, turn);
+  assert.ok(errors.some((e) => /probe.kind must be "explain"/.test(e)));
 });
 
 /* ---------------------------------------------------------------------------
