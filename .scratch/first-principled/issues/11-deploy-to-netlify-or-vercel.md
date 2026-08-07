@@ -3,22 +3,24 @@
 **Type:** task
 **Status:** ready-for-agent (blocked)
 **Blocked by:** 10
-**Related:** spec sections 6, 11; `vercel.json` or `netlify.toml`
+**Related:** spec sections 6, 11; `netlify.toml`
 
 ## Question
 
-How does the app get live as static files plus one function, with the LLM key
-as a platform secret?
+How does the app get live on Netlify as static files plus one function, with
+the LLM key as a platform secret?
 
 ## What
 
-1. Choose Netlify or Vercel (Danny's call; both work for this shape) and wire
-   the platform config from ticket 01.
+1. Platform is **Netlify** (Danny confirmed 2026-08-07). CLI is installed and
+   authed as danielftabraham@outlook.com (team danielabrahamx);
+   `"$APPDATA/npm/netlify.cmd"` in git-bash. Wire the `netlify.toml` from
+   ticket 01.
 2. Deploy: static frontend plus the single function. Platform CI from the
    GitHub repo (danielabrahamx/first-principled) or direct CLI deploy.
-3. Environment secrets on the platform: LLM_API_KEY (Danny supplies the
-   DeepSeek key), LLM_MODEL, LLM_BASE_URL. The key must never reach the
-   client bundle (verify: grep the built assets).
+3. Environment secrets on the platform: LLM_API_KEY (from `.env`, gitignored),
+   LLM_MODEL, LLM_BASE_URL. Set them with `netlify env:set`. The key must
+   never reach the client bundle (verify: grep the built assets).
 4. Live URL recorded in README with a one-line deploy note.
 5. Smoke test the live function: one map generation and one turn against the
    deployed endpoint.
@@ -31,9 +33,11 @@ as a platform secret?
 
 ## Human gate
 
-Danny must be logged into the chosen platform (or provide CLI auth) and must
-supply the DeepSeek API key. Agents prepare everything else and stop at the
-credential gate if needed.
+None blocking: the Netlify CLI is already authed and the DeepSeek key is in
+`.env`. Create and link the site with `netlify sites:create --name
+first-principled` and `netlify link` (or the agent picks a sensible name).
+Stop and ask Danny only if site creation fails for a reason the CLI cannot
+resolve.
 
 ## Docs rule
 

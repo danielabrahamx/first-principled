@@ -21,9 +21,10 @@ What is the skeleton every other ticket builds on?
 3. `docs/agents/issue-tracker.md`: local-markdown tracker config per the
    setup-matt-pocock-skills convention (issues live under `.scratch/`).
 4. `README.md`: what the product is, layout, how to run locally, how to deploy.
-5. `AGENTS.md` (or `CLAUDE.md` if Danny prefers): agent skills block pointing
-   at the tracker, the map, and the commit-and-push rule. Default is `AGENTS.md`
-   per the agentvisa convention; confirm with Danny.
+5. `AGENTS.md`: already written by the orchestrator setup (2026-08-07, Danny
+   confirmed AGENTS.md over CLAUDE.md). `docs/agents/issue-tracker.md` and
+   `docs/agents/domain.md` also exist. Do not rewrite; only extend if a rule is
+   missing.
 
 ## Acceptance criteria
 

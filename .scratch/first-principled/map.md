@@ -32,9 +32,13 @@ ephemeral sessions, no accounts.
   API, no DB, no auth, no agent framework (Mastra etc. is v2).
 - Two pages: chat and map. The map page NEVER shows reality map content
   mid-session; comparison unlocks only at session end.
-- LLM key: Danny supplies it as a platform env secret (ticket 11). A DeepSeek
-  key already exists on this machine at `~/.local/share/opencode/auth.json`
-  (ticket 03 may use it).
+- **LLM key:** in `.env` (gitignored) and `~/.local/share/opencode/auth.json`
+  (deepseek entry). Both hold the same key; never commit either.
+- **Deploy: Netlify** (Danny confirmed 2026-08-07). CLI authed as
+  danielftabraham@outlook.com; `"$APPDATA/npm/netlify.cmd"` in git-bash.
+- **Setup landed 2026-08-07 (orchestrator):** AGENTS.md (Danny chose AGENTS.md
+  over CLAUDE.md), docs/agents/{issue-tracker,domain}.md, CONTEXT.md,
+  .gitignore, .env. Ticket 01 must not rewrite these, only extend.
 - Consult: `spec.md`, `docs/MISSION.md`, the grilling skill for prompt
   discipline, the opencode-wayfinder-tickets skill for the work loop.
 
@@ -71,7 +75,7 @@ ephemeral sessions, no accounts.
 8. [Chat page UI](issues/08-chat-page-ui.md) - blocked by 07
 9. [Map page UI](issues/09-map-page-ui.md) - blocked by 07
 10. [Session end comparison and transfer question](issues/10-session-end-comparison-and-transfer-question.md) - blocked by 08, 09
-11. [Deploy to Netlify or Vercel](issues/11-deploy-to-netlify-or-vercel.md) - blocked by 10 - human gate: platform login and LLM key
+11. [Deploy to Netlify or Vercel](issues/11-deploy-to-netlify-or-vercel.md) - blocked by 10 - Netlify chosen, CLI authed, key in .env; no human gate
 12. [End to end acceptance and demo session](issues/12-end-to-end-acceptance-and-demo-session.md) - blocked by 11
 
 ## Ticket sequence (dependency overview)

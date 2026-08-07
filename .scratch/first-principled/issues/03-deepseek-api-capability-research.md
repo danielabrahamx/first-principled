@@ -3,8 +3,9 @@
 **Type:** research
 **Status:** ready-for-agent
 **Blocked by:** none (parallel to 02)
-**Related:** spec sections 6, 8, 11; a DeepSeek key already exists at
-`~/.local/share/opencode/auth.json` (verify it is still valid before use)
+**Related:** spec sections 6, 8, 11; the LLM key is at `.env` (gitignored) and
+in `~/.local/share/opencode/auth.json` (deepseek entry, updated 2026-08-07).
+Both hold the same key; use either.
 
 ## Question
 
@@ -22,8 +23,8 @@ model id should the app call?
 4. Confirm streaming support and whether the v1 UI needs it.
 5. Confirm rate limits and rough cost per session (map generation plus ~20
    turns) at the chosen model.
-6. Record a working curl-equivalent call (use the key at
-   `~/.local/share/opencode/auth.json`) proving the exact request shape.
+6. Record a working curl-equivalent call (use the key in `.env`) proving the
+   exact request shape.
 
 ## Acceptance criteria
 
