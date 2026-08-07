@@ -1,0 +1,40 @@
+:root {
+  --bg: #0f1115;
+  --fg: #e8e6e3;
+  --muted: #8a8f98;
+  --accent: #4f8cff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+.shell {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+}
+
+h1 {
+  font-size: 2rem;
+  margin: 0 0 0.5rem;
+}
+
+.tagline {
+  font-size: 1.1rem;
+  color: var(--muted);
+  margin: 0 0 2rem;
+}
+
+.note {
+  color: var(--muted);
+  font-size: 0.9rem;
+}

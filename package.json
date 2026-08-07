@@ -1,0 +1,14 @@
+{
+  "name": "first-principled",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI tutor that reduces the cognitive distance between the learner's mental model and reality",
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "node -e \"console.log('static site, nothing to build')\""
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

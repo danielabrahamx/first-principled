@@ -29,7 +29,8 @@ ephemeral sessions, no accounts.
   shipping. Commit and push before done (AGENTS.md rule).
 - Stack: static frontend + one stateless serverless function
   (`POST /api/agent`), client-held session state, DeepSeek via OpenAI-compatible
-  API, no DB, no auth, no agent framework (Mastra etc. is v2).
+  API, no DB, no auth, no agent framework (Mastra etc. is v2). Plain ES
+  modules, zero npm dependencies, no bundler (ticket 01).
 - Two pages: chat and map. The map page NEVER shows reality map content
   mid-session; comparison unlocks only at session end.
 - **LLM key:** in `.env` (gitignored) and `~/.local/share/opencode/auth.json`
@@ -62,6 +63,8 @@ ephemeral sessions, no accounts.
 ## Decisions so far
 
 <!-- one line per resolved ticket; empty until tickets resolve -->
+
+- [01 - Project scaffold and docs](issues/01-project-scaffold-and-docs.md) - src/ + netlify/functions/agent stub, netlify.toml with /api/agent rewrite, zero-dep plain ES modules (no bundler), MISSION.md verbatim from spec 1-3, README; npm install and netlify build verified on Windows.
 
 ## Open frontier
 
