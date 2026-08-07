@@ -73,8 +73,8 @@ ephemeral sessions, no accounts.
 1. [Project scaffold and docs](issues/01-project-scaffold-and-docs.md) - `resolved`
 2. [Mental model graph schema](issues/02-mental-model-graph-schema.md) - `resolved` - types, fixtures, closeness score
 3. [DeepSeek API capability research](issues/03-deepseek-api-capability-research.md) - `resolved` - base URL, model id deepseek-v4-flash, json_object only, fallback, cost; findings in research/03-*.md
-4. [Reality map generation](issues/04-reality-map-generation.md) - blocked by 01, 02, 03
-5. [Socratic engine and learner map updates](issues/05-socratic-engine-and-learner-map-updates.md) - blocked by 01, 02, 03
+4. [Reality map generation](issues/04-reality-map-generation.md) - `ready-for-agent` - blockers 01, 02, 03 all resolved 2026-08-07
+5. [Socratic engine and learner map updates](issues/05-socratic-engine-and-learner-map-updates.md) - `ready-for-agent` - blockers 01, 02, 03 all resolved 2026-08-07
 6. [Stateless agent orchestrator](issues/06-stateless-agent-orchestrator.md) - blocked by 04, 05
 7. [Client session state](issues/07-client-session-state.md) - blocked by 06
 8. [Chat page UI](issues/08-chat-page-ui.md) - blocked by 07
