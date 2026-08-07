@@ -275,7 +275,7 @@ function layerMirrorErrors(map, layers, nodes) {
   }
   for (const node of nodeList) {
     const layer = layerList.find((l) => l.id === node.layer);
-    if (layer && !layer.nodes.includes(node.id)) {
+    if (layer && Array.isArray(layer.nodes) && !layer.nodes.includes(node.id)) {
       errors.push(`node ${node.id} is not listed in its layer "${layer.id}"`);
     }
   }

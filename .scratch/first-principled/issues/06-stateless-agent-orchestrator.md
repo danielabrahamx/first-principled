@@ -1,7 +1,7 @@
 # 06 - Stateless agent orchestrator
 
 **Type:** task
-**Status:** ready-for-agent (blocked)
+**Status:** ready-for-agent (unblocked 2026-08-07 by 04, 05)
 **Blocked by:** 04, 05
 **Related:** spec sections 6, 8; `api/agent.ts` or `functions/agent.ts`
 

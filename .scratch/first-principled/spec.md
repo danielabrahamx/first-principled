@@ -89,7 +89,7 @@ Closeness score: fraction of known learner nodes matching reality, per session. 
 
 Phases:
 
-- Init: the learner types a word; the agent generates the Reality Map (first turn).
+- Init: the learner types a word; the agent generates the Reality Map (first turn, `src/lib/agent/realityMap.js`). Generation runs in JSON mode with one repair retry (validation-gated), thinking off for latency; a non-teachable input (gibberish, empty phrase) is refused gracefully, not mapped.
 - Active: Socratic turns (engine: `src/lib/agent/socratic.js`). Opening rule: empty learner map means observation-first (what have you seen, used, or noticed about this thing); a populated map means gap-first (probe the biggest gaps in dependency order, lower layers before abstractions). Each turn: ask a question, update the learner map, choose the next gap. Explanation fallback: when the learner asks, or after two failed attempts on the same point. A failed attempt is an answer that leaves the point non-correct; asking a question is not a failure, and after the fallback the count restarts. If the learner has no model of a concept, the agent teaches observationally before questioning it.
 - End: the agent asks a transfer question, a novel problem that requires the corrected model. The learner answers; the agent records pass or fail against the reality map. The comparison view unlocks.
 

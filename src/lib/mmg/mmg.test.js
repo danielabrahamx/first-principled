@@ -135,6 +135,14 @@ test("validator rejects a map with no layers", () => {
   assert.ok(result.errors.some((e) => e.includes("at least one layer")));
 });
 
+test("validator does not throw when a layer lacks a nodes list", () => {
+  const map = /** @type {any} */ (clone(laptopRealityMap));
+  map.layers[0].nodes = undefined;
+  const result = validateRealityMap(map);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => e.includes("nodes must be an array")));
+});
+
 test("an empty learner map is valid (session start)", () => {
   const result = validateLearnerMap({ nodes: [], edges: [] }, laptopRealityMap);
   assert.equal(result.ok, true, result.errors.join("; "));
