@@ -12,7 +12,17 @@
       <p class="tagline">
         Reduce the cognitive distance between your mental model and reality.
       </p>
-      <p class="note">Chat UI arrives with the chat page ticket. Map UI with the map page ticket.</p>
+      <nav class="routes" aria-label="Pages">
+        <a href="#chat" data-route="chat">Chat</a>
+        <a href="#map" data-route="map">Map</a>
+      </nav>
+      <section id="view-chat" class="view">
+        <p class="note">Chat UI arrives with the chat page ticket.</p>
+      </section>
+      <section id="view-map" class="view" hidden>
+        <p class="note">Map UI arrives with the map page ticket.</p>
+      </section>
     </main>
+    <script type="module" src="app.js"></script>
   </body>
 </html>

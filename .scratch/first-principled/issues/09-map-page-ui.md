@@ -1,7 +1,7 @@
 # 09 - Map page UI
 
 **Type:** task
-**Status:** ready-for-agent (blocked)
+**Status:** ready-for-agent (unblocked by 07)
 **Blocked by:** 07
 **Related:** spec sections 7, 9; `src/pages/map.tsx` or equivalent
 

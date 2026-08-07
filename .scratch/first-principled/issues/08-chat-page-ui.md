@@ -1,7 +1,7 @@
 # 08 - Chat page UI
 
 **Type:** task
-**Status:** ready-for-agent (blocked)
+**Status:** ready-for-agent (unblocked by 07)
 **Blocked by:** 07
 **Related:** spec sections 8, 9; `src/pages/chat.tsx` or equivalent
 

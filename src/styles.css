@@ -38,3 +38,18 @@ h1 {
   color: var(--muted);
   font-size: 0.9rem;
 }
+
+.routes {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.routes a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.routes a:hover {
+  text-decoration: underline;
+}

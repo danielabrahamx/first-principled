@@ -40,7 +40,7 @@ Founders building things, learning as they build, avoiding technical debt. v1: o
 - Static frontend, minimal web UI, two pages: chat and map.
 - One stateless serverless function, POST /api/agent, on Netlify or Vercel. It receives the full session state with every call, calls DeepSeek, returns the reply plus the updated learner map and diffs. It stores nothing.
 - No database, no auth, no agent framework.
-- Client holds session state in memory (word, reality map, learner map, history, phase).
+- Client holds session state in memory (`src/state/session.js`: word, reality map, learner map, history, failedAttempts, phase, end result) and sends it with every request. The chat and map pages are hash routes (`#chat`, `#map`) sharing one store instance, so navigation keeps the session. Nothing is written to disk, localStorage, or any server.
 - DeepSeek via the OpenAI-compatible API. Provider, model, base URL are environment configuration.
 - No web grounding in v1. The reality map comes from the model's knowledge only.
 
