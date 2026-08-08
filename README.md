@@ -4,8 +4,13 @@ An AI tutor. The learner types a word or phrase (laptop, recursion,
 photosynthesis). The agent builds a Reality Map of that thing from the model's
 own knowledge, then a Socratic conversation on a chat page extracts and
 refines the learner's Mental Model against it, driven by the gap between the
-two maps. A map page shows the learner's model updating live. At session end
-the learner sees both maps compared and answers a transfer question.
+two maps. A map page shows the learner's model updating live, plus the
+reality map as a phylogenetic lineage tree viewable from session start
+(most derived layer nearest the crown, deepest foundation lowest). At
+session end the learner sees both maps compared and answers a transfer
+question. The learner can also ask for a direct briefing - a plain-language
+answer built from the reality map - whenever they want information to model
+a decision.
 
 Mission (immutable): **reduce the cognitive distance between the learner's
 mental model and reality.** See `docs/MISSION.md`.

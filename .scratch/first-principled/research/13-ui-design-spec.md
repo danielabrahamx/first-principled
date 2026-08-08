@@ -145,6 +145,8 @@ must render the learner model's target (the full reality map) as this tree.
 - UI matches this spec: orb recipe, fonts (Fraunces/Space Grotesk), palette,
   three map states (learner grid + reality phylogenetic tree), both viewports.
 - All existing tests still pass; typecheck clean; live browser check;
-  no-leak audit (map page never shows reality content mid-session; the
-  reality tree is the session-end comparison view).
+  no-leak audit (as re-scoped by tickets 15/16: the map page shows the
+  reality tree from session start; chat never leaks reality content, and
+  the only sanctioned quote of the reality map is a learner-initiated
+  briefing).
 - Netlify deploy target unchanged.
