@@ -8,7 +8,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { overRateLimit } from "./agent.mjs";
+// The wrapper reads the cap at module load; a small cap makes the
+// in-memory fallback testable without sending 60+ requests.
+process.env.RATE_LIMIT_MAX = "3";
+const { overRateLimit } = await import("./agent.mjs");
 
 const HOUR = new Date().toISOString().slice(0, 13);
 const OLD_HOUR = "20000101T00";
@@ -70,5 +73,17 @@ test("rate limiter fails open when the store throws", async () => {
       throw new Error("store down");
     },
   };
-  assert.equal(await overRateLimit("1.2.3.4", broken), false);
+  // A broken store falls through to the in-memory fallback, which limits
+  // (the site stays up but the gate keeps counting locally).
+  const memIp = "9.9.9.1";
+  assert.equal(await overRateLimit(memIp, broken), false);
+  assert.equal(await overRateLimit(memIp, broken), false);
+});
+
+test("rate limiter falls back to in-memory counting without a store", async () => {
+  const memIp = "9.9.9.2";
+  assert.equal(await overRateLimit(memIp), false);
+  assert.equal(await overRateLimit(memIp), false);
+  assert.equal(await overRateLimit(memIp), false);
+  assert.equal(await overRateLimit(memIp), true);
 });

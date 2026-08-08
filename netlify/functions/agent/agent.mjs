@@ -50,13 +50,16 @@ function clientIp(req) {
 }
 
 /**
- * Fixed-window per-IP counter in Netlify Blobs. Returns true when the IP
- * is over the hourly cap. Fail-open: any store error returns false (no
- * limiting) so a broken store never takes the site down.
+ * Fixed-window per-IP counter. Returns true when the IP is over the
+ * hourly cap.
  *
- * The store is injectable for tests; production callers omit it and get
- * the Netlify Blobs store (unavailable outside the Netlify runtime, where
- * the fail-open path applies).
+ * Primary store: Netlify Blobs (shared across function instances), used
+ * when the platform injects the blob context. Fallback: an in-process
+ * counter (per instance, resets on cold start) so the gate works even on
+ * sites where the blob context is unavailable - best-effort under
+ * multi-instance load, strictly better than nothing, zero config.
+ *
+ * The store is injectable for tests; production callers omit it.
  *
  * @param {string} ip
  * @param {{ get(key: string, opts?: any): Promise<any>, set(key: string, value: any, opts?: any): Promise<any> } | null} [store]
@@ -64,30 +67,53 @@ function clientIp(req) {
  */
 export async function overRateLimit(ip, store = null) {
   if (RATE_LIMIT_MAX <= 0) return false;
-  let active = store;
-  if (active === null) {
-    try {
-      active = getStore({ name: "agent-ratelimits" });
-    } catch {
-      return false;
-    }
-  }
   const hour = new Date().toISOString().slice(0, 13);
   const key = `ip:${ip}`;
-  try {
-    /** @type {{ count?: number, hour?: string } | null} */
-    const current = await active.get(key, { type: "json" });
-    const count = current && current.hour === hour ? current.count || 0 : 0;
-    if (count >= RATE_LIMIT_MAX) return true;
-    await active.set(
-      key,
-      { count: count + 1, hour },
-      { expires: RATE_LIMIT_WINDOW_HOURS * 60 * 60 }
-    );
-    return false;
-  } catch {
-    return false;
+  if (store !== null) {
+    try {
+      /** @type {{ count?: number, hour?: string } | null} */
+      const current = await store.get(key, { type: "json" });
+      const count = current && current.hour === hour ? current.count || 0 : 0;
+      if (count >= RATE_LIMIT_MAX) return true;
+      await store.set(
+        key,
+        { count: count + 1, hour },
+        { expires: RATE_LIMIT_WINDOW_HOURS * 60 * 60 }
+      );
+      return false;
+    } catch {
+      // Fall through to the in-memory counter; never take the site down
+      // on a store error.
+    }
   }
+  return inMemoryRateLimit(key, hour);
+}
+
+/**
+ * In-process fallback: a fixed-window counter per (ip, hour) with the
+ * previous hour's entries dropped on access. Bounded by the number of
+ * distinct IPs seen in an hour.
+ *
+ * @type {Map<string, number>}
+ */
+const memoryCounters = new Map();
+
+/**
+ * @param {string} key
+ * @param {string} hour
+ * @returns {boolean} true when the cap is already met.
+ */
+function inMemoryRateLimit(key, hour) {
+  const bucket = `${key}:${hour}`;
+  const count = memoryCounters.get(bucket) || 0;
+  if (count >= RATE_LIMIT_MAX) return true;
+  memoryCounters.set(bucket, count + 1);
+  if (memoryCounters.size > 10_000) {
+    for (const stale of [...memoryCounters.keys()]) {
+      if (!stale.endsWith(hour)) memoryCounters.delete(stale);
+    }
+  }
+  return false;
 }
 
 /**
@@ -145,7 +171,13 @@ export default async (req) => {
     );
   }
 
-  if (await overRateLimit(ip)) {
+  let blobStore = null;
+  try {
+    blobStore = getStore({ name: "agent-ratelimits" });
+  } catch {
+    blobStore = null;
+  }
+  if (await overRateLimit(ip, blobStore)) {
     return errorResponse(
       429,
       "rate_limited",
