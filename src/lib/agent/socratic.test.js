@@ -9,6 +9,7 @@ import {
   explanationDue,
   explanationRequested,
   explainDirective,
+  briefingRequested,
   updateFailedAttempts,
   computeDiff,
   buildSocraticSystemPrompt,
@@ -327,6 +328,38 @@ test("explainDirective prioritises the failed-attempts gate over a request", () 
   assert.equal(d.reason, "failed attempts");
 });
 
+/* ---------------------------------------------------------------------------
+ * Policy: briefingRequested
+ * ------------------------------------------------------------------------- */
+
+test("briefingRequested is conservative about ordinary answers", () => {
+  assert.equal(briefingRequested(null), false);
+  assert.equal(briefingRequested(""), false);
+  assert.equal(briefingRequested("I use it for email and spreadsheets."), false);
+  assert.equal(briefingRequested("A transistor is a switch you flick by hand."), false);
+  assert.equal(briefingRequested("I don't know - some kind of chip?"), false);
+  assert.equal(briefingRequested("the screen dims when I unplug the charger"), false);
+  assert.equal(briefingRequested("Can you explain how a keypress becomes a letter?"), false);
+  assert.equal(briefingRequested("What is a transistor?"), false);
+  assert.equal(briefingRequested("Why does it get warm?"), false);
+  assert.equal(briefingRequested("just tell me if I'm right"), false);
+});
+
+test("briefingRequested fires on direct-information and decision phrasings", () => {
+  assert.equal(briefingRequested("brief me on the power path"), true);
+  assert.equal(briefingRequested("give me a brief on the power path"), true);
+  assert.equal(briefingRequested("just tell me about the power path"), true);
+  assert.equal(briefingRequested("just explain the whole power path to me"), true);
+  assert.equal(briefingRequested("just tell me how this works"), true);
+  assert.equal(briefingRequested("walk me through how a keypress becomes a letter"), true);
+  assert.equal(briefingRequested("tell me everything about how it boots"), true);
+  assert.equal(briefingRequested("tell me about the power path"), true);
+  assert.equal(briefingRequested("how do I decide between a new laptop and an upgrade"), true);
+  assert.equal(briefingRequested("what do I need to know about batteries"), true);
+  assert.equal(briefingRequested("give me the rundown on the power path"), true);
+  assert.equal(briefingRequested("how does the whole chain work end to end"), true);
+});
+
 test("the explanation fallback beats the observation opening even with an all-untested map", () => {
   const allUntested = baseState({
     learnerMap: {
@@ -367,6 +400,94 @@ test("validateTurn rejects a probe when an explanation is due and demands explai
   };
   const errors = validateTurn(state, turn);
   assert.ok(errors.some((e) => /probe.kind must be "explain"/.test(e)));
+});
+
+/* ---------------------------------------------------------------------------
+ * Policy: briefing directive
+ * ------------------------------------------------------------------------- */
+
+test("a briefing request triggers the directive and outranks the explanation gate", () => {
+  const state = baseState({
+    learnerMap: laptopLearnerMap,
+    failedAttempts: { "n-transistor": 2 },
+    learnerUtterance: "just tell me about the power path",
+  });
+  const prompt = buildSocraticUserPrompt(state);
+  assert.match(prompt, /asked for direct information/);
+  assert.match(prompt, /probe.kind must be "brief"/);
+  assert.match(prompt, /do not ask the learner a new question/);
+  assert.doesNotMatch(prompt, /explanation fallback is due/);
+});
+
+test("the briefing beats the observation opening even with an all-untested map", () => {
+  const state = baseState({
+    learnerMap: {
+      nodes: [{ id: "n-transistor", state: "untested", confidence: 0.5, evidence: [] }],
+      edges: [],
+    },
+    learnerUtterance: "brief me on the power path",
+  });
+  const prompt = buildDirective(state);
+  assert.match(prompt, /briefing/);
+  assert.doesNotMatch(prompt, /Opening move/);
+});
+
+test("the directive never fires a briefing without a request", () => {
+  const state = baseState({ learnerMap: laptopLearnerMap });
+  const prompt = buildDirective(state);
+  assert.doesNotMatch(prompt, /briefing/);
+});
+
+test("the briefing directive is the one mode that permits quoting the reality map", () => {
+  const state = baseState({
+    learnerMap: laptopLearnerMap,
+    learnerUtterance: "just explain the whole power path to me",
+  });
+  const prompt = buildSocraticUserPrompt(state);
+  assert.match(prompt, /quote accurately, never embellish/);
+  const plain = buildSocraticUserPrompt(baseState({ learnerMap: laptopLearnerMap }));
+  assert.doesNotMatch(plain, /never embellish/);
+});
+
+test("validateTurn demands a brief probe when the learner asked for a briefing", () => {
+  const state = baseState({
+    learnerMap: laptopLearnerMap,
+    learnerUtterance: "just tell me about the power path",
+  });
+  const turn = {
+    reply: "So what have you noticed about how it powers up?",
+    learnerMap: clone(laptopLearnerMap),
+    probe: { nodeId: "n-transistor", kind: /** @type {"probe"} */ ("probe") },
+  };
+  const errors = validateTurn(state, turn);
+  assert.ok(errors.some((e) => /probe.kind must be "brief"/.test(e)));
+});
+
+test("validateTurn rejects a brief probe when no briefing was requested", () => {
+  const state = baseState({
+    learnerMap: laptopLearnerMap,
+    learnerUtterance: "A transistor is a switch you flick by hand.",
+  });
+  const turn = {
+    reply: "Here is how the whole power path works: ...",
+    learnerMap: clone(laptopLearnerMap),
+    probe: { nodeId: null, kind: /** @type {"brief"} */ ("brief") },
+  };
+  const errors = validateTurn(state, turn);
+  assert.ok(errors.some((e) => /probe.kind must not be "brief"/.test(e)));
+});
+
+test("validateTurn accepts a well-formed briefing turn", () => {
+  const state = baseState({
+    learnerMap: laptopLearnerMap,
+    learnerUtterance: "just tell me about the power path",
+  });
+  const errors = validateTurn(state, {
+    reply: "Here is the whole power path, from first principles up.",
+    learnerMap: clone(laptopLearnerMap),
+    probe: { nodeId: null, kind: "brief" },
+  });
+  assert.deepEqual(errors, []);
 });
 
 /* ---------------------------------------------------------------------------
@@ -574,6 +695,46 @@ test("an explanation on request is accepted with zero failed attempts", async ()
   assert.deepEqual(result.failedAttempts, {});
 });
 
+test("a briefing turn delivers a direct answer and resets all failed attempts", async () => {
+  const briefTurn = JSON.stringify({
+    reply:
+      "Here is the whole power path, from first principles up. A transistor is a semiconductor switch that controls current flow; the basic building block of digital circuits. ...",
+    learnerMap: clone(laptopLearnerMap),
+    probe: { nodeId: null, kind: "brief" },
+  });
+  const result = await generateSocraticTurn({
+    state: baseState({
+      learnerMap: laptopLearnerMap,
+      failedAttempts: { "n-transistor": 2, "n-app": 3 },
+      learnerUtterance: "just tell me about the power path",
+    }),
+    callLLM: strictModel([briefTurn]),
+  });
+  assert.equal(result.ok, true, result.errors.join("; "));
+  assert.equal(result.probe && result.probe.kind, "brief");
+  assert.deepEqual(result.failedAttempts, {}, "a briefing resets the struggle counts");
+});
+
+test("an unrequested brief probe is repaired, not accepted", async () => {
+  const unrequestedBrief = JSON.stringify({
+    reply: "Here is everything you need to know about laptops.",
+    learnerMap: clone(laptopLearnerMap),
+    probe: { nodeId: null, kind: "brief" },
+  });
+  const fixedTurn = JSON.stringify({
+    reply: "What do you think controls that switch?",
+    learnerMap: clone(laptopLearnerMap),
+    probe: { nodeId: "n-transistor", kind: "probe" },
+  });
+  const result = await generateSocraticTurn({
+    state: baseState({ learnerMap: laptopLearnerMap }),
+    callLLM: strictModel([unrequestedBrief, fixedTurn]),
+  });
+  assert.equal(result.ok, true, result.errors.join("; "));
+  assert.equal(result.retried, true);
+  assert.equal(result.probe && result.probe.kind, "probe");
+});
+
 /* ---------------------------------------------------------------------------
  * Simulated session
  * ------------------------------------------------------------------------- */
@@ -585,6 +746,8 @@ const SIM_REPLIES = [
   "A transistor is a tiny switch controlled by a voltage: a small signal lets current flow or stops it. Computers chain millions of these together to do arithmetic. How does that change your picture?",
   "Exactly. So what sits between those switches and the numbers you see?",
   "Have you ever noticed how a password check either lets you in or stops you?",
+  "Here is the whole power path, from first principles up. A transistor is: \"Semiconductor switch that controls current flow; the basic building block of digital circuits.\" Logic gates are circuits that compute AND, OR and NOT from input voltages. Bits are the binary digits carried by a gate's output state. The operating system is the software layer that manages hardware resources, and applications are the programs you interact with, running on top of the OS.",
+  "Exactly - a gate's output carries a bit. So what carries the result of those gates?",
 ];
 
 const SIM_TURNS = [
@@ -715,6 +878,61 @@ const SIM_TURNS = [
     },
     probe: { nodeId: "n-logic-gate", kind: "probe" },
   },
+  {
+    learner: "Just tell me about the power path - how does the whole thing work end to end?",
+    reply: SIM_REPLIES[6],
+    learnerMap: {
+      nodes: [
+        {
+          id: "n-app",
+          state: "correct",
+          confidence: 0.7,
+          evidence: ["I use a laptop every day for email and spreadsheets"],
+        },
+        {
+          id: "n-transistor",
+          state: "correct",
+          confidence: 0.85,
+          evidence: ["so it's a tiny switch controlled by a voltage, and chaining them does arithmetic"],
+        },
+        { id: "n-logic-gate", state: "missing", confidence: 0.1, evidence: [] },
+      ],
+      edges: [],
+    },
+    probe: { nodeId: null, kind: "brief" },
+  },
+  {
+    learner:
+      "Oh I see - so a transistor is a semiconductor switch that controls current flow, and logic gates are circuits that compute AND, OR and NOT from voltages!",
+    reply: SIM_REPLIES[7],
+    learnerMap: {
+      nodes: [
+        {
+          id: "n-app",
+          state: "correct",
+          confidence: 0.7,
+          evidence: ["I use a laptop every day for email and spreadsheets"],
+        },
+        {
+          id: "n-transistor",
+          state: "correct",
+          confidence: 0.9,
+          evidence: [
+            "so it's a tiny switch controlled by a voltage, and chaining them does arithmetic",
+            "a transistor is a semiconductor switch that controls current flow",
+          ],
+        },
+        {
+          id: "n-logic-gate",
+          state: "correct",
+          confidence: 0.85,
+          evidence: ["logic gates are circuits that compute AND, OR and NOT from voltages"],
+        },
+      ],
+      edges: [],
+    },
+    probe: { nodeId: "n-bit", kind: "probe" },
+  },
 ];
 
 test("simulated session: valid maps, real flips, explanation exactly at the gate", async () => {
@@ -734,7 +952,9 @@ test("simulated session: valid maps, real flips, explanation exactly at the gate
       const user = request.messages[1];
       if (typeof user.content === "string") userPrompts.push(user.content);
     });
-    const result = await generateSocraticTurn({ state, callLLM: transport });
+    const result = await generateSocraticTurn(
+      { state: { ...state, learnerUtterance: turn.learner }, callLLM: transport },
+    );
     assert.equal(result.ok, true, `turn failed: ${result.errors.join("; ")}`);
     assert.equal(result.retried, false);
     results.push(result);
@@ -747,10 +967,19 @@ test("simulated session: valid maps, real flips, explanation exactly at the gate
   }
 
   const kinds = results.map((result) => result.probe && result.probe.kind);
-  assert.deepEqual(kinds, ["observe", "probe", "probe", "explain", "probe", "probe"]);
+  assert.deepEqual(kinds, [
+    "observe",
+    "probe",
+    "probe",
+    "explain",
+    "probe",
+    "probe",
+    "brief",
+    "probe",
+  ]);
 
   const modes = results.map((result) => result.mode);
-  assert.deepEqual(modes, ["observe", "gap", "gap", "gap", "gap", "gap"]);
+  assert.deepEqual(modes, ["observe", "gap", "gap", "gap", "gap", "gap", "gap", "gap"]);
 
   const failures = results.map((result) => result.failedAttempts);
   assert.deepEqual(failures[0], {});
@@ -759,6 +988,8 @@ test("simulated session: valid maps, real flips, explanation exactly at the gate
   assert.deepEqual(failures[3], {});
   assert.deepEqual(failures[4], {});
   assert.deepEqual(failures[5], { "n-logic-gate": 1 });
+  assert.deepEqual(failures[6], {}, "the briefing resets the failure count");
+  assert.deepEqual(failures[7], {});
 
   assert.deepEqual(results[0].diff, { added: ["n-app"], flipped: [], updated: [] });
   assert.deepEqual(results[1].diff, { added: ["n-transistor"], flipped: [], updated: [] });
@@ -770,22 +1001,32 @@ test("simulated session: valid maps, real flips, explanation exactly at the gate
     updated: [],
   });
   assert.deepEqual(results[5].diff, { added: ["n-logic-gate"], flipped: [], updated: [] });
+  assert.deepEqual(results[6].diff, { added: [], flipped: [], updated: [] }, "a briefing alone changes no states");
+  assert.deepEqual(results[7].diff, {
+    added: [],
+    flipped: [{ id: "n-logic-gate", from: "missing", to: "correct" }],
+    updated: ["n-transistor"],
+  }, "the learner's post-briefing demonstration updates the map");
 
   assert.equal(closenessScore(/** @type {any} */ (results[0].learnerMap)), 1);
   assert.equal(closenessScore(/** @type {any} */ (results[1].learnerMap)), 0.5);
   assert.equal(closenessScore(/** @type {any} */ (results[4].learnerMap)), 1);
   assert.equal(closenessScore(/** @type {any} */ (results[5].learnerMap)), 2 / 3);
+  assert.equal(closenessScore(/** @type {any} */ (results[6].learnerMap)), 2 / 3);
+  assert.equal(closenessScore(/** @type {any} */ (results[7].learnerMap)), 1);
 
   assert.match(userPrompts[0], /Opening move/);
   assert.doesNotMatch(userPrompts[1], /explanation fallback is due/);
   assert.doesNotMatch(userPrompts[2], /explanation fallback is due/);
   assert.match(userPrompts[3], /explanation fallback is due/);
   assert.match(userPrompts[3], /n-transistor/);
+  assert.match(userPrompts[6], /asked for direct information/);
 });
 
-test("no simulated reply quotes reality map content verbatim", () => {
+test("no simulated reply quotes reality map content verbatim (briefings excepted - the sanctioned mode)", () => {
   const descriptions = laptopRealityMap.nodes.map((node) => node.description);
   for (const turn of SIM_TURNS) {
+    if (turn.probe.kind === "brief") continue;
     for (const description of descriptions) {
       assert.equal(
         turn.reply.includes(description),
@@ -794,6 +1035,20 @@ test("no simulated reply quotes reality map content verbatim", () => {
       );
     }
   }
+});
+
+test("a briefing reply quotes the reality map accurately and completely", () => {
+  const briefing = SIM_TURNS.find((turn) => turn.probe.kind === "brief");
+  assert.ok(briefing, "the simulated session has a briefing turn");
+  const transistor = laptopRealityMap.nodes.find((node) => node.id === "n-transistor");
+  assert.ok(
+    transistor && briefing.reply.includes(transistor.description),
+    "the briefing quotes the map verbatim"
+  );
+  assert.ok(
+    briefing.reply.includes("Logic gates") && briefing.reply.includes("AND, OR and NOT"),
+    "the briefing restates the map's content accurately, not invented claims"
+  );
 });
 
 test("the directive for the gate turn never instructs quoting the reality map", () => {

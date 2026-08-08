@@ -6,7 +6,8 @@
  * Division of labour:
  * - Code decides the hard, countable rules: opening vs gap-first mode
  *   (conversationMode), the explanation gate after two failed attempts
- *   (explanationDue, updateFailedAttempts), the deterministic per-turn diff
+ *   (explanationDue, updateFailedAttempts), the learner-initiated briefing
+ *   directive (briefingRequested), the deterministic per-turn diff
  *   (computeDiff), and schema/consistency validation of the model's update
  *   (validateTurn). These are pure functions, unit-tested.
  * - The model decides everything semantic: which gap to probe, the wording,
@@ -43,10 +44,12 @@ import { validateLearnerMap } from "../mmg/validator.js";
  * - observe: the observation-first opening (nodeId usually null).
  * - probe: a gap-first probing question about a specific node.
  * - explain: the explanation fallback fired for this node.
+ * - brief: a learner-initiated briefing - direct information delivery, the
+ *   one mode where quoting the reality map is allowed (ticket 16).
  * - converse: the learner asked a clarifying question; answered without
  *   changing the model.
  *
- * @typedef {"observe" | "probe" | "explain" | "converse"} ProbeKind
+ * @typedef {"observe" | "probe" | "explain" | "brief" | "converse"} ProbeKind
  */
 
 /**
@@ -146,6 +149,44 @@ export function explanationRequested(utterance) {
 }
 
 /**
+ * Whether the learner's latest message asks for direct information - a
+ * briefing. Ticket 16, from Danny's product observation (2026-08-08): "most
+ * people would expect to receive information to model their decisions."
+ *
+ * Distinct from the explanation fallback: an explanation is single-concept
+ * and often failure-driven ("what is X", "why does X"); a briefing is
+ * multi-concept, decision-oriented, and always learner-initiated - a survey
+ * cue (the whole path, everything, an overview), an explicit tell-me, or a
+ * decision question.
+ *
+ * Conservative matcher, like explanationRequested: only obvious
+ * briefing-seeking phrasings fire it, so ordinary answers are not misread.
+ * "Can you explain what a transistor is?" stays an explanation request - it
+ * has no survey or decision cue - while "just explain the whole power path
+ * to me" is a briefing (multi-concept, whole-chain).
+ *
+ * @param {string | null | undefined} utterance
+ * @returns {boolean}
+ */
+export function briefingRequested(utterance) {
+  if (typeof utterance !== "string") return false;
+  const u = utterance.trim().toLowerCase();
+  if (u.length === 0) return false;
+  if (/^just tell me (if|whether)/.test(u)) return false;
+  return (
+    /brief (me|us)( on| about|$)/.test(u) ||
+    /give me a brief/.test(u) ||
+    /^just (tell|explain|walk|give) me/.test(u) ||
+    /(tell|walk|run) me (through|about|everything|all about)/.test(u) ||
+    /the whole .{1,80} (path|flow|story|thing|process|journey|chain)/.test(u) ||
+    /(end to end|start to finish|from beginning to end|top to bottom)/.test(u) ||
+    /how (do|should|can|could) i (decide|choose|pick|compare|weigh)/.test(u) ||
+    /what do i (need|want) to know/.test(u) ||
+    /give me (the )?(facts|info(rmation)?|details|rundown|overview|lowdown|walkthrough)/.test(u)
+  );
+}
+
+/**
  * Whether this turn's directive must be an explanation: a node has two or
  * more failed attempts (the gate), or the learner asked for one. When due,
  * the turn is validated so probe.kind must be "explain" - the model cannot
@@ -176,8 +217,10 @@ export function explainDirective(state) {
  * the learner just said something about it) and which is still not correct.
  * Asking a question is not a failure: a turn that changes nothing counts
  * nothing. A correct answer or an explanation turn clears the node (a fresh
- * pair of attempts, principle 8). Keys only exist for nodes with an active
- * failure count.
+ * pair of attempts, principle 8). A briefing turn clears ALL counts: the
+ * tutor just delivered the answer directly, so the learner is no longer
+ * stuck on any previously failed point (ticket 16). Keys only exist for
+ * nodes with an active failure count.
  *
  * @param {FailedAttempts} failedAttempts
  * @param {LearnerMentalModel} prevMap
@@ -186,6 +229,9 @@ export function explainDirective(state) {
  * @returns {FailedAttempts}
  */
 export function updateFailedAttempts(failedAttempts, prevMap, nextMap, probe) {
+  if (probe.kind === "brief") {
+    return {};
+  }
   const next = { ...failedAttempts };
   if (probe.kind === "explain" && probe.nodeId !== null) {
     delete next[probe.nodeId];
@@ -260,7 +306,8 @@ Hard rules:
 8. Productive struggle is valuable when it reveals the learner's model (principle 7). Do not rush to explain.
 9. The explanation fallback exists to minimize unnecessary cognitive load (principle 8). Use it ONLY when the learner asks for an explanation, or when the directive says it is due (two failed attempts on the same point). When it fires, the reply IS the explanation - a direct, plain explanation of that ONE concept built from what the learner has said; do not end it with a new question. Still never quote the reality map.
 10. Reconnect new knowledge to what the learner already showed (principle 9). Never skip intermediate steps (principle 12): do not introduce an abstraction the learner has not observed.
-11. If the learner asks a clarifying question or needs a short aside, answer briefly without changing the model (kind "converse").`;
+11. If the learner asks a clarifying question or needs a short aside, answer briefly without changing the model (kind "converse").
+12. Briefing is the ONE exception to the no-quote rule (ticket 16): when the learner asks for direct information - "brief me on X", "just tell me about X", "how do I decide between A and B", "walk me through the whole power path" - deliver a direct, accurate, plain-language briefing of exactly what they asked for, built from the reality map. This is the one mode where you may quote the map's descriptions, layer names and chain - quote accurately, never embellish, and never add anything the map does not contain. The reply must BE the briefing: do not end it with a Socratic question. Briefing is learner-initiated only - never volunteer a briefing when the learner did not ask.`;
 }
 
 /**
@@ -294,9 +341,9 @@ Latest learner message: "${state.learnerUtterance ?? ""}"
 This turn: ${buildDirective(state)}
 
 Reply with a single json object, exactly this shape:
-{"reply": "your message to the learner", "learnerMap": {"nodes": [{"id": "...", "state": "untested|missing|misconception|correct", "confidence": 0.5, "evidence": ["short verbatim learner quote"]}], "edges": [{"source": "...", "target": "...", "state": "untested|missing|misconception|correct", "confidence": 0.5, "evidence": ["..."]}]}, "probe": {"nodeId": "..." or null, "kind": "observe|probe|explain|converse"}}
+{"reply": "your message to the learner", "learnerMap": {"nodes": [{"id": "...", "state": "untested|missing|misconception|correct", "confidence": 0.5, "evidence": ["short verbatim learner quote"]}], "edges": [{"source": "...", "target": "...", "state": "untested|missing|misconception|correct", "confidence": 0.5, "evidence": ["..."]}]}, "probe": {"nodeId": "..." or null, "kind": "observe|probe|explain|brief|converse"}}
 
-Rules for the reply object: "reply" is your message to the learner. "learnerMap" is the COMPLETE learner model - every node and edge from the previous learner map must still be present, with states, confidence and evidence updated. "probe" reports this turn: kind "observe" for the observation opening (nodeId null), "probe" for a gap question about a specific node, "explain" for an explanation fallback turn, "converse" when you answered an aside without changing the model.`;
+Rules for the reply object: "reply" is your message to the learner. "learnerMap" is the COMPLETE learner model - every node and edge from the previous learner map must still be present, with states, confidence and evidence updated. "probe" reports this turn: kind "observe" for the observation opening (nodeId null), "probe" for a gap question about a specific node, "explain" for an explanation fallback turn, "brief" for a learner-initiated briefing (the one mode where quoting the reality map is allowed), "converse" when you answered an aside without changing the model.`;
 }
 
 /**
@@ -308,6 +355,9 @@ Rules for the reply object: "reply" is your message to the learner. "learnerMap"
  */
 export function buildDirective(state) {
   const concept = state.realityMap.concept;
+  if (briefingRequested(state.learnerUtterance)) {
+    return `The learner asked for direct information (a briefing). Deliver it: a direct, accurate, plain-language briefing of the concepts they asked about, built from the reality map - this is the ONE mode where you may quote the reality map (descriptions, layer names, the chain), and you must quote accurately, never embellish, never add anything the map does not contain. Cover exactly what they asked for. This reply must BE the briefing: do not ask the learner a new question at the end. probe.kind must be "brief".`;
+  }
   const explain = explainDirective(state);
   if (explain.due) {
     if (explain.nodeId !== null) {
@@ -373,7 +423,7 @@ function unpackTurn(parsed) {
   }
   const probe = turn.probe;
   if (typeof probe !== "object" || probe === null) return null;
-  const kinds = ["observe", "probe", "explain", "converse"];
+  const kinds = ["observe", "probe", "explain", "brief", "converse"];
   if (typeof probe.kind !== "string" || !kinds.includes(probe.kind)) return null;
   if (probe.nodeId !== null && typeof probe.nodeId !== "string") return null;
   return {
@@ -388,8 +438,11 @@ function unpackTurn(parsed) {
  * Returns a list of human-readable errors; empty means the turn is accepted.
  *
  * Checks: learner map schema-valid against the reality map, the probe targets
- * a real reality node, and the update is a refinement - every node and edge
- * of the previous learner map must still be present (v1 never deletes).
+ * a real reality node, the probe kind matches this turn's directive (brief
+ * when the learner asked for a briefing, and ONLY then; explain when the
+ * explanation fallback is due), and the update is a refinement - every node
+ * and edge of the previous learner map must still be present (v1 never
+ * deletes).
  *
  * @param {SocraticState} state
  * @param {UnpackedTurn} turn
@@ -405,8 +458,16 @@ export function validateTurn(state, turn) {
     if (!exists) errors.push(`probe.nodeId does not exist in the reality map: ${turn.probe.nodeId}`);
   }
 
+  const briefing = briefingRequested(state.learnerUtterance);
+  if (briefing && turn.probe.kind !== "brief") {
+    errors.push('probe.kind must be "brief" (the learner asked for direct information)');
+  }
+  if (!briefing && turn.probe.kind === "brief") {
+    errors.push('probe.kind must not be "brief" (no briefing was requested - the default is Socratic)');
+  }
+
   const explain = explainDirective(state);
-  if (explain.due && turn.probe.kind !== "explain") {
+  if (explain.due && !briefing && turn.probe.kind !== "explain") {
     errors.push(`probe.kind must be "explain" (explanation ${explain.reason})`);
   }
 

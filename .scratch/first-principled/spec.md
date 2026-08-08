@@ -90,7 +90,7 @@ Closeness score: fraction of known learner nodes matching reality, per session. 
 Phases:
 
 - Init: the learner types a word; the agent generates the Reality Map (first turn, `src/lib/agent/realityMap.js`). Generation runs in JSON mode with one repair retry (validation-gated), thinking off for latency; a non-teachable input (gibberish, empty phrase) is refused gracefully, not mapped.
-- Active: Socratic turns (engine: `src/lib/agent/socratic.js`). Opening rule: empty learner map means observation-first (what have you seen, used, or noticed about this thing); a populated map means gap-first (probe the biggest gaps in dependency order, lower layers before abstractions). Each turn: ask a question, update the learner map, choose the next gap. Explanation fallback: when the learner asks, or after two failed attempts on the same point. A failed attempt is an answer that leaves the point non-correct; asking a question is not a failure, and after the fallback the count restarts. If the learner has no model of a concept, the agent teaches observationally before questioning it.
+- Active: Socratic turns (engine: `src/lib/agent/socratic.js`). Opening rule: empty learner map means observation-first (what have you seen, used, or noticed about this thing); a populated map means gap-first (probe the biggest gaps in dependency order, lower layers before abstractions). Each turn: ask a question, update the learner map, choose the next gap. Explanation fallback: when the learner asks, or after two failed attempts on the same point. A failed attempt is an answer that leaves the point non-correct; asking a question is not a failure, and after the fallback the count restarts. If the learner has no model of a concept, the agent teaches observationally before questioning it. Briefing (ticket 16): when the learner asks for direct information to model a decision, the tutor delivers a direct, accurate, plain-language briefing built from the reality map instead of a question.
 - End: the orchestrator triggers it when every reality node is known, or the turn cap (24 learner messages) is reached. The agent asks a transfer question, a novel problem that requires the corrected model. The learner answers; the agent records pass or fail against the reality map. The comparison view unlocks.
 
 Turn contract:
@@ -129,7 +129,7 @@ internal, 502 upstream_error (provider failure) or invalid_model_output (the
 model could not produce valid output after the internal repair retry). Raw
 provider errors and the key never reach the client.
 
-Internals: the model returns `{reply, learnerMap, probe}` per turn, where probe reports what the turn was about (`{nodeId, kind: observe|probe|explain|converse}`). The function computes `diff` deterministically from the previous and updated learner maps (the model is never trusted to compute it) and carries `failedAttempts` forward (node id to count). `failedAttempts` is client-held session state sent with every request.
+Internals: the model returns `{reply, learnerMap, probe}` per turn, where probe reports what the turn was about (`{nodeId, kind: observe|probe|explain|brief|converse}`). The function computes `diff` deterministically from the previous and updated learner maps (the model is never trusted to compute it) and carries `failedAttempts` forward (node id to count). `failedAttempts` is client-held session state sent with every request.
 
 The explanation fallback (principle 8) is a code-level rule, not just a
 prompt instruction (ticket 12 acceptance found the model deferring an
@@ -140,6 +140,28 @@ takes priority) or the learner asked. When due, the turn is validated so
 `probe.kind` must be `explain` and the reply IS the explanation - no new
 question at the end. `validateTurn` rejects a non-explain probe while the
 explanation is due.
+
+The briefing mode (ticket 16, from Danny's product observation 2026-08-08:
+"most people would expect to receive information to model their decisions")
+is the learner-initiated exception to Socratic probing. `briefingRequested(utterance)`
+matches direct-information phrasings conservatively - explicit tell-me
+("just tell me about X"), "brief me on X", whole-path or end-to-end surveys
+("just explain the whole power path to me", "walk me through how it works"),
+decision questions ("how do I decide between A and B", "what do I need to
+know") - while single-concept "what is X" / "why does X" questions stay
+explanation requests. A briefing outranks the explanation fallback and the
+opening rule: a fresh explicit request beats a derived gate. When due,
+`probe.kind` must be `brief` and the reply IS the briefing: direct,
+accurate, plain-language, built from the reality map, no new Socratic
+question at the end. This is the ONE mode where quoting the reality map is
+allowed (the map page already exposes it from session start per ticket 15,
+and the learner explicitly asked) - quotes must be accurate and never
+embellished. `validateTurn` rejects a `brief` probe when no briefing was
+requested, so the model cannot turn itself into a lecturer: the default
+stays Socratic. A briefing turn resets all failed-attempt counts (the
+learner has been told; struggle restarts fresh), and the learner map is not
+left frozen - nodes the learner then demonstrates they know become correct
+on the following turns, and gap closures accumulate normally.
 
 ## 9. UX
 
@@ -166,6 +188,10 @@ recipe live in `research/13-ui-design-spec.md`.
   a TUTOR label; learner messages are ink-dark bubbles with a YOU label.
   Errors render as one friendly line plus a Retry button that re-sends the
   exact failed request; raw JSON and provider text never reach the learner.
+  A learner who asks for direct information ("just tell me about X", "brief
+  me on Y", "how do I decide between A and B") receives a direct briefing
+  instead of a Socratic question - the one mode where reality content is
+  delivered in chat, because the learner asked for it (ticket 16).
   Session end: the transfer question appears as a normal message, the learner
   answers, and a result panel shows passed or not passed plus the comparison
   entry point (a link to the map page). No reality map content ever renders
@@ -245,5 +271,8 @@ wires `/api/agent` to the function). Live URL recorded in README.
 - Layer chain: ordered layers of the reality map, contiguous.
 - Diff: per-turn changes to the learner map.
 - Socratic engine: the agent behavior that questions instead of explains.
+- Briefing: a learner-initiated turn (probe kind "brief") where the tutor
+  delivers direct, accurate information built from the reality map - the one
+  mode where quoting reality is allowed.
 - Stateless function: serverless endpoint that stores nothing between calls.
 - Phase: init, active, end.

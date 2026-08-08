@@ -36,7 +36,9 @@ Netlify, DeepSeek-backed, no database.
   `LLM_BASE_URL` (from `.env`, gitignored).
 - No DB, no auth, no agent framework (Mastra/LangGraph is v2).
 - Two pages: chat and map. The map page shows the reality tree from session
-  start (ticket 15, Danny 2026-08-08); chat NEVER leaks reality content.
+  start (ticket 15, Danny 2026-08-08); chat NEVER leaks reality content -
+  except in a learner-initiated briefing (ticket 16), the one mode where the
+  tutor may quote the reality map, because the learner asked for it.
 
 ## Agent skills
 
