@@ -31,6 +31,7 @@
 
 import { sessionStore } from "../state/session.js";
 import { callAgent as defaultCallAgent } from "../api/agent.js";
+import { getTurnstileToken } from "../turnstile.js";
 
 /** @typedef {import("../state/session.js").SessionState} SessionState */
 /** @typedef {import("../state/session.js").SessionStore} SessionStore */
@@ -61,6 +62,10 @@ const ERROR_MESSAGES = {
   upstream_error: "The tutor had trouble responding. Please try again.",
   invalid_model_output: "The tutor produced an unreadable answer. Please try again.",
   network: "Could not reach the tutor. Check your connection and try again.",
+  too_large: "That message was too large. Please try a shorter one.",
+  rate_limited: "Too many requests from this device. Please wait a moment and try again.",
+  captcha_required: "One quick human check, then we continue.",
+  captcha_failed: "The human check did not pass. Please try again.",
   unknown: "Something went wrong. Please try again.",
 };
 
@@ -206,7 +211,13 @@ export function initChatPage(root, options = {}) {
     pendingContent = content;
     setSending(true);
     render();
-    const result = await callAgent(store.toRequest());
+    // Single-use Turnstile token for this turn (ticket 18). Null when the
+    // widget is not configured; the server only enforces when its secret
+    // key is set, so an unconfigured site still works.
+    const token = await getTurnstileToken("agent_turn");
+    const result = await callAgent(store.toRequest(), {
+      turnstileToken: token ?? undefined,
+    });
     if (result.ok) {
       const applied = store.applyResponse(result.data);
       pendingContent = null;

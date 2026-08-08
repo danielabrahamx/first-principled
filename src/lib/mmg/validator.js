@@ -14,6 +14,15 @@
 import { EDGE_TYPES, NODE_STATES } from "./types.js";
 
 /**
+ * Abuse-control caps (ticket 18): a reality map beyond these sizes is not
+ * a concept map, it is an attacker inflating the prompt (and the bill).
+ * Live sessions generate ~11 nodes; these caps are generous multiples.
+ */
+export const MAX_REALITY_NODES = 60;
+export const MAX_REALITY_EDGES = 120;
+export const MAX_REALITY_LAYERS = 12;
+
+/**
  * @typedef {object} ValidationResult
  * @property {boolean} ok
  * @property {string[]} errors
@@ -115,6 +124,22 @@ export function validateRealityMap(input) {
   const layers = Array.isArray(map.layers) ? /** @type {any[]} */ (map.layers) : null;
   const nodes = Array.isArray(map.nodes) ? /** @type {any[]} */ (map.nodes) : null;
   const edges = Array.isArray(map.edges) ? /** @type {any[]} */ (map.edges) : null;
+
+  if (layers !== null && layers.length > MAX_REALITY_LAYERS) {
+    errors.push(
+      `realityMap.layers has ${layers.length} layers (max ${MAX_REALITY_LAYERS})`
+    );
+  }
+  if (nodes !== null && nodes.length > MAX_REALITY_NODES) {
+    errors.push(
+      `realityMap.nodes has ${nodes.length} nodes (max ${MAX_REALITY_NODES})`
+    );
+  }
+  if (edges !== null && edges.length > MAX_REALITY_EDGES) {
+    errors.push(
+      `realityMap.edges has ${edges.length} edges (max ${MAX_REALITY_EDGES})`
+    );
+  }
 
   if (layers === null) {
     errors.push("realityMap.layers must be an array");

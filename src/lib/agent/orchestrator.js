@@ -58,6 +58,14 @@ import { validateLearnerMap, validateRealityMap } from "../mmg/validator.js";
 export const MAX_TURNS = 24;
 
 /**
+ * Abuse-control caps (ticket 18), enforced server-side before any LLM
+ * call: the client is trusted to behave, the endpoint is not.
+ */
+export const MAX_WORD_CHARS = 100;
+export const MAX_MESSAGE_CHARS = 10000;
+export const MAX_HISTORY_MESSAGES = 60;
+
+/**
  * Whether the session is due to end: every reality node is known in the
  * learner map (no node left untested), or the learner-message cap is hit.
  * Pure and deterministic; checked by the orchestrator before each active
@@ -213,6 +221,10 @@ function historyErrors(value, what) {
     }
     if (typeof /** @type {any} */ (message).content !== "string") {
       errors.push(`${what}[${i}].content must be a string`);
+    } else if (/** @type {any} */ (message).content.length > MAX_MESSAGE_CHARS) {
+      errors.push(
+        `${what}[${i}].content is too long (max ${MAX_MESSAGE_CHARS} characters)`
+      );
     }
   });
   if (errors.length === 0 && value.length === 0) {
@@ -360,6 +372,21 @@ function unpackGrade(parsed) {
  * ------------------------------------------------------------------------- */
 
 /**
+ * Keep only the tail of a validated history. Real sessions end at
+ * MAX_TURNS learner messages (48 messages at most); anything longer is an
+ * attacker padding the prompt, so it is dropped before it reaches the
+ * model. The tail keeps the transfer question and the last utterance.
+ *
+ * @param {any[]} messages
+ * @returns {any[]}
+ */
+function truncateHistory(messages) {
+  return messages.length > MAX_HISTORY_MESSAGES
+    ? messages.slice(messages.length - MAX_HISTORY_MESSAGES)
+    : messages;
+}
+
+/**
  * The init phase: generate the reality map, then run the observation-first
  * opening Socratic turn. A refused word stays on phase "init" with the
  * refusal as the reply and no reality map, so the client can ask again.
@@ -375,6 +402,13 @@ async function handleInit(request, callLLM) {
       400,
       "bad_request",
       'A word or phrase is required to start a session (field "word").'
+    );
+  }
+  if (word.length > MAX_WORD_CHARS) {
+    return errorResult(
+      400,
+      "bad_request",
+      `The word or phrase is too long (max ${MAX_WORD_CHARS} characters).`
     );
   }
 
@@ -454,7 +488,7 @@ async function handleActive(request, callLLM) {
   /** @type {LearnerMentalModel} */
   const learnerMap = request.learnerMap;
   const failedAttempts = coerceFailedAttempts(request.failedAttempts);
-  const messages = /** @type {any[]} */ (request.history);
+  const messages = truncateHistory(/** @type {any[]} */ (request.history));
   const learnerMessageCount = messages.filter((message) => message.role === "user").length;
   const utterance = /** @type {any} */ (messages[messages.length - 1]).content;
 
@@ -542,7 +576,7 @@ async function handleEnd(request, callLLM) {
     return errorResult(400, "bad_request", history.join("; "));
   }
 
-  const messages = /** @type {any[]} */ (request.history);
+  const messages = truncateHistory(/** @type {any[]} */ (request.history));
   const answer = /** @type {any} */ (messages[messages.length - 1]).content;
   let question = null;
   for (let i = messages.length - 2; i >= 0; i--) {

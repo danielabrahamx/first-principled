@@ -30,11 +30,17 @@
  * @param {object} [options]
  * @param {typeof fetch} [options.fetchImpl] - defaults to globalThis.fetch.
  * @param {string} [options.endpoint] - defaults to "/api/agent".
+ * @param {string} [options.turnstileToken] - single-use Turnstile token
+ *   (ticket 18); included in the body only when present so unconfigured
+ *   clients stay compatible with the gate-free server.
  * @returns {Promise<CallResult>}
  */
 export async function callAgent(body, options = {}) {
   const fetchImpl = options.fetchImpl ?? /** @type {typeof fetch} */ (globalThis.fetch);
   const endpoint = options.endpoint ?? "/api/agent";
+  const payload = options.turnstileToken
+    ? { ...body, turnstileToken: options.turnstileToken }
+    : body;
 
   /** @type {Response} */
   let response;
@@ -45,7 +51,7 @@ export async function callAgent(body, options = {}) {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     });
   } catch {
     // Network-level failure (offline, connection refused, server down).

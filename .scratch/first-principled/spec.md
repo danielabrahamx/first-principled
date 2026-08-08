@@ -124,10 +124,15 @@ nothing.
   {passed, assessment}; the reply is the assessment.
 
 Errors use a stable envelope - `{"error": {"code", "message"}}` - with status
-400 bad_request (malformed request), 500 config_error (missing LLM_API_KEY) or
+400 bad_request (malformed request), 413 too_large (body over 64KB),
+429 rate_limited (per-IP hourly cap hit), 403 captcha_required or
+captcha_failed (Turnstile token missing or rejected, only enforced when
+TURNSTILE_SECRET_KEY is set), 500 config_error (missing LLM_API_KEY) or
 internal, 502 upstream_error (provider failure) or invalid_model_output (the
 model could not produce valid output after the internal repair retry). Raw
-provider errors and the key never reach the client.
+provider errors and the key never reach the client. Every request passes the
+wrapper's gates in order - body cap, rate limit, Turnstile - before any LLM
+call (ticket 18).
 
 Internals: the model returns `{reply, learnerMap, probe}` per turn, where probe reports what the turn was about (`{nodeId, kind: observe|probe|explain|brief|converse}`). The function computes `diff` deterministically from the previous and updated learner maps (the model is never trusted to compute it) and carries `failedAttempts` forward (node id to count). `failedAttempts` is client-held session state sent with every request.
 
