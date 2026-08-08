@@ -1,7 +1,7 @@
 # 17 - Reality tree should read as a phylogenetic lineage (chronological descent)
 
 **Type:** task
-**Status:** claimed (opencode-session-2026-08-08)
+**Status:** resolved (2026-08-08)
 **Blocked by:** none
 **Related:** tickets 13, 15; spec sections 9; src/lib/mapview/tree.js;
 src/lib/mapview/tree.test.js; research/13-ui-design-spec.md
@@ -68,6 +68,41 @@ geometry so the tree visually reads as chronological lineage?
 Spec section 9 tree paragraph updated in the SAME commit as the code to
 describe the divergence geometry (trunk + per-layer divergence depths).
 research/13-ui-design-spec.md may be annotated with the divergence step.
+
+## Resolution notes
+
+The tree now reads as a phylogenetic lineage. Changes (all in
+src/lib/mapview/tree.js + tree.test.js):
+- `treeLayout` diverges branches from a central trunk at successive depths:
+  `divergenceY(i) = TREE_ROOT_HEIGHT + TREE_ROOT_GAP + i * TREE_DIVERGENCE_STEP`
+  (new constant, 36px per layer) - the top layer (apps) diverges highest,
+  nearest the crown, and the deepest foundation (physics) lowest. The trunk
+  x is the box-balanced center; branch columns alternate left and right of
+  it (even branches right, odd left), each side ordered deepest-nearest, so
+  an elbow to a far column always passes above the nearer columns' cards -
+  proven invariant, unit-tested, zero crossings. Odd branch counts (live
+  maps can be 5-layer) leave the trunk in the gap between the two middle
+  columns with a balanced box; a single branch centers on the trunk.
+  Columns keep the horizontal spread (280px cards, 32px gaps); the old
+  single `branchLineY` is replaced by per-branch `divergenceY`.
+- `cladogramPaths` matches: trunk `M rootCx rootBottom V <deepest
+  divergenceY>`, then one elbow per branch
+  `M rootCx divergenceY H cx V firstCardY` (still elbow style, stroke
+  #B9B3E8, width 2), in-branch card connectors unchanged.
+- Card metrics exports unchanged (TREE_CARD_WIDTH 280, TREE_CARD_HEIGHT 64,
+  TREE_CARD_GAP 12, TREE_ROOT_WIDTH 220, TREE_ROOT_HEIGHT 74).
+- AC5 held: geometry-only - no socratic prompts, no learner-grid, no
+  session-end metrics touched.
+- Verified: npm test 184 green (+4 skipped), tsc clean, netlify build OK.
+  Local CDP probe (static serve + stubbed laptop fixture init, headless
+  Edge): 12/12 - 6 labels at top 156..336px strictly increasing, trunk
+  `M 920 74 V 326`, 6 elbows at 146..326, 8 cards, stage 1840x444, no
+  document overflow at 375px (tree scrolls horizontally). Deployed to prod
+  (netlify deploy --prod) and CDP-probed the live Reality tab with a real
+  init: 7/7 - the model generated a 5-layer laptop map and the odd-count
+  layout rendered correctly (trunk `M 608 74 V 290`, labels 156..300
+  strictly increasing, 5 elbows, 9 cards, no overflow).
+- Spec section 9 + research/13-ui-design-spec.md updated in the same commit.
 
 ## Human gate
 
