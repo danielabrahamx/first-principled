@@ -46,10 +46,20 @@ the API bill. How do we cap the blast radius with zero spend and no auth
 
 ## Acceptance
 
-- 188 tests green, tsc clean.
-- Live: 413 on a >64KB body, 429 after RATE_LIMIT_MAX rapid requests from
-  one IP, 400 on bad JSON, normal turn still works, _headers present on the
-  static site, Google Fonts and Turnstile script load under the CSP.
+- 194 tests green (7 rate-limiter unit tests covering the blob-store
+  counting and the in-memory fallback), tsc clean.
+- Live: 413 on a >64KB body, 400 on bad JSON, 400 on an over-long word,
+  security headers present on the static site, a full init turn still
+  works, Google Fonts and the Turnstile script load under the CSP.
+- NOT live-verified: 429. Netlify does not inject the Netlify Blobs
+  context into this function on the free plan (the site-level blob API
+  works, the function env does not carry NETLIFY_BLOBS_CONTEXT), and
+  free-tier function instances cold-start per request, which resets the
+  in-memory fallback. The limiter is therefore best-effort until the blob
+  context exists (upgrade or support toggle) or the site sits behind a
+  proxy with its own rate limiting. Evidence recorded honestly; the
+  primary wall for a public demo remains Turnstile (fail-closed once
+  TURNSTILE_SECRET_KEY is set).
 - Turnstile gate activates by setting TURNSTILE_SECRET_KEY (Netlify env)
   and pasting the public site key into src/turnstile.js; until then the
   site runs ungated.
