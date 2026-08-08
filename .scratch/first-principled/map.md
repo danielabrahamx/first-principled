@@ -95,6 +95,7 @@ ephemeral sessions, no accounts.
 14. [Error banner always visible](issues/14-error-banner-always-visible.md) - `resolved` (2026-08-08) - ticket 13 CSS regression: `.error-banner { display: flex }` (and `.composer`, `.composer-wrap`) overrode the UA `[hidden] { display: none }`, so the Retry banner rendered permanently; fixed with a global `[hidden] { display: none !important; }` guard in src/styles.css. Verified in headless Chromium via CDP computed styles: banner none/0px on load, flex/65px + visible Retry on a real failed agent call, hidden again on success; 169 tests + tsc clean.
 15. [Reality map viewable from session start](issues/15-reality-map-viewable-from-session-start.md) - `resolved` (2026-08-08) - Danny's product call: the reality tree is viewable from session start, not only at session end. map.js gates the Reality tab/tree on realityMap !== null (comparison metrics still session-end only); socratic rule 1 rewritten (learner may open the map, tutor never quotes it unprompted); spec 9 + AGENTS.md no-leak re-scoped to chat-only. CDP-verified mid-session (ended=false): tab visible, tree renders; 169 tests + tsc clean. Frontier closed.
 16. [Briefing mode: tutor delivers information for decisions](issues/16-briefing-mode-tutor-delivers-information.md) - `ready-for-agent` - Danny's product observation (2026-08-08): most people expect to receive information to model their decisions; add a learner-initiated briefing mode (probe kind "brief") alongside Socratic default, learner map still updates. NEXT FRONTIER.
+17. [Tree should read as phylogenetic lineage](issues/17-tree-should-read-as-phylogenetic-lineage.md) - `ready-for-agent` - Danny (2026-08-08): the tree doesn't look chronological; rework treeLayout so branches diverge from a central trunk at successive depths (top layer highest, deepest foundation lowest) instead of one shared branch line; update cladogramPaths + tests. Parallel with 16.
 
 ## Ticket sequence (dependency overview)
 
@@ -103,7 +104,8 @@ ephemeral sessions, no accounts.
 02 + 03 -> 04 reality map gen, 05 socratic engine
 04 + 05 -> 06 orchestrator -> 07 client state -> 08 chat UI, 09 map UI
 08 + 09 -> 10 session end -> 11 deploy (human gates) -> 12 acceptance
-15 (reality map viewable from start) -> 16 (briefing mode) - both unblocked, frontier
+15 (reality map viewable from start) -> 16 (briefing mode) -> both unblocked, frontier
+17 (tree phylogenetics) - parallel with 16, both unblocked, frontier
 ```
 
 ## Not yet specified
