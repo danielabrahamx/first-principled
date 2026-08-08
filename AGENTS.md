@@ -35,8 +35,8 @@ Netlify, DeepSeek-backed, no database.
 - DeepSeek via OpenAI-compatible API. Env: `LLM_API_KEY`, `LLM_MODEL`,
   `LLM_BASE_URL` (from `.env`, gitignored).
 - No DB, no auth, no agent framework (Mastra/LangGraph is v2).
-- Two pages: chat and map. The map page NEVER shows reality map content
-  mid-session; comparison unlocks only at session end.
+- Two pages: chat and map. The map page shows the reality tree from session
+  start (ticket 15, Danny 2026-08-08); chat NEVER leaks reality content.
 
 ## Agent skills
 

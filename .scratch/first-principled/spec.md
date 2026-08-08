@@ -170,13 +170,15 @@ recipe live in `research/13-ui-design-spec.md`.
   answers, and a result panel shows passed or not passed plus the comparison
   entry point (a link to the map page). No reality map content ever renders
   here.
-- Map page (`src/pages/map.js`, tickets 09, 13): separate route. Renders the
-  learner's model only: nodes colored by state (untested gray, missing red,
+- Map page (`src/pages/map.js`, tickets 09, 13, 15): separate route. Renders the
+  learner's model: nodes colored by state (untested gray, missing red,
   misconception orange, correct green), edges with their own state, confidence
   shown per node (a status line "state - 0.9" plus a thin bar). A node's
   label comes from the held reality map ONLY when the node is already in the
-  learner model - the label join is the sole reality data the page may use,
-  so unengaged nodes, layer names and descriptions can never render. Nodes
+  learner model - the label join is the sole reality data the mid-session
+  learner grid may use,
+  so unengaged nodes, layer names and descriptions can never render in the
+  grid. Nodes
   flow into a responsive grid (no graph library; an SVG overlay draws the
   edges between cards) in the order the learner engaged with them; no reality
   structure (layers) is used for layout. A header segmented control switches
@@ -185,15 +187,17 @@ recipe live in `research/13-ui-design-spec.md`.
   Changes from each turn's diff animate: new nodes pop in, state flips
   transition color on the same element, evidence or confidence changes flash,
   edge colors transition. The page makes no network requests - every update
-  comes from the shared session store. Session end (ticket 10, redesigned in
-  13): the segmented control gains a Reality segment next to "Learner map";
-  the Learner map tab keeps the final grid, the Reality tab swaps it for the
-  reality phylogenetic tree - the concept as the root crown, each reality
+  comes from the shared session store. Since ticket 15 (Danny's product call,
+  2026-08-08) the Reality segment is visible from session start: the reality
+  phylogenetic tree - the concept as the root crown, each reality
   layer branching down below it, because a reality map IS a lineage (every
-  concept is built on simpler concepts beneath it). A metrics row of closeness
+  concept is built on simpler concepts beneath it) - is an information
+  surface the learner may open at any time a reality map is held, not a
+  session-end reveal. A metrics row of closeness
   score, gap closures and the transfer result, plus the transfer assessment,
-  render on both tabs. The comparison is the one place the page may show full
-  reality content, because the session is over.
+  render on both tabs at session end only. The chat page NEVER leaks reality
+  content (labels, layers, descriptions) in either direction: the no-leak
+  rule now binds chat, not the map page.
 - Session end: comparison view - reality map vs learner map, closed-gap summary, closeness score, transfer result.
 
 ## 10. Metrics

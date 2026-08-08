@@ -11,17 +11,19 @@
  * rendering, so they cannot appear. The page makes no network requests at
  * all: every update comes from the session store.
  *
- * Three states, per the ticket 13 spec:
- * - Learner model grid: a segmented header (Chat / Map), a title row with
- *   the concept word and a Closeness number + progress bar, a legend, and
- *   the responsive card grid with the SVG edge overlay.
- * - Session end: the header gains a Reality segment; selecting it swaps the
- *   grid for the reality phylogenetic tree (lib/mapview/tree.js) - the
- *   concept as the crown, its layers branching down like ancestry. The
- *   comparison metrics row and transfer assessment render on both tabs.
- *   Ground truth is allowed here because the session is over.
- * - The no-leak rule binds mid-session only: the Reality segment and tree
- *   appear only when state.ended and a reality map is held.
+ * Three states, per the ticket 13 spec and ticket 15 (2026-08-08):
+ * - Learner model grid: a segmented header (Chat / Map / Reality), a title
+ *   row with the concept word and a Closeness number + progress bar, a
+ *   legend, and the responsive card grid with the SVG edge overlay.
+ * - Reality tree: the Reality segment is visible from session start (ticket
+ *   15) - the reality phylogenetic tree (lib/mapview/tree.js), the concept
+ *   as the crown, its layers branching down like ancestry, is an
+ *   information surface the learner may open whenever a reality map is
+ *   held. The comparison metrics row and transfer assessment render on both
+ *   tabs at session end only.
+ * - The no-leak rule now binds chat, not the map page: mid-session the
+ *   learner grid still shows only engaged nodes, but the Reality tab shows
+ *   full ground truth at any time.
  *
  * Updates are diff-driven: the store's lastDiff tells us which nodes
  * appeared (pop-in), flipped state (color transition on the same DOM
@@ -312,16 +314,19 @@ export function renderMapPage(root, store, options = {}) {
   }
 
   /**
-   * The segmented control per session state: mid-session Chat | Map; at
-   * session end the Map segment becomes "Learner map" and a Reality segment
-   * appears (the one place ground truth may be shown).
+   * The segmented control per session state: mid-session Chat | Map | Reality
+   * (the reality tree is an information surface, viewable from session start
+   * per Danny's 2026-08-08 product call - ticket 15); at session end the Map
+   * segment becomes "Learner map" and the comparison metrics appear on both
+   * tabs.
    *
    * @param {import("../state/session.js").SessionState} state
    */
   function updateTabs(state) {
-    const compare = state.ended && state.realityMap !== null;
+    const hasReality = state.realityMap !== null;
+    const compare = state.ended && hasReality;
     modelTab.textContent = compare ? "Learner map" : "Map";
-    realityTab.hidden = !compare;
+    realityTab.hidden = !hasReality;
     chatTab.classList.remove("active");
     modelTab.classList.toggle("active", !compare || tab === "model");
     realityTab.classList.toggle("active", compare && tab === "reality");
@@ -434,8 +439,9 @@ export function renderMapPage(root, store, options = {}) {
     }
 
     const hasWord = state.word !== null;
-    const compare = state.ended && state.realityMap !== null;
-    const showTree = compare && tab === "reality";
+    const hasReality = state.realityMap !== null;
+    const compare = state.ended && hasReality;
+    const showTree = hasReality && tab === "reality";
 
     word.textContent = state.word ?? "";
     titleRow.hidden = !hasWord;

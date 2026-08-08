@@ -31,8 +31,8 @@ ephemeral sessions, no accounts.
   (`POST /api/agent`), client-held session state, DeepSeek via OpenAI-compatible
   API, no DB, no auth, no agent framework (Mastra etc. is v2). Plain ES
   modules, zero npm dependencies, no bundler (ticket 01).
-- Two pages: chat and map. The map page NEVER shows reality map content
-  mid-session; comparison unlocks only at session end.
+- Two pages: chat and map. The map page shows the reality tree from session
+  start (ticket 15, Danny 2026-08-08); chat NEVER leaks reality content.
 - **LLM key:** in `.env` (gitignored) and `~/.local/share/opencode/auth.json`
   (deepseek entry). Both hold the same key; never commit either.
 - **Deploy: Netlify** (Danny confirmed 2026-08-07). CLI authed as
@@ -93,6 +93,8 @@ ephemeral sessions, no accounts.
 12. [End to end acceptance and demo session](issues/12-end-to-end-acceptance-and-demo-session.md) - `resolved` (2026-08-07) - laptop + recursion sessions end to end live; found + fixed explanation-fallback violation (learner asking for an explanation was told to keep observing; now a code-level rule via explanationRequested/explainDirective, validateTurn enforces probe.kind = explain); README demo section present; no-leak audit passed. Frontier closed.
 13. [UI redesign (orb design, from spec)](issues/13-ui-redesign-from-paper-design.md) - `resolved` (2026-08-07) - rebuilt chat/map to the chapel orb design spec (research/13-ui-design-spec.md, no Paper dependency): orb recipe, Fraunces/Space Grotesk, palette; chat hero + TUTOR/YOU orb-avatar messages; map segmented control + title row + legend + 280px cards; session-end Reality segment shows the reality map as a phylogenetic tree (new src/lib/mapview/tree.js, concept crown + layer branches); no-leak rule and all behavior contracts intact; spec 9 updated; 168 tests, tsc, netlify build, headless-Edge DOM + computed-style audits all green
 14. [Error banner always visible](issues/14-error-banner-always-visible.md) - `resolved` (2026-08-08) - ticket 13 CSS regression: `.error-banner { display: flex }` (and `.composer`, `.composer-wrap`) overrode the UA `[hidden] { display: none }`, so the Retry banner rendered permanently; fixed with a global `[hidden] { display: none !important; }` guard in src/styles.css. Verified in headless Chromium via CDP computed styles: banner none/0px on load, flex/65px + visible Retry on a real failed agent call, hidden again on success; 169 tests + tsc clean.
+15. [Reality map viewable from session start](issues/15-reality-map-viewable-from-session-start.md) - `resolved` (2026-08-08) - Danny's product call: the reality tree is viewable from session start, not only at session end. map.js gates the Reality tab/tree on realityMap !== null (comparison metrics still session-end only); socratic rule 1 rewritten (learner may open the map, tutor never quotes it unprompted); spec 9 + AGENTS.md no-leak re-scoped to chat-only. CDP-verified mid-session (ended=false): tab visible, tree renders; 169 tests + tsc clean. Frontier closed.
+16. [Briefing mode: tutor delivers information for decisions](issues/16-briefing-mode-tutor-delivers-information.md) - `ready-for-agent` - Danny's product observation (2026-08-08): most people expect to receive information to model their decisions; add a learner-initiated briefing mode (probe kind "brief") alongside Socratic default, learner map still updates. NEXT FRONTIER.
 
 ## Ticket sequence (dependency overview)
 
@@ -101,6 +103,7 @@ ephemeral sessions, no accounts.
 02 + 03 -> 04 reality map gen, 05 socratic engine
 04 + 05 -> 06 orchestrator -> 07 client state -> 08 chat UI, 09 map UI
 08 + 09 -> 10 session end -> 11 deploy (human gates) -> 12 acceptance
+15 (reality map viewable from start) -> 16 (briefing mode) - both unblocked, frontier
 ```
 
 ## Not yet specified
