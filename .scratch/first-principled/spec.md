@@ -219,7 +219,15 @@ recipe live in `research/13-ui-design-spec.md`.
   layer branching down below it, because a reality map IS a lineage (every
   concept is built on simpler concepts beneath it) - is an information
   surface the learner may open at any time a reality map is held, not a
-  session-end reveal. A metrics row of closeness
+  session-end reveal. The tree reads chronologically as a lineage (ticket
+  17): a central trunk descends from the crown and each layer diverges from
+  it at its own depth - the top layer (most derived) diverges highest,
+  nearest the crown, and the deepest foundation lowest - with the branch
+  label at each divergence point. Branch columns alternate left and right
+  around the trunk (deepest branch nearest the trunk on each side), so the
+  elbows never cross another branch's cards; columns keep the horizontal
+  spread (280px cards, 32px gaps) and wide maps scroll horizontally. A
+  metrics row of closeness
   score, gap closures and the transfer result, plus the transfer assessment,
   render on both tabs at session end only. The chat page NEVER leaks reality
   content (labels, layers, descriptions) in either direction: the no-leak

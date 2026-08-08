@@ -114,8 +114,14 @@ must render the learner model's target (the full reality map) as this tree.
   CONCEPT" (Space Grotesk 12/600 `#8B94A3` 0.1em uppercase) over "laptop"
   (Fraunces 700 28px white).
 - Cladogram connectors: SVG elbow paths, stroke `#B9B3E8`, strokeWidth 2,
-  fill none. Vertical trunk from the root down, horizontal branch line, then
-  vertical drops to each branch tip (phylogenetic elbow style).
+  fill none. Vertical trunk from the root down; each layer diverges from the
+  trunk at its own depth (a `TREE_DIVERGENCE_STEP` of 36px per layer - the
+  top layer highest, nearest the crown, the deepest foundation lowest, so
+  the tree reads chronologically), a horizontal elbow from the trunk to each
+  branch column at its divergence, then a vertical drop into the branch's
+  cards (phylogenetic elbow style). Branch columns alternate left and right
+  of the trunk, deepest nearest the trunk, so elbows never cross cards
+  (ticket 17).
 - Three branches side by side, each: branch label "BRANCH - COMPUTATION" /
   "BRANCH - ENERGY" / "BRANCH - PHYSICAL" (Space Grotesk 11/600 accent 0.1em
   uppercase) over stacked node cards (280px, surface, 14px radius, 14/600

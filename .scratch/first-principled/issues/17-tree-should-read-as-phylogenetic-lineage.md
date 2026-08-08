@@ -1,7 +1,7 @@
 # 17 - Reality tree should read as a phylogenetic lineage (chronological descent)
 
 **Type:** task
-**Status:** ready-for-agent
+**Status:** claimed (opencode-session-2026-08-08)
 **Blocked by:** none
 **Related:** tickets 13, 15; spec sections 9; src/lib/mapview/tree.js;
 src/lib/mapview/tree.test.js; research/13-ui-design-spec.md
