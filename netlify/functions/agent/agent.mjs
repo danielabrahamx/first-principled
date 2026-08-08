@@ -54,25 +54,32 @@ function clientIp(req) {
  * is over the hourly cap. Fail-open: any store error returns false (no
  * limiting) so a broken store never takes the site down.
  *
+ * The store is injectable for tests; production callers omit it and get
+ * the Netlify Blobs store (unavailable outside the Netlify runtime, where
+ * the fail-open path applies).
+ *
  * @param {string} ip
+ * @param {{ get(key: string, opts?: any): Promise<any>, set(key: string, value: any, opts?: any): Promise<any> } | null} [store]
  * @returns {Promise<boolean>}
  */
-async function overRateLimit(ip) {
+export async function overRateLimit(ip, store = null) {
   if (RATE_LIMIT_MAX <= 0) return false;
-  let store;
-  try {
-    store = getStore({ name: "agent-ratelimits" });
-  } catch {
-    return false;
+  let active = store;
+  if (active === null) {
+    try {
+      active = getStore({ name: "agent-ratelimits" });
+    } catch {
+      return false;
+    }
   }
   const hour = new Date().toISOString().slice(0, 13);
   const key = `ip:${ip}`;
   try {
     /** @type {{ count?: number, hour?: string } | null} */
-    const current = await store.get(key, { type: "json" });
+    const current = await active.get(key, { type: "json" });
     const count = current && current.hour === hour ? current.count || 0 : 0;
     if (count >= RATE_LIMIT_MAX) return true;
-    await store.set(
+    await active.set(
       key,
       { count: count + 1, hour },
       { expires: RATE_LIMIT_WINDOW_HOURS * 60 * 60 }
