@@ -41,6 +41,11 @@ import { callAgent as defaultCallAgent } from "../api/agent.js";
  *   singleton.
  * @property {typeof defaultCallAgent} [callAgent] - the transport; injected
  *   for tests.
+ * @property {(route: string) => void} [navigate] - route to another page
+ *   (header segmented control); defaults to setting location.hash.
+ * @property {(listener: (route: string) => void) => () => void} [subscribeRoute] -
+ *   route change subscription for the header's active tab; injected by
+ *   app.js, optional for tests.
  */
 
 /**
@@ -101,6 +106,13 @@ export function phaseLabel(state) {
 export function initChatPage(root, options = {}) {
   const store = options.store ?? sessionStore;
   const callAgent = options.callAgent ?? defaultCallAgent;
+  const navigate =
+    options.navigate ??
+    ((route) => {
+      /** @type {{ hash: string }} */
+      const location = /** @type {any} */ (globalThis.location);
+      location.hash = `#${route}`;
+    });
 
   /** @type {HTMLElement} */
   const chatEl = get(root, "chat");
@@ -142,6 +154,29 @@ export function initChatPage(root, options = {}) {
   const endPanel = get(root, "end-panel");
   /** @type {HTMLElement} */
   const endStatus = get(root, "end-status");
+
+  /* Header segmented control (Chat | Map) - the map page is reachable from
+   * chat at any time (ticket 15: the reality tree is an information surface
+   * from session start; the mobile header needs the nav). */
+  const chatSeg = root.querySelector(".chat-seg");
+  if (chatSeg) {
+    const segItems = /** @type {NodeListOf<HTMLElement>} */ (
+      chatSeg.querySelectorAll(".seg-item")
+    );
+    for (const item of segItems) {
+      item.addEventListener("click", () => {
+        const tab = item.dataset.tab;
+        if (tab) navigate(tab);
+      });
+    }
+    if (options.subscribeRoute) {
+      options.subscribeRoute((route) => {
+        for (const item of segItems) {
+          item.classList.toggle("active", item.dataset.tab === route);
+        }
+      });
+    }
+  }
 
   /** The user content of the in-flight or failed turn; null when idle. */
   /** @type {string | null} */

@@ -74,6 +74,13 @@ surface, viewable from session start. Changes:
 - docs/MISSION.md untouched (no principle amendment needed: rule 6 about
   constructing understanding through questions still binds the tutor's
   messages; the map page is learner-initiated viewing, not teaching).
+- Follow-up fix in the same commit (Danny's mobile report): the chat header
+  had NO navigation to the map page (only the logo + phase pill), so the
+  tree was unreachable from chat on mobile. Added the same segmented
+  control (Chat | Map) to the chat header (index.html + chat.js navigate/
+  subscribeRoute options + app.js wiring), active state follows the route.
+  CDP-verified at 390px mobile viewport: nav visible (Chat 61px, Map 59px),
+  Map click navigates to #map, active states track the route.
 
 ## Docs rule
 

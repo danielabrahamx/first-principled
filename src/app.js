@@ -31,7 +31,10 @@ const mapView = element("view-map");
 const mapPage = renderMapPage(mapView, sessionStore, {
   navigate: (route) => router.navigate(route),
 });
-initChatPage(chatView);
+initChatPage(chatView, {
+  navigate: (route) => router.navigate(route),
+  subscribeRoute: (listener) => router.subscribe(listener),
+});
 
 /**
  * @param {string} route
