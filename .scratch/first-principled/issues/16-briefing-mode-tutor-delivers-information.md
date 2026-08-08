@@ -1,7 +1,7 @@
 # 16 - Briefing mode: the tutor delivers information for decisions
 
 **Type:** task
-**Status:** ready-for-agent
+**Status:** claimed (opencode, 2026-08-08)
 **Blocked by:** none
 **Related:** tickets 05, 08, 12; spec sections 8, 9; src/lib/agent/socratic.js;
 docs/MISSION.md
