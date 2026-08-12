@@ -46,11 +46,19 @@
  * A node of the reality map - a concept in the chain from first principles to
  * the thing itself.
  *
+ * `basis` (ticket 06, principle 5) is the observation the abstraction
+ * compresses - what a learner can point at. The foundation layer names the
+ * deepest observable layer and has no basis; every node above it should.
+ * The field is OPTIONAL in the schema so maps without it remain valid (the
+ * generator's deriveCheck enforces it for new maps; the validator accepts
+ * legacy maps).
+ *
  * @typedef {object} RealityNode
  * @property {NodeId} id
  * @property {string} label
  * @property {LayerId} layer
  * @property {string} description
+ * @property {string} [basis] - the observation this node compresses (ticket 06).
  */
 
 /**

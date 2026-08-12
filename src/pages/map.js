@@ -1,34 +1,30 @@
 /**
- * The map page (tickets 09, 10, 13): the learner watches their mental model
- * converge without ever seeing the answers - now in the "chapel" design from
- * the ticket 13 spec (research/13-ui-design-spec.md).
+ * The map page - the home surface of the map-first v2 (tickets 09-12).
  *
- * What renders mid-session is exactly the learner's model - the learner map
- * nodes joined with reality labels ONLY for nodes already in the model (see
- * lib/mapview/viewmodel.js, which owns that no-leak rule), colored by state,
- * confidence per node, edges drawn between cards with their own state.
- * Reality layers, descriptions and unengaged nodes are never consulted for
- * rendering, so they cannot appear. The page makes no network requests at
- * all: every update comes from the session store.
+ * Ticket 09: the map is the primary pane, chat is docked beside it (right
+ * rail on desktop, stacked below on narrow screens). The tutor's probe
+ * highlight: when a response carries probe.nodeId, that node pulses while
+ * the question is live. The router makes # (empty) land here; #chat keeps
+ * the full chat page.
  *
- * Three states, per the ticket 13 spec and ticket 15 (2026-08-08):
- * - Learner model grid: a segmented header (Chat / Map / Reality), a title
- *   row with the concept word and a Closeness number + progress bar, a
- *   legend, and the responsive card grid with the SVG edge overlay.
- * - Reality tree: the Reality segment is visible from session start (ticket
- *   15) - the reality phylogenetic tree (lib/mapview/tree.js), the concept
- *   as the crown, its layers branching down like ancestry, is an
- *   information surface the learner may open whenever a reality map is
- *   held. The comparison metrics row and transfer assessment render on both
- *   tabs at session end only.
- * - The no-leak rule now binds chat, not the map page: mid-session the
- *   learner grid still shows only engaged nodes, but the Reality tab shows
- *   full ground truth at any time.
+ * Ticket 10: every learner-grid card is clickable and opens the node panel -
+ * reality description (allowed: the no-leak rule now binds chat, not the
+ * map - Danny 2026-08-10), current state/confidence, the evidence ledger
+ * with turn numbers, the state rotation trail, and linked neighbors with
+ * their states. Esc closes; the panel is keyboard-accessible.
  *
- * Updates are diff-driven: the store's lastDiff tells us which nodes
- * appeared (pop-in), flipped state (color transition on the same DOM
- * element) or updated confidence/evidence (flash). Re-renders from
- * navigation or resize re-layout without replaying the animation.
+ * Ticket 11: hovering a learner card shows its rotation popover (turn by
+ * turn: state, confidence, evidence); hovering a reality-tree layer branch
+ * shows the layer story - which of its nodes the learner engaged, in what
+ * order, and how their states rotated.
+ *
+ * Ticket 12: a timeline scrubber under the header - one stop per ledger
+ * turn, drag to any stop to render that snapshot, and a play button that
+ * replays the shape rotations using the existing diff animation language.
+ * Scrubbing renders snapshots from the ledger; it never mutates the store.
+ *
+ * Everything reads the shared session store (state/session.js); the page
+ * makes no network requests.
  */
 
 import {
@@ -50,6 +46,15 @@ import {
   nodePositions,
   edgePaths,
 } from "../lib/mapview/layout.js";
+import {
+  nodePanelView,
+  layerStory,
+  timelineStops,
+  snapshotAt,
+  snapshotDiff,
+} from "../lib/mapview/history.js";
+import { nodeHistory } from "../state/session.js";
+import { renderDock } from "./dock.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -92,16 +97,6 @@ function pct(confidence) {
 }
 
 /**
- * @param {ReturnType<typeof learnerCards>[number]} card
- * @returns {string}
- */
-function tooltip(card) {
-  const lines = [`${card.label}: ${card.state}, ${pct(card.confidence)} confident`];
-  for (const quote of card.evidence) lines.push(`evidence: ${quote}`);
-  return lines.join("\n");
-}
-
-/**
  * Mount the map page into `root`, driven by the shared session store.
  * Returns a handle with `sync()` for route changes; the page also
  * subscribes to the store, so it re-renders live as turns land.
@@ -132,6 +127,10 @@ export function renderMapPage(root, store, options = {}) {
   let lastWord = /** @type {string | null} */ (null);
 
   const page = el("div", "map-page");
+  const split = el("div", "map-split");
+  const main = el("div", "map-main");
+  const dock = el("aside", "map-dock-wrap");
+  dock.setAttribute("aria-label", "Tutor conversation");
 
   /* Header: logo row + segmented control. */
   const header = el("header", "map-header");
@@ -157,6 +156,20 @@ export function renderMapPage(root, store, options = {}) {
   });
   tabs.append(chatTab, modelTab, realityTab);
   header.append(logo, tabs);
+
+  /* Timeline scrubber (ticket 12). */
+  const timeline = el("div", "map-timeline");
+  timeline.hidden = true;
+  const playBtn = el("button", "tl-btn", "\u25B6");
+  playBtn.setAttribute("aria-label", "Replay the session's rotations");
+  playBtn.setAttribute("title", "Replay");
+  const rail = el("div", "tl-rail");
+  const fill = el("i", "tl-fill");
+  rail.appendChild(fill);
+  const stopsWrap = el("div", "tl-stops");
+  rail.appendChild(stopsWrap);
+  const counter = el("span", "tl-counter", "0/0");
+  timeline.append(playBtn, rail, counter);
 
   /* Title row: eyebrow + concept word, closeness on the right. */
   const titleRow = el("div", "map-title-row");
@@ -198,7 +211,7 @@ export function renderMapPage(root, store, options = {}) {
   stage.append(svg, nodesLayer);
   scroll.appendChild(stage);
 
-  /* Reality phylogenetic tree panel (session end, Reality tab). */
+  /* Reality phylogenetic tree panel (Reality tab). */
   const treePanel = el("div", "tree-panel");
   treePanel.hidden = true;
   const treeScroll = el("div", "tree");
@@ -230,8 +243,12 @@ export function renderMapPage(root, store, options = {}) {
     "Session complete. This is your final mental model."
   );
 
-  page.append(header, titleRow, legend, scroll, treePanel, cmpBlock, noSession, empty, ended);
+  main.append(header, timeline, titleRow, legend, scroll, treePanel, cmpBlock, noSession, empty, ended);
+  split.append(main, dock);
+  page.appendChild(split);
   root.append(page);
+
+  const dockHandle = renderDock(dock);
 
   /** @type {Map<string, HTMLElement>} node id -> card element */
   const nodeEls = new Map();
@@ -243,6 +260,25 @@ export function renderMapPage(root, store, options = {}) {
   /** @typedef {ReturnType<typeof learnerCards>[number]} MapCard */
   /** @typedef {ReturnType<typeof nodeDelta>} NodeDelta */
 
+  /* The node panel (ticket 10): one overlay reused for any clicked node. */
+  const panel = el("div", "node-panel");
+  panel.hidden = true;
+  panel.setAttribute("role", "dialog");
+  panel.setAttribute("aria-modal", "false");
+  const panelClose = el("button", "node-panel-close", "\u00D7");
+  panelClose.setAttribute("aria-label", "Close node panel");
+  const panelBody = el("div", "node-panel-body");
+  panel.append(panelClose, panelBody);
+  page.appendChild(panel);
+  let panelOpen = false;
+
+  /** The hover popover (ticket 11): one element, repositioned per hover. */
+  const popover = el("div", "history-popover");
+  popover.hidden = true;
+  page.appendChild(popover);
+  let popoverTimer = /** @type {number | null} */ (null);
+  let popoverSource = /** @type {HTMLElement | null} */ (null);
+
   /**
    * @param {MapCard} card
    * @returns {HTMLElement}
@@ -250,6 +286,12 @@ export function renderMapPage(root, store, options = {}) {
   function buildCard(card) {
     const node = el("div", `map-card ${stateClass(card.state)}`);
     node.dataset.nodeId = card.id;
+    node.tabIndex = 0;
+    node.setAttribute("role", "button");
+    node.setAttribute(
+      "aria-label",
+      `${card.label}: ${card.state}, ${pct(card.confidence)} confident. Activate to open its story.`
+    );
     const top = el("div", "map-card-top");
     top.appendChild(el("span", "map-card-label", card.label));
     const status = el(
@@ -289,16 +331,15 @@ export function renderMapPage(root, store, options = {}) {
       );
     }
     if (fill && fill.style.width !== pct(card.confidence)) fill.style.width = pct(card.confidence);
-    node.title = tooltip(card);
     node.setAttribute(
       "aria-label",
-      `${card.label}: ${card.state}, ${pct(card.confidence)} confident`
+      `${card.label}: ${card.state}, ${pct(card.confidence)} confident. Activate to open its story.`
     );
   }
 
   /**
    * The title-row closeness number: "known/total" with the progress bar at
-   * the closeness percentage (the ticket 13 spec's 4/11 + 38% example).
+   * the closeness percentage.
    *
    * @param {import("../state/session.js").SessionState} state
    */
@@ -314,12 +355,6 @@ export function renderMapPage(root, store, options = {}) {
   }
 
   /**
-   * The segmented control per session state: mid-session Chat | Map | Reality
-   * (the reality tree is an information surface, viewable from session start
-   * per Danny's 2026-08-08 product call - ticket 15); at session end the Map
-   * segment becomes "Learner map" and the comparison metrics appear on both
-   * tabs.
-   *
    * @param {import("../state/session.js").SessionState} state
    */
   function updateTabs(state) {
@@ -333,8 +368,6 @@ export function renderMapPage(root, store, options = {}) {
   }
 
   /**
-   * A metrics chip: "Closeness 83%", "Gaps closed 4", "Transfer passed".
-   *
    * @param {string} label
    * @param {string} value
    * @returns {HTMLElement}
@@ -346,10 +379,6 @@ export function renderMapPage(root, store, options = {}) {
   }
 
   /**
-   * The session-end comparison: the metrics row (closeness, gap closures,
-   * transfer) and the transfer assessment. Shown on both map tabs, because
-   * this is the mission made visible.
-   *
    * @param {HTMLElement} block
    * @param {import("../state/session.js").SessionState} state
    */
@@ -372,9 +401,375 @@ export function renderMapPage(root, store, options = {}) {
   }
 
   /**
-   * The reality phylogenetic tree: root card (the concept, as the crown) and
-   * the layer branches below it, with cladogram elbow connectors. Session end
-   * only - this is full ground truth.
+   * The node panel content (ticket 10): reality description (allowed), the
+   * learner's current state, evidence with turn numbers, the rotation trail,
+   * and linked neighbors.
+   *
+   * @param {string} nodeId
+   */
+  function openPanel(nodeId) {
+    const state = store.getState();
+    const view = nodePanelView(state, nodeId);
+    panelBody.replaceChildren();
+
+    const heading = el("div", "node-panel-heading");
+    heading.appendChild(el("h2", "node-panel-label", view.label));
+    const status = el(
+      "span",
+      "map-status",
+      `${view.engaged ? view.state : "untested"} - ${view.confidence.toFixed(1)}`
+    );
+    heading.appendChild(status);
+    panelBody.appendChild(heading);
+
+    if (view.description.length > 0) {
+      const section = el("section", "node-panel-section");
+      section.appendChild(el("h3", "node-panel-h", "What it is"));
+      section.appendChild(el("p", "node-panel-desc", view.description));
+      panelBody.appendChild(section);
+    }
+
+    if (view.trail.length > 0) {
+      const section = el("section", "node-panel-section");
+      section.appendChild(el("h3", "node-panel-h", "How your model changed"));
+      const list = el("ul", "node-panel-trail");
+      for (const entry of view.trail) {
+        const item = el("li", "node-panel-trail-item");
+        const head = el(
+          "span",
+          "node-panel-trail-head",
+          `turn ${entry.turn} - ${entry.state} (${pct(entry.confidence)})`
+        );
+        item.appendChild(head);
+        for (const quote of entry.evidence) {
+          item.appendChild(el("span", "node-panel-quote", `\u201C${quote}\u201D`));
+        }
+        list.appendChild(item);
+      }
+      section.appendChild(list);
+      panelBody.appendChild(section);
+    }
+
+    if (view.evidence.length > 0) {
+      const section = el("section", "node-panel-section");
+      section.appendChild(el("h3", "node-panel-h", "Your words"));
+      const list = el("ul", "node-panel-evidence");
+      for (const entry of view.evidence) {
+        const item = el("li", "node-panel-evidence-item");
+        item.append(
+          el("span", "node-panel-turn", `t${entry.turn}`),
+          document.createTextNode(`\u201C${entry.quote}\u201D`)
+        );
+        list.appendChild(item);
+      }
+      section.appendChild(list);
+      panelBody.appendChild(section);
+    }
+
+    if (view.neighbors.length > 0) {
+      const section = el("section", "node-panel-section");
+      section.appendChild(el("h3", "node-panel-h", "Connected to"));
+      const list = el("ul", "node-panel-neighbors");
+      for (const neighbor of view.neighbors) {
+        const item = el(
+          "li",
+          "node-panel-neighbor",
+          `${neighbor.label} (${neighbor.relation})`
+        );
+        item.append(
+          document.createTextNode(`${neighbor.label} ${neighbor.relation === "out" ? "\u2192" : "\u2190"}`),
+          el("span", `legend-swatch ${stateClass(neighbor.state)}`),
+          document.createTextNode(` ${neighbor.state}`)
+        );
+        list.appendChild(item);
+      }
+      section.appendChild(list);
+      panelBody.appendChild(section);
+    }
+
+    if (!view.engaged) {
+      const section = el("section", "node-panel-section");
+      section.appendChild(
+        el("p", "node-panel-empty", "You haven't engaged this node yet - it will appear when you do.")
+      );
+      panelBody.appendChild(section);
+    }
+
+    panel.hidden = false;
+    panelOpen = true;
+    panelClose.focus();
+  }
+
+  function closePanel() {
+    panel.hidden = true;
+    panelOpen = false;
+  }
+
+  /**
+   * Show the hover popover for a card: the node's rotation trail with turns.
+   *
+   * @param {HTMLElement} source
+   * @param {string} nodeId
+   */
+  function showPopover(source, nodeId) {
+    const state = store.getState();
+    const trail = nodeHistory(state, nodeId);
+    if (trail.length === 0) return;
+    popover.replaceChildren();
+    const label = el("p", "history-popover-label", `${source.dataset.nodeId} rotation`);
+    popover.appendChild(label);
+    const list = el("ul", "history-popover-list");
+    for (const entry of trail) {
+      const item = el(
+        "li",
+        "history-popover-item",
+        `turn ${entry.turn} - ${entry.state} (${pct(entry.confidence)})`
+      );
+      if (entry.evidence.length > 0) {
+        item.appendChild(el("span", "history-popover-quote", `\u201C${entry.evidence[entry.evidence.length - 1]}\u201D`));
+      }
+      list.appendChild(item);
+    }
+    popover.appendChild(list);
+    popover.hidden = false;
+    const rect = source.getBoundingClientRect();
+    const popRect = popover.getBoundingClientRect();
+    let left = rect.left;
+    let top = rect.bottom + 8;
+    if (left + popRect.width > window.innerWidth - 8) {
+      left = Math.max(8, window.innerWidth - popRect.width - 8);
+    }
+    if (top + popRect.height > window.innerHeight - 8) {
+      top = Math.max(8, rect.top - popRect.height - 8);
+    }
+    popover.style.left = `${left}px`;
+    popover.style.top = `${top}px`;
+    popoverSource = source;
+  }
+
+  /**
+   * The layer-story popover for a reality-tree branch (ticket 11).
+   *
+   * @param {HTMLElement} source
+   * @param {string} layerId
+   */
+  function showLayerStory(source, layerId) {
+    const state = store.getState();
+    const story = layerStory(state, layerId);
+    popover.replaceChildren();
+    const label = el("p", "history-popover-label", `Layer: ${story.layerName}`);
+    popover.appendChild(label);
+    if (story.engaged.length === 0) {
+      popover.appendChild(
+        el("p", "history-popover-none", "None of this layer's nodes engaged yet.")
+      );
+    } else {
+      const list = el("ul", "history-popover-list");
+      for (const entry of story.engaged) {
+        const item = el(
+          "li",
+          "history-popover-item",
+          `${entry.label}: first at turn ${entry.firstTurn}, now ${entry.current} (${entry.rotations.length} rotation${entry.rotations.length === 1 ? "" : "s"})`
+        );
+        list.appendChild(item);
+      }
+      popover.appendChild(list);
+    }
+    popover.hidden = false;
+    const rect = source.getBoundingClientRect();
+    const popRect = popover.getBoundingClientRect();
+    let left = rect.left;
+    let top = rect.bottom + 8;
+    if (left + popRect.width > window.innerWidth - 8) {
+      left = Math.max(8, window.innerWidth - popRect.width - 8);
+    }
+    if (top + popRect.height > window.innerHeight - 8) {
+      top = Math.max(8, rect.top - popRect.height - 8);
+    }
+    popover.style.left = `${left}px`;
+    popover.style.top = `${top}px`;
+    popoverSource = source;
+  }
+
+  function hidePopover() {
+    if (popoverTimer !== null) {
+      clearTimeout(popoverTimer);
+      popoverTimer = null;
+    }
+    popover.hidden = true;
+    popoverSource = null;
+  }
+
+  /**
+   * Wire a card's interactions: click opens the panel, hover shows the
+   * rotation popover, keyboard opens on Enter/Space.
+   *
+   * @param {HTMLElement} node
+   */
+  function wireCard(node) {
+    const nodeId = node.dataset.nodeId;
+    if (!nodeId) return;
+    node.addEventListener("click", () => {
+      hidePopover();
+      openPanel(nodeId);
+    });
+    node.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        hidePopover();
+        openPanel(nodeId);
+      }
+    });
+    node.addEventListener("mouseenter", () => {
+      if (popoverTimer !== null) clearTimeout(popoverTimer);
+      popoverTimer = /** @type {any} */ (setTimeout(() => showPopover(node, nodeId), 350));
+    });
+    node.addEventListener("mouseleave", hidePopover);
+    node.addEventListener("focus", () => {
+      if (popoverTimer !== null) clearTimeout(popoverTimer);
+      popoverTimer = /** @type {any} */ (setTimeout(() => showPopover(node, nodeId), 350));
+    });
+    node.addEventListener("blur", hidePopover);
+  }
+
+  /**
+   * The timeline scrubber (ticket 12): one stop per ledger turn. Scrub to a
+   * stop renders that snapshot; play replays from the current stop with the
+   * diff animation language. Returning to the live stop re-syncs the store.
+   */
+  const TL_LIVE = -1;
+  /** The stop the timeline is parked on: -1 = live. */
+  let tlStop = TL_LIVE;
+  /** True while the replay animation is running. */
+  let tlPlaying = false;
+  /** The replay timer. */
+  let tlTimer = /** @type {number | null} */ (null);
+
+  /** @type {any[]} */
+  let tlStopsCache = /** @type {any[]} */ ([]);
+
+  /**
+   * Rebuild the timeline stops from the ledger and mark the active one.
+   */
+  function renderTimeline() {
+    const state = store.getState();
+    tlStopsCache = timelineStops(state);
+    const count = tlStopsCache.length;
+    timeline.hidden = count < 2;
+    if (count < 2) return;
+
+    stopsWrap.replaceChildren();
+    for (const stop of tlStopsCache) {
+      const dot = el("button", "tl-stop");
+      dot.dataset.turn = String(stop.turn);
+      dot.setAttribute("aria-label", `Turn ${stop.turn}`);
+      dot.setAttribute("title", `Turn ${stop.turn}${stop.reply ? `: ${stop.reply}` : ""}`);
+      dot.addEventListener("click", () => {
+        if (tlPlaying) stopReplay();
+        tlStop = stop.turn;
+        renderTimeline();
+        syncGridFromSnapshot(stop.turn);
+      });
+      stopsWrap.appendChild(dot);
+    }
+    const activeIndex = tlStop === TL_LIVE ? count - 1 : tlStop - 1;
+    const active = /** @type {HTMLButtonElement | null} */ (
+      stopsWrap.querySelector(`[data-turn="${tlStop === TL_LIVE ? count : tlStop}"]`)
+    );
+    if (active) active.classList.add("active");
+    fill.style.width = `${count === 1 ? 100 : Math.round(((activeIndex + 1) / count) * 100)}%`;
+    counter.textContent = `${activeIndex + 1}/${count}`;
+    playBtn.textContent = tlPlaying ? "\u23F8" : "\u25B6";
+  }
+
+  /**
+   * Render the learner grid from a ledger snapshot instead of the live map
+   * (ticket 12). The snapshot's own diff drives the animation; the reality
+   * tree is unchanged.
+   *
+   * @param {number} turn
+   */
+  function syncGridFromSnapshot(turn) {
+    const state = store.getState();
+    const snap = snapshotAt(state, turn);
+    if (snap === null) return;
+    const snapshotState = /** @type {any} */ ({
+      ...state,
+      learnerMap: snap,
+      lastDiff: snapshotDiff(state, turn),
+      lastProbe: null,
+      closeness: null,
+    });
+    renderGrid(snapshotState, true);
+  }
+
+  /**
+   * One replay step: advance the active stop, render the snapshot, and
+   * either continue or stop at the live position.
+   */
+  function replayStep() {
+    const count = tlStopsCache.length;
+    if (count === 0) {
+      stopReplay();
+      return;
+    }
+    const next = tlStop === TL_LIVE ? 1 : Math.min(tlStop + 1, count);
+    tlStop = next;
+    renderTimeline();
+    syncGridFromSnapshot(next);
+    if (tlStop === count) {
+      // Arrived at the live snapshot; park on live.
+      stopReplay();
+      tlStop = TL_LIVE;
+      renderTimeline();
+      sync();
+      return;
+    }
+    tlTimer = /** @type {any} */ (setTimeout(replayStep, 900));
+  }
+
+  function startReplay() {
+    if (tlStopsCache.length < 2) return;
+    tlPlaying = true;
+    renderTimeline();
+    replayStep();
+  }
+
+  function stopReplay() {
+    tlPlaying = false;
+    if (tlTimer !== null) {
+      clearTimeout(tlTimer);
+      tlTimer = null;
+    }
+    renderTimeline();
+  }
+
+  playBtn.addEventListener("click", () => {
+    if (tlPlaying) {
+      stopReplay();
+    } else {
+      startReplay();
+    }
+  });
+
+  /** Close the popover and panel on Esc - only while the map view is the
+   * visible route (the page stays mounted when #chat is shown). */
+  const onKeydown = (/** @type {KeyboardEvent} */ event) => {
+    if (event.key !== "Escape") return;
+    if (root.hidden) return;
+    if (panelOpen) {
+      closePanel();
+    } else {
+      hidePopover();
+    }
+    if (tlPlaying) stopReplay();
+  };
+  document.addEventListener("keydown", onKeydown);
+
+  /**
+   * The reality phylogenetic tree: root card (the concept) and the layer
+   * branches below it, with cladogram elbow connectors. Branches carry their
+   * layer stories on hover (ticket 11).
    *
    * @param {import("../state/session.js").SessionState} state
    */
@@ -401,12 +796,28 @@ export function renderMapPage(root, store, options = {}) {
       const label = el("p", "tree-branch-label", `BRANCH - ${branch.name}`);
       label.style.left = `${branch.cx}px`;
       label.style.top = `${branch.labelY}px`;
+      label.tabIndex = 0;
+      label.setAttribute("aria-label", `Layer ${branch.name}: ${branch.id}`);
+      label.addEventListener("mouseenter", () => {
+        if (popoverTimer !== null) clearTimeout(popoverTimer);
+        popoverTimer = /** @type {any} */ (setTimeout(() => showLayerStory(label, branch.id), 350));
+      });
+      label.addEventListener("mouseleave", hidePopover);
+      label.addEventListener("focus", () => {
+        if (popoverTimer !== null) clearTimeout(popoverTimer);
+        popoverTimer = /** @type {any} */ (setTimeout(() => showLayerStory(label, branch.id), 350));
+      });
+      label.addEventListener("blur", hidePopover);
       treeLayer.appendChild(label);
       for (const card of branch.cards) {
         const node = el("div", "tree-branch-card", card.label);
         node.style.left = `${card.x}px`;
         node.style.top = `${card.y}px`;
         node.style.width = `${TREE_CARD_WIDTH}px`;
+        node.addEventListener("click", () => {
+          hidePopover();
+          openPanel(card.id);
+        });
         treeLayer.appendChild(node);
       }
     }
@@ -423,58 +834,22 @@ export function renderMapPage(root, store, options = {}) {
   }
 
   /**
-   * Sync the page with the store: segmented control, title row, legend,
-   * learner grid or reality tree, comparison block, empty and ended states.
+   * Render the learner grid from a state-like object - either the live store
+   * state or a ledger snapshot (ticket 12). The probe highlight pulses the
+   * node named by lastProbe (ticket 09).
+   *
+   * @param {any} state - the live store state or a ledger snapshot.
+   * @param {boolean} [fromSnapshot] - when true, the diff animation replays
+   *   unconditionally (scrubbing shows each turn's change).
    */
-  function sync() {
-    const state = store.getState();
+  function renderGrid(state, fromSnapshot = false) {
     const cards = learnerCards(state);
     const edges = learnerEdges(state);
-    const diffActive = state.lastDiff !== null && state.lastDiff !== renderedDiff;
+    const diffActive =
+      fromSnapshot || (state.lastDiff !== null && state.lastDiff !== renderedDiff);
     const diff = diffActive ? state.lastDiff : null;
 
-    if (state.word !== lastWord) {
-      lastWord = state.word;
-      tab = "model";
-    }
-
-    const hasWord = state.word !== null;
-    const hasReality = state.realityMap !== null;
-    const compare = state.ended && hasReality;
-    const showTree = hasReality && tab === "reality";
-
-    word.textContent = state.word ?? "";
-    titleRow.hidden = !hasWord;
-    legend.hidden = !hasWord;
-    updateCloseness(state);
-    updateTabs(state);
-
-    cmpBlock.hidden = !compare;
-    if (compare) renderComparison(cmpBlock, state);
-
-    treePanel.hidden = !showTree;
-    if (showTree) renderTree(state);
-
-    if (!hasWord) {
-      noSession.hidden = false;
-      empty.hidden = true;
-      scroll.hidden = true;
-      ended.hidden = true;
-      return;
-    }
-    noSession.hidden = true;
-    if (cards.length === 0) {
-      empty.hidden = false;
-      scroll.hidden = true;
-      ended.hidden = state.ended ? false : true;
-      return;
-    }
-    empty.hidden = true;
-    scroll.hidden = showTree;
-    if (showTree) return;
-    ended.hidden = state.ended ? false : true;
-
-    const cols = columnCount(stage.clientWidth || root.clientWidth || 480);
+    const cols = columnCount(stage.clientWidth || main.clientWidth || 480);
     const metrics = gridMetrics(cards.length, cols);
     const pos = nodePositions(cards, metrics.columns);
     stage.style.width = `${metrics.width}px`;
@@ -495,11 +870,14 @@ export function renderMapPage(root, store, options = {}) {
         node = buildCard(card);
         nodeEls.set(card.id, node);
         nodesLayer.appendChild(node);
+        wireCard(node);
       }
       updateCard(node, card, delta);
       const where = pos[card.id];
       node.style.left = `${where.x}px`;
       node.style.top = `${where.y}px`;
+      // Probe highlight (ticket 09): pulse the node the tutor is asking about.
+      node.classList.toggle("probed", state.lastProbe !== null && state.lastProbe.nodeId === card.id);
     }
 
     const wantEdges = new Set(edges.map((edge) => `${edge.source}->${edge.target}`));
@@ -535,7 +913,63 @@ export function renderMapPage(root, store, options = {}) {
       }
     }
 
-    if (diffActive) renderedDiff = state.lastDiff;
+    if (diffActive && !fromSnapshot) renderedDiff = state.lastDiff;
+  }
+
+  /**
+   * Sync the page with the store: segmented control, title row, legend,
+   * learner grid or reality tree, comparison block, empty and ended states,
+   * and the timeline.
+   */
+  function sync() {
+    const state = store.getState();
+    const cards = learnerCards(state);
+
+    if (state.word !== lastWord) {
+      lastWord = state.word;
+      tab = "model";
+      tlStop = TL_LIVE;
+    }
+
+    const hasWord = state.word !== null;
+    const hasReality = state.realityMap !== null;
+    const compare = state.ended && hasReality;
+    const showTree = hasReality && tab === "reality";
+
+    word.textContent = state.word ?? "";
+    titleRow.hidden = !hasWord;
+    legend.hidden = !hasWord;
+    updateCloseness(state);
+    updateTabs(state);
+
+    cmpBlock.hidden = !compare;
+    if (compare) renderComparison(cmpBlock, state);
+
+    treePanel.hidden = !showTree;
+    if (showTree) renderTree(state);
+
+    renderTimeline();
+
+    if (!hasWord) {
+      noSession.hidden = false;
+      empty.hidden = true;
+      scroll.hidden = true;
+      ended.hidden = true;
+      return;
+    }
+    noSession.hidden = true;
+    if (cards.length === 0) {
+      empty.hidden = false;
+      scroll.hidden = true;
+      ended.hidden = state.ended ? false : true;
+      return;
+    }
+    empty.hidden = true;
+    scroll.hidden = showTree;
+    if (showTree) return;
+    ended.hidden = state.ended ? false : true;
+
+    renderGrid(state);
   }
 
   const unsubscribe = store.subscribe(sync);
@@ -551,6 +985,8 @@ export function renderMapPage(root, store, options = {}) {
     /** Tear the page down (not used in v1; keeps the subscription clean). */
     destroy() {
       unsubscribe();
+      dockHandle.destroy();
+      document.removeEventListener("keydown", onKeydown);
       if (responsive) {
         window.removeEventListener("resize", sync);
       }

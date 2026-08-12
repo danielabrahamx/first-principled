@@ -12,6 +12,7 @@ import { createRouter } from "./state/router.js";
 import { sessionStore } from "./state/session.js";
 import { renderMapPage } from "./pages/map.js";
 import { initChatPage } from "./pages/chat.js";
+import { wantsDemo, runDemo } from "./demo.js";
 
 /**
  * @param {string} id
@@ -49,3 +50,9 @@ function render(route) {
 
 router.subscribe(render);
 render(router.route);
+
+// ?demo=1 seeds a scripted session so the map-first UI is reviewable
+// without the API key (the DeepSeek key is 402 pending top-up, research/03).
+if (wantsDemo()) {
+  runDemo(sessionStore);
+}

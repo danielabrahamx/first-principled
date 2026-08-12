@@ -52,6 +52,24 @@ const ENVELOPED_MAP = JSON.stringify({
 });
 
 /** @type {string} */
+const FOUNDATION_REPLY = JSON.stringify({
+  isValidConcept: true,
+  foundation: {
+    layer: laptopRealityMap.layers[0],
+    nodes: laptopRealityMap.nodes.filter(
+      (node) => node.layer === laptopRealityMap.layers[0].id
+    ),
+  },
+});
+
+/** @type {string} */
+const DERIVED_MAP = JSON.stringify({
+  isValidConcept: true,
+  map: laptopRealityMap,
+  selfReview: { derivable: true, gaps: [] },
+});
+
+/** @type {string} */
 const OPENING_TURN = JSON.stringify({
   reply: "What have you noticed about how what you type becomes letters on the screen?",
   learnerMap: {
@@ -144,8 +162,8 @@ test("grade prompts carry the JSON mode contract and the question and answer", (
  * init
  * ------------------------------------------------------------------------- */
 
-test("init generates the map and runs the opening turn, contract-exact", async () => {
-  const { callLLM, requests } = scriptedTransport([ENVELOPED_MAP, OPENING_TURN]);
+test("init generates the map (foundation-first) and runs the opening turn, contract-exact", async () => {
+  const { callLLM, requests } = scriptedTransport([FOUNDATION_REPLY, DERIVED_MAP, OPENING_TURN]);
   const result = await handleRequest(clone(INIT_REQUEST), { callLLM });
 
   assert.equal(result.status, 200);
@@ -173,8 +191,10 @@ test("init generates the map and runs the opening turn, contract-exact", async (
   });
   assert.deepEqual(result.body.diff, { added: ["n-app"], flipped: [], updated: [] });
   assert.deepEqual(result.body.failedAttempts, {});
-  assert.equal(requests.length, 2, "map generation then one opening turn, no more calls");
-  const openingPrompt = requests[1].messages[1].content;
+  assert.equal(requests.length, 3, "foundation, derive, then one opening turn - no more calls");
+  assert.match(requests[0].messages[1].content, /Word or phrase: laptop/);
+  assert.match(requests[1].messages[1].content, /Derive the remaining layers/);
+  const openingPrompt = requests[2].messages[1].content;
   assert.match(openingPrompt, /Opening move/);
   assert.match(openingPrompt, /Latest learner message: "laptop"/);
 });
@@ -421,8 +441,8 @@ test("an unparseable grade after the repair attempt maps to a structured error",
  * ------------------------------------------------------------------------- */
 
 test("two identical requests with identical upstream results give identical responses", async () => {
-  const first = scriptedTransport([ENVELOPED_MAP, OPENING_TURN]);
-  const second = scriptedTransport([ENVELOPED_MAP, OPENING_TURN]);
+  const first = scriptedTransport([FOUNDATION_REPLY, DERIVED_MAP, OPENING_TURN]);
+  const second = scriptedTransport([FOUNDATION_REPLY, DERIVED_MAP, OPENING_TURN]);
   const resultA = await handleRequest(clone(INIT_REQUEST), { callLLM: first.callLLM });
   const resultB = await handleRequest(clone(INIT_REQUEST), { callLLM: second.callLLM });
   assert.deepEqual(resultA, resultB);

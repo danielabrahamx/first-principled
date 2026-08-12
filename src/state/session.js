@@ -38,9 +38,11 @@ import { gapClosuresInDiff } from "../lib/mmg/metrics.js";
 
 /** @typedef {import("../lib/mmg/types.js").RealityMap} RealityMap */
 /** @typedef {import("../lib/mmg/types.js").LearnerMentalModel} LearnerMentalModel */
+/** @typedef {import("../lib/mmg/types.js").NodeState} NodeState */
 /** @typedef {import("../lib/mmg/types.js").Diff} Diff */
 /** @typedef {import("../lib/agent/llm.js").ChatMessage} ChatMessage */
 /** @typedef {import("../lib/agent/socratic.js").FailedAttempts} FailedAttempts */
+/** @typedef {import("../lib/agent/socratic.js").Probe} Probe */
 
 /**
  * @typedef {object} SessionState
@@ -62,11 +64,43 @@ import { gapClosuresInDiff } from "../lib/mmg/metrics.js";
  *   (drives the map page's per-turn animation).
  * @property {string | null} lastReply - the reply text of the most recent
  *   response.
+ * @property {Probe | null} lastProbe - the probe of the most recent
+ *   response (ticket 09: the map page pulses the node being probed).
  * @property {number | null} closeness - closeness score of the current
  *   learner map, recomputed on every response (0 before the first turn).
  * @property {number} gapClosures - the session metric (spec section 10):
  *   how many nodes have flipped from missing or misconception to correct
  *   so far, accumulated from each turn's diff. Reset by startSession.
+ * @property {LedgerEntry[]} ledger - one entry per applied response, in
+ *   order, with the learner-map snapshot after that turn (ticket 08). The
+ *   map snapshot is what lets nodeHistory reconstruct evidence and
+ *   confidence per rotation - the diff alone cannot (an "updated" entry
+ *   does not say what changed). Reset by startSession.
+ */
+
+/**
+ * One turn in the ledger: the diff and reply of an applied response plus the
+ * learner-map snapshot it left behind (ticket 08). The snapshot is needed
+ * because a diff's `updated` list says a node changed but not to what - the
+ * map-first UI (tickets 09-12) shows evidence and confidence per rotation.
+ *
+ * @typedef {object} LedgerEntry
+ * @property {number} turn - 1-based turn number (the entry's index + 1).
+ * @property {Diff} diff - the response's diff (empty when none was sent).
+ * @property {string | null} reply - the response's reply text.
+ * @property {Probe | null} probe - the response's probe, for the probe
+ *   highlight and the timeline replay (tickets 09-12).
+ * @property {LearnerMentalModel} learnerMap - the learner map after this turn.
+ */
+
+/**
+ * One recorded state of a learner node at a turn, for the rotation trail.
+ *
+ * @typedef {object} NodeHistoryEntry
+ * @property {NodeState} state
+ * @property {number} confidence
+ * @property {string[]} evidence
+ * @property {number} turn
  */
 
 /**
@@ -104,9 +138,58 @@ function freshState() {
     transferResult: null,
     lastDiff: null,
     lastReply: null,
+    lastProbe: null,
     closeness: null,
     gapClosures: 0,
+    ledger: [],
   };
+}
+
+/**
+ * The per-node rotation trail: every time the node's state, confidence or
+ * evidence changed across the ledger, with the turn number (ticket 08).
+ * Pure and derived from the ledger, so the map-first UI (tickets 10-12) can
+ * show "untested -> misconception -> correct with evidence at each turn"
+ * without any extra storage. A node that was never engaged returns [].
+ *
+ * @param {Pick<SessionState, "ledger">} state
+ * @param {string} nodeId
+ * @returns {NodeHistoryEntry[]}
+ */
+export function nodeHistory(state, nodeId) {
+  /** @type {NodeHistoryEntry[]} */
+  const trail = [];
+  /** @type {LearnerMentalModel} */
+  let prev = { nodes: [], edges: [] };
+  for (const entry of state.ledger) {
+    const node = entry.learnerMap.nodes.find((n) => n.id === nodeId);
+    const prior = prev.nodes.find((n) => n.id === nodeId);
+    const changed =
+      node !== undefined &&
+      (prior === undefined ||
+        prior.state !== node.state ||
+        prior.confidence !== node.confidence ||
+        !sameEvidence(prior.evidence, node.evidence));
+    if (changed) {
+      trail.push({
+        state: node.state,
+        confidence: node.confidence,
+        evidence: [...node.evidence],
+        turn: entry.turn,
+      });
+    }
+    prev = entry.learnerMap;
+  }
+  return trail;
+}
+
+/**
+ * @param {readonly string[]} a
+ * @param {readonly string[]} b
+ * @returns {boolean}
+ */
+function sameEvidence(a, b) {
+  return a.length === b.length && a.every((value, i) => value === b[i]);
 }
 
 /**
@@ -204,12 +287,32 @@ export function createSessionStore() {
       if (response.phase === "init" || response.phase === "active" || response.phase === "end") {
         current.phase = response.phase;
       }
+      if (response.probe && typeof response.probe === "object") {
+        current.lastProbe = response.probe;
+      }
       if (response.sessionEnded === true) {
         current.ended = true;
         if (response.transferResult && typeof response.transferResult === "object") {
           current.transferResult = response.transferResult;
         }
       }
+
+      // Append the turn to the ledger (ticket 08): the diff, the reply, the
+      // probe, and a deep copy of the learner-map snapshot after this
+      // response, so per-node rotation history can be reconstructed with
+      // evidence and confidence intact - and so later view-layer mutations
+      // of the live map can never retroactively rewrite history.
+      current.ledger.push({
+        turn: current.ledger.length + 1,
+        diff:
+          response.diff && typeof response.diff === "object"
+            ? response.diff
+            : { added: [], flipped: [], updated: [] },
+        reply: typeof response.reply === "string" ? response.reply : null,
+        probe:
+          response.probe && typeof response.probe === "object" ? response.probe : null,
+        learnerMap: structuredClone(current.learnerMap),
+      });
       notify();
       return true;
     },

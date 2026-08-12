@@ -300,6 +300,22 @@ body {
   cursor: default;
 }
 
+.demo-button {
+  border: 1px dashed var(--accent);
+  background: transparent;
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 8px 18px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.demo-button:hover {
+  background: var(--accent-soft);
+}
+
 /* Messages */
 
 .messages {
@@ -980,7 +996,471 @@ body {
   color: var(--ink-muted);
 }
 
+/* --------------------------------------------------------------------------
+ * Map-first split layout (ticket 09): the map is the primary pane, the
+ * tutor conversation is docked beside it.
+ * ------------------------------------------------------------------------ */
+
+.map-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 28px;
+  align-items: start;
+}
+
+.map-main {
+  min-width: 0;
+}
+
+.map-dock-wrap {
+  position: sticky;
+  top: 24px;
+  min-width: 0;
+}
+
+/* The docked chat pane */
+
+.dock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 8px 28px rgba(30, 34, 40, 0.06);
+  max-height: calc(100dvh - 48px);
+}
+
+.dock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dock-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.dock-phase {
+  font-size: 11px;
+  padding: 4px 10px;
+}
+
+.dock-messages {
+  flex: 1;
+  min-height: 120px;
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 2px;
+}
+
+.dock-message {
+  max-width: 96%;
+}
+
+.dock-message .bubble {
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 22px;
+  border-radius: 4px 14px 14px 14px;
+  background: var(--ground);
+  border: 1px solid var(--border);
+}
+
+.dock-message p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.dock-user {
+  align-self: flex-end;
+}
+
+.dock-user .bubble {
+  background: var(--ink);
+  color: #ffffff;
+  border-radius: 14px 14px 4px 14px;
+}
+
+.dock-start {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--ink-muted);
+}
+
+.dock-start p {
+  margin: 0;
+}
+
+.dock-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: var(--ground);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 8px 8px 8px 14px;
+}
+
+.dock-input {
+  flex: 1;
+  resize: none;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  background: transparent;
+  border: none;
+  padding: 6px 0;
+  color: var(--ink);
+}
+
+.dock-input::placeholder {
+  color: #8a94a3;
+}
+
+.dock-input:focus {
+  outline: none;
+}
+
+.dock-input:disabled {
+  opacity: 0.55;
+}
+
+.dock-send {
+  width: 38px;
+  height: 38px;
+  font-size: 17px;
+}
+
+.dock-status {
+  margin: 0;
+  text-align: right;
+  font-size: 12px;
+}
+
+.dock-error {
+  padding: 10px 12px;
+  gap: 10px;
+}
+
+/* Timeline scrubber (ticket 12) */
+
+.map-timeline {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(30, 34, 40, 0.04);
+}
+
+.tl-btn {
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 16px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tl-btn:hover {
+  background: var(--accent-soft);
+}
+
+.tl-rail {
+  position: relative;
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--seg-track);
+}
+
+.tl-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.tl-stops {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px;
+}
+
+.tl-stop {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--surface);
+  background: var(--seg-track);
+  cursor: pointer;
+  padding: 0;
+}
+
+.tl-stop.active {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(91, 75, 196, 0.25);
+}
+
+.tl-counter {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  min-width: 40px;
+  text-align: right;
+}
+
+/* Node panel (ticket 10) */
+
+.node-panel {
+  position: fixed;
+  right: 16px;
+  top: 16px;
+  bottom: 16px;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 24px 64px rgba(30, 34, 40, 0.22);
+  padding: 20px;
+  overflow-y: auto;
+  z-index: 40;
+}
+
+.node-panel-close {
+  position: sticky;
+  top: 0;
+  float: right;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-muted);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.node-panel-close:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.node-panel-heading {
+  margin-bottom: 16px;
+}
+
+.node-panel-label {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.node-panel-section {
+  margin: 18px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.node-panel-h {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.node-panel-desc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--ink);
+}
+
+.node-panel-trail,
+.node-panel-evidence,
+.node-panel-neighbors {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.node-panel-trail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--ground);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.node-panel-trail-head {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.node-panel-quote {
+  font-size: 13px;
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+.node-panel-evidence-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.node-panel-turn {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 6px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+}
+
+.node-panel-neighbor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.node-panel-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+/* Hover history popover (ticket 11) */
+
+.history-popover {
+  position: fixed;
+  z-index: 50;
+  max-width: 320px;
+  background: var(--ink);
+  color: #ffffff;
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: 0 16px 40px rgba(30, 34, 40, 0.3);
+  font-size: 13px;
+}
+
+.history-popover-label {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #aeb6c4;
+}
+
+.history-popover-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-popover-item {
+  font-size: 13px;
+  line-height: 1.45;
+  color: #ffffff;
+}
+
+.history-popover-quote {
+  display: block;
+  margin-top: 2px;
+  color: #aeb6c4;
+  font-style: italic;
+}
+
+.history-popover-none {
+  margin: 0;
+  color: #aeb6c4;
+}
+
+/* Probe highlight (ticket 09): the node the tutor is asking about pulses */
+
+.map-card.probed {
+  animation: probe-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes probe-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(91, 75, 196, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(91, 75, 196, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(91, 75, 196, 0);
+  }
+}
+
 /* Narrow viewports */
+
+@media (max-width: 960px) {
+  .map-split {
+    grid-template-columns: 1fr;
+  }
+
+  .map-dock-wrap {
+    position: static;
+    order: 2;
+    max-height: 360px;
+  }
+
+  .dock {
+    max-height: 360px;
+  }
+
+  .node-panel {
+    width: calc(100vw - 32px);
+  }
+}
 
 @media (max-width: 480px) {
   .chat {
@@ -1024,5 +1504,14 @@ body {
 
   .map-closeness-frac {
     font-size: 26px;
+  }
+
+  .node-panel {
+    right: 8px;
+    left: 8px;
+    top: 8px;
+    bottom: 8px;
+    width: auto;
+    max-width: none;
   }
 }

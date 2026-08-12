@@ -32,6 +32,7 @@
 import { sessionStore } from "../state/session.js";
 import { callAgent as defaultCallAgent } from "../api/agent.js";
 import { getTurnstileToken } from "../turnstile.js";
+import { loadDemoSession } from "../demo.js";
 
 /** @typedef {import("../state/session.js").SessionState} SessionState */
 /** @typedef {import("../state/session.js").SessionStore} SessionStore */
@@ -129,6 +130,8 @@ export function initChatPage(root, options = {}) {
   const beginButton = get(root, "begin-button");
   /** @type {HTMLElement} */
   const startHint = get(root, "start-hint");
+  /** @type {HTMLButtonElement} */
+  const demoButton = get(root, "demo-button");
   /** @type {HTMLElement} */
   const phaseIndicator = get(root, "phase-indicator");
   /** @type {HTMLElement} */
@@ -256,6 +259,16 @@ export function initChatPage(root, options = {}) {
     autoGrow(messageInput);
     hideError();
     await runTurn(content);
+  }
+
+  /** Seed a scripted session so the UI is reviewable without the API key. */
+  function runDemo() {
+    if (sending) return;
+    if (!loadDemoSession(store)) return;
+    wordInput.value = "";
+    hideError();
+    render();
+    navigate("map");
   }
 
   /** Re-send the failed request. The store was untouched by the failure. */
@@ -414,6 +427,7 @@ export function initChatPage(root, options = {}) {
     sendMessage();
   });
   retryButton.addEventListener("click", retry);
+  demoButton.addEventListener("click", runDemo);
   wordInput.addEventListener("input", () => autoGrow(wordInput));
   messageInput.addEventListener("input", () => autoGrow(messageInput));
   wordInput.addEventListener("keydown", onKeydown);

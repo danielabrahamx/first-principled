@@ -192,6 +192,12 @@ export function validateRealityMap(input) {
       if (typeof node.description !== "string") {
         errors.push(`${where}.description must be a string`);
       }
+      if (node.basis !== undefined && (typeof node.basis !== "string" || node.basis.trim().length === 0)) {
+        // ticket 06: basis is the observation an abstraction compresses. It is
+        // optional (legacy maps and the eval fixtures predate it); the
+        // generator's deriveCheck enforces it for newly generated maps.
+        errors.push(`${where}.basis must be a non-empty string when present`);
+      }
       if (typeof node.layer !== "string") {
         errors.push(`${where}.layer must be a string`);
       } else if (layers && !layers.some((l) => l.id === node.layer)) {

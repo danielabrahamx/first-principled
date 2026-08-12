@@ -1,7 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { createSessionStore, sessionStore, EMPTY_LEARNER_MAP } from "./session.js";
+import {
+  createSessionStore,
+  sessionStore,
+  EMPTY_LEARNER_MAP,
+  nodeHistory,
+} from "./session.js";
 import { laptopRealityMap } from "../lib/mmg/fixtures.js";
 
 /**
@@ -23,6 +28,7 @@ function turnResponse(overrides = {}) {
     diff: { added: [], flipped: [], updated: [] },
     phase: "active",
     failedAttempts: {},
+    probe: { nodeId: "n-electricity", kind: "probe" },
     ...overrides,
   };
 }
@@ -288,6 +294,254 @@ test("the exported singleton is a working store and is shared", () => {
   assert.equal(typeof sessionStore.startSession, "function");
   assert.equal(typeof sessionStore.applyResponse, "function");
   assert.equal(typeof sessionStore.toRequest, "function");
+});
+
+/* ---------------------------------------------------------------------------
+ * Ticket 08: the turn ledger and per-node rotation history
+ * ------------------------------------------------------------------------- */
+
+test("the ledger appends one entry per applied response with diff, reply and map snapshot", () => {
+  const store = createSessionStore();
+  store.startSession("laptop");
+  store.applyResponse({
+    reply: "What have you noticed about how what you type becomes letters on the screen?",
+    learnerMap: EMPTY_LEARNER_MAP,
+    diff: { added: [], flipped: [], updated: [] },
+    phase: "active",
+    failedAttempts: {},
+    realityMap: laptopRealityMap,
+  });
+  store.appendUserMessage("I press keys and letters appear");
+  store.applyResponse(
+    turnResponse({
+      diff: { added: ["n-transistor"], flipped: [], updated: [] },
+    })
+  );
+
+  const ledger = store.getState().ledger;
+  assert.equal(ledger.length, 2);
+  assert.equal(ledger[0].turn, 1);
+  assert.equal(ledger[0].reply, "What have you noticed about how what you type becomes letters on the screen?");
+  assert.deepEqual(ledger[0].diff, { added: [], flipped: [], updated: [] });
+  assert.deepEqual(ledger[0].learnerMap, EMPTY_LEARNER_MAP);
+  assert.equal(ledger[1].turn, 2);
+  assert.deepEqual(ledger[1].diff, { added: ["n-transistor"], flipped: [], updated: [] });
+  assert.deepEqual(ledger[1].learnerMap, turnResponse().learnerMap);
+  assert.deepEqual(ledger[1].probe, { nodeId: "n-electricity", kind: "probe" }, "the probe lands in the ledger");
+});
+
+test("lastProbe tracks the most recent response's probe and resets on startSession", () => {
+  const store = createSessionStore();
+  store.startSession("laptop");
+  store.applyResponse({
+    reply: "Opening question",
+    learnerMap: EMPTY_LEARNER_MAP,
+    diff: { added: [], flipped: [], updated: [] },
+    phase: "active",
+    failedAttempts: {},
+    realityMap: laptopRealityMap,
+  });
+  assert.equal(store.getState().lastProbe, null, "the opening turn has no probe");
+  store.appendUserMessage("I press keys and letters appear");
+  store.applyResponse(turnResponse());
+  assert.deepEqual(store.getState().lastProbe, { nodeId: "n-electricity", kind: "probe" });
+  store.startSession("recursion");
+  assert.equal(store.getState().lastProbe, null, "a new session clears the probe");
+});
+
+test("ledger snapshots are deep copies - later mutation of the live map never rewrites history", () => {
+  const store = createSessionStore();
+  store.startSession("laptop");
+  store.applyResponse({
+    reply: "Opening question",
+    learnerMap: EMPTY_LEARNER_MAP,
+    diff: { added: [], flipped: [], updated: [] },
+    phase: "active",
+    failedAttempts: {},
+    realityMap: laptopRealityMap,
+  });
+  store.appendUserMessage("I press keys and letters appear");
+  store.applyResponse(turnResponse());
+
+  const snapshot = store.getState().ledger[1].learnerMap;
+  assert.notEqual(snapshot.nodes[0], store.getState().learnerMap.nodes[0], "snapshot must not share node objects with the live map");
+
+  // Mutate the live map in place - as a view layer might - and assert the
+  // ledger's earlier snapshot is untouched.
+  store.getState().learnerMap.nodes[0].state = "misconception";
+  store.getState().learnerMap.nodes[0].evidence.push("mutated later");
+
+  const ledger = store.getState().ledger;
+  assert.equal(ledger[1].learnerMap.nodes[0].state, "correct");
+  assert.deepEqual(ledger[1].learnerMap.nodes[0].evidence, ["I know it flows"]);
+  assert.equal(store.getState().learnerMap.nodes[0].state, "misconception", "the live map itself did change");
+});
+
+test("an init refusal also lands in the ledger", () => {
+  const store = createSessionStore();
+  store.startSession("gibberish");
+  store.applyResponse({
+    reply: "I could not find a teachable concept in that input.",
+    learnerMap: { nodes: [], edges: [] },
+    diff: { added: [], flipped: [], updated: [] },
+    phase: "init",
+    failedAttempts: {},
+  });
+  assert.equal(store.getState().ledger.length, 1);
+  assert.equal(store.getState().ledger[0].reply, "I could not find a teachable concept in that input.");
+});
+
+test("nodeHistory derives the full rotation trail with evidence at each turn", () => {
+  const store = createSessionStore();
+  store.startSession("laptop");
+  store.applyResponse({
+    reply: "Opening question",
+    learnerMap: EMPTY_LEARNER_MAP,
+    diff: { added: [], flipped: [], updated: [] },
+    phase: "active",
+    failedAttempts: {},
+    realityMap: laptopRealityMap,
+  });
+
+  // Turn 2: the node appears as a misconception.
+  store.appendUserMessage("a transistor is a switch you flick by hand");
+  store.applyResponse(
+    turnResponse({
+      learnerMap: {
+        nodes: [
+          {
+            id: "n-transistor",
+            state: "misconception",
+            confidence: 0.4,
+            evidence: ["a transistor is a switch you flick by hand"],
+          },
+        ],
+        edges: [],
+      },
+      diff: { added: ["n-transistor"], flipped: [], updated: [] },
+    })
+  );
+
+  // Turn 3: confidence shifts while the state holds (an update).
+  store.appendUserMessage("ok, a voltage-controlled switch?");
+  store.applyResponse(
+    turnResponse({
+      learnerMap: {
+        nodes: [
+          {
+            id: "n-transistor",
+            state: "misconception",
+            confidence: 0.3,
+            evidence: ["a transistor is a switch you flick by hand", "ok, a voltage-controlled switch?"],
+          },
+        ],
+        edges: [],
+      },
+      diff: { added: [], flipped: [], updated: ["n-transistor"] },
+    })
+  );
+
+  // Turn 4: the flip to correct.
+  store.appendUserMessage("small signals flip it on and off");
+  store.applyResponse(
+    turnResponse({
+      learnerMap: {
+        nodes: [
+          {
+            id: "n-transistor",
+            state: "correct",
+            confidence: 0.85,
+            evidence: ["a transistor is a switch you flick by hand", "small signals flip it on and off"],
+          },
+        ],
+        edges: [],
+      },
+      diff: {
+        added: [],
+        flipped: [{ id: "n-transistor", from: "misconception", to: "correct" }],
+        updated: [],
+      },
+    })
+  );
+
+  const trail = nodeHistory(store.getState(), "n-transistor");
+  assert.deepEqual(trail, [
+    {
+      state: "misconception",
+      confidence: 0.4,
+      evidence: ["a transistor is a switch you flick by hand"],
+      turn: 2,
+    },
+    {
+      state: "misconception",
+      confidence: 0.3,
+      evidence: ["a transistor is a switch you flick by hand", "ok, a voltage-controlled switch?"],
+      turn: 3,
+    },
+    {
+      state: "correct",
+      confidence: 0.85,
+      evidence: ["a transistor is a switch you flick by hand", "small signals flip it on and off"],
+      turn: 4,
+    },
+  ]);
+});
+
+test("nodeHistory is empty for a node that was never engaged", () => {
+  const store = createSessionStore();
+  store.startSession("laptop");
+  store.applyResponse({
+    reply: "Opening question",
+    learnerMap: EMPTY_LEARNER_MAP,
+    diff: { added: [], flipped: [], updated: [] },
+    phase: "active",
+    failedAttempts: {},
+    realityMap: laptopRealityMap,
+  });
+  assert.deepEqual(nodeHistory(store.getState(), "n-os"), []);
+});
+
+test("startSession resets the ledger and history - no cross-session leakage", () => {
+  const store = createSessionStore();
+  store.startSession("laptop");
+  store.applyResponse({
+    reply: "Opening question",
+    learnerMap: EMPTY_LEARNER_MAP,
+    diff: { added: [], flipped: [], updated: [] },
+    phase: "active",
+    failedAttempts: {},
+    realityMap: laptopRealityMap,
+  });
+  assert.equal(store.getState().ledger.length, 1);
+  assert.equal(store.startSession("recursion"), true);
+  assert.deepEqual(store.getState().ledger, []);
+  assert.deepEqual(nodeHistory(store.getState(), "n-transistor"), []);
+});
+
+test("a frozen store does not append to the ledger", () => {
+  const store = createSessionStore();
+  store.startSession("laptop");
+  store.applyResponse({
+    reply: "Opening question",
+    learnerMap: EMPTY_LEARNER_MAP,
+    diff: { added: [], flipped: [], updated: [] },
+    phase: "active",
+    failedAttempts: {},
+    realityMap: laptopRealityMap,
+  });
+  store.applyResponse({
+    reply: "End",
+    learnerMap: EMPTY_LEARNER_MAP,
+    diff: { added: [], flipped: [], updated: [] },
+    phase: "end",
+    failedAttempts: {},
+    sessionEnded: true,
+    transferResult: { passed: true, assessment: "Good." },
+  });
+  const count = store.getState().ledger.length;
+  assert.ok(count >= 2);
+  assert.equal(store.applyResponse(turnResponse()), false);
+  assert.equal(store.getState().ledger.length, count);
 });
 
 test("subscribe fires on startSession and applyResponse, and unsubscribes", () => {

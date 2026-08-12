@@ -26,15 +26,15 @@ test("ROUTES are exactly chat and map", () => {
   assert.deepEqual(ROUTES, ["chat", "map"]);
 });
 
-test("the default route is chat when the hash is empty", () => {
+test("the default route is map when the hash is empty (map-first, ticket 09)", () => {
   const router = createRouter({ location: fakeLocation("") });
   assert.equal(router.route, DEFAULT_ROUTE);
-  assert.equal(router.route, "chat");
+  assert.equal(router.route, "map");
 });
 
-test("an unknown hash falls back to chat", () => {
+test("an unknown hash falls back to map", () => {
   const router = createRouter({ location: fakeLocation("#about") });
-  assert.equal(router.route, "chat");
+  assert.equal(router.route, "map");
 });
 
 test("navigate switches the route and notifies subscribers", () => {
@@ -43,15 +43,17 @@ test("navigate switches the route and notifies subscribers", () => {
   const seen = [];
   const unsubscribe = router.subscribe((route) => seen.push(route));
 
-  router.navigate("map");
+  // The default route is map; the first navigation to a different route fires.
   assert.equal(router.route, "map");
   router.navigate("chat");
   assert.equal(router.route, "chat");
-  assert.deepEqual(seen, ["map", "chat"]);
+  router.navigate("map");
+  assert.equal(router.route, "map");
+  assert.deepEqual(seen, ["chat", "map"]);
 
   unsubscribe();
-  router.navigate("map");
-  assert.deepEqual(seen, ["map", "chat"]);
+  router.navigate("chat");
+  assert.deepEqual(seen, ["chat", "map"]);
 });
 
 test("navigate ignores unknown routes", () => {
@@ -60,15 +62,15 @@ test("navigate ignores unknown routes", () => {
   const seen = [];
   router.subscribe((route) => seen.push(route));
   router.navigate("settings");
-  assert.equal(router.route, "chat");
+  assert.equal(router.route, "map");
   assert.deepEqual(seen, []);
 });
 
 test("the router works without a location (pure route tracking)", () => {
   const router = createRouter({ location: null });
-  assert.equal(router.route, "chat");
-  router.navigate("map");
   assert.equal(router.route, "map");
+  router.navigate("chat");
+  assert.equal(router.route, "chat");
 });
 
 test("the browser hashchange event drives the router too", () => {
@@ -78,10 +80,15 @@ test("the browser hashchange event drives the router too", () => {
   const seen = [];
   router.subscribe((route) => seen.push(route));
 
+  assert.equal(router.route, "map", "empty hash means the map (map-first)");
+  location.hash = "#chat";
+  location.fireHashChange();
+  assert.equal(router.route, "chat");
+  assert.deepEqual(seen, ["chat"]);
   location.hash = "#map";
   location.fireHashChange();
   assert.equal(router.route, "map");
-  assert.deepEqual(seen, ["map"]);
+  assert.deepEqual(seen, ["chat", "map"]);
 });
 
 test("a Location without addEventListener falls back to globalThis", () => {
@@ -108,10 +115,14 @@ test("a Location without addEventListener falls back to globalThis", () => {
     const seen = [];
     router.subscribe((route) => seen.push(route));
 
+    bareLocation.hash = "#chat";
+    for (const listener of listeners.get("hashchange") ?? []) listener();
+    assert.equal(router.route, "chat");
+    assert.deepEqual(seen, ["chat"]);
     bareLocation.hash = "#map";
     for (const listener of listeners.get("hashchange") ?? []) listener();
     assert.equal(router.route, "map");
-    assert.deepEqual(seen, ["map"]);
+    assert.deepEqual(seen, ["chat", "map"]);
   } finally {
     globalThis.addEventListener = originalAdd;
   }

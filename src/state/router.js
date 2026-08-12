@@ -20,8 +20,10 @@
 /** @type {readonly string[]} */
 export const ROUTES = Object.freeze(["chat", "map"]);
 
-/** The default route when the hash is empty or unknown. */
-export const DEFAULT_ROUTE = "chat";
+/** The default route when the hash is empty or unknown. Map-first (ticket
+ * 09): the map is the home surface; chat is reachable via #chat and the
+ * docked panel. */
+export const DEFAULT_ROUTE = "map";
 
 /**
  * @param {string} hash

@@ -35,6 +35,7 @@ export const laptopRealityMap = {
       layer: "l1",
       description:
         "Semiconductor element whose manufacture depends on electricity; the material transistor junctions are built from.",
+      basis: "sand is everywhere and the chips inside devices come from it",
     },
     {
       id: "n-transistor",
@@ -42,6 +43,7 @@ export const laptopRealityMap = {
       layer: "l2",
       description:
         "Semiconductor switch that controls current flow; the basic building block of digital circuits.",
+      basis: "a light switch either passes current or stops it",
     },
     {
       id: "n-circuit",
@@ -49,6 +51,7 @@ export const laptopRealityMap = {
       layer: "l2",
       description:
         "Interconnected transistors and components that together implement a function.",
+      basis: "wiring components together so current flows through them",
     },
     {
       id: "n-logic-gate",
@@ -56,6 +59,7 @@ export const laptopRealityMap = {
       layer: "l3",
       description:
         "A circuit computing a boolean function such as AND, OR or NOT from input voltages.",
+      basis: "a password check either lets you in or stops you",
     },
     {
       id: "n-bit",
@@ -63,6 +67,7 @@ export const laptopRealityMap = {
       layer: "l3",
       description:
         "The smallest unit of information; a binary digit carried by a gate's output state.",
+      basis: "a switch being on or off is two distinct states",
     },
     {
       id: "n-os",
@@ -70,6 +75,7 @@ export const laptopRealityMap = {
       layer: "l4",
       description:
         "Software layer that manages hardware resources and runs applications on top of it.",
+      basis: "a machine boots into a home screen that runs the programs you open",
     },
     {
       id: "n-app",
@@ -77,6 +83,7 @@ export const laptopRealityMap = {
       layer: "l5",
       description:
         "A program the user interacts with directly, running on the operating system.",
+      basis: "double-clicking an icon opens the program you actually use",
     },
   ],
   edges: [
