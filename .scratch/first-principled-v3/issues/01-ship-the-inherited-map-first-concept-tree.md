@@ -12,7 +12,7 @@ first-principled.netlify.app.
 
 **Blocked by:** None - can start immediately.
 
-**Status:** ready-for-agent
+**Status:** claimed by opencode (Daniel session, DeepSeek v4 flash), 2026-08-12
 
 - [ ] Map-first layout, node panels, hover layer stories committed and pushed (scoped add, never git add -A)
 - [ ] Session machinery parked, not shipped as learner-turn replay

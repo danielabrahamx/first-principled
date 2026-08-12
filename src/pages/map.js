@@ -948,7 +948,9 @@ export function renderMapPage(root, store, options = {}) {
     treePanel.hidden = !showTree;
     if (showTree) renderTree(state);
 
-    renderTimeline();
+    // renderTimeline() is parked (v3 01): the scrubber/replay is session
+    // machinery, moot under the no-session decision - never unwire it in
+    // the live UI. The code stays for the discovery-timeline reframe.
 
     if (!hasWord) {
       noSession.hidden = false;
