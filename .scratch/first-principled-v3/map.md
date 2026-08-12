@@ -65,13 +65,13 @@ this effort.
 
 <!-- one line per resolved ticket -->
 - [05] STE subset: 8 STE100 rules + own ~60-word approved list (docs/ste.md); applies to learner-facing copy (generated via prompt, hand-written edited); microcopy exempt from sentence rules but approved words only; never code identifiers (2026-08-12).
+- [09 - Observation sourcing research](issues/09-observation-sourcing-research.md) - parametric coverage holds across tiers (40/45 EXACT, 0 UNKNOWN, 1 confident error); fail-honest contract drafted (UNKNOWN marker, visible gap, token headroom + retry); web grounding NOT required for canonical corpus - contract, not grounding (2026-08-12).
 
 ## Open frontier
 
 - [01 - Ship the inherited map-first concept tree](issues/01-ship-the-inherited-map-first-concept-tree.md) - unblocked, task (AFK)
 - [05 - STE subset for learner-facing copy](issues/05-ste-subset-for-learner-facing-copy.md) - unblocked, grilling (HITL)
 - [08 - Gap-free layer-chain structure](issues/08-gap-free-layer-chain-structure.md) - unblocked, task (AFK)
-- [09 - Observation sourcing research](issues/09-observation-sourcing-research.md) - unblocked, research (AFK)
 
 ## Not yet specified
 
