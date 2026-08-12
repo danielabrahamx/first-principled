@@ -1,32 +1,46 @@
 /**
- * Reality Map generation, v2 (ticket 06): foundation-first iterative
- * derivation, per ticket 04's v1 design and spec sections 4, 7, 8.
+ * Reality Map generation, v3 (ticket 08): gap-free bottom-up layer chain,
+ * extending the v2 foundation-first flow (ticket 06) and v1's design (ticket
+ * 04, spec sections 4, 7, 8).
  *
  * v1 generated the whole map in one call and validated only structure
  * (contiguity: every layer has an edge to a lower layer), so "plausible
- * chain" was the quality ceiling. v2 derives the chain instead of asserting
- * it, in two phases:
+ * chain" was the quality ceiling. v2 derived the chain in two phases - a
+ * foundation layer, then the rest in one call - so gaps were still possible
+ * and merely caught by validation. v3 makes a skipped intermediate step
+ * structurally impossible: the map is built bottom-up, one layer per call,
+ * and each call sees ONLY the layer immediately below it. A layer that is
+ * not the immediate successor of the last one built cannot be expressed,
+ * because the only layer the model can reference is the one it was given.
  *
  *   Phase A (foundation): name the deepest observable layer the thing is
- *   built on - the foundation. Refusal contract unchanged (a non-teachable
- *   input is refused, not mapped).
+ *   built on - the foundation, always layer l0. Refusal contract unchanged
+ *   (a non-teachable input is refused, not mapped).
  *
- *   Phase B (derive): given the foundation, derive the remaining layers
- *   upward. Every layer after the foundation must be built on the layer
- *   below it (typed edges), every node above the foundation carries a
+ *   Phase C (per-layer derive loop): build the remaining layers one at a
+ *   time, bottom-up. Each call receives the current top layer and derives
+ *   the NEXT layer directly above it - layer l1 from l0, l2 from l1, and so
+ *   on. Code assigns the layer ids (l1, l2, ...) and requires at least one
+ *   edge from each new layer to the layer below it, so the chain is
+ *   contiguous by construction. Every node above the foundation carries a
  *   `basis` - the observation the abstraction compresses (principle 5) -
  *   and nodes with testable behavior emit `predicts` edges (principle 2).
- *   The model reports a self-review of the chain's derivability.
+ *   The model reports a per-layer self-review of derivability. The loop
+ *   stops when the model says the concept is reached (done), or at the soft
+ *   layer cap.
  *
- * Code owns the hard checks: validateRealityMap (structure) plus
- * deriveCheck (reachability from the foundation and basis presence). The
- * map is repaired up to twice citing both, exactly like v1's repair loop.
+ * Code owns the hard checks at every step: validateRealityMap (structure
+ * and contiguity, v1 ticket 02) plus deriveCheck (reachability from the
+ * foundation and basis presence, v2 ticket 06) plus the per-layer rule (the
+ * new layer must connect to the layer below it). Failures drive the repair
+ * loop (v1 ticket 04) - up to two repairs per layer, exactly like v1's
+ * escalating repair contract. Both validators run once more on the final
+ * assembled map as the backstop gate: a map leaves this function only
+ * through both gates.
  *
- * Latency note: two smaller calls replace one big one; repairs add more. The
- * 30s budget and per-call costs are measured by live verification, which is
- * pending billing (research/03: the .env key returns 402). The flow is
- * prototype-fidelity by design - a per-layer one-call-per-layer loop is the
- * documented next step if latency allows.
+ * Latency note: per-layer calls are smaller than v2's single derive call,
+ * so the chain costs one call per layer plus repairs. Measured live in
+ * ticket 08: 30/30 concepts gap-free (research/08-gapfree-verification.md).
  *
  * The transport is injected (`callLLM`) so unit tests run against a stub and
  * live verification runs against the real DeepSeek API.
@@ -34,7 +48,7 @@
 
 import { callChatCompletion } from "./llm.js";
 import { parseModelJson } from "./jsonParse.js";
-import { validateRealityMap } from "../mmg/validator.js";
+import { validateRealityMap, MAX_REALITY_LAYERS } from "../mmg/validator.js";
 
 /**
  * @typedef {import("../mmg/types.js").RealityMap} RealityMap
@@ -137,35 +151,41 @@ function unpackFoundation(parsed) {
 }
 
 /* ---------------------------------------------------------------------------
- * Phase B: derive the rest of the chain
+ * Phase C: derive the chain one layer at a time, bottom-up
  * ------------------------------------------------------------------------- */
 
 /**
- * The system prompt for phase B: derive the remaining layers from the given
- * foundation, foundation-first, with a basis observation per abstraction,
- * predicts edges, and a self-review. The word "json" and an example shape
- * are both required by the JSON mode contract.
+ * The system prompt for a per-layer derive call (ticket 08): given the
+ * current top layer, derive the NEXT layer directly above it - built ONLY on
+ * the layer given, so a skipped intermediate step is structurally
+ * impossible. Basis per abstraction, typed edges, a per-layer self-review,
+ * and a done flag for when the concept is reached. The word "json" and an
+ * example shape are both required by the JSON mode contract.
  *
  * @param {number} maxLayers
  * @returns {string}
  */
-export function buildRealityMapSystemPrompt(maxLayers) {
+export function buildNextLayerSystemPrompt(maxLayers) {
   return `You are first-principled, an AI tutor whose mission is to reduce the cognitive distance between a learner's mental model and reality.
 
-You are given the FOUNDATION layer of a Reality Map - the deepest observable layer a thing is built on. Derive the REST of the map, layer by layer, from the foundation up to the thing itself. Each layer answers: what do the layers below make possible? Principle: no skipped intermediate steps - a gap in the chain becomes a gap in understanding. For "laptop", given the physics foundation, the chain runs materials, electronics, logic gates, operating system, applications - each step built on the one before.
+You are building the Reality Map of a concept layer by layer, bottom-up, one layer per reply. You are given the CURRENT TOP LAYER - the deepest layer built so far - and you derive the NEXT layer directly above it: the layer that the given layer makes possible. Derive the next layer ONLY from the layer you are given. Never skip an intermediate step and never jump ahead: a gap in the chain becomes a gap in understanding. For "laptop", given the physics foundation, the chain runs materials, electronics, logic gates, operating system, applications - each step built on the one before.
 
-Requirements for the map:
-- Around ${maxLayers} layers total, foundation included (a soft cap; do not rabbit-hole deeper unless the thing genuinely requires it).
-- A few nodes per layer; each node has an id, label, layer, and a one to two sentence description.
-- Every node ABOVE the foundation carries a "basis" field: the observation the abstraction compresses (principle 5). Example: logic gate -> basis "a password check either lets you in or stops you". The basis is what a learner can point at.
-- Edges are typed. The ONLY allowed types are: built-on, abstraction-of, part-of, depends-on, predicts, contradicts. Never invent an edge type. Every layer after the foundation must have at least one edge connecting it to a lower layer.
-- Where a node's behavior is testable, add a "predicts" edge (principle 2): the node predicts an observable outcome. Example: a battery predicts the torch dimming as it discharges.
-- Before replying, self-review the chain: is every layer actually built on the layer below? Does every abstraction have a basis? Are there invented steps? Report the review honestly.
+The whole chain will be around ${maxLayers} layers total, foundation included (a soft cap; do not plan deeper unless the thing genuinely requires it).
 
-Reply as JSON only. No markdown fences, no commentary. Two shapes:
+Requirements for the next layer:
+- Build exactly ONE layer, with the id stated in the prompt (l1, l2, ...).
+- 1 to 3 nodes; each node has an id, a label, the new layer id, a one to two sentence description, and a "basis" field: the observation the abstraction compresses (principle 5). The basis is what a learner can point at. Example: logic gate -> basis "a password check either lets you in or stops you".
+- Give every node a NEW unique id - never reuse a node id from the layers you were given; the same concept at a higher layer is a NEW node with a NEW id.
+- 1 to 3 typed edges. At least one edge must connect the new layer to the layer you were given. The ONLY allowed edge types are: built-on, abstraction-of, part-of, depends-on, predicts, contradicts. Never invent an edge type. Edges may also connect nodes within the new layer. Reference only node ids you were given or ids you create.
+- Before replying, self-review: is the new layer really built on the layer given? Does every node have a basis? Are there invented steps? Report the review honestly.
 
-When the derivation succeeds:
-{"isValidConcept": true, "map": {"concept": "...", "layers": [...], "nodes": [...], "edges": [...]}, "selfReview": {"derivable": true, "gaps": []}}
+Reply as JSON only. No markdown fences, no commentary. Three shapes:
+
+When the layer you were given is not yet the top of the chain:
+{"isValidConcept": true, "done": false, "layer": {"id": "l2", "name": "...", "nodes": ["n-..."]}, "nodes": [{"id": "n-...", "label": "...", "layer": "l2", "description": "...", "basis": "..."}], "edges": [{"source": "n-...", "target": "n-...", "type": "built-on"}], "selfReview": {"derivable": true, "gaps": []}}
+
+When the layer you were given already contains the thing itself - the concept is reached:
+{"isValidConcept": true, "done": true}
 
 When the concept turns out not to be derivable from the foundation (or is not a real thing):
 {"isValidConcept": false, "reason": "one short sentence explaining why not"}
@@ -175,24 +195,67 @@ Example node with a basis:
 }
 
 /**
+ * The per-layer user message: the concept, the layer immediately below (the
+ * ONLY map content the model sees - this is what makes skipping impossible),
+ * and the fixed id of the next layer to build.
+ *
  * @param {string} concept
- * @param {any} foundation
+ * @param {any} belowLayer
+ * @param {any[]} belowNodes
+ * @param {string} nextLayerId
  * @returns {import("./llm.js").ChatMessage}
  */
-function deriveUserMessage(concept, foundation) {
+function nextLayerUserMessage(concept, belowLayer, belowNodes, nextLayerId) {
   return {
     role: "user",
-    content: `Foundation (json):\n\n${JSON.stringify(foundation, null, 2)}\n\nDerive the remaining layers of "${concept}" from this foundation, from the foundation up to the concept itself. Reply with the full map (all layers, all nodes, all edges, foundation included) plus the self-review.`,
+    content: `Concept: ${concept}\n\nCurrent top layer (json):\n\n${JSON.stringify(
+      { layer: belowLayer, nodes: belowNodes },
+      null,
+      2
+    )}\n\nBuild layer ${nextLayerId}, the next layer directly above ${belowLayer.id}: what does the layer below make possible? Derive ${nextLayerId} ONLY from ${belowLayer.id} - do not skip a step. Reply with the required JSON shape: the new layer, its nodes, its edges, and the self-review. If ${belowLayer.id} already contains the thing the concept names, reply {"isValidConcept": true, "done": true} instead.`,
   };
 }
 
 /**
- * Unpacks a phase-B reply into a map + self-review or a refusal.
+ * The repair message for a failed layer attempt (v1 ticket 04's escalating
+ * repair contract, per layer): cites the problems and narrows the
+ * instructions.
+ *
+ * @param {string} concept
+ * @param {any} belowLayer
+ * @param {any[]} belowNodes
+ * @param {string} nextLayerId
+ * @param {string} problems
+ * @param {boolean} finalAttempt
+ * @returns {import("./llm.js").ChatMessage}
+ */
+function nextLayerRepairMessage(
+  concept,
+  belowLayer,
+  belowNodes,
+  nextLayerId,
+  problems,
+  finalAttempt
+) {
+  return {
+    role: "user",
+    content: `Concept: ${concept}\n\nCurrent top layer (json):\n\n${JSON.stringify(
+      { layer: belowLayer, nodes: belowNodes },
+      null,
+      2
+    )}\n\nYour previous attempt to build layer ${nextLayerId} did not meet the contract: ${problems}\n\nReply with JSON only, no markdown, exactly the required shape: the layer ${nextLayerId}, its nodes, its edges to ${belowLayer.id}, and the self-review. Do not rename or re-list existing layers or nodes. Every new node needs a NEW unique id - never reuse a node id from the layer below. Fix EVERY problem listed.${
+      finalAttempt ? " This is your final attempt." : ""
+    }`,
+  };
+}
+
+/**
+ * Unpacks a per-layer reply into a done flag, a layer, or a refusal.
  *
  * @param {unknown} parsed
- * @returns {{ refused: true; reason: string } | { refused: false; map: any; selfReview: any } | null}
+ * @returns {{ refused: true; reason: string } | { refused: false; done: boolean; layer: any; nodes: any[]; edges: any[]; selfReview: any } | null}
  */
-function unpackDerive(parsed) {
+function unpackNextLayer(parsed) {
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
     return null;
   }
@@ -206,17 +269,169 @@ function unpackDerive(parsed) {
           : "The model could not derive a teachable chain here.",
     };
   }
-  if (typeof reply.map === "object" && reply.map !== null) {
+  if (reply.done === true) {
+    return { refused: false, done: true, layer: null, nodes: [], edges: [], selfReview: {} };
+  }
+  if (reply.layer && typeof reply.layer === "object") {
     return {
       refused: false,
-      map: reply.map,
-      selfReview: reply.selfReview && typeof reply.selfReview === "object" ? reply.selfReview : {},
+      done: false,
+      layer: reply.layer,
+      nodes: Array.isArray(reply.nodes) ? reply.nodes : [],
+      edges: Array.isArray(reply.edges) ? reply.edges : [],
+      selfReview:
+        reply.selfReview && typeof reply.selfReview === "object" ? reply.selfReview : {},
     };
   }
-  if (Array.isArray(reply.layers)) {
-    return { refused: false, map: reply, selfReview: {} };
-  }
   return null;
+}
+
+/**
+ * Merges a per-layer reply into the assembled map.
+ *
+ * @param {{ concept: string; layers: any[]; nodes: any[]; edges: any[] }} assembled
+ * @param {{ layer: any; nodes?: any; edges?: any }} layerReply
+ * @returns {{ concept: string; layers: any[]; nodes: any[]; edges: any[] }}
+ */
+function mergeLayer(assembled, layerReply) {
+  return {
+    concept: assembled.concept,
+    layers: [...assembled.layers, layerReply.layer],
+    nodes: [
+      ...assembled.nodes,
+      ...(Array.isArray(layerReply.nodes) ? layerReply.nodes : []),
+    ],
+    edges: [
+      ...assembled.edges,
+      ...(Array.isArray(layerReply.edges) ? layerReply.edges : []),
+    ],
+  };
+}
+
+/**
+ * The per-layer gate (ticket 08): the assembled map must pass the contiguity
+ * validator (v1 02) and deriveCheck (v2 06) - the same backstop gates that
+ * run on the final map - plus the structural per-layer rule: the new layer
+ * must have the expected id and at least one edge connecting it to the layer
+ * immediately below (the only layer the derivation call could see). The
+ * model's own self-review is honored when it reports problems.
+ *
+ * @param {any} candidate
+ * @param {string} nextLayerId
+ * @param {string} belowLayerId
+ * @param {any} selfReview
+ * @returns {string[]} the problems to feed the next repair attempt
+ */
+function layerProblems(candidate, nextLayerId, belowLayerId, selfReview) {
+  const validation = validateRealityMap(candidate);
+  const derive = deriveCheck(candidate);
+  const errors = [...validation.errors, ...derive.errors];
+  if (!candidate.layers.some(
+    /** @param {any} layer */
+    (layer) => layer.id === nextLayerId
+  )) {
+    errors.push(`the new layer id must be ${nextLayerId}`);
+  }
+  const layerIndex = new Map(
+    candidate.layers.map(
+      /** @param {any} layer @param {number} i */
+      (layer, i) => [layer.id, i]
+    )
+  );
+  const belowIndex = layerIndex.get(belowLayerId);
+  const nextIndex = layerIndex.get(nextLayerId);
+  if (nextIndex !== undefined && belowIndex !== undefined && nextIndex - belowIndex === 1) {
+    const connectsDown = candidate.edges.some(
+      /** @param {any} edge */
+      (edge) => {
+        const s = candidate.nodes.find(
+          /** @param {any} node */
+          (node) => node.id === edge.source
+        );
+        const t = candidate.nodes.find(
+          /** @param {any} node */
+          (node) => node.id === edge.target
+        );
+        if (!s || !t) return false;
+        const si = layerIndex.get(s.layer);
+        const ti = layerIndex.get(t.layer);
+        return (si === nextIndex && ti === belowIndex) || (ti === nextIndex && si === belowIndex);
+      }
+    );
+    if (!connectsDown) {
+      errors.push(
+        `layer "${nextLayerId}" has no edge connecting it to the layer below (${belowLayerId}) - every layer must be derived from the layer immediately below it`
+      );
+    }
+  }
+  if (selfReview && selfReview.derivable === false) {
+    errors.push("your self-review reports the new layer is not derivable from the layer below");
+  }
+  if (selfReview && Array.isArray(selfReview.gaps) && selfReview.gaps.length > 0) {
+    errors.push(`your self-review reports gaps: ${selfReview.gaps.slice(0, 3).join("; ")}`);
+  }
+  return errors;
+}
+
+/**
+ * The problem statement for the next layer repair attempt.
+ *
+ * @param {string[]} problems
+ * @param {boolean} parseable
+ * @returns {string}
+ */
+function layerProblemsText(problems, parseable) {
+  if (!parseable) {
+    return "your reply was not valid JSON in the required shape";
+  }
+  return [...new Set(problems)].slice(0, 6).join("; ");
+}
+
+/**
+ * Structural check of a phase-A foundation reply. The foundation is locked
+ * in by the per-layer loop, so phase A must own its shape - phase B can no
+ * longer patch a malformed foundation the way v2's single derive call could.
+ *
+ * @param {any} foundation
+ * @returns {string[]}
+ */
+function foundationProblems(foundation) {
+  const errors = /** @type {string[]} */ ([]);
+  const layer = foundation && foundation.layer;
+  if (typeof layer !== "object" || layer === null) {
+    errors.push("foundation.layer must be an object");
+    return errors;
+  }
+  if (typeof layer.id !== "string" || layer.id.length === 0) {
+    errors.push("foundation.layer.id must be a non-empty string");
+  }
+  if (typeof layer.name !== "string" || layer.name.length === 0) {
+    errors.push("foundation.layer.name must be a non-empty string");
+  }
+  if (!Array.isArray(layer.nodes)) {
+    errors.push("foundation.layer.nodes must be an array");
+  }
+  const nodes = foundation.nodes;
+  if (!Array.isArray(nodes) || nodes.length === 0) {
+    errors.push("foundation.nodes must be a non-empty array");
+  } else {
+    for (const node of nodes) {
+      if (typeof node !== "object" || node === null) {
+        errors.push("foundation nodes must be objects");
+        continue;
+      }
+      if (typeof node.id !== "string" || node.id.length === 0) {
+        errors.push("foundation node ids must be non-empty strings");
+      }
+      if (typeof node.label !== "string" || node.label.length === 0) {
+        errors.push("foundation node labels must be non-empty strings");
+      }
+      if (typeof node.description !== "string") {
+        errors.push("foundation node descriptions must be strings");
+      }
+    }
+  }
+  return errors;
 }
 
 /* ---------------------------------------------------------------------------
@@ -287,29 +502,18 @@ export function deriveCheck(map) {
  * Generation flow
  * ------------------------------------------------------------------------- */
 
-/** Phase B attempts: initial derivation plus two repairs. */
-const MAX_DERIVE_ATTEMPTS = 3;
+/** Per-layer attempts: initial derivation plus two repairs. */
+const MAX_LAYER_ATTEMPTS = 3;
 /** Phase A attempts: initial foundation plus one repair. */
 const MAX_FOUNDATION_ATTEMPTS = 2;
 
 /**
- * @param {string} concept
- * @param {any} foundation
- * @param {string} problems
- * @param {boolean} finalAttempt
- * @returns {import("./llm.js").ChatMessage}
- */
-function deriveRepairMessage(concept, foundation, problems, finalAttempt) {
-  return {
-    role: "user",
-    content: `Foundation (json):\n\n${JSON.stringify(foundation, null, 2)}\n\nYour previous derivation of "${concept}" did not meet the contract: ${problems}\n\nReply with JSON only, no markdown, exactly the required shape. Do not drop or rename the foundation layer. Fix EVERY problem listed.${
-      finalAttempt ? " This is your final attempt." : ""
-    }`,
-  };
-}
-
-/**
- * Generates a Reality Map for a word or phrase, foundation-first.
+ * Generates a Reality Map for a word or phrase, bottom-up and layer by
+ * layer: the foundation first, then each layer derived only from the layer
+ * immediately below it, so a skipped intermediate step is structurally
+ * impossible rather than merely validated against. The contiguity validator
+ * and deriveCheck gate every layer and the final map as the backstop; the
+ * repair loop fixes flagged layers up to twice each.
  *
  * @param {{ concept: string; callLLM?: CallLLM }} input
  * @param {GenerateOptions} [options]
@@ -338,8 +542,13 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
 
   const maxTokens = options.maxTokens ?? 4096;
   const thinking = options.thinking === true;
+  /** The soft layer cap, hard-clamped to the validator's structural max. */
+  const maxLayers = Math.min(
+    Math.max(1, Math.floor(options.maxLayers ?? 6)),
+    MAX_REALITY_LAYERS
+  );
   const totalStarted = Date.now();
-  /** Whether any repair attempt was used across either phase. */
+  /** Whether any repair attempt was used across any phase. */
   let repaired = false;
 
   /**
@@ -353,6 +562,8 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
   /* Phase A: the foundation. */
   /** @type {any} */
   let foundation = null;
+  /** @type {string} */
+  let foundationProblemsText = "it was not valid JSON in the required shape";
   for (let attempt = 0; attempt < MAX_FOUNDATION_ATTEMPTS; attempt++) {
     const isRepair = attempt > 0;
     if (isRepair) repaired = true;
@@ -362,7 +573,7 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
           { role: "system", content: buildFoundationSystemPrompt() },
           {
             role: "user",
-            content: `Word or phrase: ${trimmed}\n\nYour previous reply did not meet the contract: it was not valid JSON in the required shape.\n\nReply with JSON only, exactly one of the two shapes.`,
+            content: `Word or phrase: ${trimmed}\n\nYour previous reply did not meet the contract: ${foundationProblemsText}\n\nReply with JSON only, exactly one of the two shapes.`,
           },
         ]
       : [{ role: "system", content: buildFoundationSystemPrompt() }, foundationUserMessage(trimmed)];
@@ -393,9 +604,16 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
         retried: attempt > 0,
       };
     }
-    if (unpack === null) continue;
-    foundation = unpack.foundation;
-    break;
+    if (unpack === null) {
+      foundationProblemsText = "it was not valid JSON in the required shape";
+      continue;
+    }
+    const problems = foundationProblems(unpack.foundation);
+    if (problems.length === 0) {
+      foundation = unpack.foundation;
+      break;
+    }
+    foundationProblemsText = problems.slice(0, 6).join("; ");
   }
 
   if (foundation === null) {
@@ -410,127 +628,153 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
     };
   }
 
-  /* Phase B: derive the rest. */
-  let lastValidation = { ok: false, errors: /** @type {string[]} */ ([]) };
-  let lastDerive = { ok: false, errors: /** @type {string[]} */ ([]) };
-  let lastSelfGaps = /** @type {string[]} */ ([]);
-  let parseable = false;
+  /* The foundation is always layer l0 - code owns the ids from here on, so
+   * the layer id sequence itself cannot skip (l1, l2, ... in order). */
+  const assembled = {
+    concept: trimmed,
+    layers: [{ ...foundation.layer, id: "l0" }],
+    nodes: (foundation.nodes ?? []).map(
+      /** @param {any} node */
+      (node) => ({ ...node, layer: "l0" })
+    ),
+    edges: [],
+  };
 
-  for (let attempt = 0; attempt < MAX_DERIVE_ATTEMPTS; attempt++) {
-    const isRepair = attempt > 0;
-    if (isRepair) repaired = true;
-    const finalAttempt = attempt === MAX_DERIVE_ATTEMPTS - 1;
-    /** @type {import("./llm.js").ChatMessage[]} */
-    const messages = isRepair
-      ? [
-          { role: "system", content: buildRealityMapSystemPrompt(options.maxLayers ?? 6) },
-          deriveRepairMessage(
-            trimmed,
-            foundation,
-            deriveProblems(lastValidation, lastDerive, lastSelfGaps, parseable),
-            finalAttempt
-          ),
-        ]
-      : [
-          { role: "system", content: buildRealityMapSystemPrompt(options.maxLayers ?? 6) },
-          deriveUserMessage(trimmed, foundation),
-        ];
+  /* Phase C: derive the remaining layers one at a time, bottom-up. Each call
+   * sees only the layer immediately below - a skipped intermediate step
+   * cannot be expressed, because the layer it would skip is the only map
+   * content the call receives. */
+  /** @type {string[]} */
+  let lastProblems = [];
+  let lastParseable = true;
+  let done = false;
 
-    let reply;
-    try {
-      reply = await call(messages);
-    } catch (err) {
+  for (let layerCount = 1; layerCount < maxLayers && !done; layerCount++) {
+    const nextLayerId = `l${layerCount}`;
+    const belowLayer = assembled.layers[assembled.layers.length - 1];
+    const belowNodes = assembled.nodes.filter(
+      /** @param {any} node */
+      (node) => node.layer === belowLayer.id
+    );
+    let layerOk = false;
+    lastProblems = [];
+    lastParseable = true;
+
+    for (let attempt = 0; attempt < MAX_LAYER_ATTEMPTS; attempt++) {
+      const isRepair = attempt > 0;
+      if (isRepair) repaired = true;
+      const finalAttempt = attempt === MAX_LAYER_ATTEMPTS - 1;
+      /** @type {import("./llm.js").ChatMessage[]} */
+      const messages = isRepair
+        ? [
+            { role: "system", content: buildNextLayerSystemPrompt(maxLayers) },
+            nextLayerRepairMessage(
+              trimmed,
+              belowLayer,
+              belowNodes,
+              nextLayerId,
+              layerProblemsText(lastProblems, lastParseable),
+              finalAttempt
+            ),
+          ]
+        : [
+            { role: "system", content: buildNextLayerSystemPrompt(maxLayers) },
+            nextLayerUserMessage(trimmed, belowLayer, belowNodes, nextLayerId),
+          ];
+
+      let reply;
+      try {
+        reply = await call(messages);
+      } catch (err) {
+        return {
+          ok: false,
+          map: null,
+          kind: "error",
+          reason: err instanceof Error ? err.message : String(err),
+          errors: [],
+          latencyMs: Date.now() - totalStarted,
+          retried: true,
+        };
+      }
+
+      const parsed = parseModelJson(reply.content);
+      const unpack = unpackNextLayer(parsed);
+      if (unpack === null) {
+        lastParseable = false;
+        lastProblems = [];
+        continue;
+      }
+      if (unpack.refused) {
+        return {
+          ok: false,
+          map: null,
+          kind: "refused",
+          reason: unpack.reason,
+          errors: [],
+          latencyMs: Date.now() - totalStarted,
+          retried: true,
+        };
+      }
+      if (unpack.done) {
+        done = true;
+        layerOk = true;
+        break;
+      }
+      lastParseable = true;
+      const candidate = repairMap(mergeLayer(assembled, unpack));
+      const problems = layerProblems(candidate, nextLayerId, belowLayer.id, unpack.selfReview);
+      if (problems.length === 0) {
+        assembled.layers = candidate.layers;
+        assembled.nodes = candidate.nodes;
+        assembled.edges = candidate.edges;
+        layerOk = true;
+        break;
+      }
+      lastProblems = problems;
+    }
+
+    if (!layerOk) {
       return {
         ok: false,
         map: null,
-        kind: "error",
-        reason: err instanceof Error ? err.message : String(err),
-        errors: [],
+        kind: "invalid",
+        reason: lastParseable
+          ? "The model could not produce a valid, derivable next layer after two repair attempts."
+          : "The model could not produce parseable JSON for a layer after two repair attempts.",
+        errors: lastProblems,
         latencyMs: Date.now() - totalStarted,
         retried: true,
       };
     }
+  }
 
-    const parsed = parseModelJson(reply.content);
-    const unpack = unpackDerive(parsed);
-    if (unpack !== null && unpack.refused) {
-      return {
-        ok: false,
-        map: null,
-        kind: "refused",
-        reason: unpack.reason,
-        errors: [],
-        latencyMs: Date.now() - totalStarted,
-        retried: true,
-      };
-    }
-    if (unpack === null) {
-      parseable = false;
-      lastValidation = { ok: false, errors: [] };
-      lastDerive = { ok: false, errors: [] };
-      lastSelfGaps = [];
-      continue;
-    }
-
-    parseable = true;
-    const candidate = repairMap(unpack.map);
-    lastValidation = validateRealityMap(candidate);
-    lastDerive = deriveCheck(candidate);
-    const selfReviewOk =
-      unpack.selfReview && unpack.selfReview.derivable !== false
-        ? true
-        : false;
-    lastSelfGaps =
-      unpack.selfReview && Array.isArray(unpack.selfReview.gaps) ? unpack.selfReview.gaps : [];
-
-    if (
-      lastValidation.ok &&
-      lastDerive.ok &&
-      selfReviewOk &&
-      lastSelfGaps.length === 0
-    ) {
-      return {
-        ok: true,
-        map: /** @type {RealityMap} */ (candidate),
-        kind: null,
-        reason: null,
-        errors: [],
-        latencyMs: Date.now() - totalStarted,
-        retried: repaired,
-      };
-    }
+  /* Final backstop gate: the assembled map leaves only through both
+   * validators - the contiguity validator (v1 02) and deriveCheck (v2 06).
+   * Every layer already passed them on merge, so this is the belt-and-braces
+   * gate the ticket keeps by design. */
+  const finalValidation = validateRealityMap(assembled);
+  const finalDerive = deriveCheck(assembled);
+  if (finalValidation.ok && finalDerive.ok) {
+    return {
+      ok: true,
+      map: /** @type {RealityMap} */ (assembled),
+      kind: null,
+      reason: null,
+      errors: [],
+      latencyMs: Date.now() - totalStarted,
+      retried: repaired,
+    };
   }
 
   return {
     ok: false,
     map: null,
     kind: "invalid",
-    reason: parseable
-      ? "The model could not produce a derivable, schema-valid Reality Map after two repair attempts."
-      : "The model could not produce parseable JSON after two repair attempts.",
-    errors: [...lastValidation.errors, ...lastDerive.errors],
+    reason: "The assembled map failed the final validator gates.",
+    errors: [...finalValidation.errors, ...finalDerive.errors],
     latencyMs: Date.now() - totalStarted,
     retried: true,
   };
-}
-
-/**
- * The problem statement for the next derive repair attempt.
- *
- * @param {{ ok: boolean; errors: string[] }} validation
- * @param {{ ok: boolean; errors: string[] }} derive
- * @param {string[]} selfGaps
- * @param {boolean} parseable
- * @returns {string}
- */
-function deriveProblems(validation, derive, selfGaps, parseable) {
-  if (!parseable) {
-    return "your reply was not valid JSON in the required shape";
-  }
-  const unique = [
-    ...new Set([...validation.errors, ...derive.errors, ...selfGaps]),
-  ];
-  return unique.slice(0, 6).join("; ");
 }
 
 /**

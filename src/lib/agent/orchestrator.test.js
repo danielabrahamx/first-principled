@@ -62,12 +62,65 @@ const FOUNDATION_REPLY = JSON.stringify({
   },
 });
 
-/** @type {string} */
-const DERIVED_MAP = JSON.stringify({
-  isValidConcept: true,
-  map: laptopRealityMap,
-  selfReview: { derivable: true, gaps: [] },
-});
+/**
+ * The per-layer map-generation script (ticket 08): the foundation reply,
+ * then one reply per layer rebuilding the fixture bottom-up. Each layer
+ * reply carries the fixture layer, its nodes, and the fixture edges whose
+ * higher endpoint sits in that layer, so the assembled map reproduces the
+ * fixture (edge order excepted - an edge belongs to the reply of its higher
+ * layer).
+ *
+ * @type {string[]}
+ */
+const PER_LAYER_MAP_SCRIPT = (() => {
+  const layerIndex = new Map(
+    laptopRealityMap.layers.map((layer, i) => [layer.id, i])
+  );
+  const nodeLayer = new Map(
+    laptopRealityMap.nodes.map((node) => [node.id, layerIndex.get(node.layer)])
+  );
+  const script = [FOUNDATION_REPLY];
+  for (let k = 1; k < laptopRealityMap.layers.length; k++) {
+    const layer = laptopRealityMap.layers[k];
+    const nodes = laptopRealityMap.nodes.filter((node) => node.layer === layer.id);
+    const edges = laptopRealityMap.edges.filter((edge) => {
+      const s = nodeLayer.get(edge.source) ?? -1;
+      const t = nodeLayer.get(edge.target) ?? -1;
+      return Math.max(s, t) === k;
+    });
+    script.push(
+      JSON.stringify({
+        isValidConcept: true,
+        done: false,
+        layer,
+        nodes,
+        edges,
+        selfReview: { derivable: true, gaps: [] },
+      })
+    );
+  }
+  return script;
+})();
+
+/**
+ * The per-layer assembled map differs from the fixture only in edge ORDER,
+ * so compare the reality maps semantically: identical layers, nodes, and
+ * edge set.
+ *
+ * @param {any} actual
+ * @param {any} expected
+ */
+function assertRealityMapEqual(actual, expected) {
+  /** @param {any} m */
+  const sortEdges = (m) =>
+    [...m.edges].sort((a, b) =>
+      `${a.source}|${a.target}|${a.type}`.localeCompare(`${b.source}|${b.target}|${b.type}`)
+    );
+  assert.deepEqual(actual.layers, expected.layers);
+  assert.deepEqual(actual.nodes, expected.nodes);
+  assert.deepEqual(sortEdges(actual), sortEdges(expected));
+  assert.equal(actual.concept, expected.concept);
+}
 
 /** @type {string} */
 const OPENING_TURN = JSON.stringify({
@@ -162,8 +215,8 @@ test("grade prompts carry the JSON mode contract and the question and answer", (
  * init
  * ------------------------------------------------------------------------- */
 
-test("init generates the map (foundation-first) and runs the opening turn, contract-exact", async () => {
-  const { callLLM, requests } = scriptedTransport([FOUNDATION_REPLY, DERIVED_MAP, OPENING_TURN]);
+test("init generates the map (per-layer bottom-up) and runs the opening turn, contract-exact", async () => {
+  const { callLLM, requests } = scriptedTransport([...PER_LAYER_MAP_SCRIPT, OPENING_TURN]);
   const result = await handleRequest(clone(INIT_REQUEST), { callLLM });
 
   assert.equal(result.status, 200);
@@ -175,7 +228,7 @@ test("init generates the map (foundation-first) and runs the opening turn, contr
     "realityMap",
     "reply",
   ]);
-  assert.deepEqual(result.body.realityMap, laptopRealityMap);
+  assertRealityMapEqual(result.body.realityMap, laptopRealityMap);
   assert.equal(result.body.phase, "active");
   assert.equal(result.body.reply, "What have you noticed about how what you type becomes letters on the screen?");
   assert.deepEqual(result.body.learnerMap, {
@@ -191,10 +244,11 @@ test("init generates the map (foundation-first) and runs the opening turn, contr
   });
   assert.deepEqual(result.body.diff, { added: ["n-app"], flipped: [], updated: [] });
   assert.deepEqual(result.body.failedAttempts, {});
-  assert.equal(requests.length, 3, "foundation, derive, then one opening turn - no more calls");
+  assert.equal(requests.length, laptopRealityMap.layers.length + 1, "foundation + one call per layer, then one opening turn - no more calls");
   assert.match(requests[0].messages[1].content, /Word or phrase: laptop/);
-  assert.match(requests[1].messages[1].content, /Derive the remaining layers/);
-  const openingPrompt = requests[2].messages[1].content;
+  assert.match(requests[1].messages[1].content, /Build layer l1/);
+  assert.match(requests[laptopRealityMap.layers.length - 1].messages[1].content, /Build layer l5/);
+  const openingPrompt = requests[laptopRealityMap.layers.length].messages[1].content;
   assert.match(openingPrompt, /Opening move/);
   assert.match(openingPrompt, /Latest learner message: "laptop"/);
 });
@@ -303,7 +357,7 @@ test("active runs one Socratic turn, wired to the learner's latest message", asy
 
   const prompt = requests[0].messages[1].content;
   assert.match(prompt, /Latest learner message: "transistors are switches you flick by hand"/);
-  assert.match(prompt, /"phase": "active"/);
+  assert.match(prompt, /Phase: active/);
   assert.doesNotMatch(prompt, /explanation fallback is due/);
 });
 
@@ -441,8 +495,8 @@ test("an unparseable grade after the repair attempt maps to a structured error",
  * ------------------------------------------------------------------------- */
 
 test("two identical requests with identical upstream results give identical responses", async () => {
-  const first = scriptedTransport([FOUNDATION_REPLY, DERIVED_MAP, OPENING_TURN]);
-  const second = scriptedTransport([FOUNDATION_REPLY, DERIVED_MAP, OPENING_TURN]);
+  const first = scriptedTransport([...PER_LAYER_MAP_SCRIPT, OPENING_TURN]);
+  const second = scriptedTransport([...PER_LAYER_MAP_SCRIPT, OPENING_TURN]);
   const resultA = await handleRequest(clone(INIT_REQUEST), { callLLM: first.callLLM });
   const resultB = await handleRequest(clone(INIT_REQUEST), { callLLM: second.callLLM });
   assert.deepEqual(resultA, resultB);

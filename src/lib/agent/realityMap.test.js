@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   buildFoundationSystemPrompt,
-  buildRealityMapSystemPrompt,
+  buildNextLayerSystemPrompt,
   deriveCheck,
   generateRealityMap,
 } from "./realityMap.js";
@@ -20,10 +20,11 @@ import { laptopRealityMap } from "../mmg/fixtures.js";
  * @returns {{ callLLM: (request: any) => Promise<{ content: string }>, requests: any[] }}
  */
 function stubTransport(replies) {
+  const queue = [...replies];
   const requests = /** @type {any[]} */ ([]);
   const callLLM = async (/** @type {any} */ request) => {
     requests.push(request);
-    const content = replies.shift();
+    const content = queue.shift();
     if (content === undefined) {
       throw new Error("unexpected extra LLM call in test script");
     }
@@ -43,12 +44,103 @@ const FOUNDATION_REPLY = JSON.stringify({
   },
 });
 
-/** The phase-B derive reply: the full laptop map, self-reviewed derivable. */
-const DERIVE_REPLY = JSON.stringify({
-  isValidConcept: true,
-  map: laptopRealityMap,
-  selfReview: { derivable: true, gaps: [] },
-});
+/** The reply that ends the chain: the concept is reached. */
+const DONE_REPLY = JSON.stringify({ isValidConcept: true, done: true });
+
+/**
+ * The per-layer replies that rebuild the laptop fixture bottom-up: the reply
+ * for layer l<k> carries the layer, its nodes, and the fixture edges whose
+ * higher endpoint sits in l<k>. Assembled in order they reproduce the
+ * fixture exactly - including the predicts edge from the foundation to the
+ * electronics layer, which the script can emit because the merge accepts
+ * edges to any already-built node.
+ *
+ * @returns {string[]}
+ */
+function layerReplies() {
+  const layerIndex = new Map(
+    laptopRealityMap.layers.map((layer, i) => [layer.id, i])
+  );
+  const nodeLayer = new Map(
+    laptopRealityMap.nodes.map((node) => [node.id, layerIndex.get(node.layer)])
+  );
+  const replies = [];
+  for (let k = 1; k < laptopRealityMap.layers.length; k++) {
+    const layer = laptopRealityMap.layers[k];
+    const nodes = laptopRealityMap.nodes.filter((node) => node.layer === layer.id);
+    const edges = laptopRealityMap.edges.filter((edge) => {
+      const s = nodeLayer.get(edge.source) ?? -1;
+      const t = nodeLayer.get(edge.target) ?? -1;
+      return Math.max(s, t) === k;
+    });
+    replies.push(
+      JSON.stringify({
+        isValidConcept: true,
+        done: false,
+        layer,
+        nodes,
+        edges,
+        selfReview: { derivable: true, gaps: [] },
+      })
+    );
+  }
+  return replies;
+}
+
+/**
+ * The scripted happy path: foundation plus five layer calls. The loop stops
+ * at the soft cap (maxLayers 6, foundation included) once layer l5 lands, so
+ * a 6-layer chain needs no done reply - done is for chains that end early.
+ */
+const HAPPY_SCRIPT = [FOUNDATION_REPLY, ...layerReplies()];
+
+/**
+ * Maps differ only in edge ORDER when rebuilt per-layer (an edge belongs to
+ * the reply of its higher layer), so compare semantically: identical
+ * concept, layers, nodes, and edge SET.
+ *
+ * @param {any} a
+ * @param {any} b
+ * @returns {boolean}
+ */
+function semanticEqual(a, b) {
+  if (!a || !b) return false;
+  /** @param {any} map */
+  const sortEdges = (map) =>
+    [...map.edges].sort((x, y) =>
+      `${x.source}|${x.target}|${x.type}`.localeCompare(`${y.source}|${y.target}|${y.type}`)
+    );
+  return (
+    a.concept === b.concept &&
+    JSON.stringify(a.layers) === JSON.stringify(b.layers) &&
+    JSON.stringify(a.nodes) === JSON.stringify(b.nodes) &&
+    JSON.stringify(sortEdges(a)) === JSON.stringify(sortEdges(b))
+  );
+}
+
+/** @param {any} map @param {string} [message] */
+function assertLaptopFixture(map, message) {
+  assert.equal(
+    semanticEqual(map, laptopRealityMap),
+    true,
+    `${message ?? "map matches the fixture"}: ${JSON.stringify(map && map.edges)}`
+  );
+}
+
+/** A scripted reply that breaks a layer: the given layer has no down-edge.
+ * @param {string} layerId */
+function brokenLayerReply(layerId) {
+  const layer = laptopRealityMap.layers.find((l) => l.id === layerId);
+  const nodes = laptopRealityMap.nodes.filter((node) => node.layer === layerId);
+  return JSON.stringify({
+    isValidConcept: true,
+    done: false,
+    layer,
+    nodes,
+    edges: [],
+    selfReview: { derivable: true, gaps: [] },
+  });
+}
 
 // --- parseModelJson / extractBalancedObject --------------------------------
 
@@ -95,20 +187,21 @@ test("the foundation prompt satisfies the JSON mode contract and the ticket asks
   assert.match(prompt, /isValidConcept/);
 });
 
-test("the derive prompt satisfies the JSON mode contract and the v2 asks", () => {
-  const prompt = buildRealityMapSystemPrompt(6);
+test("the next-layer prompt satisfies the JSON mode contract and the ticket asks", () => {
+  const prompt = buildNextLayerSystemPrompt(6);
   assert.match(prompt, /\bjson\b/i);
-  assert.match(prompt, /no skipped intermediate steps/);
-  assert.match(prompt, /foundation/i);
+  assert.match(prompt, /layer by layer/i);
+  assert.match(prompt, /ONLY from the layer/i, "each layer derives only from the layer below");
+  assert.match(prompt, /skip an intermediate step/i, "skipping is forbidden, not just checked");
   assert.match(prompt, /basis/i, "every abstraction names the observation it compresses");
   assert.match(prompt, /predicts/i, "testable predictions are emitted (principle 2)");
-  assert.match(prompt, /self-review/i);
-  assert.match(prompt, /built-on|depends-on|part-of|abstraction-of|predicts|contradicts/);
+  assert.match(prompt, /done/i, "the model can declare the concept reached");
   assert.match(prompt, /around 6 layers/i);
+  assert.match(prompt, /built-on|depends-on|part-of|abstraction-of|predicts|contradicts/);
 });
 
-test("the derive prompt honors a custom layer cap", () => {
-  assert.match(buildRealityMapSystemPrompt(4), /around 4 layers/i);
+test("the next-layer prompt honors a custom layer cap", () => {
+  assert.match(buildNextLayerSystemPrompt(4), /around 4 layers/i);
 });
 
 // --- deriveCheck -------------------------------------------------------------
@@ -155,20 +248,36 @@ test("deriveCheck is structural on garbage input", () => {
 
 // --- generation: happy paths -------------------------------------------------
 
-test("a two-phase generation returns the map as-is with two calls", async () => {
-  const { callLLM, requests } = stubTransport([FOUNDATION_REPLY, DERIVE_REPLY]);
+test("a per-layer generation returns the fixture map with one call per layer", async () => {
+  const { callLLM, requests } = stubTransport(HAPPY_SCRIPT);
   const result = await generateRealityMap({ concept: "laptop", callLLM });
   assert.equal(result.ok, true);
-  assert.deepEqual(result.map, laptopRealityMap);
+  assertLaptopFixture(result.map);
   assert.equal(result.retried, false);
-  assert.equal(requests.length, 2);
+  assert.equal(requests.length, laptopRealityMap.layers.length);
   assert.equal(requests[0].jsonMode, true);
   assert.equal(requests[0].thinking, false);
   assert.match(requests[0].messages[1].content, /Word or phrase: laptop/);
-  assert.match(requests[1].messages[1].content, /Derive the remaining layers/);
+  assert.match(requests[1].messages[1].content, /Build layer l1/);
+  assert.match(requests[requests.length - 1].messages[1].content, /Build layer l5/);
 });
 
-test("a refusal in phase A is propagated without a derive call", async () => {
+test("each layer call sees only the layer immediately below it", async () => {
+  const { callLLM, requests } = stubTransport(HAPPY_SCRIPT);
+  const result = await generateRealityMap({ concept: "laptop", callLLM });
+  assert.equal(result.ok, true);
+  const l2Call = requests[2].messages[1].content;
+  assert.match(l2Call, /Build layer l2/);
+  assert.match(l2Call, /n-silicon/, "l2 sees the layer below (materials)");
+  assert.ok(!l2Call.includes("n-transistor"), "l2 must not see its own nodes");
+  assert.ok(!l2Call.includes("n-electricity"), "l2 must not see the foundation");
+  const l4Call = requests[4].messages[1].content;
+  assert.match(l4Call, /Build layer l4/);
+  assert.match(l4Call, /n-bit/, "l4 sees the layer below (logic)");
+  assert.ok(!l4Call.includes("n-electricity"), "l4 must not see the foundation");
+});
+
+test("a refusal in phase A is propagated without further calls", async () => {
   const { callLLM, requests } = stubTransport([
     JSON.stringify({ isValidConcept: false, reason: "keysmash is not a thing" }),
   ]);
@@ -187,107 +296,191 @@ test("empty input refuses without calling the LLM", async () => {
   assert.equal(requests.length, 0);
 });
 
+test("a done reply right after the foundation yields a single-layer map", async () => {
+  const { callLLM, requests } = stubTransport([FOUNDATION_REPLY, DONE_REPLY]);
+  const result = await generateRealityMap({ concept: "electricity", callLLM });
+  assert.equal(result.ok, true);
+  assert.ok(result.map, "a single-layer map exists");
+  assert.equal(result.map.layers.length, 1);
+  assert.equal(result.map.layers[0].id, "l0", "the foundation id is normalized to l0");
+  assert.equal(result.retried, false);
+  assert.equal(requests.length, 2);
+});
+
 // --- generation: retry paths -------------------------------------------------
 
-test("an unparseable phase A triggers one foundation repair, then derives", async () => {
-  const { callLLM, requests } = stubTransport(["not json at all", FOUNDATION_REPLY, DERIVE_REPLY]);
+test("an unparseable phase A triggers one foundation repair, then builds layers", async () => {
+  const { callLLM, requests } = stubTransport(["not json at all", ...HAPPY_SCRIPT]);
   const result = await generateRealityMap({ concept: "laptop", callLLM });
   assert.equal(result.ok, true);
-  assert.deepEqual(result.map, laptopRealityMap);
+  assertLaptopFixture(result.map);
   assert.equal(result.retried, true);
-  assert.equal(requests.length, 3);
   assert.match(requests[1].messages[1].content, /did not meet the contract/);
 });
 
-test("an unparseable phase B triggers a repair attempt that cites JSON", async () => {
-  const { callLLM, requests } = stubTransport([FOUNDATION_REPLY, "not json", DERIVE_REPLY]);
+test("a malformed foundation layer triggers a foundation repair", async () => {
+  const malformed = JSON.stringify({
+    isValidConcept: true,
+    foundation: {
+      layer: { id: "l0", name: "physics", nodes: [] },
+      nodes: [],
+    },
+  });
+  const { callLLM, requests } = stubTransport([malformed, ...HAPPY_SCRIPT]);
   const result = await generateRealityMap({ concept: "laptop", callLLM });
   assert.equal(result.ok, true);
-  assert.deepEqual(result.map, laptopRealityMap);
+  assertLaptopFixture(result.map);
   assert.equal(result.retried, true);
-  assert.equal(requests.length, 3);
+  assert.match(requests[1].messages[1].content, /foundation/i);
+});
+
+test("an unparseable layer reply triggers a repair that cites JSON", async () => {
+  const { callLLM, requests } = stubTransport([
+    FOUNDATION_REPLY,
+    "not json",
+    ...HAPPY_SCRIPT.slice(1),
+  ]);
+  const result = await generateRealityMap({ concept: "laptop", callLLM });
+  assert.equal(result.ok, true);
+  assertLaptopFixture(result.map);
+  assert.equal(result.retried, true);
   assert.match(requests[2].messages[1].content, /not valid JSON/);
 });
 
-test("a schema-invalid phase B triggers a repair citing the layer chain gap", async () => {
-  const gapped = structuredClone(laptopRealityMap);
-  gapped.edges = gapped.edges.filter(
-    (edge) => !(edge.source === "n-logic-gate" && edge.target === "n-circuit")
-  );
-  const bad = JSON.stringify({
+test("a layer with the wrong id triggers a repair citing the expected id", async () => {
+  const wrongId = JSON.stringify({
     isValidConcept: true,
-    map: gapped,
+    done: false,
+    layer: { id: "l7", name: "materials", nodes: ["n-silicon"] },
+    nodes: laptopRealityMap.nodes.filter((node) => node.layer === "l1"),
+    edges: [],
     selfReview: { derivable: true, gaps: [] },
   });
-  const { callLLM, requests } = stubTransport([FOUNDATION_REPLY, bad, DERIVE_REPLY]);
+  const { callLLM, requests } = stubTransport([
+    FOUNDATION_REPLY,
+    wrongId,
+    ...HAPPY_SCRIPT.slice(1),
+  ]);
   const result = await generateRealityMap({ concept: "laptop", callLLM });
   assert.equal(result.ok, true);
-  assert.deepEqual(result.map, laptopRealityMap);
+  assertLaptopFixture(result.map);
   assert.equal(result.retried, true);
-  assert.match(requests[2].messages[1].content, /layer chain gap/);
+  assert.match(requests[2].messages[1].content, /layer id must be l1/);
+});
+
+test("a layer with no edge to the layer below triggers a repair citing the rule", async () => {
+  const { callLLM, requests } = stubTransport([
+    FOUNDATION_REPLY,
+    brokenLayerReply("l1"),
+    ...HAPPY_SCRIPT.slice(1),
+  ]);
+  const result = await generateRealityMap({ concept: "laptop", callLLM });
+  assert.equal(result.ok, true);
+  assertLaptopFixture(result.map);
+  assert.equal(result.retried, true);
+  assert.match(requests[2].messages[1].content, /layer below/);
 });
 
 test("a missing basis triggers a repair citing principle 5", async () => {
-  const noBasis = structuredClone(laptopRealityMap);
-  noBasis.nodes = noBasis.nodes.map((node) =>
-    node.id === "n-logic-gate" ? { ...node, basis: undefined } : node
-  );
-  const bad = JSON.stringify({
+  const noBasis = JSON.stringify({
     isValidConcept: true,
-    map: noBasis,
+    done: false,
+    layer: laptopRealityMap.layers[1],
+    nodes: laptopRealityMap.nodes
+      .filter((node) => node.layer === "l1")
+      .map((node) => ({ ...node, basis: undefined })),
+    edges: [
+      { source: "n-silicon", target: "n-electricity", type: "depends-on" },
+    ],
     selfReview: { derivable: true, gaps: [] },
   });
-  const { callLLM, requests } = stubTransport([FOUNDATION_REPLY, bad, DERIVE_REPLY]);
+  const { callLLM, requests } = stubTransport([
+    FOUNDATION_REPLY,
+    noBasis,
+    ...HAPPY_SCRIPT.slice(1),
+  ]);
   const result = await generateRealityMap({ concept: "laptop", callLLM });
   assert.equal(result.ok, true);
-  assert.deepEqual(result.map, laptopRealityMap);
+  assertLaptopFixture(result.map);
   assert.equal(result.retried, true);
   assert.match(requests[2].messages[1].content, /has no basis/);
+});
+
+test("a disconnected node triggers a repair citing the invented gap", async () => {
+  const stray = JSON.stringify({
+    isValidConcept: true,
+    done: false,
+    layer: laptopRealityMap.layers[1],
+    nodes: [
+      ...laptopRealityMap.nodes.filter((node) => node.layer === "l1"),
+      {
+        id: "n-stray",
+        label: "stray",
+        layer: "l1",
+        description: "A node with no edges at all.",
+        basis: "nothing",
+      },
+    ],
+    edges: [{ source: "n-silicon", target: "n-electricity", type: "depends-on" }],
+    selfReview: { derivable: true, gaps: [] },
+  });
+  const { callLLM, requests } = stubTransport([
+    FOUNDATION_REPLY,
+    stray,
+    ...HAPPY_SCRIPT.slice(1),
+  ]);
+  const result = await generateRealityMap({ concept: "laptop", callLLM });
+  assert.equal(result.ok, true);
+  assertLaptopFixture(result.map);
+  assert.equal(result.retried, true);
+  assert.match(requests[2].messages[1].content, /invented gap/);
 });
 
 test("a self-review that is not derivable triggers a repair", async () => {
   const bad = JSON.stringify({
     isValidConcept: true,
-    map: laptopRealityMap,
-    selfReview: { derivable: false, gaps: ["the OS layer skips the bit layer"] },
+    done: false,
+    layer: laptopRealityMap.layers[1],
+    nodes: laptopRealityMap.nodes.filter((node) => node.layer === "l1"),
+    edges: [{ source: "n-silicon", target: "n-electricity", type: "depends-on" }],
+    selfReview: { derivable: false, gaps: ["the layer skips the bit layer"] },
   });
-  const { callLLM, requests } = stubTransport([FOUNDATION_REPLY, bad, DERIVE_REPLY]);
+  const { callLLM, requests } = stubTransport([
+    FOUNDATION_REPLY,
+    bad,
+    ...HAPPY_SCRIPT.slice(1),
+  ]);
   const result = await generateRealityMap({ concept: "laptop", callLLM });
   assert.equal(result.ok, true);
-  assert.deepEqual(result.map, laptopRealityMap);
+  assertLaptopFixture(result.map);
   assert.equal(result.retried, true);
   assert.match(requests[2].messages[1].content, /skips the bit layer/);
 });
 
 test("a garbage edge is dropped by cleanup before validation", async () => {
-  const dirty = structuredClone(laptopRealityMap);
-  dirty.edges = [...dirty.edges, { source: "n-app", target: "n-caption", type: "part-of" }];
-  const dirtyReply = JSON.stringify({
+  const dirty = JSON.stringify({
     isValidConcept: true,
-    map: dirty,
+    done: false,
+    layer: laptopRealityMap.layers[1],
+    nodes: laptopRealityMap.nodes.filter((node) => node.layer === "l1"),
+    edges: [
+      { source: "n-silicon", target: "n-electricity", type: "depends-on" },
+      { source: "n-silicon", target: "n-caption", type: "part-of" },
+    ],
     selfReview: { derivable: true, gaps: [] },
   });
-  const { callLLM, requests } = stubTransport([FOUNDATION_REPLY, dirtyReply]);
+  const { callLLM, requests } = stubTransport([FOUNDATION_REPLY, dirty, ...HAPPY_SCRIPT.slice(2)]);
   const result = await generateRealityMap({ concept: "laptop", callLLM });
   assert.equal(result.ok, true);
-  assert.deepEqual(result.map, laptopRealityMap);
+  assertLaptopFixture(result.map);
   assert.equal(result.retried, false);
-  assert.equal(requests.length, 2);
+  assert.equal(requests.length, laptopRealityMap.layers.length);
 });
 
-test("a refusal on a later phase-B attempt is honored", async () => {
-  const gapped = structuredClone(laptopRealityMap);
-  gapped.edges = gapped.edges.filter(
-    (edge) => !(edge.source === "n-logic-gate" && edge.target === "n-circuit")
-  );
-  const bad = JSON.stringify({
-    isValidConcept: true,
-    map: gapped,
-    selfReview: { derivable: true, gaps: [] },
-  });
+test("a refusal on a later layer attempt is honored", async () => {
   const { callLLM, requests } = stubTransport([
     FOUNDATION_REPLY,
-    bad,
+    brokenLayerReply("l1"),
     JSON.stringify({ isValidConcept: false, reason: "not a concept after all" }),
   ]);
   const result = await generateRealityMap({ concept: "laptop", callLLM });
@@ -298,22 +491,19 @@ test("a refusal on a later phase-B attempt is honored", async () => {
   assert.equal(requests.length, 3);
 });
 
-test("all derive attempts invalid fails with the validation and derive errors", async () => {
-  const noBasis = structuredClone(laptopRealityMap);
-  noBasis.nodes = noBasis.nodes.map((node) =>
-    node.id === "n-logic-gate" ? { ...node, basis: undefined } : node
-  );
-  const bad = JSON.stringify({
-    isValidConcept: true,
-    map: noBasis,
-    selfReview: { derivable: true, gaps: [] },
-  });
-  const { callLLM } = stubTransport([FOUNDATION_REPLY, bad, bad, bad]);
+test("all attempts for a layer invalid fails as invalid with the problems", async () => {
+  const { callLLM } = stubTransport([
+    FOUNDATION_REPLY,
+    brokenLayerReply("l1"),
+    brokenLayerReply("l1"),
+    brokenLayerReply("l1"),
+  ]);
   const result = await generateRealityMap({ concept: "laptop", callLLM });
   assert.equal(result.ok, false);
   assert.equal(result.kind, "invalid");
   assert.ok(result.errors.length > 0);
-  assert.ok(result.errors.some((error) => /has no basis/.test(error)));
+  assert.ok(result.errors.some((error) => /layer below/.test(error)));
+  assert.match(result.reason ?? "", /two repair attempts/);
 });
 
 test("all foundation attempts unparseable fails as invalid", async () => {
@@ -334,10 +524,50 @@ test("a transport failure surfaces as an error result", async () => {
   assert.match(result.reason ?? "", /401/);
 });
 
+// --- generation: structure and caps ------------------------------------------
+
+test("the soft layer cap stops the loop without a done reply", async () => {
+  const { callLLM, requests } = stubTransport([
+    FOUNDATION_REPLY,
+    ...layerReplies().slice(0, 1),
+  ]);
+  const result = await generateRealityMap({ concept: "laptop", callLLM }, { maxLayers: 2 });
+  assert.equal(result.ok, true);
+  assert.ok(result.map, "a capped map exists");
+  assert.equal(result.map.layers.length, 2);
+  assert.deepEqual(result.map.layers.map((layer) => layer.id), ["l0", "l1"]);
+  assert.equal(requests.length, 2);
+});
+
+test("the layer cap is clamped to the validator's structural max", async () => {
+  const { callLLM, requests } = stubTransport([FOUNDATION_REPLY, DONE_REPLY]);
+  const result = await generateRealityMap({ concept: "laptop", callLLM }, { maxLayers: 99 });
+  assert.equal(result.ok, true);
+  assert.ok(result.map, "a clamped map exists");
+  assert.equal(result.map.layers.length, 1);
+  assert.equal(requests.length, 2, "a huge cap must not explode the loop");
+});
+
 test("generated maps pass validateRealityMap and deriveCheck together", async () => {
-  const { callLLM } = stubTransport([FOUNDATION_REPLY, DERIVE_REPLY]);
+  const { callLLM } = stubTransport(HAPPY_SCRIPT);
   const result = await generateRealityMap({ concept: "laptop", callLLM });
   assert.equal(result.ok, true);
+  assert.ok(result.map, "a generated map exists");
   assert.equal(validateRealityMap(result.map).ok, true);
   assert.equal(deriveCheck(result.map).ok, true);
+});
+
+test("a skipped intermediate step is structurally impossible at the prompt level", async () => {
+  const { callLLM, requests } = stubTransport(HAPPY_SCRIPT);
+  const result = await generateRealityMap({ concept: "laptop", callLLM });
+  assert.equal(result.ok, true);
+  for (let i = 1; i <= 5; i++) {
+    const content = requests[i].messages[1].content;
+    assert.match(content, new RegExp(`Build layer l${i}`), `call ${i} builds layer l${i}`);
+    if (i > 1) {
+      const below = laptopRealityMap.layers[i - 1].id;
+      const belowNode = laptopRealityMap.nodes.find((node) => node.layer === below);
+      assert.ok(belowNode && content.includes(belowNode.id), `call ${i} sees the layer below (${below})`);
+    }
+  }
 });
