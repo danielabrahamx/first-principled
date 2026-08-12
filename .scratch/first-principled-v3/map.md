@@ -13,9 +13,13 @@ will be the crux. everything discussed here we should ticket."
 The concept tree is the product: a chronological phylogenetic tree of how ideas
 are built, foundations at the bottom, abstractions above, where every part is
 hoverable and the crux of each node and layer is the observations and
-discoveries that made the next stage possible. The user can hover over any part
-of the tree and read how that layer came to be. The LLM chat is a secondary
-surface; the learner's mental model tracking is not part of this effort.
+discoveries that made the next stage possible. The user types a word or phrase
+and the tree is generated with a structure that guarantees no gaps in the layer
+chain. The observations are REAL discovery history, not rational
+reconstruction. The tree is a pure knowledge artifact: browse like Wikipedia,
+read-only, nothing to complete, no session. The LLM chat is an optional
+secondary surface at most; the learner's mental model tracking is not part of
+this effort.
 
 ## Notes
 
@@ -46,6 +50,17 @@ surface; the learner's mental model tracking is not part of this effort.
 - The v1 spec is NOT rewritten by this effort; the v3 spec emerges from ticket
   resolutions (02's content model decision first).
 
+## Fog cleared 2026-08-12 (Danny)
+
+- Entry flow: word input stays - generate the tree, but with a structure that
+  ensures the LLM leaves no gaps in the layer chain (ticket 08).
+- Journey: no session at all - pure knowledge artifact, nothing to complete,
+  no grading, no transfer question. Chat pane optional.
+- Learner action: read-only for now (no marking, no notes).
+- Observations: REAL discovery history (actual discoveries/discoverers), not
+  rational reconstruction. Open question: what happens when the model does not
+  have the information - ticket 09 probes coverage + fail-honest design.
+
 ## Decisions so far
 
 <!-- one line per resolved ticket; empty until tickets resolve -->
@@ -53,25 +68,33 @@ surface; the learner's mental model tracking is not part of this effort.
 ## Open frontier
 
 - [01 - Ship the inherited map-first concept tree](issues/01-ship-the-inherited-map-first-concept-tree.md) - unblocked, task (AFK)
-- [02 - Observations content model: the crux](issues/02-observations-content-model-the-crux.md) - unblocked, grilling (HITL)
 - [05 - STE subset for learner-facing copy](issues/05-ste-subset-for-learner-facing-copy.md) - unblocked, grilling (HITL)
+- [08 - Gap-free layer-chain structure](issues/08-gap-free-layer-chain-structure.md) - unblocked, task (AFK)
+- [09 - Observation sourcing research](issues/09-observation-sourcing-research.md) - unblocked, research (AFK)
 
 ## Not yet specified
 
-- Entry flow: how the tree is born when the chat is secondary (word input
-  still, or a library of pre-built trees?).
-- The session/end story under tree-first: what a completed journey looks like
-  without the Socratic session driving it; what remains of the transfer
-  question and the comparison.
-- What the learner does with the tree beyond reading (annotate, mark known,
-  nothing?).
+- Discovery timeline: the parked scrubber/replay machinery (v2 12) could be
+  reframed as a timeline of the tree's own emergence (layers appearing as
+  their enabling observations land) instead of learner-turn replay. Sharp
+  enough to ticket only after 02 and 08.
+- Chat pane "when": the optional Q&A surface over the tree - what it asks,
+  when it returns. Parked by Danny (2a).
+- Tree scale: one concept per tree (current) vs cross-concept linking - stays
+  out (unchanged from v2).
 
 ## Out of scope
 
 - Engine thread (v2 tickets 01-07): Socratic engine, code-driven gap
   selection, prediction move, confidence anchoring, eval harness - pushed back
   by Danny 2026-08-12. Returns only as a fresh effort.
-- Learner mental model tracking and chat-first UX.
+- Learner mental model tracking, chat-first UX, and the Socratic session
+  itself - the journey is browse-only (Danny 2026-08-12).
+- Session machinery as built (v2 08 turn ledger, v2 12 scrubber/replay):
+  moot under the no-session decision; parked for the discovery-timeline
+  reframe (see Not yet specified), not shipped as learner-turn replay.
+- Transfer question, grading, session-end comparison (v1 10): no session to
+  end, ruled out with the journey decision.
 - The v2 spec write-up (belongs to the v2 effort).
 - Accounts, auth, server-side persistence, cross-device sync (unchanged).
 - Web grounding, RAG, tool use. Agent frameworks (Mastra, LangGraph).
