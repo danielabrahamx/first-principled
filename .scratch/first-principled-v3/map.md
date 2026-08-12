@@ -66,10 +66,10 @@ this effort.
 <!-- one line per resolved ticket -->
 - [05] STE subset: 8 STE100 rules + own ~60-word approved list (docs/ste.md); applies to learner-facing copy (generated via prompt, hand-written edited); microcopy exempt from sentence rules but approved words only; never code identifiers (2026-08-12).
 - [09 - Observation sourcing research](issues/09-observation-sourcing-research.md) - parametric coverage holds across tiers (40/45 EXACT, 0 UNKNOWN, 1 confident error); fail-honest contract drafted (UNKNOWN marker, visible gap, token headroom + retry); web grounding NOT required for canonical corpus - contract, not grounding (2026-08-12).
+- [01 - Ship the inherited map-first concept tree](issues/01-ship-the-inherited-map-first-concept-tree.md) - the v2 map-thread inheritance ships: map-first layout + docked Tutor pane, clickable node panels, hover history + layer stories, two-phase reality maps (basis + deriveCheck), demo loader. Scrubber/replay parked hidden (session machinery moot under no-session). Live-verified on DeepSeek (laptop: 6 layers, 20 nodes, 29 edges, basis everywhere), 375px clean, deployed to first-principled.netlify.app. Known gap for 08: the derive prompt omits the per-layer node-list shape, so the model sometimes drops `layers[].nodes` and generation fails after repairs (2/3 concepts on the live probe) (2026-08-12).
 
 ## Open frontier
 
-- [01 - Ship the inherited map-first concept tree](issues/01-ship-the-inherited-map-first-concept-tree.md) - unblocked, task (AFK)
 - [05 - STE subset for learner-facing copy](issues/05-ste-subset-for-learner-facing-copy.md) - unblocked, grilling (HITL)
 - [08 - Gap-free layer-chain structure](issues/08-gap-free-layer-chain-structure.md) - unblocked, task (AFK)
 
