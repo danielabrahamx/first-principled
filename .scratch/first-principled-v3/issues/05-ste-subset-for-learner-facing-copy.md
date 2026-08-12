@@ -10,7 +10,18 @@ layer stories, error messages, docs) and where it does not (code identifiers).
 
 **Blocked by:** None - can start immediately.
 
-**Status:** ready-for-agent
+**Status:** resolved (hermes session, 2026-08-12 - grilling with Danny in
+chat; Danny is the verifier, approved all four picks)
+
+**Answer:** Adopt 8 STE100 rules (one meaning per word; short sentences under
+20 words; active voice; one idea per sentence; no vague words; consistent
+terminology; no slang or idioms; no contractions). Own approved word list
+(~60 words) drafted in docs/ste.md. Applies to node descriptions, observation
+narratives, layer stories, error messages, docs - generated content via the
+generation prompt, hand-written copy edited to STE. Microcopy (labels, node
+titles, layer names, empty states) exempt from sentence rules but uses only
+approved words. Never applied to code identifiers. New words added by ticket
+review only.
 
 - [ ] STE rule subset adopted and written down
 - [ ] Approved word list drafted for the concept-tree domain

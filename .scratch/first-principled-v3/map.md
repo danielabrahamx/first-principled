@@ -63,7 +63,8 @@ this effort.
 
 ## Decisions so far
 
-<!-- one line per resolved ticket; empty until tickets resolve -->
+<!-- one line per resolved ticket -->
+- [05] STE subset: 8 STE100 rules + own ~60-word approved list (docs/ste.md); applies to learner-facing copy (generated via prompt, hand-written edited); microcopy exempt from sentence rules but approved words only; never code identifiers (2026-08-12).
 
 ## Open frontier
 
