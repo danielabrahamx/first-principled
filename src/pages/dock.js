@@ -5,9 +5,14 @@
  *
  * The full chat page (chat.js) remains reachable via #chat; the dock is the
  * always-visible conversation surface of the map-first layout. It shares the
- * session store singleton and the same transport (api/agent.js) and error
- * wording (errorMessage from chat.js), so starting a session in the dock is
+ * session store singleton, the same transport (api/agent.js), and the shared
+ * generation module (lib/generation.js), so a follow-up answer in the dock is
  * exactly the same loop as the full page.
+ *
+ * Ticket 11: the dock is follow-up-only. The word input lives in the map
+ * header (the map owns tree entry); when there is no tree yet - or the map is
+ * still building one, or the session has ended - the dock shows a hint
+ * pointing at the map header and hides its composer.
  *
  * DOM-free by construction: the module exports pure helpers (dockLabel,
  * dockMessages) for node:test and mounts them in the browser inside
@@ -16,8 +21,7 @@
 
 import { sessionStore } from "../state/session.js";
 import { callAgent as defaultCallAgent } from "../api/agent.js";
-import { getTurnstileToken } from "../turnstile.js";
-import { errorMessage } from "./chat.js";
+import { runAgentTurn, errorMessage } from "../lib/generation.js";
 
 /** @typedef {import("../state/session.js").SessionState} SessionState */
 /** @typedef {import("../state/session.js").SessionStore} SessionStore */
@@ -118,8 +122,7 @@ export function renderDock(root, options = {}) {
   const start = document.createElement("div");
   start.className = "dock-start";
   const startHint = document.createElement("p");
-  startHint.textContent =
-    "Type a word or phrase - laptop, recursion - and the tutor will build a tree of the concept.";
+  startHint.textContent = "Enter a word on the Map page to build the tree.";
   start.className = "dock-start";
   start.appendChild(startHint);
 
@@ -141,50 +144,27 @@ export function renderDock(root, options = {}) {
   }
 
   /**
-   * @param {string | null} content
+   * @param {string} content
    */
   async function runTurn(content) {
     pendingContent = content;
     setSending(true);
     sync();
-    const token = await getTurnstileToken("agent_turn");
-    const result = await callAgent(store.toRequest(), {
-      turnstileToken: token ?? undefined,
-    });
+    const result = await runAgentTurn(store, { callAgent });
     if (result.ok) {
-      const applied = store.applyResponse(result.data);
       pendingContent = null;
-      if (applied) {
-        error.hidden = true;
-      } else {
-        errorText.textContent = errorMessage("internal");
-        error.hidden = false;
-      }
+      error.hidden = true;
     } else {
-      errorText.textContent = errorMessage(result.code);
+      errorText.textContent = errorMessage(result.code ?? "unknown");
       error.hidden = false;
     }
     setSending(false);
     sync();
   }
 
-  /** True when the input should be treated as a new word (init or after an
-   * ended session, when startSession resets the store). */
-  function wantsWord() {
-    const state = store.getState();
-    return state.phase === "init" || state.ended;
-  }
-
-  async function submitWord() {
-    const word = input.value.trim();
-    if (word.length === 0 || sending) return;
-    if (!store.startSession(word)) return;
-    input.value = "";
-    error.hidden = true;
-    await runTurn(null);
-  }
-
   async function sendMessage() {
+    const state = store.getState();
+    if (state.phase !== "active") return;
     const content = input.value.trim();
     if (content.length === 0 || sending) return;
     if (!store.appendUserMessage(content)) return;
@@ -203,39 +183,41 @@ export function renderDock(root, options = {}) {
   function onKeydown(event) {
     if (event.key !== "Enter" || event.shiftKey) return;
     event.preventDefault();
-    if (wantsWord()) submitWord();
-    else sendMessage();
+    sendMessage();
   }
 
   composer.addEventListener("submit", (event) => {
     event.preventDefault();
-    if (wantsWord()) submitWord();
-    else sendMessage();
+    sendMessage();
   });
   retryBtn.addEventListener("click", retry);
   input.addEventListener("keydown", onKeydown);
 
-  /** Renders the transcript, the phase, the start hint and the composer state. */
+  /** Renders the transcript, the phase, the hint and the composer state. */
   function sync() {
     const state = store.getState();
     phase.textContent = dockLabel(state);
     phase.dataset.phase =
       state.phase === "init" ? "starting" : state.phase === "end" ? "end" : state.learnerMap.nodes.length > 0 ? "refining" : "exploring";
 
-    const starting = state.phase === "init" && !state.ended;
-    // The composer is ALWAYS the input surface: during init it takes the
-    // word or phrase (submitWord), mid-session the answer (sendMessage),
-    // and after the session ends a new word starts a fresh session.
-    composer.hidden = false;
+    // Follow-up-only (ticket 11): the composer takes an answer only while a
+    // tree exists and the session is live. The map header owns word entry.
+    const usable = state.word !== null && state.phase === "active";
+    composer.hidden = !usable;
     input.disabled = sending;
-    input.placeholder = starting || state.ended
-      ? "Type a word or phrase..."
-      : "Your answer... (Enter to send)";
-    // The start hint doubles as the post-session prompt.
-    startHint.textContent = state.ended
-      ? "Session end. Type a new word or phrase to start another."
-      : "Type a word or phrase - laptop, recursion - and the tutor will build a tree of the concept.";
-    start.hidden = !(starting || state.ended);
+    input.placeholder = "Your answer... (Enter to send)";
+    start.hidden = usable;
+    if (state.ended) {
+      startHint.textContent =
+        "Session end. Enter a new word on the Map page to build another tree.";
+    } else if (state.word === null) {
+      startHint.textContent = "Enter a word on the Map page to build the tree.";
+    } else if (state.lastReply !== null) {
+      startHint.textContent =
+        "The tree did not build. Enter a different word on the Map page.";
+    } else {
+      startHint.textContent = "The tree is building on the Map page.";
+    }
 
     list.replaceChildren();
     for (const message of dockMessages(state)) {

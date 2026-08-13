@@ -13,18 +13,28 @@
  * with turn numbers, the state rotation trail, and linked neighbors with
  * their states. Esc closes; the panel is keyboard-accessible.
  *
- * Ticket 11: hovering a learner card shows its rotation popover (turn by
- * turn: state, confidence, evidence); hovering a reality-tree layer branch
- * shows the layer story - which of its nodes the learner engaged, in what
- * order, and how their states rotated.
+ * Ticket 11: the map owns tree entry. A word input sits in the sticky
+ * header; submitting it starts generation here - no route to chat. While the
+ * generator works (mean ~20s, ticket 03) a progressive skeleton mirrors the
+ * vertical-path tree and lights its layer bands bottom-up as each layer
+ * lands; when the tree arrives the reality tab reveals. Generation runs
+ * through the shared lib/generation.js module, the same one chat and the
+ * dock use for follow-ups. The old empty state ("start in chat first") is
+ * gone; a refusal surfaces the model's reply on the page instead.
+ *
+ * Ticket 11 (hover): hovering a learner card shows its rotation popover
+ * (turn by turn: state, confidence, evidence); hovering a reality-tree layer
+ * branch shows the layer story - which of its nodes the learner engaged, in
+ * what order, and how their states rotated.
  *
  * Ticket 12: a timeline scrubber under the header - one stop per ledger
  * turn, drag to any stop to render that snapshot, and a play button that
  * replays the shape rotations using the existing diff animation language.
  * Scrubbing renders snapshots from the ledger; it never mutates the store.
+ * (Parked hidden: session machinery, moot under the no-session decision.)
  *
- * Everything reads the shared session store (state/session.js); the page
- * makes no network requests.
+ * Everything reads the shared session store (state/session.js); the page's
+ * only network calls are the generation turns it owns (ticket 11).
  */
 
 import {
@@ -59,6 +69,12 @@ import {
   dependents,
 } from "../lib/mapview/observation.js";
 import { nodeHistory } from "../state/session.js";
+import { callAgent as defaultCallAgent } from "../api/agent.js";
+import {
+  generateTree,
+  runAgentTurn,
+  errorMessage,
+} from "../lib/generation.js";
 import { renderDock } from "./dock.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -102,6 +118,54 @@ function pct(confidence) {
 }
 
 /**
+ * The skeleton's layer shape (ticket 11): the bands of card placeholders
+ * that mirror the vertical-path tree (ticket 10) - a root block at the top,
+ * then layer bands downward to the foundation. Pure so node:test can check
+ * it without a DOM. Band 0 sits nearest the crown; the last band is the
+ * foundation, which the generator builds first.
+ *
+ * @returns {Array<{ cards: number }>}
+ */
+export function skeletonBands() {
+  return [{ cards: 2 }, { cards: 3 }, { cards: 1 }, { cards: 2 }, { cards: 1 }];
+}
+
+/**
+ * Build the skeleton element: a caption, a root card placeholder, a trunk,
+ * and one band per skeletonBands entry - a layer label placeholder plus a
+ * column of card placeholders. The skeleton starts hidden; startSkeleton
+ * reveals the bands bottom-up while the tree builds.
+ *
+ * @returns {HTMLElement}
+ */
+function buildSkeleton() {
+  const sk = el("div", "tree-skeleton");
+  sk.hidden = true;
+  sk.setAttribute("role", "status");
+  sk.appendChild(
+    el(
+      "p",
+      "sk-caption",
+      "Building the tree. The foundation shows first, then each layer."
+    )
+  );
+  const root = el("div", "sk-root");
+  root.append(el("span", "sk-root-line"), el("span", "sk-root-line"));
+  sk.append(root, el("div", "sk-trunk"));
+  for (const band of skeletonBands()) {
+    const layer = el("div", "sk-layer");
+    layer.appendChild(el("span", "sk-layer-label"));
+    const cards = el("div", "sk-cards");
+    for (let j = 0; j < band.cards; j += 1) {
+      cards.appendChild(el("i", "sk-card"));
+    }
+    layer.appendChild(cards);
+    sk.appendChild(layer);
+  }
+  return sk;
+}
+
+/**
  * Mount the map page into `root`, driven by the shared session store.
  * Returns a handle with `sync()` for route changes; the page also
  * subscribes to the store, so it re-renders live as turns land.
@@ -112,12 +176,15 @@ function pct(confidence) {
  * @param {object} [options]
  * @param {boolean} [options.responsive] - listen to window resize (true in
  *   the browser; tests can disable).
+ * @param {typeof defaultCallAgent} [options.callAgent] - the transport for
+ *   the generation turns this page owns; injected for tests.
  * @param {(route: string) => void} [options.navigate] - route to another
  *   page (used by the segmented control); defaults to setting location.hash.
  * @returns {{ sync: () => void; destroy: () => void }}
  */
 export function renderMapPage(root, store, options = {}) {
   const responsive = options.responsive !== false;
+  const callAgent = options.callAgent ?? defaultCallAgent;
   const navigate =
     options.navigate ??
     ((route) => {
@@ -160,7 +227,30 @@ export function renderMapPage(root, store, options = {}) {
     sync();
   });
   tabs.append(chatTab, modelTab, realityTab);
-  header.append(logo, tabs);
+
+  /* Ticket 11: the word input lives on the map - the map owns tree entry.
+     Submitting starts generation here; chat is follow-up-only. Full-width
+     in the sticky header so it is the first thing seen on a phone. */
+  const entry = el("form", "map-entry");
+  /** @type {HTMLInputElement} */
+  const entryInput = /** @type {HTMLInputElement} */ (
+    document.createElement("input")
+  );
+  entryInput.className = "map-entry-input";
+  entryInput.type = "text";
+  entryInput.placeholder = "Type a word or phrase...";
+  entryInput.setAttribute("autocomplete", "off");
+  entryInput.setAttribute(
+    "aria-label",
+    "Build the tree from a word or phrase"
+  );
+  const entryButton = /** @type {HTMLButtonElement} */ (
+    el("button", "map-entry-button", "Build")
+  );
+  entryButton.type = "submit";
+  entry.append(entryInput, entryButton);
+
+  header.append(logo, tabs, entry);
 
   /* Timeline scrubber (ticket 12). */
   const timeline = el("div", "map-timeline");
@@ -232,10 +322,24 @@ export function renderMapPage(root, store, options = {}) {
   const cmpBlock = el("section", "cmp-block");
   cmpBlock.hidden = true;
 
+  /* Ticket 11 generation surfaces: the progressive skeleton that stands in
+     for the tree while it builds, an error banner with retry on transport
+     failure, and a note when the model refuses the word. */
+  const skeleton = buildSkeleton();
+  const mapError = el("div", "error-banner map-error");
+  mapError.hidden = true;
+  const mapErrorText = el("p", "error-text");
+  const mapRetry = el("button", "retry-button", "Retry");
+  mapRetry.setAttribute("aria-label", "Retry building the tree");
+  mapRetry.addEventListener("click", retryGeneration);
+  mapError.append(mapErrorText, mapRetry);
+  const refusalNote = el("p", "note map-empty");
+  refusalNote.hidden = true;
+
   const noSession = el(
     "p",
     "note map-empty",
-    "Start a session in chat first. Your mental model will take shape here as it builds."
+    "Enter a word above to build the tree."
   );
   const empty = el(
     "p",
@@ -248,12 +352,145 @@ export function renderMapPage(root, store, options = {}) {
     "Session complete. This is your final mental model."
   );
 
-  main.append(header, timeline, titleRow, legend, scroll, treePanel, cmpBlock, noSession, empty, ended);
+  main.append(
+    header,
+    timeline,
+    titleRow,
+    legend,
+    mapError,
+    skeleton,
+    scroll,
+    treePanel,
+    cmpBlock,
+    noSession,
+    refusalNote,
+    empty,
+    ended
+  );
   split.append(main, dock);
   page.appendChild(split);
   root.append(page);
 
   const dockHandle = renderDock(dock);
+
+  /* Ticket 11 generation state: the input + skeleton live for the ~20s the
+     generator works, then the reality tab reveals. */
+  const reducedMotion =
+    typeof matchMedia === "function" &&
+    matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /** True while a generation turn is in flight. */
+  let generating = false;
+  /** When the next tree lands, reveal the reality tab (the tree is the
+   *  product - Danny 2026-08-13). */
+  let revealOnLand = false;
+  /** The skeleton reveal timer. */
+  let skeletonTimer = /** @type {number | null} */ (null);
+  /** One layer band lights every SKELETON_STEP_MS, bottom-up. */
+  const SKELETON_STEP_MS = 3200;
+
+  /**
+   * @param {boolean} on
+   */
+  function setEntryBusy(on) {
+    entryInput.disabled = on;
+    entryButton.disabled = on;
+    entryButton.textContent = on ? "Building..." : "Build";
+  }
+
+  /**
+   * Show the skeleton and reveal its layer bands bottom-up: the generator
+   * builds the tree bottom-up (foundation first, ticket 08), so the
+   * skeleton lights the foundation band first, then each band upward, one
+   * every SKELETON_STEP_MS. Under reduced motion every band lights at once.
+   */
+  function startSkeleton() {
+    skeleton.hidden = false;
+    const layers = [...skeleton.querySelectorAll(".sk-layer")];
+    for (const layer of layers) layer.classList.remove("lit");
+    if (reducedMotion) {
+      for (const layer of layers) layer.classList.add("lit");
+      return;
+    }
+    let i = layers.length - 1;
+    const tick = () => {
+      if (i < 0) return;
+      layers[i].classList.add("lit");
+      i -= 1;
+      if (i >= 0) {
+        skeletonTimer = /** @type {any} */ (setTimeout(tick, SKELETON_STEP_MS));
+      }
+    };
+    tick();
+  }
+
+  function stopSkeleton() {
+    if (skeletonTimer !== null) {
+      clearTimeout(skeletonTimer);
+      skeletonTimer = null;
+    }
+    skeleton.hidden = true;
+  }
+
+  /**
+   * @param {string} code
+   */
+  function showMapError(code) {
+    mapErrorText.textContent = errorMessage(code);
+    mapError.hidden = false;
+  }
+
+  function hideMapError() {
+    mapError.hidden = true;
+  }
+
+  /** Submit the header word input: begin a session and grow the tree here. */
+  async function submitWord() {
+    const word = entryInput.value.trim();
+    if (word.length === 0 || generating) return;
+    entryInput.value = "";
+    generating = true;
+    revealOnLand = true;
+    setEntryBusy(true);
+    hideMapError();
+    startSkeleton();
+    const result = await generateTree(store, word, { callAgent });
+    generating = false;
+    setEntryBusy(false);
+    stopSkeleton();
+    if (result.ok) {
+      sync();
+    } else {
+      showMapError(result.code ?? "unknown");
+    }
+    sync();
+  }
+
+  /** Retry the failed generation: the store was untouched, so the same
+   *  init turn re-sends exactly. */
+  async function retryGeneration() {
+    if (generating) return;
+    if (store.getState().word === null) return;
+    generating = true;
+    revealOnLand = true;
+    setEntryBusy(true);
+    hideMapError();
+    startSkeleton();
+    const result = await runAgentTurn(store, { callAgent });
+    generating = false;
+    setEntryBusy(false);
+    stopSkeleton();
+    if (result.ok) {
+      sync();
+    } else {
+      showMapError(result.code ?? "unknown");
+    }
+    sync();
+  }
+
+  entry.addEventListener("submit", (event) => {
+    event.preventDefault();
+    submitWord();
+  });
 
   /** @type {Map<string, HTMLElement>} node id -> card element */
   const nodeEls = new Map();
@@ -1131,7 +1368,7 @@ export function renderMapPage(root, store, options = {}) {
   /**
    * Sync the page with the store: segmented control, title row, legend,
    * learner grid or reality tree, comparison block, empty and ended states,
-   * and the timeline.
+   * the generation skeleton, and the timeline.
    */
   function sync() {
     const state = store.getState();
@@ -1141,6 +1378,10 @@ export function renderMapPage(root, store, options = {}) {
       lastWord = state.word;
       tab = "model";
       tlStop = TL_LIVE;
+    }
+    if (revealOnLand && state.realityMap !== null) {
+      revealOnLand = false;
+      tab = "reality";
     }
 
     const hasWord = state.word !== null;
@@ -1160,15 +1401,28 @@ export function renderMapPage(root, store, options = {}) {
     treePanel.hidden = !showTree;
     if (showTree) renderTree(state);
 
-    // renderTimeline() is parked (v3 01): the scrubber/replay is session
-    // machinery, moot under the no-session decision - never unwire it in
-    // the live UI. The code stays for the discovery-timeline reframe.
+    // While generation is in flight the skeleton stands in for everything
+    // below the title row; the empty states would only mislead.
+    if (generating) {
+      noSession.hidden = true;
+      empty.hidden = true;
+      ended.hidden = true;
+      scroll.hidden = true;
+      cmpBlock.hidden = true;
+      treePanel.hidden = true;
+      mapError.hidden = true;
+      refusalNote.hidden = true;
+      skeleton.hidden = false;
+      return;
+    }
+    skeleton.hidden = true;
 
     if (!hasWord) {
       noSession.hidden = false;
       empty.hidden = true;
       scroll.hidden = true;
       ended.hidden = true;
+      refusalNote.hidden = true;
       return;
     }
     noSession.hidden = true;
@@ -1176,8 +1430,18 @@ export function renderMapPage(root, store, options = {}) {
       empty.hidden = false;
       scroll.hidden = true;
       ended.hidden = state.ended ? false : true;
+      // The model refused the word (a reply landed, no tree). Show the
+      // refusal instead of the generic empty note (ticket 11).
+      if (!hasReality && state.lastReply !== null) {
+        empty.hidden = true;
+        refusalNote.textContent = state.lastReply;
+        refusalNote.hidden = false;
+      } else {
+        refusalNote.hidden = true;
+      }
       return;
     }
+    refusalNote.hidden = true;
     empty.hidden = true;
     scroll.hidden = showTree;
     if (showTree) return;
@@ -1205,6 +1469,10 @@ export function renderMapPage(root, store, options = {}) {
     sync,
     /** Tear the page down (not used in v1; keeps the subscription clean). */
     destroy() {
+      if (skeletonTimer !== null) {
+        clearTimeout(skeletonTimer);
+        skeletonTimer = null;
+      }
       unsubscribe();
       dockHandle.destroy();
       document.removeEventListener("keydown", onKeydown);

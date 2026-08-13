@@ -35,30 +35,19 @@
             </div>
           </div>
           <div id="message-list" class="messages" aria-live="polite"></div>
+          <p id="refusal-hint" class="hint" hidden>
+            The tree did not build. Enter a different word on the Map page.
+          </p>
           <div id="start-panel" class="start-panel">
             <span class="orb start-orb" aria-hidden="true"></span>
-            <p class="start-eyebrow">The tutor is ready</p>
-            <h2 class="start-headline">What would you like to learn?</h2>
+            <p class="start-eyebrow">First, build the tree</p>
+            <h2 class="start-headline">Enter a word on the Map page</h2>
             <p class="start-sub">
-              A word or phrase - laptop, recursion, photosynthesis. The tutor will build a tree of
-              the concept.
-            </p>
-            <p id="start-hint" class="hint" hidden>
-              The input did not work. Use a different word or phrase.
+              A word or phrase makes the tree. Ask questions about the tree here.
             </p>
             <button id="demo-button" type="button" class="demo-button">
               See a demo session (no key needed)
             </button>
-            <form id="start-form" class="start-form">
-              <textarea
-                id="word-input"
-                class="composer-input"
-                rows="1"
-                placeholder="Type a word or phrase..."
-                autocomplete="off"
-              ></textarea>
-              <button id="begin-button" type="submit" class="begin-button">Start</button>
-            </form>
           </div>
           <div id="error-banner" class="error-banner" role="alert" hidden>
             <p id="error-text" class="error-text"></p>

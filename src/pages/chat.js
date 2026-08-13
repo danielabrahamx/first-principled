@@ -1,23 +1,27 @@
 /**
- * The chat page: the one surface that carries the whole Socratic loop.
+ * The chat page: the follow-up surface for the generated tree (ticket 11).
  *
- * Per ticket 08 and spec section 9. A thin controller over the session store
- * (state/session.js) and the client transport (api/agent.js): it renders
- * whatever the store holds, forwards what the learner types, and shows a
- * sending state while the API call is in flight.
+ * Per ticket 08 and spec section 9, reworked by ticket 11: the word-to-tree
+ * entry lives on the map page now, so this page is follow-up-only - it
+ * renders the conversation and forwards what the learner answers to the
+ * tree's questions. The turn loop runs through the shared generation module
+ * (lib/generation.js); this page adds the rendering and the friendly error
+ * wording.
  *
  * Surfaces:
- * - Starting: a word or phrase input (visible in phase init, including after
- *   a refusal - a new word starts a new session).
+ * - No session yet: a panel that points to the map page (the tree entry
+ *   point) and a demo button for reviewing the UI without the API key.
  * - Conversation: a message list of learner and agent turns.
+ * - Refusal: when the map's generation did not accept the word, the store
+ *   holds the refusal as the last reply; this page shows a hint pointing
+ *   back to the map and no composer.
  * - Phase indicator: starting / exploring / refining / session end. The
  *   exploring-vs-refining split mirrors the engine's own opening rule in
  *   spec section 8: an empty learner map means observation-first
  *   (exploring); a populated map means gap-first (refining).
  * - Session end: the transfer question arrives as a normal message, the
  *   learner answers, then a result panel shows pass or fail and the
- *   comparison entry point (a link to the map page - the map UI itself is
- *   ticket 09, the comparison view ticket 10).
+ *   comparison entry point (a link to the map page).
  * - Errors: one friendly line plus a Retry button, never raw JSON or
  *   provider text. Retry re-sends the exact request that failed, so a failed
  *   turn can be retried without losing or duplicating state.
@@ -31,11 +35,13 @@
 
 import { sessionStore } from "../state/session.js";
 import { callAgent as defaultCallAgent } from "../api/agent.js";
-import { getTurnstileToken } from "../turnstile.js";
 import { loadDemoSession } from "../demo.js";
+import { runAgentTurn, errorMessage } from "../lib/generation.js";
 
 /** @typedef {import("../state/session.js").SessionState} SessionState */
 /** @typedef {import("../state/session.js").SessionStore} SessionStore */
+
+export { errorMessage };
 
 /**
  * @typedef {object} ChatOptions
@@ -49,36 +55,6 @@ import { loadDemoSession } from "../demo.js";
  *   route change subscription for the header's active tab; injected by
  *   app.js, optional for tests.
  */
-
-/**
- * The friendly wording per transport code. Every code the transport can
- * produce has a line; unknown codes fall back to the last entry.
- *
- * @type {Record<string, string>}
- */
-const ERROR_MESSAGES = {
-  bad_request: "The tutor did not accept the input. Please try again.",
-  config_error: "The tutor is not ready yet. Please try again later.",
-  internal: "A fault happened on our side. Please try again.",
-  upstream_error: "The tutor could not answer. Please try again.",
-  invalid_model_output: "The tutor produced an unreadable answer. Please try again.",
-  network: "We could not reach the tutor. Check your connection, then try again.",
-  too_large: "Your message was too large. Please use a short message.",
-  rate_limited: "Too many requests. Please wait a moment, then try again.",
-  captcha_required: "One quick human check, then we continue.",
-  captcha_failed: "The human check did not pass. Please try again.",
-  unknown: "A fault happened. Please try again.",
-};
-
-/**
- * The transport code to the line the learner sees.
- *
- * @param {string} code
- * @returns {string}
- */
-export function errorMessage(code) {
-  return ERROR_MESSAGES[code] ?? ERROR_MESSAGES.unknown;
-}
 
 /**
  * @typedef {object} PhaseView
@@ -122,14 +98,10 @@ export function initChatPage(root, options = {}) {
 
   /** @type {HTMLElement} */
   const chatEl = get(root, "chat");
-  /** @type {HTMLTextAreaElement} */
-  const wordInput = get(root, "word-input");
-  /** @type {HTMLFormElement} */
-  const startForm = get(root, "start-form");
-  /** @type {HTMLButtonElement} */
-  const beginButton = get(root, "begin-button");
   /** @type {HTMLElement} */
-  const startHint = get(root, "start-hint");
+  const startPanel = get(root, "start-panel");
+  /** @type {HTMLElement} */
+  const refusalHint = get(root, "refusal-hint");
   /** @type {HTMLButtonElement} */
   const demoButton = get(root, "demo-button");
   /** @type {HTMLElement} */
@@ -204,50 +176,26 @@ export function initChatPage(root, options = {}) {
   }
 
   /**
-   * One turn: send the current store request, apply the response, or surface
-   * a friendly error with a retry. `content` is the learner message the turn
-   * is answering (already appended to the store by the caller); null on init.
+   * One turn: send the current store request through the shared generation
+   * module, apply the response, or surface a friendly error with a retry.
+   * `content` is the learner message the turn is answering (already appended
+   * to the store by the caller).
    *
-   * @param {string | null} content
+   * @param {string} content
    */
   async function runTurn(content) {
     pendingContent = content;
     setSending(true);
     render();
-    // Single-use Turnstile token for this turn (ticket 18). Null when the
-    // widget is not configured; the server only enforces when its secret
-    // key is set, so an unconfigured site still works.
-    const token = await getTurnstileToken("agent_turn");
-    const result = await callAgent(store.toRequest(), {
-      turnstileToken: token ?? undefined,
-    });
+    const result = await runAgentTurn(store, { callAgent });
     if (result.ok) {
-      const applied = store.applyResponse(result.data);
       pendingContent = null;
-      if (applied) {
-        hideError();
-      } else {
-        // Unreadable but 200: nothing was applied, retry is safe.
-        showError("internal");
-      }
+      hideError();
     } else {
-      showError(result.code);
+      showError(result.code ?? "unknown");
     }
     setSending(false);
     render();
-  }
-
-  /**
-   * Start a session from the word input. Called for the first word and again
-   * after an init refusal (a new word is a new session).
-   */
-  async function submitWord() {
-    const word = wordInput.value.trim();
-    if (word.length === 0 || sending) return;
-    if (!store.startSession(word)) return;
-    wordInput.value = "";
-    hideError();
-    await runTurn(null);
   }
 
   /** Send the learner's typed answer for the current turn. */
@@ -265,7 +213,6 @@ export function initChatPage(root, options = {}) {
   function runDemo() {
     if (sending) return;
     if (!loadDemoSession(store)) return;
-    wordInput.value = "";
     hideError();
     render();
     navigate("map");
@@ -318,9 +265,6 @@ export function initChatPage(root, options = {}) {
    */
   function setSending(on) {
     sending = on;
-    wordInput.disabled = on;
-    beginButton.disabled = on;
-    beginButton.textContent = on ? "Thinking..." : "Start";
     messageInput.disabled = on;
     sendButton.disabled = on;
     composerStatus.hidden = !on;
@@ -337,14 +281,16 @@ export function initChatPage(root, options = {}) {
     phaseIndicator.textContent = phase.label;
     phaseIndicator.dataset.phase = phase.kind;
 
-    const starting = state.phase === "init" && !state.ended;
-    chatEl.classList.toggle("starting", starting);
+    // No session yet: the tree entry lives on the map page, so chat points
+    // there instead of hosting a start form (ticket 11).
+    const noSession = state.word === null;
+    chatEl.classList.toggle("starting", noSession);
     renderMessages(state);
 
-    startForm.hidden = !starting;
-    startHint.hidden = !(starting && state.history.length > 0);
+    startPanel.hidden = !noSession;
+    refusalHint.hidden = !(state.word !== null && state.phase === "init");
 
-    const composing = !starting && !state.ended;
+    const composing = state.word !== null && state.phase === "active";
     composer.hidden = !composing;
     composerWrap.hidden = !composing;
     messageInput.placeholder =
@@ -352,7 +298,7 @@ export function initChatPage(root, options = {}) {
         ? "Your answer to the last question..."
         : "Your answer... (Enter to send)";
 
-    hero.hidden = starting;
+    hero.hidden = state.word === null || state.phase === "init";
     heroWord.textContent = state.word ?? "";
     heroEyebrow.textContent = heroEyebrowText(phase.kind);
 
@@ -418,19 +364,13 @@ export function initChatPage(root, options = {}) {
     form.requestSubmit();
   }
 
-  startForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    submitWord();
-  });
   composer.addEventListener("submit", (event) => {
     event.preventDefault();
     sendMessage();
   });
   retryButton.addEventListener("click", retry);
   demoButton.addEventListener("click", runDemo);
-  wordInput.addEventListener("input", () => autoGrow(wordInput));
   messageInput.addEventListener("input", () => autoGrow(messageInput));
-  wordInput.addEventListener("keydown", onKeydown);
   messageInput.addEventListener("keydown", onKeydown);
 
   render();

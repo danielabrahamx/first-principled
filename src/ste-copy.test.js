@@ -35,6 +35,7 @@ const COPY_FILES = [
   path.join(ROOT, "src", "index.html"),
   path.join(ROOT, "src", "pages", "chat.js"),
   path.join(ROOT, "src", "pages", "dock.js"),
+  path.join(ROOT, "src", "lib", "generation.js"),
 ];
 
 /**
@@ -80,7 +81,7 @@ const CHROME_WORDS = new Set(
   `tutor session demo key pages word phrase type enter send retry end new
    input message answer question request wait moment human pass continue
    ready fault happen side accept reach produce unreadable work large right
-   like want name principled quick needed`
+   like want name principled quick needed map page`
     .split(/\s+/)
     .filter(Boolean)
 );

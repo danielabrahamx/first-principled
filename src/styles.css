@@ -265,41 +265,6 @@ body {
   font-size: 14px;
 }
 
-.start-form {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  max-width: 560px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 8px 8px 8px 22px;
-  box-shadow: 0 8px 28px rgba(30, 34, 40, 0.06);
-}
-
-.begin-button {
-  border: none;
-  border-radius: 14px;
-  padding: 12px 24px;
-  background: radial-gradient(circle at 32% 26%, #c4baf2, #5b4bc4 52%, #352a85 100%);
-  box-shadow:
-    0 8px 20px rgba(91, 75, 196, 0.45),
-    inset -2px -3px 8px rgba(30, 20, 80, 0.35),
-    inset 2px 3px 6px rgba(255, 255, 255, 0.25);
-  color: #ffffff;
-  font-family: var(--font-ui);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.begin-button:disabled {
-  opacity: 0.55;
-  cursor: default;
-}
-
 .demo-button {
   border: 1px dashed var(--accent);
   background: transparent;
@@ -557,6 +522,73 @@ body {
 .map-header.is-stuck {
   border-bottom-color: var(--border);
   box-shadow: 0 8px 20px rgba(30, 34, 40, 0.06);
+}
+
+/* Ticket 11: the word entry in the sticky header - the map owns tree entry.
+   Full-width row (flex 1 1 100%) so it is the first thing seen on a phone;
+   on desktop it sits beneath the logo + segmented control. */
+
+.map-entry {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 6px 6px 6px 18px;
+  box-shadow: 0 8px 28px rgba(30, 34, 40, 0.06);
+}
+
+.map-entry-input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  background: transparent;
+  color: var(--ink);
+  border: none;
+  padding: 10px 0;
+}
+
+.map-entry-input::placeholder {
+  color: #8a94a3;
+}
+
+.map-entry-input:focus {
+  outline: none;
+}
+
+.map-entry-input:disabled {
+  opacity: 0.55;
+}
+
+.map-entry-button {
+  border: none;
+  border-radius: 13px;
+  padding: 11px 20px;
+  background: radial-gradient(circle at 32% 26%, #c4baf2, #5b4bc4 52%, #352a85 100%);
+  box-shadow:
+    0 8px 20px rgba(91, 75, 196, 0.45),
+    inset -2px -3px 8px rgba(30, 20, 80, 0.35),
+    inset 2px 3px 6px rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 44px;
+}
+
+.map-entry-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.map-error {
+  margin-bottom: 16px;
 }
 
 /* Segmented control */
@@ -1015,6 +1047,96 @@ body {
 .tree-branch-card:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Ticket 11: progressive skeleton - mirrors the vertical-path tree (root
+   block top, trunk, then layer bands down to the foundation) and lights its
+   bands bottom-up as each layer lands. Card placeholders match the real
+   tree card size (280x64) so the reveal swaps in place when the tree
+   renders. Single column, centered: no horizontal overflow at 375px/320px. */
+
+.tree-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0 32px;
+}
+
+.sk-caption {
+  margin: 0 0 18px;
+  color: var(--ink-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.sk-root {
+  width: 220px;
+  height: 74px;
+  border-radius: 16px;
+  background: var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.sk-root-line {
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.sk-root-line:first-child {
+  width: 56%;
+}
+
+.sk-root-line:last-child {
+  width: 38%;
+}
+
+.sk-trunk {
+  width: 2px;
+  height: 52px;
+  background: var(--border);
+}
+
+.sk-layer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  opacity: 0.3;
+  transition: opacity 0.5s ease;
+}
+
+.sk-layer.lit {
+  opacity: 1;
+}
+
+.sk-layer-label {
+  width: 92px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--border);
+}
+
+.sk-cards {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.sk-card {
+  width: 280px;
+  height: 64px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(30, 34, 40, 0.05);
 }
 
 /* Reduced motion (ticket 04): no transitions, no repeated animations */
@@ -1703,10 +1825,6 @@ body {
   .start-orb {
     width: 140px;
     height: 140px;
-  }
-
-  .start-form {
-    padding-left: 14px;
   }
 
   .map-header {
