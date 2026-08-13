@@ -297,3 +297,68 @@ export function dependents(realityMap, nodeId) {
   }
   return labels;
 }
+
+/**
+ * The enabling observations a node COMBINES (ticket 13): the `combines`
+ * list of a convergence node, each entry resolved against the map so the
+ * panel can render the contributing observations from the other fields -
+ * the source node's label and layer plus its observation view. Defensive:
+ * a combine entry that references a missing node or carries an unusable
+ * record renders as an explicit gap, never a blank and never a crash. A
+ * node without a combines list yields an empty array.
+ *
+ * @param {any} realityMap
+ * @param {string} nodeId
+ * @returns {Array<{ sourceId: string; label: string; layer: string; layerName: string; observation: ObservationView }>}
+ */
+export function combinesOf(realityMap, nodeId) {
+  if (
+    realityMap === null ||
+    typeof realityMap !== "object" ||
+    !Array.isArray(realityMap.layers) ||
+    !Array.isArray(realityMap.nodes)
+  ) {
+    return [];
+  }
+  const nodes = /** @type {any[]} */ (realityMap.nodes);
+  const byId = new Map(nodes.map((node) => [node && node.id, node]));
+  const node = byId.get(nodeId);
+  if (node === undefined || !Array.isArray(node.combines)) return [];
+
+  const layers = /** @type {any[]} */ (realityMap.layers);
+  const layerName = new Map(
+    layers.map((layer) => [layer && layer.id, layer && layer.name])
+  );
+
+  return node.combines
+    .filter(
+      /** @param {any} entry */
+      (entry) => entry !== null && typeof entry === "object"
+    )
+    .map(
+      /** @param {any} entry */
+      (entry) => {
+        const sourceId =
+          typeof entry.id === "string" && entry.id.length > 0 ? entry.id : nodeId;
+        const source = byId.get(sourceId);
+        return {
+          sourceId,
+          label:
+            source !== undefined && typeof source.label === "string"
+              ? source.label
+              : sourceId,
+          layer:
+            source !== undefined && typeof source.layer === "string"
+              ? source.layer
+              : "",
+          layerName:
+            source !== undefined &&
+            typeof source.layer === "string" &&
+            typeof layerName.get(source.layer) === "string"
+              ? layerName.get(source.layer)
+              : "",
+          observation: observationOf(source),
+        };
+      }
+    );
+}

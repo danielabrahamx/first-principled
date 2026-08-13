@@ -107,6 +107,79 @@ test("validator rejects duplicate node ids", () => {
   assert.ok(result.errors.some((e) => e.includes("duplicate node id")));
 });
 
+test("validator accepts a convergence node's combines list and rejects broken entries", () => {
+  // llmRealityMap (ticket 13): a convergence node combines attention,
+  // embeddings, and compute - structurally valid combines entries.
+  const llm = structuredClone(laptopRealityMap);
+  const bit = llm.nodes.find((node) => node.id === "n-bit");
+  assert.ok(bit);
+  bit.combines = [
+    {
+      id: "n-logic-gate",
+      observation: {
+        discoverer: { value: "George Boole", mark: "EXACT" },
+        date: { value: "1847", mark: "EXACT" },
+        keyObservation: { value: "Boole links logical reasoning to the rules of algebra.", mark: "EXACT" },
+        confidence: "high",
+        note: "",
+      },
+    },
+    {
+      id: "n-electricity",
+      observation: {
+        discoverer: { value: "Thales of Miletus", mark: "APPROXIMATE" },
+        date: { value: "600 BC", mark: "APPROXIMATE" },
+        keyObservation: { value: "Amber rubbed with fur attracts feathers and dry leaves.", mark: "EXACT" },
+        confidence: "medium",
+        note: "",
+      },
+    },
+  ];
+  assert.equal(validateRealityMap(llm).ok, true);
+
+  const ghost = /** @type {any} */ (clone(llm));
+  ghost.nodes = ghost.nodes.map(
+    /** @param {any} node */
+    (node) =>
+      node.id === "n-bit" && Array.isArray(node.combines)
+        ? { ...node, combines: [{ id: "n-ghost", observation: node.combines[0].observation }] }
+        : node
+  );
+  const ghostResult = validateRealityMap(ghost);
+  assert.equal(ghostResult.ok, false);
+  assert.ok(ghostResult.errors.some((e) => e.includes("n-ghost")));
+
+  const badObs = /** @type {any} */ (clone(llm));
+  badObs.nodes = badObs.nodes.map(
+    /** @param {any} node */
+    (node) =>
+      node.id === "n-bit"
+        ? {
+          ...node,
+          combines: [
+            {
+              id: "n-logic-gate",
+              observation: {
+                discoverer: { value: "George Boole", mark: "EXACT" },
+                date: { value: "1847", mark: "EXACT" },
+                keyObservation: { value: "Boole links logical reasoning to the rules of algebra.", mark: "EXACT" },
+                confidence: "high",
+                note: "",
+              },
+            },
+            {
+              id: "n-electricity",
+              observation: { discoverer: { value: "x", mark: "EXACT" } },
+            },
+          ],
+        }
+      : node
+  );
+  const badObsResult = validateRealityMap(badObs);
+  assert.equal(badObsResult.ok, false);
+  assert.ok(badObsResult.errors.some((e) => e.includes("observation record")));
+});
+
 test("validator rejects a self-loop edge", () => {
   const map = clone(laptopRealityMap);
   map.edges.push({

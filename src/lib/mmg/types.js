@@ -83,6 +83,17 @@
  * ticket 03. The field stays OPTIONAL in the schema so maps without it
  * remain valid.
  *
+ * `combines` (ticket 13) is what makes a node a CONVERGENCE node: a real
+ * discovery history is convergent - independent streams meet at a layer and
+ * combine. A convergence node keeps ONE crux record (`basis` - the discovery
+ * that combined the streams, e.g. Vaswani 2017) plus a `combines` list of
+ * the ENABLING observations from other fields that it synthesizes. Each
+ * entry references the source node id (which must exist, in a strictly
+ * lower layer) and carries that field's observation record so the panel can
+ * render it even if the source node's own record later changes. The
+ * generator emits a cross-layer edge to each combine source; deriveCheck
+ * enforces the 2+ distinct-layer rule (ticket 13 Q2).
+ *
  * @typedef {object} RealityNode
  * @property {NodeId} id
  * @property {string} label
@@ -90,6 +101,9 @@
  * @property {string} description
  * @property {string | ObservationRecord} [basis] - the observation this node
  *   compresses (ticket 06); an observation record since ticket 03.
+ * @property {Array<{ id: NodeId; observation: ObservationRecord }>} [combines] -
+ *   the enabling observations from other fields this node's crux combines
+ *   (ticket 13); present only on convergence nodes.
  */
 
 /**

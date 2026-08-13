@@ -639,6 +639,10 @@ body {
   margin-bottom: 20px;
 }
 
+.map-title-left {
+  min-width: 0;
+}
+
 .map-eyebrow {
   margin: 0 0 6px;
   font-size: 13px;
@@ -1042,6 +1046,32 @@ body {
 .tree-obs-dot.gap {
   background: transparent;
   border: 2px dashed var(--ink-muted);
+}
+
+/* Convergence node (ticket 13): a node that combines observations from
+   several fields. The card carries a small "combines N fields" chip, always
+   legible at 375px/320px; the SVG fan-in strokes (drawn only on desktop, in
+   the .tree-converge-fans group) are the wide-stage representation. */
+
+.tree-converge-chip {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(91, 75, 196, 0.1);
+  border: 1px solid rgba(91, 75, 196, 0.35);
+  border-radius: 999px;
+  padding: 1px 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tree-converge-fans {
+  pointer-events: none;
 }
 
 .tree-branch-label:focus-visible,

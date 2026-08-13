@@ -46,7 +46,9 @@ import {
 import { comparisonMetrics } from "../lib/mapview/comparison.js";
 import {
   TREE_CARD_WIDTH,
+  TREE_TWO_UP_MIN_WIDTH,
   cladogramPaths,
+  convergenceFanPaths,
   realityTree,
   treeLayout,
 } from "../lib/mapview/tree.js";
@@ -67,6 +69,7 @@ import {
   observationOf,
   layerObservationStory,
   dependents,
+  combinesOf,
 } from "../lib/mapview/observation.js";
 import { nodeHistory } from "../state/session.js";
 import { callAgent as defaultCallAgent } from "../api/agent.js";
@@ -717,6 +720,37 @@ export function renderMapPage(root, store, options = {}) {
     }
     panelBody.appendChild(obsSection);
 
+    // The convergence stream (ticket 13): a convergence node combines
+    // observations from several fields. The panel renders its crux record
+    // (above) plus each contributing observation from the other fields.
+    const combined = combinesOf(state.realityMap, nodeId);
+    if (combined.length > 0) {
+      const section = el("section", "node-panel-section");
+      section.appendChild(
+        el("h3", "node-panel-h", "It combines observations from other fields")
+      );
+      const list = el("ul", "obs-story-list");
+      for (const entry of combined) {
+        const item = el("li", "obs-story-item");
+        const field = entry.layerName || entry.layer;
+        item.appendChild(
+          el(
+            "p",
+            "obs-story-node",
+            entry.label.length > 0
+              ? field.length > 0
+                ? `${entry.label} (${field})`
+                : entry.label
+              : entry.sourceId
+          )
+        );
+        item.appendChild(buildObservationCard(entry.observation));
+        list.appendChild(item);
+      }
+      section.appendChild(list);
+      panelBody.appendChild(section);
+    }
+
     if (view.description.length > 0) {
       const section = el("section", "node-panel-section");
       section.appendChild(el("h3", "node-panel-h", "What it is"));
@@ -1254,6 +1288,15 @@ export function renderMapPage(root, store, options = {}) {
         );
         dot.setAttribute("aria-hidden", "true");
         node.append(labelSpan, dot);
+        if (card.combines > 0) {
+          const chip = el(
+            "span",
+            "tree-converge-chip",
+            `combines ${card.combines} field${card.combines === 1 ? "" : "s"}`
+          );
+          chip.setAttribute("aria-hidden", "true");
+          node.append(chip);
+        }
         node.addEventListener("click", () => {
           hidePopover();
           openPanel(card.id, node);
@@ -1308,6 +1351,27 @@ export function renderMapPage(root, store, options = {}) {
     }
 
     treeMotion = wireTreeMotion({ svg: treeSvg, layout, layers, reduced: reducedMotion });
+
+    /* Ticket 13: the convergence fan-in. On desktop (a stage wide enough to
+     * draw them) each convergence node gets a small fan of branch lines
+     * rising into its bottom edge, one per combined field. Mobile carries the
+     * "combines N fields" chip instead - the fan would crowd a 375px column.
+     * Drawn after wireTreeMotion so the fan strokes are never mistaken for
+     * cladogram elbows by the motion wiring. */
+    if (width > TREE_TWO_UP_MIN_WIDTH) {
+      const fanGroup = document.createElementNS(SVG_NS, "g");
+      fanGroup.setAttribute("class", "tree-converge-fans");
+      for (const fan of convergenceFanPaths(layout)) {
+        const path = document.createElementNS(SVG_NS, "path");
+        path.setAttribute("d", fan.d);
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", "#B9B3E8");
+        path.setAttribute("stroke-width", "1.5");
+        path.setAttribute("opacity", "0.55");
+        fanGroup.appendChild(path);
+      }
+      treeSvg.appendChild(fanGroup);
+    }
   }
 
   /**

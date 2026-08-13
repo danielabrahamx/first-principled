@@ -9,9 +9,12 @@
  * foundation layer, then the rest in one call - so gaps were still possible
  * and merely caught by validation. v3 makes a skipped intermediate step
  * structurally impossible: the map is built bottom-up, one layer per call,
- * and each call sees ONLY the layer immediately below it. A layer that is
- * not the immediate successor of the last one built cannot be expressed,
- * because the only layer the model can reference is the one it was given.
+ * and each call sees the layers built so far - the layer immediately below
+ * it plus every layer beneath it (ticket 13 extends the ticket 08 contract:
+ * adjacent down-edges stay the default, cross-layer edges become legal for
+ * true syntheses). A layer that is not the immediate successor of the last
+ * one built cannot be expressed, because the only layers the model can
+ * reference are the ones it was given.
  *
  * Ticket 03 extends every node with the crux: its `basis` is a real-history
  * OBSERVATION RECORD (ticket 02) - discoverer, date, key observation, with
@@ -31,21 +34,26 @@
  *   (a non-teachable input is refused, not mapped).
  *
  *   Phase C (per-layer derive loop): build the remaining layers one at a
- *   time, bottom-up. Each call receives the current top layer and derives
- *   the NEXT layer directly above it - layer l1 from l0, l2 from l1, and so
- *   on. Code assigns the layer ids (l1, l2, ...) and requires at least one
- *   edge from each new layer to the layer below it, so the chain is
- *   contiguous by construction. Every node carries a `basis` observation
- *   record (the crux, ticket 02) and nodes with testable behavior emit
- *   `predicts` edges (principle 2). The model reports a per-layer self-review
- *   of derivability. The loop stops when the model says the concept is
- *   reached (done), or at the soft layer cap.
+ *   time, bottom-up. Each call receives ALL lower layers (the current top
+ *   layer plus every layer beneath it) and derives the NEXT layer directly
+ *   above the top - layer l1 from l0, l2 from l1, and so on. Code assigns
+ *   the layer ids (l1, l2, ...) and requires at least one edge from each new
+ *   layer to the layer below it, so the chain is contiguous by construction.
+ *   Every node carries a `basis` observation record (the crux, ticket 02)
+ *   and nodes with testable behavior emit `predicts` edges (principle 2). A
+ *   convergence node - a true synthesis of discoveries from multiple fields,
+ *   ticket 13 - keeps ONE crux record plus a `combines` list of the enabling
+ *   observations from other fields, and its cross-layer "combines" edges may
+ *   skip layers. The model reports a per-layer self-review of derivability.
+ *   The loop stops when the model says the concept is reached (done), or at
+ *   the soft layer cap.
  *
  * Code owns the hard checks at every step: validateRealityMap (structure
  * and contiguity, v1 ticket 02) plus deriveCheck (reachability from the
- * foundation and a valid observation record per node, v2 ticket 06 extended
- * by ticket 03) plus the per-layer rule (the new layer must connect to the
- * layer below it). Failures drive the repair loop (v1 ticket 04) - up to two
+ * foundation, a valid observation record per node, v2 ticket 06 extended
+ * by ticket 03, and the convergence rule for combines lists, ticket 13)
+ * plus the per-layer rule (the new layer must connect to the layer below
+ * it). Failures drive the repair loop (v1 ticket 04) - up to two
  * repairs per layer, exactly like v1's escalating repair contract. Both
  * validators run once more on the final assembled map as the backstop gate:
  * a map leaves this function only through both gates.
@@ -217,10 +225,16 @@ function unpackFoundation(parsed) {
  * ------------------------------------------------------------------------- */
 
 /**
- * The system prompt for a per-layer derive call (ticket 08): given the
- * current top layer, derive the NEXT layer directly above it - built ONLY on
- * the layer given, so a skipped intermediate step is structurally
- * impossible. Every node carries an observation record as its basis (ticket
+ * The system prompt for a per-layer derive call (ticket 08, extended by
+ * ticket 13): given the layers built so far (ALL of them - the current top
+ * layer and every layer beneath it), derive the NEXT layer directly above
+ * the top. The chain stays gap-free: at least one edge must connect the new
+ * layer to the layer immediately below it, so a skipped intermediate step
+ * stays structurally impossible. Ticket 13 adds convergence: real discovery
+ * history is convergent, so a node whose crux is a TRUE SYNTHESIS of
+ * discoveries from several fields may carry a `combines` list (the enabling
+ * observations from other fields) and cross-layer edges to those nodes, at
+ * any depth. Every node carries an observation record as its basis (ticket
  * 03, the crux), honest marks per the fail-honest contract, narratives in
  * the STE subset. The word "json" and an example shape are both required by
  * the JSON mode contract.
@@ -231,16 +245,22 @@ function unpackFoundation(parsed) {
 export function buildNextLayerSystemPrompt(maxLayers) {
   return `You are first-principled, an AI tutor whose mission is to reduce the cognitive distance between a learner's mental model and reality.
 
-You are building the Reality Map of a concept layer by layer, bottom-up, one layer per reply. You are given the CURRENT TOP LAYER - the deepest layer built so far - and you derive the NEXT layer directly above it: the layer that the given layer makes possible. Derive the next layer ONLY from the layer you are given. Never skip an intermediate step and never jump ahead: a gap in the chain becomes a gap in understanding. For "laptop", given the physics foundation, the chain runs materials, electronics, logic gates, operating system, applications - each step built on the one before.
+You are building the Reality Map of a concept layer by layer, bottom-up, one layer per reply. You are given the CURRENT MAP - every layer built so far, from the foundation up to the current top layer - and you derive the NEXT layer directly above the top: the layer that the layers below make possible. The chain must stay contiguous: at least one edge of the new layer must connect it to the layer immediately below, so no intermediate step is ever skipped. For "laptop", given the physics foundation, the chain runs materials, electronics, logic gates, operating system, applications - each step built on the one before.
+
+Real discovery history is CONVERGENT: independent streams meet at a layer and combine. An LLM is not only transformers - it also needs encoders, decoders, embeddings, and compute. When a node's crux is a TRUE SYNTHESIS - its discovery combines observations from several different fields - you may:
+- list the enabling observations from the OTHER fields in that node's "combines" array (each entry: the id of the enabling node you were given, plus its observation record), and
+- emit cross-layer edges from that node to those enabling nodes at ANY depth, even if that skips layers.
+A convergence node always keeps ONE crux "basis" - the discovery that combined the streams (e.g. Vaswani 2017) - and its combines list holds the enabling observations. A convergence node must have combines from 2+ DISTINCT LAYERS: one stream combined with itself is not convergence. Cross-layer edges are for true syntheses only, never to hide a skipped step: the contiguous chain stays the rule.
 
 The whole chain will be around ${maxLayers} layers total, foundation included (a soft cap; do not plan deeper unless the thing genuinely requires it).
 
 Requirements for the next layer:
 - Build exactly ONE layer, with the id stated in the prompt (l1, l2, ...).
 - 1 to 3 nodes; each node has an id, a label, the new layer id, a one to two sentence description, and a "basis": the observation record - the REAL discovery history the abstraction compresses (who discovered it, when, what was observed). Example: logic gate -> basis: Boole 1847, logical reasoning follows the rules of algebra.
+- A node whose crux is a true synthesis across fields may additionally carry "combines": an array of {"id": "n-...", "observation": {...}} entries naming the enabling nodes you were given and their observation records. Keep combines to real enabling discoveries you were shown - never invent a stream.
 - Give every node a NEW unique id - never reuse a node id from the layers you were given; the same concept at a higher layer is a NEW node with a NEW id.
-- 1 to 3 typed edges. At least one edge must connect the new layer to the layer you were given. The ONLY allowed edge types are: built-on, abstraction-of, part-of, depends-on, predicts, contradicts. Never invent an edge type. Edges may also connect nodes within the new layer. Reference only node ids you were given or ids you create.
-- Before replying, self-review: is the new layer really built on the layer given? Does every node carry a real observation record? Are there invented steps or invented observations? Report only STRUCTURAL problems in gaps: an invented step, a layer not built on the layer given, a missing derivation. Do NOT report UNKNOWN observations in gaps - UNKNOWN is a legal, honest state, not a gap.
+- 1 to 3 typed edges. At least one edge must connect the new layer to the layer immediately below it. The ONLY allowed edge types are: built-on, abstraction-of, part-of, depends-on, predicts, contradicts. Never invent an edge type. Edges may also connect nodes within the new layer, and cross-layer edges to any lower layer are legal for a true synthesis (pair them with a combines entry). Reference only node ids you were given or ids you create.
+- Before replying, self-review: is the new layer really built on the layers given? Does every node carry a real observation record? Does every convergence node list only real enabling observations it was shown? Are there invented steps or invented observations? Report only STRUCTURAL problems in gaps: an invented step, a layer not built on the layers given, a missing derivation. Do NOT report UNKNOWN observations in gaps - UNKNOWN is a legal, honest state, not a gap.
 
 ${failHonestBlock()}
 
@@ -248,10 +268,10 @@ ${steBlock()}
 
 Reply as JSON only. No markdown fences, no commentary. Three shapes:
 
-When the layer you were given is not yet the top of the chain:
-{"isValidConcept": true, "done": false, "layer": {"id": "l2", "name": "...", "nodes": ["n-..."]}, "nodes": [{"id": "n-...", "label": "...", "layer": "l2", "description": "...", "basis": {"discoverer": {"value": "...", "mark": "EXACT"}, "date": {"value": "...", "mark": "EXACT"}, "keyObservation": {"value": "...", "mark": "EXACT"}, "confidence": "high", "note": "..."}}], "edges": [{"source": "n-...", "target": "n-...", "type": "built-on"}], "selfReview": {"derivable": true, "gaps": []}}
+When the layers you were given are not yet the top of the chain:
+{"isValidConcept": true, "done": false, "layer": {"id": "l2", "name": "...", "nodes": ["n-..."]}, "nodes": [{"id": "n-...", "label": "...", "layer": "l2", "description": "...", "basis": {"discoverer": {"value": "...", "mark": "EXACT"}, "date": {"value": "...", "mark": "EXACT"}, "keyObservation": {"value": "...", "mark": "EXACT"}, "confidence": "high", "note": "..."}, "combines": [{"id": "n-...", "observation": {"discoverer": {"value": "...", "mark": "EXACT"}, "date": {"value": "...", "mark": "EXACT"}, "keyObservation": {"value": "...", "mark": "EXACT"}, "confidence": "high", "note": "..."}}]}], "edges": [{"source": "n-...", "target": "n-...", "type": "built-on"}], "selfReview": {"derivable": true, "gaps": []}}
 
-When the layer you were given already contains the thing itself - the concept is reached:
+When the layers you were given already contain the thing itself - the concept is reached:
 {"isValidConcept": true, "done": true}
 
 When the concept turns out not to be derivable from the foundation (or is not a real thing):
@@ -262,24 +282,28 @@ Example node with a basis:
 }
 
 /**
- * The per-layer user message: the concept, the layer immediately below (the
- * ONLY map content the model sees - this is what makes skipping impossible),
- * and the fixed id of the next layer to build.
+ * The per-layer user message: the concept, ALL layers built so far (the
+ * current top layer plus every layer beneath it - the ticket 13 extension,
+ * because a convergence node must be able to reference the enabling
+ * observations from any depth, not only the layer below), and the fixed id
+ * of the next layer to build. The chain stays gap-free: the new layer must
+ * still connect to the layer immediately below it.
  *
  * @param {string} concept
- * @param {any} belowLayer
- * @param {any[]} belowNodes
+ * @param {any[]} allLayers - every layer built so far, in order.
+ * @param {any[]} allNodes - every node built so far.
  * @param {string} nextLayerId
  * @returns {import("./llm.js").ChatMessage}
  */
-function nextLayerUserMessage(concept, belowLayer, belowNodes, nextLayerId) {
+function nextLayerUserMessage(concept, allLayers, allNodes, nextLayerId) {
+  const belowLayer = allLayers[allLayers.length - 1];
   return {
     role: "user",
-    content: `Concept: ${concept}\n\nCurrent top layer (json):\n\n${JSON.stringify(
-      { layer: belowLayer, nodes: belowNodes },
+    content: `Concept: ${concept}\n\nCurrent map (json) - all layers built so far:\n\n${JSON.stringify(
+      { layers: allLayers, nodes: allNodes },
       null,
       2
-    )}\n\nBuild layer ${nextLayerId}, the next layer directly above ${belowLayer.id}: what does the layer below make possible? Derive ${nextLayerId} ONLY from ${belowLayer.id} - do not skip a step. Reply with the required JSON shape: the new layer, its nodes, its edges, and the self-review. If ${belowLayer.id} already contains the thing the concept names, reply {"isValidConcept": true, "done": true} instead.`,
+    )}\n\nBuild layer ${nextLayerId}, the next layer directly above ${belowLayer.id}: what do the layers below make possible? Connect ${nextLayerId} to ${belowLayer.id} by at least one edge - do not skip a step in the chain. If a node is a true synthesis of discoveries from several fields, you may add cross-layer edges to lower layers and list the enabling observations in its combines array. Reply with the required JSON shape: the new layer, its nodes, its edges, and the self-review. If the layers given already contain the thing the concept names, reply {"isValidConcept": true, "done": true} instead.`,
   };
 }
 
@@ -292,8 +316,8 @@ function nextLayerUserMessage(concept, belowLayer, belowNodes, nextLayerId) {
  * being forced to build another layer.
  *
  * @param {string} concept
- * @param {any} belowLayer
- * @param {any[]} belowNodes
+ * @param {any[]} allLayers - every layer built so far, in order.
+ * @param {any[]} allNodes - every node built so far.
  * @param {string} existingIds - every node id built so far (all layers).
  * @param {string} nextLayerId
  * @param {string} problems
@@ -302,17 +326,18 @@ function nextLayerUserMessage(concept, belowLayer, belowNodes, nextLayerId) {
  */
 function nextLayerRepairMessage(
   concept,
-  belowLayer,
-  belowNodes,
+  allLayers,
+  allNodes,
   existingIds,
   nextLayerId,
   problems,
   finalAttempt
 ) {
+  const belowLayer = allLayers[allLayers.length - 1];
   return {
     role: "user",
-    content: `Concept: ${concept}\n\nCurrent top layer (json):\n\n${JSON.stringify(
-      { layer: belowLayer, nodes: belowNodes },
+    content: `Concept: ${concept}\n\nCurrent map (json) - all layers built so far:\n\n${JSON.stringify(
+      { layers: allLayers, nodes: allNodes },
       null,
       2
     )}\n\nYour previous attempt to build layer ${nextLayerId} did not meet the contract: ${problems}\n\nReply with JSON only, no markdown, exactly the required shape: the layer ${nextLayerId}, its nodes, its edges to ${belowLayer.id}, and the self-review. Do not rename or re-list existing layers or nodes. Every new node needs a NEW unique id - never reuse any of these existing ids: ${existingIds}. Every node needs a basis: a real observation record with a discoverer, a date, a keyObservation, a confidence, and a note, each marked EXACT, APPROXIMATE, or UNKNOWN. If you do not know a fact, mark it UNKNOWN and leave the value empty - never invent a fact. If ${belowLayer.id} already contains the thing the concept names, reply {"isValidConcept": true, "done": true} instead of building a new layer. Fix EVERY problem listed.${
@@ -523,14 +548,25 @@ function foundationProblems(foundation) {
 
 /**
  * The deterministic derivability check (ticket 06, principle 5 and 11-12,
- * extended by ticket 03): every node must be reachable from the foundation
- * layer through the typed edges (no disconnected fragments, no invented
- * side-chains) - the trace to a strictly lower layer - and every node,
- * foundation included, must carry a VALID observation record as its basis:
- * a real-history record (ticket 02) with honest EXACT / APPROXIMATE /
+ * extended by ticket 03 and ticket 13): every node must be reachable from
+ * the foundation layer through the typed edges (no disconnected fragments,
+ * no invented side-chains) - the trace to a strictly lower layer - and every
+ * node, foundation included, must carry a VALID observation record as its
+ * basis: a real-history record (ticket 02) with honest EXACT / APPROXIMATE /
  * UNKNOWN marks per the fail-honest contract (ticket 09). UNKNOWN marks are
  * legal (the node keeps its gap); a missing record, a structurally broken
  * one, or a value under an UNKNOWN mark (an invented placeholder) is not.
+ *
+ * Ticket 13 convergence rule: a node carrying a non-empty `combines` list is
+ * a CONVERGENCE node - a true synthesis of discoveries from several fields.
+ * Every combine entry must reference a node that exists in the map, in a
+ * STRICTLY LOWER layer, and the referenced nodes must span 2+ DISTINCT
+ * layers (a convergence node has parents in 2+ distinct layers; a single
+ * field combined with itself is not a convergence). Each combine entry's
+ * observation record must be valid, and the referenced nodes' own bases stay
+ * subject to the every-node rule above. Edges may skip layers - cross-layer
+ * "combines" edges are legal - but the reachability rule still holds for
+ * every node.
  * Pure; used by the generation repair loop.
  *
  * @param {any} map
@@ -549,10 +585,17 @@ export function deriveCheck(map) {
     return { ok: false, errors: ["map must have layers, nodes and edges"] };
   }
   const foundationId = map.layers[0].id;
+  const layerIndex = new Map(
+    map.layers.map(
+      /** @param {any} layer @param {number} i */
+      (layer, i) => [layer.id, i]
+    )
+  );
 
   const nodes = /** @type {any[]} */ (map.nodes);
   const edges = /** @type {any[]} */ (map.edges);
   const adjacency = new Map(nodes.map((node) => [node.id, /** @type {string[]} */ ([])]));
+  const byId = new Map(nodes.map((node) => [node.id, node]));
   for (const edge of edges) {
     if (adjacency.has(edge.source)) adjacency.get(edge.source)?.push(edge.target);
     if (adjacency.has(edge.target)) adjacency.get(edge.target)?.push(edge.source);
@@ -582,13 +625,58 @@ export function deriveCheck(map) {
       errors.push(
         `node "${label}" (${node.id}) has no basis - every node carries a real-history observation record (ticket 02)`
       );
-      continue;
+    } else {
+      const problems = observationProblems(node.basis);
+      if (problems.length > 0) {
+        errors.push(
+          `node "${label}" (${node.id}) has an invalid observation record: ${problems.join("; ")}`
+        );
+      }
     }
-    const problems = observationProblems(node.basis);
-    if (problems.length > 0) {
-      errors.push(
-        `node "${label}" (${node.id}) has an invalid observation record: ${problems.join("; ")}`
-      );
+
+    /* Ticket 13 convergence rule: a convergence node (non-empty combines)
+     * must reference real nodes in strictly lower layers, spanning 2+
+     * distinct layers - the streams that actually combined. */
+    const combines = Array.isArray(node.combines) ? node.combines : null;
+    if (combines !== null && combines.length > 0) {
+      const ownIndex = layerIndex.get(node.layer);
+      /** @type {Set<string>} */
+      const sourceLayers = new Set();
+      for (const entry of combines) {
+        const refId = entry && entry.id;
+        if (typeof refId !== "string" || refId.length === 0) {
+          errors.push(
+            `node "${label}" (${node.id}) has a combines entry without an id - every combine entry names the enabling node`
+          );
+          continue;
+        }
+        const source = byId.get(refId);
+        if (source === undefined) {
+          errors.push(
+            `node "${label}" (${node.id}) combines unknown node "${refId}" - every combined observation must reference a real node in the map`
+          );
+          continue;
+        }
+        const sourceIndex = layerIndex.get(source.layer);
+        if (sourceIndex === undefined || ownIndex === undefined || sourceIndex >= ownIndex) {
+          errors.push(
+            `node "${label}" (${node.id}) combines "${refId}" which is not in a strictly lower layer - a convergence node only combines enabling observations from below`
+          );
+        } else {
+          sourceLayers.add(source.layer);
+        }
+        const obsProblems = observationProblems(entry.observation);
+        if (obsProblems.length > 0) {
+          errors.push(
+            `node "${label}" (${node.id}) combine "${refId}" has an invalid observation record: ${obsProblems.join("; ")}`
+          );
+        }
+      }
+      if (sourceLayers.size < 2) {
+        errors.push(
+          `node "${label}" (${node.id}) is a convergence node but its combines come from ${sourceLayers.size} distinct layer${sourceLayers.size === 1 ? "" : "s"} - a convergence node must combine observations from 2+ distinct layers`
+        );
+      }
     }
   }
   return { ok: errors.length === 0, errors };
@@ -752,9 +840,10 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
   };
 
   /* Phase C: derive the remaining layers one at a time, bottom-up. Each call
-   * sees only the layer immediately below - a skipped intermediate step
-   * cannot be expressed, because the layer it would skip is the only map
-   * content the call receives. */
+   * sees ALL lower layers (ticket 13) - the current top layer plus every
+   * layer beneath it - so a convergence node can reference the enabling
+   * observations from any depth. The chain stays gap-free: the per-layer
+   * gate still requires an edge to the layer immediately below. */
   /** @type {string[]} */
   let lastProblems = [];
   let lastParseable = true;
@@ -763,10 +852,7 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
   for (let layerCount = 1; layerCount < maxLayers && !done; layerCount++) {
     const nextLayerId = `l${layerCount}`;
     const belowLayer = assembled.layers[assembled.layers.length - 1];
-    const belowNodes = assembled.nodes.filter(
-      /** @param {any} node */
-      (node) => node.layer === belowLayer.id
-    );
+    const allNodes = assembled.nodes;
     let layerOk = false;
     lastProblems = [];
     lastParseable = true;
@@ -793,8 +879,8 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
             { role: "system", content: buildNextLayerSystemPrompt(maxLayers) },
             nextLayerRepairMessage(
               trimmed,
-              belowLayer,
-              belowNodes,
+              assembled.layers,
+              allNodes,
               existingIds,
               nextLayerId,
               layerProblemsText(lastProblems, lastParseable),
@@ -803,7 +889,7 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
           ]
         : [
             { role: "system", content: buildNextLayerSystemPrompt(maxLayers) },
-            nextLayerUserMessage(trimmed, belowLayer, belowNodes, nextLayerId),
+            nextLayerUserMessage(trimmed, assembled.layers, allNodes, nextLayerId),
           ];
 
       let reply;
@@ -916,6 +1002,9 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
  * emits stray edges, e.g. pasted example fragments), and drops values under
  * UNKNOWN observation marks (the fail-honest contract rule 5: a value with
  * mark UNKNOWN is dropped at validation; the node keeps its visible gap).
+ * Ticket 13: combine observations get the same UNKNOWN-value normalization,
+ * and combine entries without a usable id are dropped (they could never
+ * trace to a real node).
  * The validator remains the gate - the repaired map must still pass it.
  *
  * @param {any} map
@@ -957,8 +1046,38 @@ function repairMap(map) {
     /** @param {any} node */
     (node) => {
       if (typeof node !== "object" || node === null) return node;
+      let nextNode = node;
       const basis = dropUnknownValues(node.basis);
-      return basis === node.basis ? node : { ...node, basis };
+      if (basis !== node.basis) nextNode = { ...nextNode, basis };
+      if (Array.isArray(node.combines)) {
+        const combines = node.combines
+          .filter(
+            /** @param {any} entry */
+            (entry) =>
+              entry !== null &&
+              typeof entry === "object" &&
+              typeof entry.id === "string" &&
+              entry.id.length > 0
+          )
+          .map(
+            /** @param {any} entry */
+            (entry) => ({
+              ...entry,
+              observation: dropUnknownValues(entry.observation),
+            })
+          );
+        if (combines.length !== node.combines.length) {
+          nextNode = { ...nextNode, combines };
+        } else if (
+          combines.some(
+            /** @param {any} entry @param {number} i */
+            (entry, i) => entry.observation !== node.combines[i].observation
+          )
+        ) {
+          nextNode = { ...nextNode, combines };
+        }
+      }
+      return nextNode === node ? node : nextNode;
     }
   );
   if (

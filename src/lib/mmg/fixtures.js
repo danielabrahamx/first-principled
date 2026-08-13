@@ -191,8 +191,7 @@ export const laptopRealityMap = {
  *
  * @type {import("./types.js").LearnerMentalModel}
  */
-export const laptopLearnerMap = {
-  nodes: [
+export const laptopLearnerMap = {  nodes: [
     {
       id: "n-electricity",
       state: "correct",
@@ -252,5 +251,132 @@ export const laptopLearnerMap = {
       confidence: 0.5,
       evidence: ["apps just run on the power, no middleman"],
     },
+  ],
+};
+
+/**
+ * The canonical multi-stream convergence map (ticket 13): a "large language
+ * model" reality map where one node - the transformer - is a CONVERGENCE
+ * NODE built from discoveries in MULTIPLE different fields, at any depth,
+ * not just the layer below. The transformer's crux is Vaswani 2017, and its
+ * `combines` list carries the enabling observations from the fields that
+ * made it possible: attention (Bahdanau 2014), embeddings (Mikolov 2013),
+ * and compute (Turing 1936) - three distinct layers below the transformer.
+ *
+ * This is the fixture that exercises the ticket 13 contract end to end:
+ * cross-layer edges (the transformer points directly at attention,
+ * embeddings, and compute - skipping the adjacent layer), a convergence
+ * node whose parents span 3 distinct layers, and the fan-in rendering.
+ *
+ * @type {import("./types.js").RealityMap}
+ */
+export const llmRealityMap = {
+  concept: "large language model",
+  layers: [
+    { id: "l0", name: "compute", nodes: ["n-turing"] },
+    { id: "l1", name: "embeddings", nodes: ["n-embedding"] },
+    { id: "l2", name: "attention", nodes: ["n-attention"] },
+    { id: "l3", name: "sequence model", nodes: ["n-transformer"] },
+    { id: "l4", name: "language model", nodes: ["n-llm"] },
+  ],
+  nodes: [
+    {
+      id: "n-turing",
+      label: "computability",
+      layer: "l0",
+      description:
+        "The theory of what a machine can compute; the foundation every program relies on.",
+      basis: {
+        discoverer: { value: "Alan Turing", mark: "EXACT" },
+        date: { value: "1936", mark: "EXACT" },
+        keyObservation: {
+          value: "Turing defines the universal machine that can compute anything computable.",
+          mark: "EXACT",
+        },
+        confidence: "high",
+        note: "",
+      },
+    },
+    {
+      id: "n-embedding",
+      label: "word embedding",
+      layer: "l1",
+      description:
+        "A dense vector that maps a word to a point in a space where similar words sit close together.",
+      basis: {
+        discoverer: { value: "Tomas Mikolov", mark: "EXACT" },
+        date: { value: "2013", mark: "EXACT" },
+        keyObservation: {
+          value: "Mikolov trains word2vec: words appear as vectors that capture meaning by context.",
+          mark: "EXACT",
+        },
+        confidence: "high",
+        note: "",
+      },
+    },
+    {
+      id: "n-attention",
+      label: "attention",
+      layer: "l2",
+      description:
+        "A mechanism that weighs how much each input position matters when producing each output position.",
+      basis: {
+        discoverer: { value: "Dzmitry Bahdanau, Kyunghyun Cho, Yoshua Bengio", mark: "APPROXIMATE" },
+        date: { value: "2014", mark: "EXACT" },
+        keyObservation: {
+          value: "Attention lets a translation model focus on the relevant parts of the source sentence.",
+          mark: "EXACT",
+        },
+        confidence: "high",
+        note: "Attention as a learned weighting appears in several papers around 2014; Bahdanau is the usual first.",
+      },
+    },
+    {
+      id: "n-transformer",
+      label: "transformer",
+      layer: "l3",
+      description:
+        "A sequence model built on self-attention that processes all positions in parallel instead of one step at a time.",
+      basis: {
+        discoverer: { value: "Ashish Vaswani, Noam Shazeer, Niki Parmar et al.", mark: "EXACT" },
+        date: { value: "2017", mark: "EXACT" },
+        keyObservation: {
+          value: "Attention Is All You Need: the transformer drops recurrence and uses self-attention alone.",
+          mark: "EXACT",
+        },
+        confidence: "high",
+        note: "",
+      },
+      combines: [
+        { id: "n-attention", observation: { discoverer: { value: "Dzmitry Bahdanau, Kyunghyun Cho, Yoshua Bengio", mark: "APPROXIMATE" }, date: { value: "2014", mark: "EXACT" }, keyObservation: { value: "Attention lets a translation model focus on the relevant parts of the source sentence.", mark: "EXACT" }, confidence: "high", note: "" } },
+        { id: "n-embedding", observation: { discoverer: { value: "Tomas Mikolov", mark: "EXACT" }, date: { value: "2013", mark: "EXACT" }, keyObservation: { value: "Mikolov trains word2vec: words appear as vectors that capture meaning by context.", mark: "EXACT" }, confidence: "high", note: "" } },
+        { id: "n-turing", observation: { discoverer: { value: "Alan Turing", mark: "EXACT" }, date: { value: "1936", mark: "EXACT" }, keyObservation: { value: "Turing defines the universal machine that can compute anything computable.", mark: "EXACT" }, confidence: "high", note: "" } },
+      ],
+    },
+    {
+      id: "n-llm",
+      label: "large language model",
+      layer: "l4",
+      description:
+        "A transformer scaled to billions of parameters and trained on a large corpus of text.",
+      basis: {
+        discoverer: { value: "OpenAI", mark: "APPROXIMATE" },
+        date: { value: "2020", mark: "EXACT" },
+        keyObservation: {
+          value: "GPT-3 shows that scaling the transformer yields broad language abilities.",
+          mark: "EXACT",
+        },
+        confidence: "high",
+        note: "Scale as a path to capability is a shared result; GPT-3 is the canonical demonstration.",
+      },
+    },
+  ],
+  edges: [
+    { source: "n-embedding", target: "n-turing", type: "depends-on" },
+    { source: "n-attention", target: "n-embedding", type: "built-on" },
+    { source: "n-transformer", target: "n-attention", type: "built-on" },
+    { source: "n-transformer", target: "n-embedding", type: "built-on" },
+    { source: "n-transformer", target: "n-turing", type: "depends-on" },
+    { source: "n-llm", target: "n-transformer", type: "built-on" },
   ],
 };

@@ -1,12 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { laptopRealityMap } from "../mmg/fixtures.js";
+import { laptopRealityMap, llmRealityMap } from "../mmg/fixtures.js";
 import {
   observationOf,
   observationByNodeId,
   layerObservationStory,
   dependents,
+  combinesOf,
 } from "./observation.js";
 
 /**
@@ -218,4 +219,45 @@ test("dependents lists direct higher-layer nodes an observation built", () => {
   assert.deepEqual(dependents(laptopRealityMap, "n-electricity"), ["silicon"]);
   assert.deepEqual(dependents(laptopRealityMap, "n-app"), []);
   assert.deepEqual(dependents(null, "n-silicon"), []);
+});
+
+test("combinesOf resolves a convergence node's enabling observations with their layers", () => {
+  const combined = combinesOf(llmRealityMap, "n-transformer");
+  assert.equal(combined.length, 3);
+  const labels = combined.map((entry) => entry.label);
+  assert.ok(labels.includes("attention"), "attention is one combined field");
+  assert.ok(labels.includes("word embedding"), "embeddings is one combined field");
+  assert.ok(labels.includes("computability"), "compute is one combined field");
+  // Each entry carries the source layer name and a renderable observation.
+  for (const entry of combined) {
+    assert.ok(entry.layer.length > 0, "the source layer id is resolved");
+    assert.ok(entry.layerName.length > 0, "the source layer name is resolved");
+    assert.equal(entry.observation.present, true, "the enabling observation is present");
+  }
+});
+
+test("combinesOf returns an empty array for a non-convergence node and null-safely", () => {
+  assert.deepEqual(combinesOf(llmRealityMap, "n-llm"), []);
+  assert.deepEqual(combinesOf(laptopRealityMap, "n-transistor"), []);
+  assert.deepEqual(combinesOf(null, "n-transformer"), []);
+  assert.deepEqual(combinesOf(llmRealityMap, "nope"), []);
+});
+
+test("combinesOf is defensive about a combine entry that references a missing node", () => {
+  const map = /** @type {any} */ (structuredClone(llmRealityMap));
+  const transformer = map.nodes.find(
+    /** @param {any} node */
+    (node) => node.id === "n-transformer"
+  );
+  assert.ok(transformer);
+  transformer.combines = [
+    ...transformer.combines,
+    { id: "n-ghost", observation: transformer.combines[0].observation },
+  ];
+  const combined = combinesOf(map, "n-transformer");
+  assert.equal(combined.length, 4);
+  const ghost = combined.find((entry) => entry.sourceId === "n-ghost");
+  assert.ok(ghost, "the ghost entry is still surfaced");
+  assert.equal(ghost.observation.present, false, "a missing source renders as the gap");
+  assert.equal(ghost.layer, "", "no layer to resolve");
 });

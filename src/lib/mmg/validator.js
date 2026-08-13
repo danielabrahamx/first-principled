@@ -212,6 +212,33 @@ export function validateRealityMap(input) {
       } else if (layers && !layers.some((l) => l.id === node.layer)) {
         errors.push(`${where}.layer references unknown layer: ${node.layer}`);
       }
+      if (node.combines !== undefined) {
+        if (!Array.isArray(node.combines)) {
+          errors.push(`${where}.combines must be an array`);
+        } else {
+          node.combines.forEach(
+            /** @param {any} entry @param {number} ci */
+            (entry, ci) => {
+              const ewhere = `${where}.combines[${ci}]`;
+              if (!expectObject(entry, ewhere).ok) {
+                errors.push(`${ewhere} must be an object`);
+                return;
+              }
+              const src = expectString(entry.id, `${ewhere}.id`);
+              if (!src.ok) {
+                errors.push(...src.errors);
+              } else if (!nodesById.has(entry.id)) {
+                errors.push(`${ewhere}.id references unknown node: ${entry.id}`);
+              }
+              if (observationProblems(entry.observation).length > 0) {
+                errors.push(
+                  `${ewhere}.observation must be a valid observation record (ticket 02)`
+                );
+              }
+            }
+          );
+        }
+      }
     });
   }
 

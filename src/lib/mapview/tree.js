@@ -81,8 +81,14 @@ function nodeDateKey(node) {
  * foundation), stable. The layer chain structure is never re-sorted across
  * layer boundaries.
  *
+ * Ticket 13 convergence: a node that carries a `combines` list is a
+ * CONVERGENCE node - a true synthesis of discoveries from several fields.
+ * Its card records `combines`: the number of DISTINCT LAYERS its enabling
+ * observations come from (the "combines N fields" chip), so the renderer can
+ * fan in that many branches and label the count.
+ *
  * @param {RealityMap | null | undefined} realityMap
- * @returns {{ rootLabel: string; branches: Array<{ id: string; name: string; oldestDate: number; nodes: Array<{ id: string; label: string }> }> }}
+ * @returns {{ rootLabel: string; branches: Array<{ id: string; name: string; oldestDate: number; nodes: Array<{ id: string; label: string; combines: number }> }> }}
  */
 export function realityTree(realityMap) {
   const sections = realitySections(realityMap);
@@ -92,20 +98,39 @@ export function realityTree(realityMap) {
       : []
   );
 
+  /** The distinct layers a node's combines list reaches into: a convergence
+   * node combines enabling observations from 2+ distinct lower layers.
+   * @param {any} node */
+  function combineLayerCount(node) {
+    if (!node || !Array.isArray(node.combines)) return 0;
+    const layers = new Set();
+    for (const entry of node.combines) {
+      if (!entry || typeof entry.id !== "string") continue;
+      const source = byId.get(entry.id);
+      if (source && typeof source.layer === "string") layers.add(source.layer);
+    }
+    return layers.size;
+  }
+
   // Cards sorted by date within each layer: oldest first, unknown dates last
   // in original order (stable). Each layer keeps its own oldest date for the
   // layer ordering below.
   const layers = sections.map((section) => {
     const indexed = section.nodes.map((node, index) => {
       const date = nodeDateKey(byId.get(node.id));
-      return { id: node.id, label: node.label, date, index };
+      const combines = combineLayerCount(byId.get(node.id));
+      return { id: node.id, label: node.label, date, index, combines };
     });
     indexed.sort((a, b) => a.date - b.date || a.index - b.index);
     return {
       id: section.id,
       name: section.name,
       oldestDate: indexed.length > 0 ? indexed[0].date : Infinity,
-      nodes: indexed.map((node) => ({ id: node.id, label: node.label })),
+      nodes: indexed.map((node) => ({
+        id: node.id,
+        label: node.label,
+        combines: node.combines,
+      })),
     };
   });
 
@@ -136,9 +161,10 @@ export function realityTree(realityMap) {
  * on the trunk. On desktop (width > TREE_TWO_UP_MIN_WIDTH) a layer with 4+
  * cards fans two-up around the trunk, which stays centered. Cards sort
  * oldest-first inside each layer and layers sit oldest at the bottom, so the
- * tree reads top (crown) to bottom (oldest foundation).
+ * tree reads top (crown) to bottom (oldest foundation). A convergence node's
+ * card carries its `combines` count (distinct combined layers, ticket 13).
  *
- * @param {{ rootLabel: string; branches: Array<{ id: string; name: string; oldestDate: number; nodes: Array<{ id: string; label: string }> }> }} tree
+ * @param {{ rootLabel: string; branches: Array<{ id: string; name: string; oldestDate: number; nodes: Array<{ id: string; label: string; combines?: number }> }> }} tree
  *   from realityTree.
  * @param {object} [options]
  * @param {number} [options.width] - the stage width (the container the tree
@@ -154,7 +180,7 @@ export function realityTree(realityMap) {
  *     divergenceY: number;
  *     labelY: number;
  *     firstCardY: number;
- *     cards: Array<{ id: string; label: string; x: number; y: number; cx: number }>;
+ *     cards: Array<{ id: string; label: string; combines: number; x: number; y: number; cx: number }>;
  *   }>;
  * }}
  */
@@ -185,7 +211,7 @@ export function treeLayout(tree, options = {}) {
     const firstCardY = divergenceY + TREE_LABEL_GAP;
     const fan = twoUp && branch.nodes.length >= TREE_TWO_UP_MIN_NODES;
 
-    /** @type {Array<{ id: string; label: string; x: number; y: number; cx: number }>} */
+    /** @type {Array<{ id: string; label: string; combines: number; x: number; y: number; cx: number }>} */
     let cards;
     if (fan) {
       // Two-up: split the cards across two columns flanking the trunk, first
@@ -202,6 +228,7 @@ export function treeLayout(tree, options = {}) {
         return {
           id: node.id,
           label: node.label,
+          combines: node.combines ?? 0,
           x: cx - TREE_CARD_WIDTH / 2,
           y: firstCardY + row * (TREE_CARD_HEIGHT + TREE_CARD_GAP),
           cx,
@@ -213,6 +240,7 @@ export function treeLayout(tree, options = {}) {
       cards = branch.nodes.map((node, j) => ({
         id: node.id,
         label: node.label,
+        combines: node.combines ?? 0,
         x: trunk - TREE_CARD_WIDTH / 2,
         y: firstCardY + j * (TREE_CARD_HEIGHT + TREE_CARD_GAP),
         cx: trunk,
@@ -292,4 +320,45 @@ export function cladogramPaths(layout) {
     }
   }
   return d;
+}
+
+/**
+ * The convergence fan-in strokes (ticket 13): for every convergence node
+ * card (a card whose `combines` is 2+), a small fan of branch lines rising
+ * from below the card up into its bottom edge - one line per combined field
+ * (distinct layer). These mark the node as the meeting point of several
+ * streams on desktop, where there is room to draw them; on the vertical path
+ * they hang just under the card, one stroke per combined field, converging
+ * into the node. Each stroke is a short diagonal from a point below the card
+ * up into the card bottom, fanned across the card width.
+ *
+ * Pure geometry, DOM-free for node:test.
+ *
+ * @param {ReturnType<typeof treeLayout>} layout
+ * @returns {Array<{ id: string; d: string }>} one path per convergence card,
+ *   a multi-segment `d` string with one fan stroke per combined field.
+ */
+export function convergenceFanPaths(layout) {
+  /** @type {Array<{ id: string; d: string }>} */
+  const paths = [];
+  for (const branch of layout.branches) {
+    for (const card of branch.cards) {
+      const fields = card.combines;
+      if (typeof fields !== "number" || fields < 2) continue;
+      const cx = card.cx;
+      const bottom = card.y + TREE_CARD_HEIGHT;
+      // Fan the strokes across the card bottom: the middle stroke rises
+      // straight up into the node, the outer strokes angle in from the sides.
+      const fanHalf = TREE_CARD_WIDTH / 2 - 18;
+      const segments = [];
+      for (let i = 0; i < fields; i++) {
+        const t = fields === 1 ? 0.5 : i / (fields - 1);
+        const x = cx - fanHalf + t * 2 * fanHalf;
+        const startY = bottom + 20 + (Math.abs(x - cx) / fanHalf) * 8;
+        segments.push(`M ${x} ${startY} L ${cx} ${bottom}`);
+      }
+      paths.push({ id: card.id, d: segments.join(" ") });
+    }
+  }
+  return paths;
 }

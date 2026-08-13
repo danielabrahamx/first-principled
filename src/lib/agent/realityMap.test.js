@@ -11,7 +11,7 @@ import {
 import { extractBalancedObject, parseModelJson } from "./jsonParse.js";
 import { validateRealityMap } from "../mmg/validator.js";
 import { observationProblems, dropUnknownValues } from "../mmg/observation.js";
-import { laptopRealityMap } from "../mmg/fixtures.js";
+import { laptopRealityMap, llmRealityMap } from "../mmg/fixtures.js";
 
 /**
  * A stub transport that records every request and replays a scripted list of
@@ -197,8 +197,13 @@ test("the next-layer prompt satisfies the JSON mode contract and the ticket asks
   const prompt = buildNextLayerSystemPrompt(6);
   assert.match(prompt, /\bjson\b/i);
   assert.match(prompt, /layer by layer/i);
-  assert.match(prompt, /ONLY from the layer/i, "each layer derives only from the layer below");
-  assert.match(prompt, /skip an intermediate step/i, "skipping is forbidden, not just checked");
+  assert.match(prompt, /CURRENT MAP/, "each layer call sees all lower layers (ticket 13)");
+  assert.match(prompt, /at least one edge of the new layer must connect it to the layer immediately below/i, "adjacent down-edges stay the default (ticket 08, extended not replaced)");
+  assert.match(prompt, /no intermediate step is ever skipped/i, "skipping is forbidden, not just checked");
+  assert.match(prompt, /CONVERGENT/i, "real discovery history is convergent (ticket 13)");
+  assert.match(prompt, /combines/i, "a convergence node carries a combines list (ticket 13)");
+  assert.match(prompt, /cross-layer edges/i, "cross-layer combines edges are legal for true syntheses (ticket 13)");
+  assert.match(prompt, /2\+ distinct layers/i, "a convergence node combines 2+ distinct layers (ticket 13)");
   assert.match(prompt, /basis/i, "every abstraction names the observation it compresses");
   assert.match(prompt, /predicts/i, "testable predictions are emitted (principle 2)");
   assert.match(prompt, /done/i, "the model can declare the concept reached");
@@ -333,6 +338,102 @@ test("deriveCheck is structural on garbage input", () => {
   const check = deriveCheck({});
   assert.equal(check.ok, false);
   assert.ok(check.errors.length > 0);
+});
+
+// --- convergence nodes (ticket 13) ------------------------------------------
+
+test("deriveCheck accepts the convergence fixture (combines from 3 distinct layers)", () => {
+  const check = deriveCheck(llmRealityMap);
+  assert.equal(check.ok, true, check.errors.join("; "));
+  const transformer = llmRealityMap.nodes.find((node) => node.id === "n-transformer");
+  assert.ok(transformer && Array.isArray(transformer.combines));
+  assert.equal(transformer.combines.length, 3);
+});
+
+test("deriveCheck rejects a convergence node whose combines come from only one distinct layer", () => {
+  const broken = /** @type {any} */ (structuredClone(llmRealityMap));
+  const transformer = broken.nodes.find(/** @param {any} node */ (node) => node.id === "n-transformer");
+  assert.ok(transformer);
+  transformer.combines = [
+    { id: "n-attention", observation: transformer.combines[0].observation },
+    { id: "n-attention", observation: transformer.combines[0].observation },
+  ];
+  const check = deriveCheck(broken);
+  assert.equal(check.ok, false);
+  assert.ok(
+    check.errors.some((error) => /distinct layer/.test(error)),
+    check.errors.join("; ")
+  );
+});
+
+test("deriveCheck rejects a convergence node that combines an unknown node id", () => {
+  const broken = /** @type {any} */ (structuredClone(llmRealityMap));
+  const transformer = broken.nodes.find(/** @param {any} node */ (node) => node.id === "n-transformer");
+  assert.ok(transformer);
+  transformer.combines = [
+    { id: "n-attention", observation: transformer.combines[0].observation },
+    { id: "n-made-up", observation: transformer.combines[0].observation },
+  ];
+  const check = deriveCheck(broken);
+  assert.equal(check.ok, false);
+  assert.ok(check.errors.some((error) => /unknown node/.test(error)));
+});
+
+test("deriveCheck rejects a convergence node that combines a node in a non-lower layer", () => {
+  const broken = /** @type {any} */ (structuredClone(llmRealityMap));
+  const llm = broken.nodes.find(/** @param {any} node */ (node) => node.id === "n-llm");
+  assert.ok(llm);
+  const attention = broken.nodes.find(/** @param {any} node */ (node) => node.id === "n-attention");
+  assert.ok(attention);
+  // n-llm sits at l4. Combining itself (l4) is not "from a strictly lower
+  // layer" - only n-transformer (l3) and lower qualify.
+  llm.combines = [
+    { id: "n-llm", observation: llm.basis },
+    { id: "n-attention", observation: attention.basis },
+  ];
+  const check = deriveCheck(broken);
+  assert.equal(check.ok, false);
+  assert.ok(check.errors.some((error) => /not in a strictly lower layer/.test(error)));
+});
+
+test("deriveCheck rejects a convergence node whose combine entry carries an invalid observation", () => {
+  const broken = /** @type {any} */ (structuredClone(llmRealityMap));
+  const transformer = broken.nodes.find(/** @param {any} node */ (node) => node.id === "n-transformer");
+  assert.ok(transformer);
+  transformer.combines = transformer.combines.map(
+    /** @param {any} entry @param {number} i */
+    (entry, i) =>
+      i === 0
+        ? { ...entry, observation: { ...entry.observation, date: { value: "", mark: "EXACT" } } }
+        : entry
+  );
+  const check = deriveCheck(broken);
+  assert.equal(check.ok, false);
+  assert.ok(check.errors.some((error) => /invalid observation record/.test(error)));
+});
+
+test("an ordinary node with no combines list is not a convergence node", () => {
+  const check = deriveCheck(laptopRealityMap);
+  assert.equal(check.ok, true, check.errors.join("; "));
+});
+
+test("the validator accepts the convergence fixture and rejects broken combines entries", () => {
+  assert.equal(validateRealityMap(llmRealityMap).ok, true);
+  const broken = /** @type {any} */ (structuredClone(llmRealityMap));
+  const transformer = broken.nodes.find(/** @param {any} node */ (node) => node.id === "n-transformer");
+  assert.ok(transformer);
+  transformer.combines = [{ id: "n-ghost", observation: transformer.combines[0].observation }];
+  const check = validateRealityMap(broken);
+  assert.equal(check.ok, false);
+  assert.ok(check.errors.some((error) => /unknown node/.test(error)));
+
+  const notArray = /** @type {any} */ (structuredClone(llmRealityMap));
+  notArray.nodes = notArray.nodes.map(
+    /** @param {any} node */
+    (node) =>
+      node.id === "n-transformer" ? { ...node, combines: "attention" } : node
+  );
+  assert.equal(validateRealityMap(notArray).ok, false);
 });
 
 // --- observation records (ticket 02/03, fail-honest contract 09) ------------
@@ -521,19 +622,19 @@ test("a per-layer generation returns the fixture map with one call per layer", a
   assert.match(requests[requests.length - 1].messages[1].content, /Build layer l5/);
 });
 
-test("each layer call sees only the layer immediately below it", async () => {
+test("each layer call sees all lower layers, not only the layer below (ticket 13)", async () => {
   const { callLLM, requests } = stubTransport(HAPPY_SCRIPT);
   const result = await generateRealityMap({ concept: "laptop", callLLM });
   assert.equal(result.ok, true);
   const l2Call = requests[2].messages[1].content;
   assert.match(l2Call, /Build layer l2/);
   assert.match(l2Call, /n-silicon/, "l2 sees the layer below (materials)");
+  assert.match(l2Call, /n-electricity/, "l2 sees the foundation too - a convergence node may reference any depth (ticket 13)");
   assert.ok(!l2Call.includes("n-transistor"), "l2 must not see its own nodes");
-  assert.ok(!l2Call.includes("n-electricity"), "l2 must not see the foundation");
   const l4Call = requests[4].messages[1].content;
   assert.match(l4Call, /Build layer l4/);
   assert.match(l4Call, /n-bit/, "l4 sees the layer below (logic)");
-  assert.ok(!l4Call.includes("n-electricity"), "l4 must not see the foundation");
+  assert.match(l4Call, /n-electricity/, "l4 sees the foundation too");
 });
 
 test("a refusal in phase A is propagated without further calls", async () => {
@@ -564,6 +665,106 @@ test("a done reply right after the foundation yields a single-layer map", async 
   assert.equal(result.map.layers[0].id, "l0", "the foundation id is normalized to l0");
   assert.equal(result.retried, false);
   assert.equal(requests.length, 2);
+});
+
+test("a per-layer generation reproduces the convergence fixture (combines list + cross-layer edges)", async () => {
+  // The llmRealityMap rebuilt bottom-up: foundation l0, then one reply per
+  // layer carrying its nodes and the fixture edges whose higher endpoint
+  // sits in that layer. The transformer reply carries its combines list and
+  // the cross-layer edges to attention, embeddings, and compute.
+  const layerIndex = new Map(llmRealityMap.layers.map((layer, i) => [layer.id, i]));
+  const nodeLayer = new Map(
+    llmRealityMap.nodes.map((node) => [node.id, layerIndex.get(node.layer)])
+  );
+  const script = [
+    JSON.stringify({
+      isValidConcept: true,
+      foundation: {
+        layer: llmRealityMap.layers[0],
+        nodes: llmRealityMap.nodes.filter((node) => node.layer === "l0"),
+      },
+    }),
+  ];
+  for (let k = 1; k < llmRealityMap.layers.length; k++) {
+    const layer = llmRealityMap.layers[k];
+    const nodes = llmRealityMap.nodes.filter((node) => node.layer === layer.id);
+    const edges = llmRealityMap.edges.filter((edge) => {
+      const s = nodeLayer.get(edge.source) ?? -1;
+      const t = nodeLayer.get(edge.target) ?? -1;
+      return Math.max(s, t) === k;
+    });
+    script.push(
+      JSON.stringify({
+        isValidConcept: true,
+        done: false,
+        layer,
+        nodes,
+        edges,
+        selfReview: { derivable: true, gaps: [] },
+      })
+    );
+  }
+
+  const { callLLM, requests } = stubTransport(script);
+  const result = await generateRealityMap({ concept: "large language model", callLLM }, { maxLayers: llmRealityMap.layers.length });
+  assert.equal(result.ok, true, (result.errors || []).join("; "));
+  assert.ok(result.map, "a generated map exists");
+  assert.equal(result.retried, false);
+  assert.equal(requests.length, llmRealityMap.layers.length);
+  assert.equal(deriveCheck(result.map).ok, true, deriveCheck(result.map).errors.join("; "));
+  assert.equal(validateRealityMap(result.map).ok, true);
+
+  const transformer = /** @type {any} */ (
+    result.map?.nodes.find((node) => node.id === "n-transformer")
+  );
+  assert.ok(transformer, "the transformer node landed");
+  assert.ok(Array.isArray(transformer.combines) && transformer.combines.length === 3,
+    "the convergence node keeps its combines list");
+  // The cross-layer combines edges survive.
+  const crossLayer = result.map?.edges.filter(
+    (edge) => edge.source === "n-transformer" && edge.target === "n-turing"
+  );
+  assert.equal(crossLayer.length, 1, "the cross-layer edge to the foundation survives");
+  assert.equal(
+    result.map?.edges.some((edge) => edge.source === "n-transformer" && edge.target === "n-embedding"),
+    true
+  );
+});
+
+test("each convergence-generating layer call receives all lower layers", async () => {
+  const layerIndex = new Map(llmRealityMap.layers.map((layer, i) => [layer.id, i]));
+  const nodeLayer = new Map(
+    llmRealityMap.nodes.map((node) => [node.id, layerIndex.get(node.layer)])
+  );
+  const script = [
+    JSON.stringify({
+      isValidConcept: true,
+      foundation: {
+        layer: llmRealityMap.layers[0],
+        nodes: llmRealityMap.nodes.filter((node) => node.layer === "l0"),
+      },
+    }),
+  ];
+  for (let k = 1; k < llmRealityMap.layers.length; k++) {
+    const layer = llmRealityMap.layers[k];
+    const nodes = llmRealityMap.nodes.filter((node) => node.layer === layer.id);
+    const edges = llmRealityMap.edges.filter((edge) => {
+      const s = nodeLayer.get(edge.source) ?? -1;
+      const t = nodeLayer.get(edge.target) ?? -1;
+      return Math.max(s, t) === k;
+    });
+    script.push(
+      JSON.stringify({ isValidConcept: true, done: false, layer, nodes, edges, selfReview: { derivable: true, gaps: [] } })
+    );
+  }
+  const { callLLM, requests } = stubTransport(script);
+  await generateRealityMap({ concept: "large language model", callLLM }, { maxLayers: llmRealityMap.layers.length });
+  // The l3 call (transformer) must see the foundation (l0) so it can point
+  // the transformer directly at compute - the ticket 13 contract.
+  const l3Call = requests[3].messages[1].content;
+  assert.match(l3Call, /Build layer l3/);
+  assert.match(l3Call, /n-turing/, "l3 sees the foundation (compute)");
+  assert.match(l3Call, /n-embedding/, "l3 sees embeddings too");
 });
 
 // --- generation: retry paths -------------------------------------------------

@@ -5,6 +5,7 @@ import {
   realityTree,
   treeLayout,
   cladogramPaths,
+  convergenceFanPaths,
   TREE_CARD_WIDTH,
   TREE_CARD_HEIGHT,
   TREE_CARD_GAP,
@@ -15,7 +16,7 @@ import {
   TREE_TWO_UP_MIN_WIDTH,
   TREE_TWO_UP_MIN_NODES,
 } from "./tree.js";
-import { laptopRealityMap } from "../mmg/fixtures.js";
+import { laptopRealityMap, llmRealityMap } from "../mmg/fixtures.js";
 
 test("realityTree roots on the concept word and orders layers chronologically", () => {
   const tree = realityTree(laptopRealityMap);
@@ -229,4 +230,79 @@ test("cladogramPaths: two-up layers get elbows out to each column plus card conn
   for (const cx of cxs) {
     assert.ok(elbows.some((path) => path === `M ${trunk} ${layout.branches[0].divergenceY} H ${cx} V ${layout.branches[0].firstCardY}`));
   }
+});
+
+// --- convergence nodes (ticket 13) -------------------------------------------
+
+test("realityTree records the distinct-layer count of a convergence node", () => {
+  const tree = realityTree(llmRealityMap);
+  const branches = tree.branches.map((branch) => ({
+    name: branch.name,
+    nodes: branch.nodes.map((node) => ({ id: node.id, combines: node.combines })),
+  }));
+  const transformerBranch = branches.find((branch) =>
+    branch.nodes.some((node) => node.id === "n-transformer")
+  );
+  assert.ok(transformerBranch, "the transformer branch exists");
+  const transformer = transformerBranch.nodes.find((node) => node.id === "n-transformer");
+  assert.ok(transformer, "the transformer node exists");
+  assert.equal(transformer.combines, 3, "the transformer combines 3 distinct layers");
+  // Non-convergence nodes carry zero.
+  for (const branch of branches) {
+    for (const node of branch.nodes) {
+      if (node.id !== "n-transformer") {
+        assert.equal(node.combines, 0, `${node.id} is not a convergence node`);
+      }
+    }
+  }
+});
+
+test("realityTree reports zero combines for an ordinary map", () => {
+  const tree = realityTree(laptopRealityMap);
+  for (const branch of tree.branches) {
+    for (const node of branch.nodes) {
+      assert.equal(node.combines, 0);
+    }
+  }
+});
+
+test("convergenceFanPaths emits one fan per convergence node with one stroke per combined field", () => {
+  const tree = realityTree(llmRealityMap);
+  const layout = treeLayout(tree, { width: 1024 });
+  const fans = convergenceFanPaths(layout);
+  assert.equal(fans.length, 1, "one convergence node");
+  assert.equal(fans[0].id, "n-transformer");
+  // The fan is 3 strokes (one per combined field), each a rising diagonal.
+  const strokes = fans[0].d.split(" M ").filter((s) => s.length > 0);
+  assert.equal(strokes.length, 3);
+  for (const stroke of strokes) {
+    assert.match(stroke, /L .+/, "each stroke rises into the node");
+  }
+});
+
+test("convergenceFanPaths is empty for a map with no convergence nodes", () => {
+  const tree = realityTree(laptopRealityMap);
+  const layout = treeLayout(tree, { width: 1024 });
+  assert.deepEqual(convergenceFanPaths(layout), []);
+});
+
+test("convergenceFanPaths is empty when a layout card has fewer than 2 combined fields", () => {
+  const layout = treeLayout(
+    {
+      rootLabel: "x",
+      branches: [
+        {
+          id: "b0",
+          name: "layer",
+          oldestDate: 0,
+          nodes: [
+            { id: "n1", label: "a", combines: 1 },
+            { id: "n2", label: "b", combines: 0 },
+          ],
+        },
+      ],
+    },
+    { width: 1024 }
+  );
+  assert.deepEqual(convergenceFanPaths(layout), []);
 });
