@@ -3,6 +3,12 @@
  * contiguous layer chain (physics -> materials -> electronics -> logic -> OS
  * -> apps) and a partial learner map with one misconception and one missing
  * node. Used by the unit tests and by later tickets as a development sample.
+ *
+ * Since ticket 03 every node carries a `basis`: a real-history observation
+ * record (ticket 02) - the actual discovery the node compresses, with honest
+ * EXACT / APPROXIMATE / UNKNOWN marks (ticket 09). The fixture is the
+ * canonical example of the crux: logic gates compress Boole's 1847 algebra,
+ * the bit compresses Shannon's 1948 information theory, and so on.
  */
 
 /**
@@ -28,6 +34,16 @@ export const laptopRealityMap = {
       layer: "l0",
       description:
         "Flow of electric charge; the physical foundation every electronic device exploits.",
+      basis: {
+        discoverer: { value: "Thales of Miletus", mark: "APPROXIMATE" },
+        date: { value: "600 BC", mark: "APPROXIMATE" },
+        keyObservation: {
+          value: "Amber rubbed with fur attracts feathers and dry leaves.",
+          mark: "EXACT",
+        },
+        confidence: "medium",
+        note: "The attribution to Thales is traditional. No primary source survives.",
+      },
     },
     {
       id: "n-silicon",
@@ -35,7 +51,16 @@ export const laptopRealityMap = {
       layer: "l1",
       description:
         "Semiconductor element whose manufacture depends on electricity; the material transistor junctions are built from.",
-      basis: "sand is everywhere and the chips inside devices come from it",
+      basis: {
+        discoverer: { value: "Jöns Jacob Berzelius", mark: "EXACT" },
+        date: { value: "1824", mark: "EXACT" },
+        keyObservation: {
+          value: "Berzelius isolates silicon as a pure element.",
+          mark: "EXACT",
+        },
+        confidence: "high",
+        note: "",
+      },
     },
     {
       id: "n-transistor",
@@ -43,7 +68,19 @@ export const laptopRealityMap = {
       layer: "l2",
       description:
         "Semiconductor switch that controls current flow; the basic building block of digital circuits.",
-      basis: "a light switch either passes current or stops it",
+      basis: {
+        discoverer: {
+          value: "John Bardeen, Walter Brattain, William Shockley",
+          mark: "APPROXIMATE",
+        },
+        date: { value: "1947", mark: "EXACT" },
+        keyObservation: {
+          value: "A small voltage controls a larger current through a germanium crystal.",
+          mark: "EXACT",
+        },
+        confidence: "high",
+        note: "Shared credit. The Bell Labs team shared the 1956 Nobel Prize.",
+      },
     },
     {
       id: "n-circuit",
@@ -51,7 +88,16 @@ export const laptopRealityMap = {
       layer: "l2",
       description:
         "Interconnected transistors and components that together implement a function.",
-      basis: "wiring components together so current flows through them",
+      basis: {
+        discoverer: { value: "Jack Kilby", mark: "EXACT" },
+        date: { value: "1958", mark: "EXACT" },
+        keyObservation: {
+          value: "Kilby builds the first integrated circuit on one piece of germanium.",
+          mark: "EXACT",
+        },
+        confidence: "high",
+        note: "Robert Noyce filed a similar patent months later.",
+      },
     },
     {
       id: "n-logic-gate",
@@ -59,7 +105,16 @@ export const laptopRealityMap = {
       layer: "l3",
       description:
         "A circuit computing a boolean function such as AND, OR or NOT from input voltages.",
-      basis: "a password check either lets you in or stops you",
+      basis: {
+        discoverer: { value: "George Boole", mark: "EXACT" },
+        date: { value: "1847", mark: "EXACT" },
+        keyObservation: {
+          value: "Boole links logical reasoning to the rules of algebra.",
+          mark: "EXACT",
+        },
+        confidence: "high",
+        note: "",
+      },
     },
     {
       id: "n-bit",
@@ -67,7 +122,16 @@ export const laptopRealityMap = {
       layer: "l3",
       description:
         "The smallest unit of information; a binary digit carried by a gate's output state.",
-      basis: "a switch being on or off is two distinct states",
+      basis: {
+        discoverer: { value: "Claude Shannon", mark: "EXACT" },
+        date: { value: "1948", mark: "EXACT" },
+        keyObservation: {
+          value: "Shannon names the bit as the basic unit of information.",
+          mark: "EXACT",
+        },
+        confidence: "high",
+        note: "The 1948 paper A Mathematical Theory of Communication introduced the bit.",
+      },
     },
     {
       id: "n-os",
@@ -75,7 +139,19 @@ export const laptopRealityMap = {
       layer: "l4",
       description:
         "Software layer that manages hardware resources and runs applications on top of it.",
-      basis: "a machine boots into a home screen that runs the programs you open",
+      basis: {
+        discoverer: {
+          value: "Robert Patrick, Owen Mock, and the General Motors team",
+          mark: "APPROXIMATE",
+        },
+        date: { value: "1956", mark: "EXACT" },
+        keyObservation: {
+          value: "A batch program starts and runs other programs on a computer.",
+          mark: "EXACT",
+        },
+        confidence: "medium",
+        note: "Credit for the first operating system is contested. GM-NAA I/O is the usual first.",
+      },
     },
     {
       id: "n-app",
@@ -83,7 +159,16 @@ export const laptopRealityMap = {
       layer: "l5",
       description:
         "A program the user interacts with directly, running on the operating system.",
-      basis: "double-clicking an icon opens the program you actually use",
+      basis: {
+        discoverer: { value: "Dan Bricklin and Bob Frankston", mark: "EXACT" },
+        date: { value: "1979", mark: "EXACT" },
+        keyObservation: {
+          value: "Bricklin and Frankston build VisiCalc, the program that sold the first personal computers.",
+          mark: "EXACT",
+        },
+        confidence: "high",
+        note: "",
+      },
     },
   ],
   edges: [

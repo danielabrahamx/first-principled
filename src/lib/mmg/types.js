@@ -43,22 +43,53 @@
  */
 
 /**
+ * One fact field of an observation record: a value plus the honesty mark
+ * (fail-honest contract, ticket 09 section 2). EXACT: a single
+ * well-documented value. APPROXIMATE: the record is low resolution or
+ * contested. UNKNOWN: no defensible value - the value is then dropped, never
+ * invented.
+ *
+ * @typedef {object} ObservationField
+ * @property {string} value - empty when the mark is UNKNOWN (dropped).
+ * @property {"EXACT" | "APPROXIMATE" | "UNKNOWN"} mark
+ */
+
+/**
+ * The real-history observation record (ticket 02, the crux): the discovery,
+ * measurement, experiment, or theoretical result a node's abstraction
+ * compresses. REAL discovery history, never rational reconstruction; UNKNOWN
+ * is a legal, first-class state (the node exists, its observation is missing,
+ * the layer chain is unbroken).
+ *
+ * @typedef {object} ObservationRecord
+ * @property {ObservationField} discoverer
+ * @property {ObservationField} date
+ * @property {ObservationField} keyObservation
+ * @property {"high" | "medium" | "low"} confidence - the model's own estimate
+ *   for the record as a whole.
+ * @property {string} note - hedge context for display on hover (contested
+ *   credit, later rejection, shared discovery); empty when there is none.
+ */
+
+/**
  * A node of the reality map - a concept in the chain from first principles to
  * the thing itself.
  *
  * `basis` (ticket 06, principle 5) is the observation the abstraction
- * compresses - what a learner can point at. The foundation layer names the
- * deepest observable layer and has no basis; every node above it should.
- * The field is OPTIONAL in the schema so maps without it remain valid (the
- * generator's deriveCheck enforces it for new maps; the validator accepts
- * legacy maps).
+ * compresses - what a learner can point at. Since ticket 03 it is a
+ * real-history OBSERVATION RECORD (ticket 02) on every node, foundation
+ * included; the generator's deriveCheck enforces the record, and the schema
+ * validator still accepts a legacy plain-string basis for maps that predate
+ * ticket 03. The field stays OPTIONAL in the schema so maps without it
+ * remain valid.
  *
  * @typedef {object} RealityNode
  * @property {NodeId} id
  * @property {string} label
  * @property {LayerId} layer
  * @property {string} description
- * @property {string} [basis] - the observation this node compresses (ticket 06).
+ * @property {string | ObservationRecord} [basis] - the observation this node
+ *   compresses (ticket 06); an observation record since ticket 03.
  */
 
 /**

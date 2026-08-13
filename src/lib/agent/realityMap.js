@@ -13,6 +13,19 @@
  * not the immediate successor of the last one built cannot be expressed,
  * because the only layer the model can reference is the one it was given.
  *
+ * Ticket 03 extends every node with the crux: its `basis` is a real-history
+ * OBSERVATION RECORD (ticket 02) - discoverer, date, key observation, with
+ * EXACT / APPROXIMATE / UNKNOWN marks per the fail-honest contract (ticket
+ * 09). REAL discovery history, never rational reconstruction; UNKNOWN is a
+ * legal, first-class state (the node exists, its observation is missing, the
+ * layer chain is unbroken); a value under an UNKNOWN mark is an invented
+ * placeholder and is rejected. The prompts carry the contract's honesty
+ * rules, the repair loop re-states them on every repair (including the
+ * empty-reply case), and deriveCheck requires a valid record on every node,
+ * foundation included. Observation narratives are written to the approved
+ * STE subset (ticket 05, docs/ste.md): the prompt carries the rules, and the
+ * exported steProblems check gates the live verification.
+ *
  *   Phase A (foundation): name the deepest observable layer the thing is
  *   built on - the foundation, always layer l0. Refusal contract unchanged
  *   (a non-teachable input is refused, not mapped).
@@ -22,25 +35,26 @@
  *   the NEXT layer directly above it - layer l1 from l0, l2 from l1, and so
  *   on. Code assigns the layer ids (l1, l2, ...) and requires at least one
  *   edge from each new layer to the layer below it, so the chain is
- *   contiguous by construction. Every node above the foundation carries a
- *   `basis` - the observation the abstraction compresses (principle 5) -
- *   and nodes with testable behavior emit `predicts` edges (principle 2).
- *   The model reports a per-layer self-review of derivability. The loop
- *   stops when the model says the concept is reached (done), or at the soft
- *   layer cap.
+ *   contiguous by construction. Every node carries a `basis` observation
+ *   record (the crux, ticket 02) and nodes with testable behavior emit
+ *   `predicts` edges (principle 2). The model reports a per-layer self-review
+ *   of derivability. The loop stops when the model says the concept is
+ *   reached (done), or at the soft layer cap.
  *
  * Code owns the hard checks at every step: validateRealityMap (structure
  * and contiguity, v1 ticket 02) plus deriveCheck (reachability from the
- * foundation and basis presence, v2 ticket 06) plus the per-layer rule (the
- * new layer must connect to the layer below it). Failures drive the repair
- * loop (v1 ticket 04) - up to two repairs per layer, exactly like v1's
- * escalating repair contract. Both validators run once more on the final
- * assembled map as the backstop gate: a map leaves this function only
- * through both gates.
+ * foundation and a valid observation record per node, v2 ticket 06 extended
+ * by ticket 03) plus the per-layer rule (the new layer must connect to the
+ * layer below it). Failures drive the repair loop (v1 ticket 04) - up to two
+ * repairs per layer, exactly like v1's escalating repair contract. Both
+ * validators run once more on the final assembled map as the backstop gate:
+ * a map leaves this function only through both gates.
  *
  * Latency note: per-layer calls are smaller than v2's single derive call,
  * so the chain costs one call per layer plus repairs. Measured live in
- * ticket 08: 30/30 concepts gap-free (research/08-gapfree-verification.md).
+ * ticket 08: 30/30 concepts gap-free (research/08-gapfree-verification.md);
+ * ticket 03 re-measured with observation records (research/
+ * 03-observations-verification.md).
  *
  * The transport is injected (`callLLM`) so unit tests run against a stub and
  * live verification runs against the real DeepSeek API.
@@ -49,6 +63,7 @@
 import { callChatCompletion } from "./llm.js";
 import { parseModelJson } from "./jsonParse.js";
 import { validateRealityMap, MAX_REALITY_LAYERS } from "../mmg/validator.js";
+import { observationProblems, dropUnknownValues } from "../mmg/observation.js";
 
 /**
  * @typedef {import("../mmg/types.js").RealityMap} RealityMap
@@ -72,7 +87,9 @@ import { validateRealityMap, MAX_REALITY_LAYERS } from "../mmg/validator.js";
  * @property {boolean} [thinking] - let the model think before answering.
  *   Default false (v1 live verification showed thinking pushes generation
  *   past the 30s budget).
- * @property {number} [maxTokens] - headroom for JSON output. Default 4096.
+ * @property {number} [maxTokens] - headroom for JSON output. Default 4096 -
+ *   inside the fail-honest contract's 3000-5000 band (ticket 09 section 3;
+ *   a lower cap truncates JSON or burns the budget on reasoning).
  * @property {string} [conceptLabel] - display name used in error messages.
  */
 
@@ -92,6 +109,46 @@ import { validateRealityMap, MAX_REALITY_LAYERS } from "../mmg/validator.js";
  * ------------------------------------------------------------------------- */
 
 /**
+ * The fail-honest contract block (ticket 09, section 1): EXACT /
+ * APPROXIMATE / UNKNOWN marks per fact field, never invent, UNKNOWN is a
+ * legal answer. Carried by every prompt that produces observation records.
+ *
+ * @returns {string}
+ */
+function failHonestBlock() {
+  return `You are a factual history-of-science annotator. The basis of every node is REAL discovery history - the discovery, measurement, experiment, or theoretical result the abstraction compresses - never a reconstructed or plausible history. An invention or first construction counts: the first spreadsheet, the first operating system, the first working transistor - each is a real, documented observation.
+
+For each fact field, respond with EXACT, APPROXIMATE, or UNKNOWN.
+- EXACT: a single well-documented value (person, year).
+- APPROXIMATE: the record itself is low resolution or contested (a decade, multiple claimants, a convention with no primary source).
+- UNKNOWN: you have no defensible value. NEVER invent a plausible answer to avoid UNKNOWN. An observation that never happened is UNKNOWN - do not describe a plausible observation as if it existed. When a mark is UNKNOWN, leave its value empty.
+
+Most concepts in a first-principles chain have documented history in your knowledge. Give the best-documented discoverer and year and mark them EXACT or APPROXIMATE. For an abstract concept, the observation is the idea's first rigorous statement or first construction: for recursion that is McCarthy's 1960 introduction of recursion in LISP (EXACT); where several people contributed, name the best-documented and mark APPROXIMATE. Reserve UNKNOWN for facts with no defensible record - never use UNKNOWN to dodge a fact you actually know, and never invent one to avoid it.
+
+If a year is contested in the historical record, give the best-documented year and mark APPROXIMATE. Where credit is shared or disputed, name all documented parties and mark APPROXIMATE when the primary credit is not settled.`;
+}
+
+/**
+ * The STE narrative block (ticket 05, docs/ste.md): rules 1-6 plus the
+ * contraction and slang bans, applied to every narrative the model writes -
+ * descriptions, keyObservation values, notes, and the self-review.
+ *
+ * @returns {string}
+ */
+function steBlock() {
+  return `Write every narrative (descriptions, keyObservation, note, self-review) in simplified technical English:
+- Short sentences: under 20 words.
+- Active voice: the subject does the action.
+- One idea per sentence.
+- No vague words: avoid it, this, that, thing without a clear referent.
+- Consistent terminology: the same word for the same concept, no synonyms.
+- No slang, idioms, or figurative language.
+- No contractions.
+- A note is one short sentence or a few words.
+- Count the words in every sentence before replying. No sentence has more than 20 words.`;
+}
+
+/**
  * The system prompt for phase A: name the deepest observable foundation the
  * thing is built on. Contains the word "json" and an example shape (the
  * DeepSeek JSON mode contract, ticket 03 findings).
@@ -104,13 +161,17 @@ export function buildFoundationSystemPrompt() {
 A learner typed a word or phrase naming a thing or concept they want to understand from first principles. Step one of building its Reality Map: name the FOUNDATION layer - the deepest, most observable layer the thing is ultimately built on. For "laptop" that foundation is physics (electricity); for "photosynthesis" it is light and matter; for "recursion" it is the call stack. The foundation is what a learner can observe or meet directly, before any abstraction.
 
 Requirements for the foundation:
-- Exactly one layer, with 1 to 3 nodes. Each node has an id, label, layer, and a one to two sentence description.
+- Exactly one layer, with 1 to 3 nodes. Each node has an id, label, layer, a one to two sentence description, and a "basis": the observation record - the REAL discovery history of the phenomenon the node names (who discovered it, when, what was observed). The foundation is the first observation a learner can point at.
 - The foundation must be real and observable, not a metaphor or a slogan.
+
+${failHonestBlock()}
+
+${steBlock()}
 
 Reply as JSON only. No markdown fences, no commentary. Two shapes:
 
 When the input names a real, teachable thing:
-{"isValidConcept": true, "foundation": {"layer": {"id": "l0", "name": "...", "nodes": ["n-..."]}, "nodes": [{"id": "n-...", "label": "...", "layer": "l0", "description": "..."}]}}
+{"isValidConcept": true, "foundation": {"layer": {"id": "l0", "name": "...", "nodes": ["n-..."]}, "nodes": [{"id": "n-...", "label": "...", "layer": "l0", "description": "...", "basis": {"discoverer": {"value": "...", "mark": "EXACT"}, "date": {"value": "...", "mark": "EXACT"}, "keyObservation": {"value": "...", "mark": "EXACT"}, "confidence": "high", "note": "..."}}]}}
 
 When the input is not a teachable thing - gibberish, random characters, an empty phrase, a command, or anything that is not a real concept or object:
 {"isValidConcept": false, "reason": "one short sentence explaining why not"}`;
@@ -158,9 +219,10 @@ function unpackFoundation(parsed) {
  * The system prompt for a per-layer derive call (ticket 08): given the
  * current top layer, derive the NEXT layer directly above it - built ONLY on
  * the layer given, so a skipped intermediate step is structurally
- * impossible. Basis per abstraction, typed edges, a per-layer self-review,
- * and a done flag for when the concept is reached. The word "json" and an
- * example shape are both required by the JSON mode contract.
+ * impossible. Every node carries an observation record as its basis (ticket
+ * 03, the crux), honest marks per the fail-honest contract, narratives in
+ * the STE subset. The word "json" and an example shape are both required by
+ * the JSON mode contract.
  *
  * @param {number} maxLayers
  * @returns {string}
@@ -174,15 +236,19 @@ The whole chain will be around ${maxLayers} layers total, foundation included (a
 
 Requirements for the next layer:
 - Build exactly ONE layer, with the id stated in the prompt (l1, l2, ...).
-- 1 to 3 nodes; each node has an id, a label, the new layer id, a one to two sentence description, and a "basis" field: the observation the abstraction compresses (principle 5). The basis is what a learner can point at. Example: logic gate -> basis "a password check either lets you in or stops you".
+- 1 to 3 nodes; each node has an id, a label, the new layer id, a one to two sentence description, and a "basis": the observation record - the REAL discovery history the abstraction compresses (who discovered it, when, what was observed). Example: logic gate -> basis: Boole 1847, logical reasoning follows the rules of algebra.
 - Give every node a NEW unique id - never reuse a node id from the layers you were given; the same concept at a higher layer is a NEW node with a NEW id.
 - 1 to 3 typed edges. At least one edge must connect the new layer to the layer you were given. The ONLY allowed edge types are: built-on, abstraction-of, part-of, depends-on, predicts, contradicts. Never invent an edge type. Edges may also connect nodes within the new layer. Reference only node ids you were given or ids you create.
-- Before replying, self-review: is the new layer really built on the layer given? Does every node have a basis? Are there invented steps? Report the review honestly.
+- Before replying, self-review: is the new layer really built on the layer given? Does every node carry a real observation record? Are there invented steps or invented observations? Report only STRUCTURAL problems in gaps: an invented step, a layer not built on the layer given, a missing derivation. Do NOT report UNKNOWN observations in gaps - UNKNOWN is a legal, honest state, not a gap.
+
+${failHonestBlock()}
+
+${steBlock()}
 
 Reply as JSON only. No markdown fences, no commentary. Three shapes:
 
 When the layer you were given is not yet the top of the chain:
-{"isValidConcept": true, "done": false, "layer": {"id": "l2", "name": "...", "nodes": ["n-..."]}, "nodes": [{"id": "n-...", "label": "...", "layer": "l2", "description": "...", "basis": "..."}], "edges": [{"source": "n-...", "target": "n-...", "type": "built-on"}], "selfReview": {"derivable": true, "gaps": []}}
+{"isValidConcept": true, "done": false, "layer": {"id": "l2", "name": "...", "nodes": ["n-..."]}, "nodes": [{"id": "n-...", "label": "...", "layer": "l2", "description": "...", "basis": {"discoverer": {"value": "...", "mark": "EXACT"}, "date": {"value": "...", "mark": "EXACT"}, "keyObservation": {"value": "...", "mark": "EXACT"}, "confidence": "high", "note": "..."}}], "edges": [{"source": "n-...", "target": "n-...", "type": "built-on"}], "selfReview": {"derivable": true, "gaps": []}}
 
 When the layer you were given already contains the thing itself - the concept is reached:
 {"isValidConcept": true, "done": true}
@@ -191,7 +257,7 @@ When the concept turns out not to be derivable from the foundation (or is not a 
 {"isValidConcept": false, "reason": "one short sentence explaining why not"}
 
 Example node with a basis:
-{"id": "n-logic-gate", "label": "logic gate", "layer": "l3", "description": "A circuit computing a boolean function such as AND, OR or NOT from input voltages.", "basis": "a password check either lets you in or stops you"}`;
+{"id": "n-logic-gate", "label": "logic gate", "layer": "l3", "description": "A circuit computing a boolean function such as AND, OR or NOT from input voltages.", "basis": {"discoverer": {"value": "George Boole", "mark": "EXACT"}, "date": {"value": "1847", "mark": "EXACT"}, "keyObservation": {"value": "Boole links logical reasoning to the rules of algebra.", "mark": "EXACT"}, "confidence": "high", "note": ""}}`;
 }
 
 /**
@@ -219,11 +285,15 @@ function nextLayerUserMessage(concept, belowLayer, belowNodes, nextLayerId) {
 /**
  * The repair message for a failed layer attempt (v1 ticket 04's escalating
  * repair contract, per layer): cites the problems and narrows the
- * instructions.
+ * instructions. Since ticket 03 it also re-states the honesty rule
+ * (contract rule 3) and, since the live run, the done option - a model that
+ * reports the concept is already reached must be able to say so instead of
+ * being forced to build another layer.
  *
  * @param {string} concept
  * @param {any} belowLayer
  * @param {any[]} belowNodes
+ * @param {string} existingIds - every node id built so far (all layers).
  * @param {string} nextLayerId
  * @param {string} problems
  * @param {boolean} finalAttempt
@@ -233,6 +303,7 @@ function nextLayerRepairMessage(
   concept,
   belowLayer,
   belowNodes,
+  existingIds,
   nextLayerId,
   problems,
   finalAttempt
@@ -243,7 +314,7 @@ function nextLayerRepairMessage(
       { layer: belowLayer, nodes: belowNodes },
       null,
       2
-    )}\n\nYour previous attempt to build layer ${nextLayerId} did not meet the contract: ${problems}\n\nReply with JSON only, no markdown, exactly the required shape: the layer ${nextLayerId}, its nodes, its edges to ${belowLayer.id}, and the self-review. Do not rename or re-list existing layers or nodes. Every new node needs a NEW unique id - never reuse a node id from the layer below. Fix EVERY problem listed.${
+    )}\n\nYour previous attempt to build layer ${nextLayerId} did not meet the contract: ${problems}\n\nReply with JSON only, no markdown, exactly the required shape: the layer ${nextLayerId}, its nodes, its edges to ${belowLayer.id}, and the self-review. Do not rename or re-list existing layers or nodes. Every new node needs a NEW unique id - never reuse any of these existing ids: ${existingIds}. Every node needs a basis: a real observation record with a discoverer, a date, a keyObservation, a confidence, and a note, each marked EXACT, APPROXIMATE, or UNKNOWN. If you do not know a fact, mark it UNKNOWN and leave the value empty - never invent a fact. If ${belowLayer.id} already contains the thing the concept names, reply {"isValidConcept": true, "done": true} instead of building a new layer. Fix EVERY problem listed.${
       finalAttempt ? " This is your final attempt." : ""
     }`,
   };
@@ -367,9 +438,12 @@ function layerProblems(candidate, nextLayerId, belowLayerId, selfReview) {
   if (selfReview && selfReview.derivable === false) {
     errors.push("your self-review reports the new layer is not derivable from the layer below");
   }
-  if (selfReview && Array.isArray(selfReview.gaps) && selfReview.gaps.length > 0) {
-    errors.push(`your self-review reports gaps: ${selfReview.gaps.slice(0, 3).join("; ")}`);
-  }
+  // NOTE: selfReview.gaps intentionally does NOT gate. The model files
+  // honesty notes there (for example "the observation record is UNKNOWN"),
+  // and UNKNOWN observations are legal - gating on free-text gaps turns
+  // honest behavior into a false failure. Structural problems are caught
+  // by the real gates above: the validator, deriveCheck, and the
+  // down-edge rule.
   return errors;
 }
 
@@ -391,6 +465,8 @@ function layerProblemsText(problems, parseable) {
  * Structural check of a phase-A foundation reply. The foundation is locked
  * in by the per-layer loop, so phase A must own its shape - phase B can no
  * longer patch a malformed foundation the way v2's single derive call could.
+ * Since ticket 03 every foundation node also carries a valid observation
+ * record (the crux: the first real observation a learner can point at).
  *
  * @param {any} foundation
  * @returns {string[]}
@@ -429,6 +505,12 @@ function foundationProblems(foundation) {
       if (typeof node.description !== "string") {
         errors.push("foundation node descriptions must be strings");
       }
+      const basis = observationProblems(node.basis);
+      if (basis.length > 0) {
+        errors.push(
+          `foundation node ${typeof node.id === "string" ? `"${node.id}" ` : ""}basis: ${basis.join("; ")}`
+        );
+      }
     }
   }
   return errors;
@@ -439,11 +521,16 @@ function foundationProblems(foundation) {
  * ------------------------------------------------------------------------- */
 
 /**
- * The deterministic derivability check (ticket 06, principle 5 and 11-12):
- * every node must be reachable from the foundation layer through the typed
- * edges (no disconnected fragments, no invented side-chains), and every node
- * above the foundation must carry a basis - the observation the abstraction
- * compresses. Pure; used by the generation repair loop.
+ * The deterministic derivability check (ticket 06, principle 5 and 11-12,
+ * extended by ticket 03): every node must be reachable from the foundation
+ * layer through the typed edges (no disconnected fragments, no invented
+ * side-chains) - the trace to a strictly lower layer - and every node,
+ * foundation included, must carry a VALID observation record as its basis:
+ * a real-history record (ticket 02) with honest EXACT / APPROXIMATE /
+ * UNKNOWN marks per the fail-honest contract (ticket 09). UNKNOWN marks are
+ * legal (the node keeps its gap); a missing record, a structurally broken
+ * one, or a value under an UNKNOWN mark (an invented placeholder) is not.
+ * Pure; used by the generation repair loop.
  *
  * @param {any} map
  * @returns {{ ok: boolean; errors: string[] }}
@@ -489,9 +576,17 @@ export function deriveCheck(map) {
         `node "${node.label}" (${node.id}) is not reachable from the foundation layer - the chain has an invented gap`
       );
     }
-    if (node.layer !== foundationId && (typeof node.basis !== "string" || node.basis.trim().length === 0)) {
+    const label = node.label && typeof node.label === "string" ? node.label : node.id;
+    if (node.basis === undefined || node.basis === null) {
       errors.push(
-        `node "${node.label}" (${node.id}) has no basis - the observation it compresses (principle 5)`
+        `node "${label}" (${node.id}) has no basis - every node carries a real-history observation record (ticket 02)`
+      );
+      continue;
+    }
+    const problems = observationProblems(node.basis);
+    if (problems.length > 0) {
+      errors.push(
+        `node "${label}" (${node.id}) has an invalid observation record: ${problems.join("; ")}`
       );
     }
   }
@@ -504,8 +599,10 @@ export function deriveCheck(map) {
 
 /** Per-layer attempts: initial derivation plus two repairs. */
 const MAX_LAYER_ATTEMPTS = 3;
-/** Phase A attempts: initial foundation plus one repair. */
-const MAX_FOUNDATION_ATTEMPTS = 2;
+/** Phase A attempts: initial foundation plus two repairs. The foundation
+ * now carries observation records (ticket 03), so it gets the same three
+ * chances as a layer. */
+const MAX_FOUNDATION_ATTEMPTS = 3;
 
 /**
  * Generates a Reality Map for a word or phrase, bottom-up and layer by
@@ -573,7 +670,7 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
           { role: "system", content: buildFoundationSystemPrompt() },
           {
             role: "user",
-            content: `Word or phrase: ${trimmed}\n\nYour previous reply did not meet the contract: ${foundationProblemsText}\n\nReply with JSON only, exactly one of the two shapes.`,
+            content: `Word or phrase: ${trimmed}\n\nYour previous reply did not meet the contract: ${foundationProblemsText}\n\nReply with JSON only, exactly one of the two shapes. If you do not know a fact, mark it UNKNOWN and leave the value empty - never invent a fact.`,
           },
         ]
       : [{ role: "system", content: buildFoundationSystemPrompt() }, foundationUserMessage(trimmed)];
@@ -608,9 +705,22 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
       foundationProblemsText = "it was not valid JSON in the required shape";
       continue;
     }
-    const problems = foundationProblems(unpack.foundation);
+    /* Normalize before checking: a value under an UNKNOWN mark is dropped
+     * (contract rule 5), so the foundation's own records land in the visible
+     * gap state instead of failing phase A. */
+    const normalizedFoundation = {
+      ...unpack.foundation,
+      nodes: (unpack.foundation.nodes ?? []).map(
+        /** @param {any} node */
+        (node) =>
+          node !== null && typeof node === "object"
+            ? { ...node, basis: dropUnknownValues(node.basis) }
+            : node
+      ),
+    };
+    const problems = foundationProblems(normalizedFoundation);
     if (problems.length === 0) {
-      foundation = unpack.foundation;
+      foundation = normalizedFoundation;
       break;
     }
     foundationProblemsText = problems.slice(0, 6).join("; ");
@@ -664,6 +774,18 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
       const isRepair = attempt > 0;
       if (isRepair) repaired = true;
       const finalAttempt = attempt === MAX_LAYER_ATTEMPTS - 1;
+      /** Every node id built so far - the repair names them all, because the
+       * model may collide with ANY earlier layer, not just the one below. */
+      const existingIds = assembled.nodes
+        .map(
+          /** @param {any} node */
+          (node) => node.id
+        )
+        .filter(
+          /** @param {any} id */
+          (id) => typeof id === "string"
+        )
+        .join(", ");
       /** @type {import("./llm.js").ChatMessage[]} */
       const messages = isRepair
         ? [
@@ -672,6 +794,7 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
               trimmed,
               belowLayer,
               belowNodes,
+              existingIds,
               nextLayerId,
               layerProblemsText(lastProblems, lastParseable),
               finalAttempt
@@ -705,6 +828,15 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
         continue;
       }
       if (unpack.refused) {
+        /* A mid-chain refusal on a real concept is usually a model error
+         * (live run: "money" refused mid-chain). Retry with the repair
+         * message; only the final attempt honors the refusal. Phase A
+         * refusals stay terminal - gibberish input is refused, not mapped. */
+        if (attempt < MAX_LAYER_ATTEMPTS - 1) {
+          lastParseable = true;
+          lastProblems = [`you refused to derive this layer: ${unpack.reason}`];
+          continue;
+        }
         return {
           ok: false,
           map: null,
@@ -780,43 +912,144 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
 /**
  * Mechanical cleanup of a candidate map before validation: drops edges that
  * reference node ids that do not exist in the map (the model occasionally
- * emits stray edges, e.g. pasted example fragments). The validator remains
- * the gate - the repaired map must still pass it.
+ * emits stray edges, e.g. pasted example fragments), and drops values under
+ * UNKNOWN observation marks (the fail-honest contract rule 5: a value with
+ * mark UNKNOWN is dropped at validation; the node keeps its visible gap).
+ * The validator remains the gate - the repaired map must still pass it.
  *
  * @param {any} map
- * @returns {any} the same object when its edges are clean, else a copy with
- *   the garbage edges removed.
+ * @returns {any} the same object when clean, else a copy with the garbage
+ *   edges removed and UNKNOWN observation values dropped.
  */
 function repairMap(map) {
   if (typeof map !== "object" || map === null || !Array.isArray(map.nodes)) {
     return map;
   }
-  if (!Array.isArray(map.edges)) {
-    return map;
+  let next = map;
+  if (Array.isArray(next.edges)) {
+    const nodeIds = new Set(
+      next.nodes
+        .filter(
+          /** @param {any} node */
+          (node) => typeof node === "object" && node !== null && typeof node.id === "string"
+        )
+        .map(
+          /** @param {any} node */
+          (node) => node.id
+        )
+    );
+    const clean = next.edges.filter(
+      /** @param {any} edge */
+      (edge) =>
+        typeof edge === "object" &&
+        edge !== null &&
+        typeof edge.source === "string" &&
+        typeof edge.target === "string" &&
+        nodeIds.has(edge.source) &&
+        nodeIds.has(edge.target)
+    );
+    if (clean.length !== next.edges.length) {
+      next = { ...next, edges: clean };
+    }
   }
-  const nodeIds = new Set(
-    map.nodes
-      .filter(
-        /** @param {any} node */
-        (node) => typeof node === "object" && node !== null && typeof node.id === "string"
-      )
-      .map(
-        /** @param {any} node */
-        (node) => node.id
-      )
+  const nodes = next.nodes.map(
+    /** @param {any} node */
+    (node) => {
+      if (typeof node !== "object" || node === null) return node;
+      const basis = dropUnknownValues(node.basis);
+      return basis === node.basis ? node : { ...node, basis };
+    }
   );
-  const clean = map.edges.filter(
-    /** @param {any} edge */
-    (edge) =>
-      typeof edge === "object" &&
-      edge !== null &&
-      typeof edge.source === "string" &&
-      typeof edge.target === "string" &&
-      nodeIds.has(edge.source) &&
-      nodeIds.has(edge.target)
-  );
-  if (clean.length === map.edges.length) {
-    return map;
+  if (
+    nodes.some(
+      /** @param {any} node @param {number} i */
+      (node, i) => node !== next.nodes[i]
+    )
+  ) {
+    next = { ...next, nodes };
   }
-  return { ...map, edges: clean };
+  return next;
+}
+
+/* ---------------------------------------------------------------------------
+ * STE narrative check (ticket 05, docs/ste.md)
+ * ------------------------------------------------------------------------- */
+
+/** Common contractions the STE subset bans (rule 8). Possessives like
+ * "Boole's" are not contractions and pass. */
+const STE_CONTRACTIONS = new Set([
+  "can't", "won't", "don't", "didn't", "doesn't", "isn't", "aren't",
+  "wasn't", "weren't", "couldn't", "wouldn't", "shouldn't", "mustn't",
+  "it's", "that's", "there's", "here's", "what's", "who's", "let's",
+  "i'm", "you're", "we're", "they're", "i've", "you've", "we've",
+  "they've", "i'll", "you'll", "he'll", "she'll", "we'll", "they'll",
+  "i'd", "you'd", "he'd", "she'd", "we'd", "they'd",
+  "would've", "should've", "could've",
+]);
+
+/** Slang, idioms, and filler the STE subset bans (rule 7). */
+const STE_BANNED = new Set([
+  "basically", "literally", "kinda", "sorta", "gonna", "wanna",
+  "stuff", "kind of", "sort of", "pretty much", "super", "a lot of",
+  "e.g.", "i.e.", "etc.",
+]);
+
+/** Vague words the subset tells the model to avoid (rule 5). Mechanical
+ * detection cannot judge whether a referent is clear, so these are warnings,
+ * not failures - the prompt carries the rule. */
+const STE_VAGUE = new Set(["it", "this", "that", "thing", "things", "something"]);
+
+/**
+ * The mechanical STE narrative check (ticket 05, docs/ste.md): no
+ * contractions, no slang or figurative filler, no em/en dashes (repo rule),
+ * and no sentence over 25 words. Vague words are reported as warnings - the
+ * referent rule is a judgment call the prompt carries.
+ *
+ * The "under 20 words" rule lives in the PROMPT (ticket 05 applies the
+ * rules to generated content via the prompt); this mechanical gate tolerates
+ * the boundary at 25 words so a well-written 21-word sentence does not fail
+ * a run while genuinely long sentences still do.
+ *
+ * Used by the live verification script (ticket 03 bar) and unit-tested here;
+ * the generator enforces STE through the prompts, not through this function.
+ *
+ * @param {unknown} text
+ * @returns {{ errors: string[]; warnings: string[] }}
+ */
+export function steProblems(text) {
+  const errors = /** @type {string[]} */ ([]);
+  const warnings = /** @type {string[]} */ ([]);
+  if (typeof text !== "string" || text.trim().length === 0) {
+    return { errors, warnings };
+  }
+  const lower = text.toLowerCase();
+  for (const word of STE_CONTRACTIONS) {
+    if (new RegExp(`\\b${word}\\b`).test(lower)) {
+      errors.push(`contraction "${word}"`);
+    }
+  }
+  for (const word of STE_BANNED) {
+    if (lower.includes(word)) {
+      errors.push(`non-STE word "${word}"`);
+    }
+  }
+  if (/[\u2014\u2013]/.test(text)) {
+    errors.push("em dash or en dash");
+  }
+  if (/--/.test(text)) {
+    errors.push("double hyphen");
+  }
+  const sentences = text.split(/[.!?]+(?:\s+|$)/);
+  for (const sentence of sentences) {
+    const words = sentence.trim().split(/\s+/).filter(Boolean);
+    if (words.length > 25) {
+      errors.push(`${words.length}-word sentence: "${sentence.trim().slice(0, 40)}..."`);
+    }
+  }
+  for (const word of STE_VAGUE) {
+    if (new RegExp(`\\b${word}\\b`).test(lower)) {
+      warnings.push(`vague word "${word}"`);
+    }
+  }
+  return { errors, warnings };
 }

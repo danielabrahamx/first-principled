@@ -12,6 +12,7 @@
  */
 
 import { EDGE_TYPES, NODE_STATES } from "./types.js";
+import { observationProblems } from "./observation.js";
 
 /**
  * Abuse-control caps (ticket 18): a reality map beyond these sizes is not
@@ -192,11 +193,19 @@ export function validateRealityMap(input) {
       if (typeof node.description !== "string") {
         errors.push(`${where}.description must be a string`);
       }
-      if (node.basis !== undefined && (typeof node.basis !== "string" || node.basis.trim().length === 0)) {
-        // ticket 06: basis is the observation an abstraction compresses. It is
-        // optional (legacy maps and the eval fixtures predate it); the
-        // generator's deriveCheck enforces it for newly generated maps.
-        errors.push(`${where}.basis must be a non-empty string when present`);
+      if (node.basis !== undefined) {
+        // ticket 06: basis is the observation an abstraction compresses. Since
+        // ticket 03 it is a real-history observation record (ticket 02), but
+        // legacy maps and fixtures carry a plain string, so both forms stay
+        // schema-valid here - the generator's deriveCheck enforces the record
+        // for newly generated maps.
+        const legacyString =
+          typeof node.basis === "string" && node.basis.trim().length > 0;
+        if (!legacyString && observationProblems(node.basis).length > 0) {
+          errors.push(
+            `${where}.basis must be a non-empty string or a valid observation record (ticket 02)`
+          );
+        }
       }
       if (typeof node.layer !== "string") {
         errors.push(`${where}.layer must be a string`);

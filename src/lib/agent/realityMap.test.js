@@ -6,9 +6,11 @@ import {
   buildNextLayerSystemPrompt,
   deriveCheck,
   generateRealityMap,
+  steProblems,
 } from "./realityMap.js";
 import { extractBalancedObject, parseModelJson } from "./jsonParse.js";
 import { validateRealityMap } from "../mmg/validator.js";
+import { observationProblems, dropUnknownValues } from "../mmg/observation.js";
 import { laptopRealityMap } from "../mmg/fixtures.js";
 
 /**
@@ -185,6 +187,10 @@ test("the foundation prompt satisfies the JSON mode contract and the ticket asks
   assert.match(prompt, /FOUNDATION layer/i);
   assert.match(prompt, /observable/i);
   assert.match(prompt, /isValidConcept/);
+  assert.match(prompt, /discoverer/, "foundation nodes carry observation records (ticket 03)");
+  assert.match(prompt, /EXACT, APPROXIMATE, or UNKNOWN/, "the fail-honest marks (ticket 09)");
+  assert.match(prompt, /NEVER invent/, "never invent a fact");
+  assert.match(prompt, /simplified technical English/, "narratives follow the STE subset (ticket 05)");
 });
 
 test("the next-layer prompt satisfies the JSON mode contract and the ticket asks", () => {
@@ -198,6 +204,13 @@ test("the next-layer prompt satisfies the JSON mode contract and the ticket asks
   assert.match(prompt, /done/i, "the model can declare the concept reached");
   assert.match(prompt, /around 6 layers/i);
   assert.match(prompt, /built-on|depends-on|part-of|abstraction-of|predicts|contradicts/);
+  assert.match(prompt, /discoverer/, "every node carries an observation record (ticket 03)");
+  assert.match(prompt, /keyObservation/, "the key observation field (ticket 02)");
+  assert.match(prompt, /confidence/, "the record carries a confidence");
+  assert.match(prompt, /EXACT, APPROXIMATE, or UNKNOWN/, "the fail-honest marks (ticket 09)");
+  assert.match(prompt, /NEVER invent/, "never invent a fact");
+  assert.match(prompt, /UNKNOWN, leave its value empty/, "UNKNOWN drops the value (contract rule 5)");
+  assert.match(prompt, /simplified technical English/, "narratives follow the STE subset (ticket 05)");
 });
 
 test("the next-layer prompt honors a custom layer cap", () => {
@@ -222,7 +235,7 @@ test("deriveCheck flags a node that is not reachable from the foundation", () =>
   assert.match(check.errors[0], /invented gap/);
 });
 
-test("deriveCheck requires a basis above the foundation but not on it", () => {
+test("deriveCheck requires an observation record on every node, foundation included", () => {
   const noBasis = structuredClone(laptopRealityMap);
   noBasis.nodes = noBasis.nodes.map((node) => {
     if (node.id === "n-logic-gate") return { ...node, basis: undefined };
@@ -237,13 +250,259 @@ test("deriveCheck requires a basis above the foundation but not on it", () => {
     if (node.layer === noFoundationBasis.layers[0].id) return { ...node, basis: undefined };
     return node;
   });
-  assert.equal(deriveCheck(noFoundationBasis).ok, true, "foundation nodes need no basis");
+  const foundationCheck = deriveCheck(noFoundationBasis);
+  assert.equal(foundationCheck.ok, false, "the foundation carries the first real observation (ticket 03)");
+  assert.ok(
+    foundationCheck.errors.some((error) => /n-electricity/.test(error) && /observation record/.test(error))
+  );
+});
+
+test("deriveCheck rejects an invalid observation record (bad mark, missing field)", () => {
+  const broken = structuredClone(laptopRealityMap);
+  const bit = broken.nodes.find((node) => node.id === "n-bit");
+  assert.ok(bit, "the fixture has a bit node");
+  bit.basis = /** @type {any} */ ({
+    discoverer: { value: "Claude Shannon", mark: "SOMETIMES" },
+    date: undefined,
+    keyObservation: {
+      value: "Shannon names the bit as the basic unit of information.",
+      mark: "EXACT",
+    },
+    confidence: "high",
+    note: "",
+  });
+  const check = deriveCheck(broken);
+  assert.equal(check.ok, false);
+  assert.ok(
+    check.errors.some((error) => /n-bit/.test(error) && /invalid observation record/.test(error))
+  );
+});
+
+test("deriveCheck rejects a value under an UNKNOWN mark (an invented placeholder)", () => {
+  const invented = structuredClone(laptopRealityMap);
+  const bit = invented.nodes.find((node) => node.id === "n-bit");
+  assert.ok(bit, "the fixture has a bit node");
+  bit.basis = {
+    discoverer: { value: "Claude Shannon", mark: "EXACT" },
+    date: { value: "around 1900", mark: "UNKNOWN" },
+    keyObservation: {
+      value: "Shannon names the bit as the basic unit of information.",
+      mark: "EXACT",
+    },
+    confidence: "high",
+    note: "",
+  };
+  const check = deriveCheck(invented);
+  assert.equal(check.ok, false);
+  assert.ok(
+    check.errors.some((error) => /never invent/.test(error)),
+    check.errors.join("; ")
+  );
+});
+
+test("deriveCheck accepts UNKNOWN marks with dropped values (legal first-class state)", () => {
+  const honest = structuredClone(laptopRealityMap);
+  const bit = honest.nodes.find((node) => node.id === "n-bit");
+  assert.ok(bit, "the fixture has a bit node");
+  bit.basis = {
+    discoverer: { value: "", mark: "UNKNOWN" },
+    date: { value: "", mark: "UNKNOWN" },
+    keyObservation: {
+      value: "Shannon names the bit as the basic unit of information.",
+      mark: "EXACT",
+    },
+    confidence: "low",
+    note: "The record of this discovery does not survive.",
+  };
+  const check = deriveCheck(honest);
+  assert.equal(check.ok, true, check.errors.join("; "));
+});
+
+test("deriveCheck rejects a legacy string basis on a generated map", () => {
+  const legacy = structuredClone(laptopRealityMap);
+  legacy.nodes = legacy.nodes.map((node) => {
+    if (node.id === "n-bit") return { ...node, basis: "a switch being on or off" };
+    return node;
+  });
+  const check = deriveCheck(legacy);
+  assert.equal(check.ok, false);
+  assert.ok(check.errors.some((error) => /n-bit/.test(error) && /observation record/.test(error)));
 });
 
 test("deriveCheck is structural on garbage input", () => {
   const check = deriveCheck({});
   assert.equal(check.ok, false);
   assert.ok(check.errors.length > 0);
+});
+
+// --- observation records (ticket 02/03, fail-honest contract 09) ------------
+
+test("observationProblems accepts a valid record with any honest marks", () => {
+  const record = {
+    discoverer: { value: "George Boole", mark: "EXACT" },
+    date: { value: "1847", mark: "APPROXIMATE" },
+    keyObservation: { value: "Boole links logical reasoning to the rules of algebra.", mark: "EXACT" },
+    confidence: "medium",
+    note: "Contested in some surveys.",
+  };
+  assert.deepEqual(observationProblems(record), []);
+  assert.deepEqual(
+    observationProblems({
+      ...record,
+      discoverer: { value: "", mark: "UNKNOWN" },
+      date: { value: "", mark: "UNKNOWN" },
+      keyObservation: { value: "", mark: "UNKNOWN" },
+      confidence: "low",
+      note: "",
+    }),
+    [],
+    "a fully UNKNOWN record is legal - the node keeps its gap"
+  );
+});
+
+test("observationProblems rejects structural breaks", () => {
+  assert.ok(observationProblems(undefined).length > 0, "missing record");
+  assert.ok(observationProblems("a plain string").length > 0, "legacy string is not a record");
+  assert.ok(
+    observationProblems({
+      discoverer: { value: "x", mark: "EXACT" },
+      date: { value: "1847", mark: "EXACT" },
+      keyObservation: { value: "y", mark: "EXACT" },
+      confidence: "certain",
+      note: "",
+    }).length > 0,
+    "confidence outside the enum"
+  );
+  assert.ok(
+    observationProblems({
+      discoverer: { value: "x", mark: "EXACT" },
+      date: { value: "1847", mark: "EXACT" },
+      keyObservation: { value: "", mark: "EXACT" },
+      confidence: "high",
+      note: 42,
+    }).length > 0,
+    "empty EXACT value and non-string note"
+  );
+});
+
+test("dropUnknownValues empties UNKNOWN-marked values but keeps the record valid", () => {
+  const record = {
+    discoverer: { value: "someone guessed", mark: "UNKNOWN" },
+    date: { value: "about 1900", mark: "UNKNOWN" },
+    keyObservation: { value: "A plausible observation that never happened.", mark: "UNKNOWN" },
+    confidence: "low",
+    note: "Claimed observation, never confirmed.",
+  };
+  const dropped = /** @type {any} */ (dropUnknownValues(record));
+  assert.equal(dropped.discoverer.value, "", "the invented value is dropped");
+  assert.equal(dropped.date.value, "");
+  assert.equal(dropped.keyObservation.value, "");
+  assert.equal(dropped.discoverer.mark, "UNKNOWN", "the mark survives into the gap state");
+  assert.equal(dropped.note, "Claimed observation, never confirmed.");
+  assert.deepEqual(observationProblems(dropped), [], "the dropped record is valid");
+  assert.deepEqual(observationProblems(record).length > 0, true, "the raw record stays invalid");
+  assert.equal(dropUnknownValues("not a record"), "not a record");
+  assert.equal(dropUnknownValues(null), null);
+});
+
+test("a layer with UNKNOWN-marked values is normalized, not repaired", async () => {
+  // The model hedges by writing a value under an UNKNOWN mark. Per the
+  // contract rule 5 the value is DROPPED at validation - the node keeps its
+  // visible gap and the layer lands without a repair.
+  const hedged = JSON.stringify({
+    isValidConcept: true,
+    done: false,
+    layer: laptopRealityMap.layers[1],
+    nodes: laptopRealityMap.nodes
+      .filter((node) => node.layer === "l1")
+      .map((node) => ({
+        ...node,
+        basis: {
+          .../** @type {any} */ (node.basis),
+          date: { value: "around 1900", mark: "UNKNOWN" },
+        },
+      })),
+    edges: [{ source: "n-silicon", target: "n-electricity", type: "depends-on" }],
+    selfReview: { derivable: true, gaps: [] },
+  });
+  const { callLLM, requests } = stubTransport([
+    FOUNDATION_REPLY,
+    hedged,
+    ...HAPPY_SCRIPT.slice(2),
+  ]);
+  const result = await generateRealityMap({ concept: "laptop", callLLM });
+  assert.equal(result.ok, true);
+  assert.equal(result.retried, false, "the dropped value is not a repair trigger");
+  assert.equal(requests.length, laptopRealityMap.layers.length);
+  const landed = /** @type {any} */ (result.map?.nodes.find((node) => node.id === "n-silicon"));
+  assert.equal(landed.basis.date.value, "", "the value is dropped, the gap is visible");
+  assert.equal(landed.basis.date.mark, "UNKNOWN");
+});
+
+test("a foundation with UNKNOWN-marked values is normalized, not repaired", async () => {
+  const hedgedFoundation = JSON.stringify({
+    isValidConcept: true,
+    foundation: {
+      layer: laptopRealityMap.layers[0],
+      nodes: laptopRealityMap.nodes
+        .filter((node) => node.layer === "l0")
+        .map((node) => ({
+          ...node,
+          basis: {
+            .../** @type {any} */ (node.basis),
+            discoverer: { value: "a traditional attribution", mark: "UNKNOWN" },
+          },
+        })),
+    },
+  });
+  const { callLLM, requests } = stubTransport([hedgedFoundation, ...HAPPY_SCRIPT.slice(1)]);
+  const result = await generateRealityMap({ concept: "laptop", callLLM });
+  assert.equal(result.ok, true);
+  assert.equal(result.retried, false);
+  const landed = /** @type {any} */ (result.map?.nodes.find((node) => node.id === "n-electricity"));
+  assert.equal(landed.basis.discoverer.value, "", "the invented attribution is dropped");
+  assert.equal(landed.basis.discoverer.mark, "UNKNOWN");
+  assert.equal(requests.length, laptopRealityMap.layers.length);
+});
+
+test("the layer repair message lists existing ids and offers the done reply", async () => {
+  const { callLLM, requests } = stubTransport([
+    FOUNDATION_REPLY,
+    brokenLayerReply("l1"),
+    ...HAPPY_SCRIPT.slice(1),
+  ]);
+  const result = await generateRealityMap({ concept: "laptop", callLLM });
+  assert.equal(result.ok, true);
+  const repair = requests[2].messages[1].content;
+  assert.match(repair, /never reuse any of these existing ids: n-electricity/, "the repair names every id the model must not reuse");
+  assert.match(repair, /"done": true/, "the repair offers the done reply when the concept is reached");
+});
+
+// --- STE narratives (ticket 05, docs/ste.md) ---------------------------------
+
+test("steProblems passes clean simplified English", () => {
+  const check = steProblems("Boole links logical reasoning to the rules of algebra.");
+  assert.deepEqual(check.errors, []);
+  assert.deepEqual(check.warnings, []);
+});
+
+test("steProblems rejects contractions, long sentences, dashes, and filler", () => {
+  assert.ok(steProblems("The team couldn't confirm the result.").errors.some((e) => /contraction/.test(e)));
+  assert.ok(steProblems("This is a very long sentence that keeps going and going and going and going and going and going and going and going and going on.").errors.some((e) => /word sentence/.test(e)));
+  assert.ok(steProblems("A discovery -- made in 1847 -- changed things.").errors.some((e) => /double hyphen/.test(e)));
+  assert.ok(steProblems("A discovery \u2014 made in 1847 \u2014 changed things.").errors.some((e) => /dash/.test(e)));
+  assert.ok(steProblems("Basically, the model invented stuff.").errors.some((e) => /non-STE word/.test(e)));
+});
+
+test("steProblems reports vague words as warnings, not failures", () => {
+  const check = steProblems("It changed the way we think about this thing.");
+  assert.deepEqual(check.errors, []);
+  assert.ok(check.warnings.some((w) => /vague word "it"/.test(w)));
+});
+
+test("steProblems is quiet on non-strings", () => {
+  assert.deepEqual(steProblems(undefined), { errors: [], warnings: [] });
+  assert.deepEqual(steProblems(""), { errors: [], warnings: [] });
 });
 
 // --- generation: happy paths -------------------------------------------------
@@ -347,6 +606,41 @@ test("an unparseable layer reply triggers a repair that cites JSON", async () =>
   assert.match(requests[2].messages[1].content, /not valid JSON/);
 });
 
+test("an empty layer reply triggers a repair that re-states the honesty rule", async () => {
+  const { callLLM, requests } = stubTransport([
+    FOUNDATION_REPLY,
+    "   \n  ",
+    ...HAPPY_SCRIPT.slice(1),
+  ]);
+  const result = await generateRealityMap({ concept: "laptop", callLLM });
+  assert.equal(result.ok, true);
+  assertLaptopFixture(result.map);
+  assert.equal(result.retried, true);
+  assert.match(requests[2].messages[1].content, /mark it UNKNOWN/, "contract rule 3: the repair re-states the honesty rule");
+  assert.match(requests[2].messages[1].content, /never invent/);
+});
+
+test("a foundation node without an observation record triggers a phase A repair", async () => {
+  const noRecord = JSON.stringify({
+    isValidConcept: true,
+    foundation: {
+      layer: laptopRealityMap.layers[0],
+      nodes: laptopRealityMap.nodes
+        .filter((node) => node.layer === "l0")
+        .map((node) => {
+          const { basis, ...rest } = node;
+          return rest;
+        }),
+    },
+  });
+  const { callLLM, requests } = stubTransport([noRecord, ...HAPPY_SCRIPT]);
+  const result = await generateRealityMap({ concept: "laptop", callLLM });
+  assert.equal(result.ok, true);
+  assertLaptopFixture(result.map);
+  assert.equal(result.retried, true);
+  assert.match(requests[1].messages[1].content, /basis/);
+});
+
 test("a layer with the wrong id triggers a repair citing the expected id", async () => {
   const wrongId = JSON.stringify({
     isValidConcept: true,
@@ -443,7 +737,7 @@ test("a self-review that is not derivable triggers a repair", async () => {
     layer: laptopRealityMap.layers[1],
     nodes: laptopRealityMap.nodes.filter((node) => node.layer === "l1"),
     edges: [{ source: "n-silicon", target: "n-electricity", type: "depends-on" }],
-    selfReview: { derivable: false, gaps: ["the layer skips the bit layer"] },
+    selfReview: { derivable: false, gaps: [] },
   });
   const { callLLM, requests } = stubTransport([
     FOUNDATION_REPLY,
@@ -454,7 +748,34 @@ test("a self-review that is not derivable triggers a repair", async () => {
   assert.equal(result.ok, true);
   assertLaptopFixture(result.map);
   assert.equal(result.retried, true);
-  assert.match(requests[2].messages[1].content, /skips the bit layer/);
+  assert.match(requests[2].messages[1].content, /not derivable/);
+});
+
+test("self-review gap notes do not gate a structurally sound layer", async () => {
+  // The model files honesty notes in gaps (for example an UNKNOWN
+  // observation record) - that is legal, not a failure. Only the structural
+  // gates may reject a layer.
+  const withNote = JSON.stringify({
+    isValidConcept: true,
+    done: false,
+    layer: laptopRealityMap.layers[1],
+    nodes: laptopRealityMap.nodes.filter((node) => node.layer === "l1"),
+    edges: [{ source: "n-silicon", target: "n-electricity", type: "depends-on" }],
+    selfReview: {
+      derivable: true,
+      gaps: ["The observation record for both nodes is UNKNOWN because no single documented discovery exists."],
+    },
+  });
+  const { callLLM, requests } = stubTransport([
+    FOUNDATION_REPLY,
+    withNote,
+    ...HAPPY_SCRIPT.slice(2),
+  ]);
+  const result = await generateRealityMap({ concept: "laptop", callLLM });
+  assert.equal(result.ok, true);
+  assertLaptopFixture(result.map);
+  assert.equal(result.retried, false, "an honest UNKNOWN note is not a repair trigger");
+  assert.equal(requests.length, laptopRealityMap.layers.length);
 });
 
 test("a garbage edge is dropped by cleanup before validation", async () => {
@@ -477,10 +798,11 @@ test("a garbage edge is dropped by cleanup before validation", async () => {
   assert.equal(requests.length, laptopRealityMap.layers.length);
 });
 
-test("a refusal on a later layer attempt is honored", async () => {
+test("a mid-chain refusal is retried and only honored on the final attempt", async () => {
   const { callLLM, requests } = stubTransport([
     FOUNDATION_REPLY,
     brokenLayerReply("l1"),
+    JSON.stringify({ isValidConcept: false, reason: "not a concept after all" }),
     JSON.stringify({ isValidConcept: false, reason: "not a concept after all" }),
   ]);
   const result = await generateRealityMap({ concept: "laptop", callLLM });
@@ -488,7 +810,21 @@ test("a refusal on a later layer attempt is honored", async () => {
   assert.equal(result.kind, "refused");
   assert.equal(result.reason, "not a concept after all");
   assert.equal(result.retried, true);
-  assert.equal(requests.length, 3);
+  assert.equal(requests.length, 4);
+  assert.match(requests[3].messages[1].content, /refused to derive this layer/, "the retry cites the refusal");
+});
+
+test("a mid-chain refusal is retried and a good repair lands the layer", async () => {
+  const { callLLM, requests } = stubTransport([
+    FOUNDATION_REPLY,
+    JSON.stringify({ isValidConcept: false, reason: "money is not derivable from exchange" }),
+    ...HAPPY_SCRIPT.slice(1),
+  ]);
+  const result = await generateRealityMap({ concept: "laptop", callLLM });
+  assert.equal(result.ok, true);
+  assertLaptopFixture(result.map);
+  assert.equal(result.retried, true);
+  assert.equal(requests.length, laptopRealityMap.layers.length + 1, "one retry call, then the chain");
 });
 
 test("all attempts for a layer invalid fails as invalid with the problems", async () => {
@@ -507,7 +843,7 @@ test("all attempts for a layer invalid fails as invalid with the problems", asyn
 });
 
 test("all foundation attempts unparseable fails as invalid", async () => {
-  const { callLLM } = stubTransport(["garbage", "more garbage"]);
+  const { callLLM } = stubTransport(["garbage", "more garbage", "still garbage"]);
   const result = await generateRealityMap({ concept: "laptop", callLLM });
   assert.equal(result.ok, false);
   assert.equal(result.kind, "invalid");
