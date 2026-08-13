@@ -82,6 +82,11 @@ this effort.
 
 ## Open frontier
 
+- 14 - Background function + client polling for generation (unblocked; Danny
+  2026-08-13: live generation broken at the 10-13 deploy - Netlify sync
+  function killed at its 30s cap while real generation takes 16-52s, not a
+  token-efficiency issue; proper fix chosen over trimming)
+
 ## Not yet specified
 
 - Discovery timeline: the parked scrubber/replay machinery (v2 12) could be
