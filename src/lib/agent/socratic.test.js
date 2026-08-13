@@ -10,6 +10,7 @@ import {
   explanationRequested,
   explainDirective,
   briefingRequested,
+  turnIsBriefing,
   updateFailedAttempts,
   computeDiff,
   buildSocraticSystemPrompt,
@@ -358,6 +359,22 @@ test("briefingRequested fires on direct-information and decision phrasings", () 
   assert.equal(briefingRequested("what do I need to know about batteries"), true);
   assert.equal(briefingRequested("give me the rundown on the power path"), true);
   assert.equal(briefingRequested("how does the whole chain work end to end"), true);
+});
+
+test("turnIsBriefing is true when forceBrief is set, even for ordinary answers", () => {
+  const ordinary = baseState({ learnerUtterance: "I use it for email and spreadsheets." });
+  assert.equal(turnIsBriefing(ordinary), false);
+  assert.equal(turnIsBriefing({ ...ordinary, forceBrief: true }), true);
+  assert.match(buildDirective({ ...ordinary, forceBrief: true }), /probe.kind must be "brief"/);
+  const errors = validateTurn(
+    { ...ordinary, forceBrief: true },
+    {
+      reply: "A laptop is a portable computer.",
+      learnerMap: ordinary.learnerMap,
+      probe: { nodeId: null, kind: "brief" },
+    }
+  );
+  assert.deepEqual(errors, []);
 });
 
 test("the explanation fallback beats the observation opening even with an all-untested map", () => {

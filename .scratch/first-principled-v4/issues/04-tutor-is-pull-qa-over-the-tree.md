@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** [One chrome, one route](02-one-chrome-one-route.md), [Ship the cladogram and one-shot grow into the live Tree](03-ship-cladogram-and-one-shot-grow.md)
 
@@ -34,13 +34,13 @@ Do not surface the Learner Mental Model.
 
 ## Acceptance criteria
 
-- [ ] After Build, the Tree lands with no tutor question in the dock
-- [ ] A learner question in the dock gets a briefing that may quote the
+- [x] After Build, the Tree lands with no tutor question in the dock
+- [x] A learner question in the dock gets a briefing that may quote the
       Reality Map
-- [ ] The briefing does not end with a Socratic probe
-- [ ] No learner-map chrome appears
-- [ ] Live-verified on real DeepSeek (one concept, one dock question)
-- [ ] npm test green, tsc clean (socratic/orchestrator tests retargeted)
+- [x] The briefing does not end with a Socratic probe
+- [x] No learner-map chrome appears
+- [x] Live-verified on real DeepSeek (one concept, one dock question)
+- [x] npm test green, tsc clean (socratic/orchestrator tests retargeted)
 
 ## Docs rule
 
@@ -48,3 +48,21 @@ Update `AGENTS.md` no-leak line: chat/dock may quote the Reality Map because
 every dock turn is a briefing. Note in `CONTEXT.md` that the Tutor is pull
 Q&A, not an opening probe. Do not rewrite the v1 spec wholesale; a short
 note on briefing-always-in-the-dock is enough.
+
+## Resolution
+
+Init generates the Reality Map and returns no `reply`, so the dock stays
+empty until the learner types. Active turns set `forceBrief`; `turnIsBriefing`
+treats that as a briefing, so the Tutor quotes the Reality Map and
+`validateTurn` rejects a closing probe. Transfer-question push on active is
+gone. Composer placeholder: "Type a question about the tree." Learner-map
+chrome stays hidden (ticket 02).
+
+Live DeepSeek (`bit`, then "What is a bit?"): init 200, no reply, 11 nodes;
+active briefing 216 chars, does not end with `?`. Script:
+`.scratch/first-principled-v4/research/04-live-brief.mjs`. tsc clean.
+Tracked tests 310 pass; 2 pre-existing rate-limiter failures in
+`netlify/functions/agent/agent.test.mjs` (untouched). Netlify build OK.
+
+Committed and pushed. Parked v2 files were not added. `stash@{0}`
+(`v2 socratic parked for v4 04`) was not popped.

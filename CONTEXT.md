@@ -7,6 +7,12 @@ Q&A. Learner Mental Model tracking remains in the engine and is parked from
 the UI. Mission: reduce the cognitive distance between the learner's mental
 model and reality.
 
+## Frontier (resume here)
+
+Ticket 04 resolved. Ticket 05 is next: claim, `netlify deploy --prod`, live
+smoke, record deploy id. Do not add parked v2 files. Do not pop `stash@{0}`
+until after 04 is on origin.
+
 ## Language
 
 **Tree**:
@@ -42,10 +48,10 @@ Current architecture (v1):
   and is parked from the UI.
 - DeepSeek via OpenAI-compatible API. No DB, no auth, no framework.
 - `src/lib/agent/` holds the engine: reality map generation, the Socratic
-  turn loop (question, infer, update the learner map, track failed attempts
-  for the explanation fallback), and the LLM transport. The model replies
-  with `{reply, learnerMap, probe}`; the function computes the diff and
-  carries the failed-attempt counts.
+  turn loop (kept for later), and the LLM transport. The dock forces every
+  turn to a briefing (`forceBrief`): the Tutor quotes the Reality Map and
+  does not open with a Socratic probe. The model still replies with
+  `{reply, learnerMap, probe}`; the UI does not show the learner map.
 
 Source of truth: `.scratch/first-principled/spec.md` (v1 product),
 `.scratch/first-principled-v4/map.md` (current effort). Immutable mission:

@@ -215,8 +215,8 @@ test("grade prompts carry the JSON mode contract and the question and answer", (
  * init
  * ------------------------------------------------------------------------- */
 
-test("init generates the map (per-layer bottom-up) and runs the opening turn, contract-exact", async () => {
-  const { callLLM, requests } = scriptedTransport([...PER_LAYER_MAP_SCRIPT, OPENING_TURN]);
+test("init generates the map (per-layer bottom-up) with no opening probe", async () => {
+  const { callLLM, requests } = scriptedTransport([...PER_LAYER_MAP_SCRIPT]);
   const result = await handleRequest(clone(INIT_REQUEST), { callLLM });
 
   assert.equal(result.status, 200);
@@ -226,31 +226,17 @@ test("init generates the map (per-layer bottom-up) and runs the opening turn, co
     "learnerMap",
     "phase",
     "realityMap",
-    "reply",
   ]);
   assertRealityMapEqual(result.body.realityMap, laptopRealityMap);
   assert.equal(result.body.phase, "active");
-  assert.equal(result.body.reply, "What have you noticed about how what you type becomes letters on the screen?");
-  assert.deepEqual(result.body.learnerMap, {
-    nodes: [
-      {
-        id: "n-app",
-        state: "correct",
-        confidence: 0.7,
-        evidence: ["I use a laptop every day"],
-      },
-    ],
-    edges: [],
-  });
-  assert.deepEqual(result.body.diff, { added: ["n-app"], flipped: [], updated: [] });
+  assert.equal(result.body.reply, undefined, "no tutor question on init");
+  assert.deepEqual(result.body.learnerMap, { nodes: [], edges: [] });
+  assert.deepEqual(result.body.diff, { added: [], flipped: [], updated: [] });
   assert.deepEqual(result.body.failedAttempts, {});
-  assert.equal(requests.length, laptopRealityMap.layers.length + 1, "foundation + one call per layer, then one opening turn - no more calls");
+  assert.equal(requests.length, laptopRealityMap.layers.length, "foundation + one call per layer, no opening turn");
   assert.match(requests[0].messages[1].content, /Word or phrase: laptop/);
   assert.match(requests[1].messages[1].content, /Build layer l1/);
   assert.match(requests[laptopRealityMap.layers.length - 1].messages[1].content, /Build layer l5/);
-  const openingPrompt = requests[laptopRealityMap.layers.length].messages[1].content;
-  assert.match(openingPrompt, /Opening move/);
-  assert.match(openingPrompt, /Latest learner message: "laptop"/);
 });
 
 test("init refuses a non-teachable word gracefully, staying on phase init", async () => {
@@ -332,8 +318,8 @@ const ACTIVE_REQUEST = {
 };
 
 /** @type {string} */
-const SOCRATIC_TURN = JSON.stringify({
-  reply: "And what controls that switch inside the laptop?",
+const BRIEF_TURN = JSON.stringify({
+  reply: "A transistor is a switch made of silicon that electricity controls, not a hand switch.",
   learnerMap: {
     nodes: laptopLearnerMap.nodes.map((node) =>
       node.id === "n-transistor"
@@ -342,26 +328,28 @@ const SOCRATIC_TURN = JSON.stringify({
     ),
     edges: laptopLearnerMap.edges,
   },
-  probe: { nodeId: "n-transistor", kind: "probe" },
+  probe: { nodeId: "n-transistor", kind: "brief" },
 });
 
-test("active runs one Socratic turn, wired to the learner's latest message", async () => {
-  const { callLLM, requests } = scriptedTransport([SOCRATIC_TURN]);
+test("active runs one briefing turn, wired to the learner's latest message", async () => {
+  const { callLLM, requests } = scriptedTransport([BRIEF_TURN]);
   const result = await handleRequest(clone(ACTIVE_REQUEST), { callLLM });
 
   assert.equal(result.status, 200);
   assert.deepEqual(Object.keys(result.body).sort(), ["diff", "failedAttempts", "learnerMap", "phase", "reply"]);
   assert.equal(result.body.phase, "active");
   assert.deepEqual(result.body.diff, { added: [], flipped: [], updated: ["n-transistor"] });
-  assert.deepEqual(result.body.failedAttempts, { "n-transistor": 2 });
+  assert.deepEqual(result.body.failedAttempts, {});
 
   const prompt = requests[0].messages[1].content;
   assert.match(prompt, /Latest learner message: "transistors are switches you flick by hand"/);
-  assert.match(prompt, /Phase: active/);
+  assert.match(prompt, /"phase": "active"/);
+  assert.match(prompt, /probe.kind must be "brief"/);
   assert.doesNotMatch(prompt, /explanation fallback is due/);
+  assert.doesNotMatch(result.body.reply, /\?/);
 });
 
-test("active returns the transfer question with phase end when the session is due", async () => {
+test("active still briefs when every node is known (no transfer push)", async () => {
   /** @type {import("../mmg/types.js").LearnerMentalModel} */
   const learner = {
     nodes: laptopRealityMap.nodes.map((node) => ({
@@ -373,19 +361,23 @@ test("active returns the transfer question with phase end when the session is du
     edges: [],
   };
   const request = { ...clone(ACTIVE_REQUEST), learnerMap: learner, failedAttempts: {} };
-  const { callLLM, requests } = scriptedTransport([TRANSFER_QUESTION]);
+  const brief = JSON.stringify({
+    reply: "The chain runs from electricity through silicon to the apps you use.",
+    learnerMap: learner,
+    probe: { nodeId: null, kind: "brief" },
+  });
+  const { callLLM, requests } = scriptedTransport([brief]);
   const result = await handleRequest(request, { callLLM });
 
   assert.equal(result.status, 200);
-  assert.equal(result.body.phase, "end");
-  assert.equal(result.body.reply, "Your friend's laptop stops working mid-day. Where would you start looking and why?");
-  assert.deepEqual(result.body.learnerMap, learner, "the learner map is untouched");
-  assert.deepEqual(result.body.diff, { added: [], flipped: [], updated: [] });
-  assert.deepEqual(result.body.failedAttempts, {});
-  assert.equal(result.body.sessionEnded, undefined, "session ends only after grading");
-  assert.equal(requests.length, 1, "no Socratic turn runs once the session is due");
+  assert.equal(result.body.phase, "active");
+  assert.equal(result.body.reply, "The chain runs from electricity through silicon to the apps you use.");
+  assert.doesNotMatch(result.body.reply, /\?/);
+  assert.deepEqual(result.body.learnerMap, learner);
+  assert.equal(requests.length, 1);
   const prompt = requests[0].messages[1].content;
-  assert.match(prompt, /Ask the transfer question now/);
+  assert.match(prompt, /probe.kind must be "brief"/);
+  assert.doesNotMatch(prompt, /Ask the transfer question now/);
 });
 
 test("active without a reality map is a bad request", async () => {
@@ -495,8 +487,8 @@ test("an unparseable grade after the repair attempt maps to a structured error",
  * ------------------------------------------------------------------------- */
 
 test("two identical requests with identical upstream results give identical responses", async () => {
-  const first = scriptedTransport([...PER_LAYER_MAP_SCRIPT, OPENING_TURN]);
-  const second = scriptedTransport([...PER_LAYER_MAP_SCRIPT, OPENING_TURN]);
+  const first = scriptedTransport([...PER_LAYER_MAP_SCRIPT]);
+  const second = scriptedTransport([...PER_LAYER_MAP_SCRIPT]);
   const resultA = await handleRequest(clone(INIT_REQUEST), { callLLM: first.callLLM });
   const resultB = await handleRequest(clone(INIT_REQUEST), { callLLM: second.callLLM });
   assert.deepEqual(resultA, resultB);

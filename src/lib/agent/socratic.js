@@ -70,6 +70,9 @@ import { validateLearnerMap } from "../mmg/validator.js";
  *   verbatim. The orchestrator (ticket 06) passes the word for the opening
  *   turn and the last user message from history on later turns; null when no
  *   utterance is available.
+ * @property {boolean} [forceBrief] - v4 ticket 04: dock turns always brief
+ *   from the Reality Map. When true, buildDirective and validateTurn treat
+ *   the turn as a briefing regardless of briefingRequested().
  */
 
 /**
@@ -184,6 +187,17 @@ export function briefingRequested(utterance) {
     /what do i (need|want) to know/.test(u) ||
     /give me (the )?(facts|info(rmation)?|details|rundown|overview|lowdown|walkthrough)/.test(u)
   );
+}
+
+/**
+ * v4 ticket 04: a dock turn is a briefing when the orchestrator forces it
+ * (every dock utterance) or when the learner's words match briefingRequested.
+ *
+ * @param {SocraticState} state
+ * @returns {boolean}
+ */
+export function turnIsBriefing(state) {
+  return state.forceBrief === true || briefingRequested(state.learnerUtterance);
 }
 
 /**
@@ -355,7 +369,7 @@ Rules for the reply object: "reply" is your message to the learner. "learnerMap"
  */
 export function buildDirective(state) {
   const concept = state.realityMap.concept;
-  if (briefingRequested(state.learnerUtterance)) {
+  if (turnIsBriefing(state)) {
     return `The learner asked for direct information (a briefing). Deliver it: a direct, accurate, plain-language briefing of the concepts they asked about, built from the reality map - this is the ONE mode where you may quote the reality map (descriptions, layer names, the chain), and you must quote accurately, never embellish, never add anything the map does not contain. Cover exactly what they asked for. This reply must BE the briefing: do not ask the learner a new question at the end. probe.kind must be "brief".`;
   }
   const explain = explainDirective(state);
@@ -458,7 +472,7 @@ export function validateTurn(state, turn) {
     if (!exists) errors.push(`probe.nodeId does not exist in the reality map: ${turn.probe.nodeId}`);
   }
 
-  const briefing = briefingRequested(state.learnerUtterance);
+  const briefing = turnIsBriefing(state);
   if (briefing && turn.probe.kind !== "brief") {
     errors.push('probe.kind must be "brief" (the learner asked for direct information)');
   }

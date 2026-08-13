@@ -10,6 +10,7 @@ Netlify, DeepSeek-backed, no database.
 **Map (only):** `.scratch/first-principled-v4/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
+**Resume:** `CONTEXT.md` section Frontier. Ticket 04 resolved. Ticket 05 is next.
 
 ## Golden rules
 
@@ -36,7 +37,8 @@ Netlify, DeepSeek-backed, no database.
   `LLM_BASE_URL` (from `.env`, gitignored).
 - No DB, no auth, no agent framework (Mastra/LangGraph is v2).
 - Home is the Tree. Tutor is a closed-by-default dock. There is no Chat page
-  and no learner-map tab.
+  and no learner-map tab. Every dock turn is a briefing: the Tutor may quote
+  the Reality Map because the learner asked. Init does not open with a probe.
 
 ## Agent skills
 

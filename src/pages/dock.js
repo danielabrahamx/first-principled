@@ -199,7 +199,7 @@ export function renderDock(root, options = {}) {
     const usable = state.word !== null && state.phase === "active";
     composer.hidden = !usable;
     input.disabled = sending;
-    input.placeholder = "Your answer... (Enter to send)";
+    input.placeholder = "Type a question about the tree.";
     start.hidden = usable;
     if (state.ended) {
       startHint.textContent =

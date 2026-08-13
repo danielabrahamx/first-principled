@@ -56,6 +56,7 @@ Generation, observations, and gap-free layer chain stay.
 - 01: prototype accepted as-is (v1 ticket 17 cladogram + one-shot elapsed grow, no scroll-gated hide). Asset: research/01-cladogram-prototype/.
 - 02: one chrome, one route. Tree is home. Tutor is a closed-by-default dock. No Chat page, no learner-map tab.
 - 03: live Tree is the v1 ticket 17 cladogram with one-shot elapsed grow; scroll never gates opacity.
+- 04: Tutor is pull Q&A. Init has no opening probe. Every dock turn is a briefing (`forceBrief`). Live DeepSeek verified (`bit`).
 
 ## Not yet specified
 

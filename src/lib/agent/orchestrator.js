@@ -387,9 +387,10 @@ function truncateHistory(messages) {
 }
 
 /**
- * The init phase: generate the reality map, then run the observation-first
- * opening Socratic turn. A refused word stays on phase "init" with the
- * refusal as the reply and no reality map, so the client can ask again.
+ * The init phase: generate the reality map and return it with no tutor
+ * question (v4 ticket 04). The dock stays empty until the learner asks.
+ * A refused word stays on phase "init" with the refusal as the reply and
+ * no reality map, so the client can ask again.
  *
  * @param {any} request
  * @param {CallLLM} callLLM
@@ -431,26 +432,13 @@ async function handleInit(request, callLLM) {
     return modelError(generation.kind);
   }
 
-  const opening = await generateSocraticTurn({
-    state: {
-      realityMap: /** @type {RealityMap} */ (generation.map),
-      learnerMap: { nodes: [], edges: [] },
-      failedAttempts: {},
-      phase: "init",
-      learnerUtterance: word,
-    },
-    callLLM,
-  });
-  if (!opening.ok) return modelError(opening.kind);
-
   return {
     status: 200,
     body: {
-      reply: opening.reply,
-      learnerMap: opening.learnerMap,
-      diff: opening.diff,
+      learnerMap: { nodes: [], edges: [] },
+      diff: { added: [], flipped: [], updated: [] },
       phase: "active",
-      failedAttempts: opening.failedAttempts,
+      failedAttempts: {},
       realityMap: /** @type {RealityMap} */ (generation.map),
     },
   };
@@ -489,7 +477,6 @@ async function handleActive(request, callLLM) {
   const learnerMap = request.learnerMap;
   const failedAttempts = coerceFailedAttempts(request.failedAttempts);
   const messages = truncateHistory(/** @type {any[]} */ (request.history));
-  const learnerMessageCount = messages.filter((message) => message.role === "user").length;
   const utterance = /** @type {any} */ (messages[messages.length - 1]).content;
 
   /** @type {import("./socratic.js").SocraticState} */
@@ -499,11 +486,8 @@ async function handleActive(request, callLLM) {
     failedAttempts,
     phase: "active",
     learnerUtterance: utterance,
+    forceBrief: true,
   };
-
-  if (sessionEndDue(realityMap, learnerMap, learnerMessageCount)) {
-    return runTransferTurn(state, callLLM);
-  }
 
   const turn = await generateSocraticTurn({ state, callLLM });
   if (!turn.ok) return modelError(turn.kind);

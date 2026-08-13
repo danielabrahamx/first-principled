@@ -289,6 +289,7 @@ wires `/api/agent` to the function). Live URL recorded in README.
 - Socratic engine: the agent behavior that questions instead of explains.
 - Briefing: a learner-initiated turn (probe kind "brief") where the tutor
   delivers direct, accurate information built from the reality map - the one
-  mode where quoting reality is allowed.
+  mode where quoting reality is allowed. v4 ticket 04: every dock turn is a
+  briefing (orchestrator `forceBrief`); init does not append an opening probe.
 - Stateless function: serverless endpoint that stores nothing between calls.
 - Phase: init, active, end.
