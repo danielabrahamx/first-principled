@@ -14,18 +14,17 @@
  * history, oldest at the bottom. `treeLayout` and `cladogramPaths` turn that
  * into absolute card positions and SVG strokes.
  *
- * The geometry is the vertical path (ticket 10): a central trunk descends
- * from the crown and every layer hangs off it as a band - the layer's cards
- * stack in a single column centered on the trunk. On desktop (width above
- * TREE_TWO_UP_MIN_WIDTH) a layer with 4+ nodes fans two-up around the trunk,
- * which stays centered. Strict chronology (ticket 10) drives the ordering:
- * within a layer, cards sort by observation date oldest first (unknown dates
- * last, in original order, stable); layers sort by their oldest date, oldest
- * nearest the foundation. The layer chain structure is the invariant - the
- * sort never moves a node across a layer boundary (ticket 08 contract).
+ * The geometry is the v1 ticket 17 cladogram (v4 ticket 03): a central trunk
+ * descends from the crown and each layer diverges at its own depth - even
+ * branches right, odd left, deepest-nearest the trunk per side. Strict
+ * chronology (ticket 10) drives the ordering: within a layer, cards sort by
+ * observation date oldest first (unknown dates last, in original order,
+ * stable); layers sort by their oldest date, oldest nearest the foundation.
+ * The layer chain structure is the invariant - the sort never moves a node
+ * across a layer boundary (ticket 08 contract).
  *
  * Reading direction: concept at top, oldest foundations at the bottom; sap
- * rises bottom to top. The motion port (ticket 12) rides this geometry.
+ * rises bottom to top. One-shot grow (ticket 03) rides this geometry.
  *
  * This is a comparison view: it renders full reality content (layer names,
  * node labels), so the map page may mount it ONLY at session end - the
@@ -42,7 +41,7 @@ import { observationOf, observationDateKey } from "./observation.js";
 /** The default card metrics shared by the tree renderer. */
 export const TREE_CARD_WIDTH = 280;
 export const TREE_CARD_HEIGHT = 64;
-/** Horizontal gap between two-up columns. */
+/** Horizontal gap between branch columns. */
 export const TREE_COLUMN_GAP = 32;
 /** Vertical gap between stacked cards inside a branch. */
 export const TREE_CARD_GAP = 12;
@@ -51,16 +50,13 @@ export const TREE_ROOT_WIDTH = 220;
 export const TREE_ROOT_HEIGHT = 74;
 /** Root card bottom to the first branch divergence point. */
 export const TREE_ROOT_GAP = 72;
-/** Vertical gap between the last card of one layer and the next divergence. */
-export const TREE_BRANCH_GAP = 48;
+/** Vertical step between successive branch divergence points. */
+export const TREE_DIVERGENCE_STEP = 36;
 /** Branch divergence point to the first card top (the branch label sits
- * between; tall enough for a 44px touch target, ticket 10). */
-export const TREE_LABEL_GAP = 58;
-/** Stage widths above this may fan 2-up; at or below it, always 1-up (the
- * mobile bar: 375px and 320px phones stay single-column). */
+ * between). */
+export const TREE_LABEL_GAP = 34;
+/** Stage widths above this may draw convergence fans (chips always show). */
 export const TREE_TWO_UP_MIN_WIDTH = 480;
-/** A layer with this many cards or more fans two-up on desktop. */
-export const TREE_TWO_UP_MIN_NODES = 4;
 
 /**
  * The first number in a node's observation date, as a sort key - 600 BC ->
@@ -155,23 +151,20 @@ export function realityTree(realityMap) {
 }
 
 /**
- * Absolute geometry for the tree, as a vertical path (ticket 10): the root
- * card centered at the top, a central trunk descending, and every layer a
- * band hanging off it - the layer's cards stacked in a single column centered
- * on the trunk. On desktop (width > TREE_TWO_UP_MIN_WIDTH) a layer with 4+
- * cards fans two-up around the trunk, which stays centered. Cards sort
- * oldest-first inside each layer and layers sit oldest at the bottom, so the
- * tree reads top (crown) to bottom (oldest foundation). A convergence node's
+ * Absolute geometry for the tree as a phylogenetic cladogram (v1 ticket 17,
+ * v4 ticket 03): root card at the top, a central trunk, layers hanging left
+ * and right (even right, odd left, deepest-nearest the trunk per side).
+ * `options.width` is ignored; the stage width is intrinsic so wide maps
+ * scroll the stage horizontally (the v1 375px fit). A convergence node's
  * card carries its `combines` count (distinct combined layers, ticket 13).
  *
  * @param {{ rootLabel: string; branches: Array<{ id: string; name: string; oldestDate: number; nodes: Array<{ id: string; label: string; combines?: number }> }> }} tree
  *   from realityTree.
- * @param {object} [options]
- * @param {number} [options.width] - the stage width (the container the tree
- *   renders into). Defaults to TREE_CARD_WIDTH (a single-column stage).
+ * @param {object} [_options] - kept for call-site compatibility; unused.
  * @returns {{
  *   width: number;
  *   height: number;
+ *   trunk: number;
  *   root: { x: number; y: number; width: number; height: number; cx: number };
  *   branches: Array<{
  *     id: string;
@@ -184,17 +177,40 @@ export function realityTree(realityMap) {
  *   }>;
  * }}
  */
-export function treeLayout(tree, options = {}) {
-  const width =
-    typeof options.width === "number" && options.width > 0
-      ? options.width
-      : TREE_CARD_WIDTH;
-  // Two-up only when the stage is wide enough to actually fit two columns
-  // beside the trunk without overflow - the hard no-overflow rule wins.
-  const twoUp =
-    width > TREE_TWO_UP_MIN_WIDTH &&
-    width >= 2 * TREE_CARD_WIDTH + TREE_COLUMN_GAP;
-  const trunk = width / 2;
+export function treeLayout(tree, _options = {}) {
+  const count = tree.branches.length;
+  const step = TREE_CARD_WIDTH + TREE_COLUMN_GAP;
+  /** @param {number} rank */
+  const dist = (rank) => TREE_CARD_WIDTH / 2 + TREE_COLUMN_GAP / 2 + rank * step;
+  /** @param {number} rank */
+  const extent = (rank) => dist(rank) + TREE_CARD_WIDTH / 2;
+  /** @param {number} i */
+  const divergenceY = (i) =>
+    TREE_ROOT_HEIGHT + TREE_ROOT_GAP + i * TREE_DIVERGENCE_STEP;
+
+  /** @type {number[]} */
+  const cx = new Array(count);
+  let trunk;
+  let width;
+  if (count === 0) {
+    trunk = TREE_CARD_WIDTH / 2;
+    width = TREE_CARD_WIDTH;
+  } else if (count === 1) {
+    trunk = TREE_CARD_WIDTH / 2;
+    width = TREE_CARD_WIDTH;
+    cx[0] = trunk;
+  } else {
+    const leftCount = Math.floor(count / 2);
+    const rightCount = Math.ceil(count / 2);
+    const maxOdd = 2 * leftCount - 1;
+    const maxEven = 2 * rightCount - 2;
+    trunk = extent(leftCount - 1);
+    width = extent(leftCount - 1) + extent(rightCount - 1);
+    for (let i = 0; i < count; i++) {
+      const rank = i % 2 === 0 ? (maxEven - i) / 2 : (maxOdd - i) / 2;
+      cx[i] = i % 2 === 0 ? trunk + dist(rank) : trunk - dist(rank);
+    }
+  }
 
   const root = {
     x: trunk - TREE_ROOT_WIDTH / 2,
@@ -204,89 +220,47 @@ export function treeLayout(tree, options = {}) {
     cx: trunk,
   };
 
-  let y = root.y + root.height + TREE_ROOT_GAP;
-  const branches = tree.branches.map((branch) => {
-    const divergenceY = y;
-    const labelY = divergenceY + 10;
-    const firstCardY = divergenceY + TREE_LABEL_GAP;
-    const fan = twoUp && branch.nodes.length >= TREE_TWO_UP_MIN_NODES;
-
-    /** @type {Array<{ id: string; label: string; combines: number; x: number; y: number; cx: number }>} */
-    let cards;
-    if (fan) {
-      // Two-up: split the cards across two columns flanking the trunk, first
-      // half left, second half right, so reading left column then right reads
-      // chronologically. The trunk stays centered between the columns.
-      const half = Math.ceil(branch.nodes.length / 2);
-      const offset = TREE_CARD_WIDTH / 2 + TREE_COLUMN_GAP / 2;
-      const leftCx = trunk - offset;
-      const rightCx = trunk + offset;
-      cards = branch.nodes.map((node, j) => {
-        const col = j < half ? 0 : 1;
-        const row = j < half ? j : j - half;
-        const cx = col === 0 ? leftCx : rightCx;
-        return {
-          id: node.id,
-          label: node.label,
-          combines: node.combines ?? 0,
-          x: cx - TREE_CARD_WIDTH / 2,
-          y: firstCardY + row * (TREE_CARD_HEIGHT + TREE_CARD_GAP),
-          cx,
-        };
-      });
-    } else {
-      // One-up: the layer's cards stack in a single column centered on the
-      // trunk.
-      cards = branch.nodes.map((node, j) => ({
-        id: node.id,
-        label: node.label,
-        combines: node.combines ?? 0,
-        x: trunk - TREE_CARD_WIDTH / 2,
-        y: firstCardY + j * (TREE_CARD_HEIGHT + TREE_CARD_GAP),
-        cx: trunk,
-      }));
-    }
-
-    const lastCardBottom =
-      cards.length === 0
-        ? firstCardY
-        : Math.max(...cards.map((card) => card.y + TREE_CARD_HEIGHT));
-    y = lastCardBottom + TREE_BRANCH_GAP;
-
+  const branches = tree.branches.map((branch, i) => {
+    const dy = divergenceY(i);
+    const firstCardY = dy + TREE_LABEL_GAP;
     return {
       id: branch.id,
       name: branch.name,
-      cx: trunk,
-      divergenceY,
-      labelY,
+      cx: cx[i],
+      divergenceY: dy,
+      labelY: dy + 10,
       firstCardY,
-      cards,
+      cards: branch.nodes.map((node, j) => ({
+        id: node.id,
+        label: node.label,
+        combines: node.combines ?? 0,
+        x: cx[i] - TREE_CARD_WIDTH / 2,
+        y: firstCardY + j * (TREE_CARD_HEIGHT + TREE_CARD_GAP),
+        cx: cx[i],
+      })),
     };
   });
 
   const lastCardBottom =
     branches.length === 0
-      ? root.y + root.height + TREE_ROOT_GAP
+      ? TREE_ROOT_HEIGHT + TREE_ROOT_GAP
       : Math.max(
-          ...branches.map((branch) =>
-            branch.cards.length === 0
-              ? branch.firstCardY
-              : Math.max(...branch.cards.map((card) => card.y + TREE_CARD_HEIGHT))
-          )
+          ...branches.map((branch) => {
+            const last = branch.cards[branch.cards.length - 1];
+            return last ? last.y + TREE_CARD_HEIGHT : branch.firstCardY;
+          })
         );
-  const height = Math.max(lastCardBottom + 16, root.y + root.height + 16);
+  const height = Math.max(lastCardBottom + 16, TREE_ROOT_HEIGHT + 16);
 
-  return { width, height, root, branches };
+  return { width, height, trunk, root, branches };
 }
 
 /**
- * The cladogram strokes as SVG path strings: a vertical trunk from the root
- * card bottom down to the deepest cards, plus per-layer connectors - for a
- * two-up layer, elbows from the trunk at the layer's divergence depth out to
- * each column, then vertical connectors between the stacked cards inside a
- * column. One-up layers sit centered on the trunk, so the trunk itself is
- * their connector. Fill none, strokeWidth 2, stroke #B9B3E8 per the design
- * spec.
+ * Cladogram elbow strokes: a vertical trunk from the root card bottom down
+ * to the deepest divergence, one elbow per branch (horizontal run from the
+ * trunk to the column, then a vertical drop into its cards), and vertical
+ * connectors between stacked cards. Fill none, strokeWidth 2, stroke
+ * #B9B3E8.
  *
  * @param {ReturnType<typeof treeLayout>} layout
  * @returns {string[]} SVG `d` strings.
@@ -296,27 +270,19 @@ export function cladogramPaths(layout) {
   const d = [];
   if (layout.branches.length === 0) return d;
 
-  const lastCardBottom = Math.max(
-    ...layout.branches.map((branch) =>
-      branch.cards.length === 0
-        ? branch.firstCardY
-        : Math.max(...branch.cards.map((card) => card.y + TREE_CARD_HEIGHT))
-    )
+  const last = layout.branches[layout.branches.length - 1];
+  d.push(
+    `M ${layout.root.cx} ${layout.root.y + layout.root.height} V ${last.divergenceY}`
   );
-  d.push(`M ${layout.root.cx} ${layout.root.y + layout.root.height} V ${lastCardBottom}`);
 
   for (const branch of layout.branches) {
-    const cols = [...new Set(branch.cards.map((card) => card.cx))];
-    for (const cx of cols) {
-      if (Math.abs(cx - layout.root.cx) < 0.5) continue;
-      const colCards = branch.cards.filter((card) => card.cx === cx);
-      const first = colCards[0];
-      d.push(`M ${layout.root.cx} ${branch.divergenceY} H ${cx} V ${first.y}`);
-      for (let j = 1; j < colCards.length; j++) {
-        const prev = colCards[j - 1];
-        const card = colCards[j];
-        d.push(`M ${cx} ${prev.y + TREE_CARD_HEIGHT} V ${card.y}`);
-      }
+    d.push(
+      `M ${layout.root.cx} ${branch.divergenceY} H ${branch.cx} V ${branch.firstCardY}`
+    );
+    for (let j = 1; j < branch.cards.length; j++) {
+      const prev = branch.cards[j - 1];
+      const card = branch.cards[j];
+      d.push(`M ${branch.cx} ${prev.y + TREE_CARD_HEIGHT} V ${card.y}`);
     }
   }
   return d;

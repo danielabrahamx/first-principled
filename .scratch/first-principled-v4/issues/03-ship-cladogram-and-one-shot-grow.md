@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** [Prototype the branching cladogram and one-shot grow](01-prototype-cladogram-and-one-shot-grow.md), [One chrome, one route](02-one-chrome-one-route.md)
 
@@ -33,16 +33,30 @@ panels, convergence fan-in/chip, chronology, skeleton.
 
 ## Acceptance criteria
 
-- [ ] Live Tree is a branching cladogram, not a vertical card stack
-- [ ] After grow (or immediately under reduced motion) every layer is
+- [x] Live Tree is a branching cladogram, not a vertical card stack
+- [x] After grow (or immediately under reduced motion) every layer is
       visible at scroll 0
-- [ ] Scrolling never sets layer opacity below 1
-- [ ] Observation hovers, node panel, and convergence chip still work
-- [ ] 375px and 320px: no accidental horizontal page overflow
-- [ ] npm test green, tsc clean, netlify build OK
-- [ ] Screenshots in `.scratch/first-principled-v4/research/` for Danny
+- [x] Scrolling never sets layer opacity below 1
+- [x] Observation hovers, node panel, and convergence chip still work
+- [x] 375px and 320px: no accidental horizontal page overflow
+- [x] npm test green, tsc clean, netlify build OK
+- [x] Screenshots in `.scratch/first-principled-v4/research/` for Danny
 
 ## Docs rule
 
 If spec section 9 still describes the v3 vertical path, update it to the
 cladogram + one-shot grow contract. Same commit as the code.
+
+## Resolution
+
+Ported the accepted ticket 01 prototype into `src/lib/mapview/tree.js` and
+`src/lib/motion.js`. Live Tree is the v1 ticket 17 cladogram (even right,
+odd left, deepest-nearest). Chronology, observation hovers, node panel, and
+convergence chips stay. Grow is a one-shot ~1s elapsed timeline; scroll
+never gates opacity. Reduced motion skips grow and sap. Stage
+`overflow-x: auto`; page does not overflow at 375/320.
+
+CDP probe (15/15): `.scratch/first-principled-v4/research/03-cdp-probe.mjs`.
+Screenshots: `03-375.png`, `03-320.png`, `03-reduced-375.png`. tsc clean.
+Netlify build OK. Tracked tests 316 pass; 2 pre-existing rate-limiter
+failures in `netlify/functions/agent/agent.test.mjs` (untouched).

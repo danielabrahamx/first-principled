@@ -55,6 +55,7 @@ Generation, observations, and gap-free layer chain stay.
 - Tutor: briefing-style Q&A over the Reality Map, learner asks first.
 - 01: prototype accepted as-is (v1 ticket 17 cladogram + one-shot elapsed grow, no scroll-gated hide). Asset: research/01-cladogram-prototype/.
 - 02: one chrome, one route. Tree is home. Tutor is a closed-by-default dock. No Chat page, no learner-map tab.
+- 03: live Tree is the v1 ticket 17 cladogram with one-shot elapsed grow; scroll never gates opacity.
 
 ## Not yet specified
 

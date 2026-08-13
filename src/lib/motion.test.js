@@ -6,8 +6,6 @@ import {
   treeLayout,
   cladogramPaths,
   TREE_CARD_HEIGHT,
-  TREE_CARD_WIDTH,
-  TREE_COLUMN_GAP,
 } from "./mapview/tree.js";
 import { laptopRealityMap } from "./mmg/fixtures.js";
 import {
@@ -39,7 +37,7 @@ test("budDelay: root first, labels then cards, deterministic per id", () => {
   assert.equal(budDelay("n-bit", "card"), card);
 });
 
-test("trunkReveal draws the trunk over the first half of the scroll", () => {
+test("trunkReveal draws the trunk over the first half of the elapsed grow", () => {
   assert.equal(trunkReveal(0), 0);
   assert.equal(trunkReveal(GROW_TRUNK_END / 2), 0.5);
   assert.equal(trunkReveal(GROW_TRUNK_END), 1);
@@ -71,67 +69,25 @@ test("layerReveal buds layers deepest-first after the trunk", () => {
 
 test("sapPulsePaths: one trunk pulse plus one per branch, all rising", () => {
   const tree = realityTree(laptopRealityMap);
-  const layout = treeLayout(tree, { width: 375 });
+  const layout = treeLayout(tree);
   const paths = sapPulsePaths(layout);
 
-  // 6 layers, all single-column at 375px: 1 trunk + 6 branch pulses.
   assert.equal(paths.length, 7);
   assert.equal(paths[0].id, "trunk");
 
-  // The trunk runs from the deepest card bottom up to the crown: written
-  // bottom-to-top so the pulse travels in the rising direction.
+  const last = layout.branches[layout.branches.length - 1];
   const trunkTop = layout.root.y + layout.root.height;
-  const deepest = Math.max(
-    ...layout.branches.map((branch) =>
-      branch.cards.length === 0
-        ? branch.firstCardY
-        : Math.max(...branch.cards.map((card) => card.y + TREE_CARD_HEIGHT))
-    )
-  );
-  assert.equal(paths[0].d, `M ${layout.root.cx} ${deepest} V ${trunkTop}`);
+  assert.equal(paths[0].d, `M ${layout.trunk} ${last.divergenceY} V ${trunkTop}`);
 
-  // Every branch pulse starts at its last card and rises into the trunk at
-  // its divergence: bottom-to-top then a horizontal run to the trunk.
   layout.branches.forEach((branch, i) => {
     const sap = paths[i + 1];
     assert.equal(sap.id, branch.id);
     const lastCard = branch.cards[branch.cards.length - 1];
     const startY = lastCard ? lastCard.y + TREE_CARD_HEIGHT : branch.firstCardY;
-    assert.ok(sap.d.startsWith(`M ${branch.cx} ${startY} V ${branch.divergenceY} H ${layout.root.cx}`));
+    assert.ok(
+      sap.d.startsWith(`M ${branch.cx} ${startY} V ${branch.divergenceY} H ${layout.trunk}`)
+    );
   });
-});
-
-test("sapPulsePaths: two-up layers get one pulse per column elbow", () => {
-  /**
-   * @param {Array<{ id: string; label: string }>} nodes
-   */
-  const mk = (nodes) => ({
-    id: "b0",
-    name: "layer 0",
-    oldestDate: 0,
-    nodes,
-  });
-  const tree = {
-    rootLabel: "x",
-    branches: [mk(["a", "b", "c", "d"].map((label) => ({ id: `n-${label}`, label })))],
-  };
-  const layout = treeLayout(tree, {
-    width: 2 * TREE_CARD_WIDTH + TREE_COLUMN_GAP + 100,
-  });
-  const paths = sapPulsePaths(layout);
-
-  // Trunk + one pulse per column (2 columns).
-  assert.equal(paths.length, 3);
-  assert.equal(paths[0].id, "trunk");
-  const cxs = [...new Set(layout.branches[0].cards.map((card) => card.cx))];
-  assert.equal(cxs.length, 2);
-  for (let i = 1; i <= 2; i++) {
-    assert.match(paths[i].id, /^b0:c\d$/);
-    const cx = cxs[i - 1];
-    const colCards = layout.branches[0].cards.filter((card) => card.cx === cx);
-    const startY = colCards[colCards.length - 1].y + TREE_CARD_HEIGHT;
-    assert.ok(paths[i].d.startsWith(`M ${cx} ${startY} V ${layout.branches[0].divergenceY} H ${layout.root.cx}`));
-  }
 });
 
 test("sapPulsePaths: empty tree emits no pulses", () => {
@@ -140,30 +96,18 @@ test("sapPulsePaths: empty tree emits no pulses", () => {
 });
 
 test("elbowLayerIndexes aligns with cladogramPaths past the trunk", () => {
-  // Single-column tree: no off-trunk strokes, so no elbow mapping.
-  const single = treeLayout(realityTree(laptopRealityMap), { width: 375 });
-  assert.deepEqual(elbowLayerIndexes(single), []);
-  assert.equal(cladogramPaths(single).length, 1);
-
-  // Two-up desktop tree: every stroke after the trunk maps to layer 0.
-  /**
-   * @param {Array<{ id: string; label: string }>} nodes
-   */
-  const mk = (nodes) => ({
-    id: "b0",
-    name: "layer 0",
-    oldestDate: 0,
-    nodes,
-  });
-  const tree = {
-    rootLabel: "x",
-    branches: [mk(["a", "b", "c", "d"].map((label) => ({ id: `n-${label}`, label })))],
-  };
-  const twoUp = treeLayout(tree, {
-    width: 2 * TREE_CARD_WIDTH + TREE_COLUMN_GAP + 100,
-  });
-  const clad = cladogramPaths(twoUp);
-  const elbows = elbowLayerIndexes(twoUp);
+  const layout = treeLayout(realityTree(laptopRealityMap));
+  const clad = cladogramPaths(layout);
+  const elbows = elbowLayerIndexes(layout);
   assert.equal(elbows.length, clad.length - 1);
-  for (const layer of elbows) assert.equal(layer, 0);
+  let cursor = 0;
+  layout.branches.forEach((branch, i) => {
+    assert.equal(elbows[cursor], i);
+    cursor += 1;
+    for (let j = 1; j < branch.cards.length; j++) {
+      assert.equal(elbows[cursor], i);
+      cursor += 1;
+    }
+  });
+  assert.equal(cursor, elbows.length);
 });

@@ -10,11 +10,10 @@ import {
   TREE_CARD_HEIGHT,
   TREE_CARD_GAP,
   TREE_COLUMN_GAP,
+  TREE_ROOT_HEIGHT,
   TREE_ROOT_GAP,
   TREE_LABEL_GAP,
-  TREE_BRANCH_GAP,
-  TREE_TWO_UP_MIN_WIDTH,
-  TREE_TWO_UP_MIN_NODES,
+  TREE_DIVERGENCE_STEP,
 } from "./tree.js";
 import { laptopRealityMap, llmRealityMap } from "../mmg/fixtures.js";
 
@@ -68,48 +67,56 @@ test("realityTree is null-safe and falls back on a missing concept", () => {
   });
 });
 
-test("treeLayout: vertical path - root top, trunk center, layers as centered bands", () => {
+test("treeLayout: cladogram - crown top, even right odd left, deepest-nearest", () => {
   const tree = realityTree(laptopRealityMap);
-  const layout = treeLayout(tree, { width: 375 });
-  assert.equal(layout.width, 375);
-  const trunk = layout.root.cx;
-  assert.equal(trunk, 375 / 2);
-  assert.equal(layout.root.x, trunk - layout.root.width / 2);
-  assert.equal(layout.root.y, 0);
-
+  const layout = treeLayout(tree);
   assert.equal(layout.branches.length, 6);
-  // Divergence depths increase down the tree: each layer hangs below the one
-  // above it (oldest at the bottom, nearest the foundation).
+  const trunk = layout.root.cx;
+  assert.equal(layout.root.y, 0);
+  assert.equal(layout.trunk, trunk);
+
   const ys = layout.branches.map((branch) => branch.divergenceY);
   for (let i = 1; i < ys.length; i++) {
     assert.ok(ys[i] > ys[i - 1], "divergence depth strictly increasing");
+    assert.equal(ys[i] - ys[i - 1], TREE_DIVERGENCE_STEP);
   }
-  assert.equal(ys[0], layout.root.y + layout.root.height + TREE_ROOT_GAP);
+  assert.equal(ys[0], TREE_ROOT_HEIGHT + TREE_ROOT_GAP);
 
-  // Every layer is a single column centered on the trunk at this width.
-  for (const branch of layout.branches) {
-    assert.equal(branch.cx, trunk);
-    for (const card of branch.cards) {
-      assert.equal(card.cx, trunk);
-      assert.equal(card.x, trunk - TREE_CARD_WIDTH / 2);
+  layout.branches.forEach((branch, i) => {
+    if (i % 2 === 0) {
+      assert.ok(branch.cx >= trunk, `even branch ${i} is on the right`);
+    } else {
+      assert.ok(branch.cx <= trunk, `odd branch ${i} is on the left`);
     }
+    for (const card of branch.cards) {
+      assert.equal(card.cx, branch.cx);
+      assert.equal(card.x, branch.cx - TREE_CARD_WIDTH / 2);
+    }
+  });
+
+  const right = layout.branches.filter((_, i) => i % 2 === 0);
+  const left = layout.branches.filter((_, i) => i % 2 === 1);
+  for (let i = 1; i < right.length; i++) {
+    assert.ok(
+      Math.abs(right[i].cx - trunk) < Math.abs(right[i - 1].cx - trunk),
+      "right side deepest-nearest"
+    );
   }
-
-  // Cards stack downward inside a band.
-  const electronics = layout.branches[2];
-  assert.equal(electronics.cards.length, 2);
-  assert.equal(electronics.cards[1].y - electronics.cards[0].y, TREE_CARD_HEIGHT + TREE_CARD_GAP);
-
-  // Bands are separated by the branch gap.
-  for (let i = 1; i < layout.branches.length; i++) {
-    const prevLast = layout.branches[i - 1].cards[layout.branches[i - 1].cards.length - 1];
-    assert.equal(
-      layout.branches[i].divergenceY,
-      prevLast.y + TREE_CARD_HEIGHT + TREE_BRANCH_GAP
+  for (let i = 1; i < left.length; i++) {
+    assert.ok(
+      Math.abs(left[i].cx - trunk) < Math.abs(left[i - 1].cx - trunk),
+      "left side deepest-nearest"
     );
   }
 
-  // No card overflows the stage horizontally (the 375px bar).
+  const electronics = layout.branches[2];
+  assert.equal(electronics.cards.length, 2);
+  assert.equal(
+    electronics.cards[1].y - electronics.cards[0].y,
+    TREE_CARD_HEIGHT + TREE_CARD_GAP
+  );
+  assert.equal(electronics.firstCardY, electronics.divergenceY + TREE_LABEL_GAP);
+
   for (const branch of layout.branches) {
     for (const card of branch.cards) {
       assert.ok(card.x >= 0, "card left edge inside stage");
@@ -118,62 +125,60 @@ test("treeLayout: vertical path - root top, trunk center, layers as centered ban
   }
 });
 
-test("treeLayout: layers with 4+ nodes fan two-up on desktop, trunk stays centered", () => {
-  /** @param {number} i */
-  const mk = (i) => ({
-    id: `b${i}`,
-    name: `layer ${i}`,
-    oldestDate: i,
-    nodes: [
-      { id: `n${i}-0`, label: "a" },
-      { id: `n${i}-1`, label: "b" },
-      { id: `n${i}-2`, label: "c" },
-      { id: `n${i}-3`, label: "d" },
-    ],
+test("treeLayout balances an odd branch count around the trunk", () => {
+  const layout = treeLayout({
+    rootLabel: "x",
+    branches: [0, 1, 2, 3, 4].map((i) => ({
+      id: `b${i}`,
+      name: `l${i}`,
+      oldestDate: i,
+      nodes: [{ id: `n${i}`, label: "n" }],
+    })),
   });
-  const layout = treeLayout(
-    { rootLabel: "x", branches: [mk(0)] },
-    { width: 2 * TREE_CARD_WIDTH + TREE_COLUMN_GAP + 100 }
-  );
-  const trunk = layout.root.cx;
-  assert.equal(layout.branches[0].cards.length, 4);
-  const cxs = layout.branches[0].cards.map((card) => card.cx);
-  // Two columns flank the trunk; the trunk stays centered between them.
-  assert.equal(new Set(cxs).size, 2);
-  assert.equal(cxs[0], cxs[1], "first half shares the left column");
-  assert.equal(cxs[2], cxs[3], "second half shares the right column");
-  const left = Math.min(...cxs);
-  const right = Math.max(...cxs);
-  assert.ok(left < trunk && right > trunk, "columns flank the trunk");
-  assert.equal((trunk - left), (right - trunk), "trunk centered between columns");
-  // No overflow.
-  for (const card of layout.branches[0].cards) {
-    assert.ok(card.x >= 0);
-    assert.ok(card.x + TREE_CARD_WIDTH <= layout.width);
+  const trunk = layout.trunk;
+  for (const branch of layout.branches) {
+    assert.ok(
+      Math.abs(branch.cx - trunk) >= TREE_CARD_WIDTH / 2 + TREE_COLUMN_GAP / 2
+    );
   }
+  const cxs = layout.branches.map((branch) => branch.cx);
+  assert.equal(Math.min(...cxs) - TREE_CARD_WIDTH / 2, 0);
+  assert.equal(Math.max(...cxs) + TREE_CARD_WIDTH / 2, layout.width);
 });
 
-test("treeLayout: 1-up below the two-up threshold even for 4+ node layers", () => {
-  /** @param {number} i */
-  const mk = (i) => ({
-    id: `b${i}`,
-    name: `layer ${i}`,
-    oldestDate: i,
-    nodes: [
-      { id: `n${i}-0`, label: "a" },
-      { id: `n${i}-1`, label: "b" },
-      { id: `n${i}-2`, label: "c" },
-      { id: `n${i}-3`, label: "d" },
-    ],
+test("treeLayout centers a single branch on the trunk", () => {
+  const layout = treeLayout({
+    rootLabel: "x",
+    branches: [{ id: "b0", name: "only", oldestDate: 0, nodes: [{ id: "n0", label: "n" }] }],
   });
-  const layout = treeLayout(
-    { rootLabel: "x", branches: [mk(0)] },
-    { width: TREE_TWO_UP_MIN_WIDTH }
+  assert.equal(layout.branches[0].cx, layout.trunk);
+  assert.equal(layout.width, TREE_CARD_WIDTH);
+});
+
+test("cladogramPaths: trunk to deepest divergence, one elbow per branch", () => {
+  const tree = realityTree(laptopRealityMap);
+  const layout = treeLayout(tree);
+  const d = cladogramPaths(layout);
+  const last = layout.branches[layout.branches.length - 1];
+  assert.equal(
+    d[0],
+    `M ${layout.root.cx} ${layout.root.y + layout.root.height} V ${last.divergenceY}`
   );
-  const trunk = layout.root.cx;
-  for (const card of layout.branches[0].cards) {
-    assert.equal(card.cx, trunk);
+  let at = 1;
+  for (const branch of layout.branches) {
+    assert.equal(
+      d[at],
+      `M ${layout.root.cx} ${branch.divergenceY} H ${branch.cx} V ${branch.firstCardY}`
+    );
+    at += 1;
+    for (let j = 1; j < branch.cards.length; j++) {
+      const prev = branch.cards[j - 1];
+      const card = branch.cards[j];
+      assert.equal(d[at], `M ${branch.cx} ${prev.y + TREE_CARD_HEIGHT} V ${card.y}`);
+      at += 1;
+    }
   }
+  assert.equal(d.length, at);
 });
 
 test("treeLayout handles an empty tree (no branches)", () => {
@@ -183,53 +188,28 @@ test("treeLayout handles an empty tree (no branches)", () => {
   assert.deepEqual(cladogramPaths(layout), []);
 });
 
-test("cladogramPaths: one vertical trunk, one elbow per two-up column", () => {
-  const tree = realityTree(laptopRealityMap);
-  const layout = treeLayout(tree, { width: 375 });
-  const d = cladogramPaths(layout);
-
-  // Single-column layers sit on the trunk, so the trunk is the only path at
-  // 1-up (no off-trunk elbows).
-  assert.equal(d.length, 1);
-  const lastBottom = Math.max(
-    ...layout.branches.map((branch) =>
-      Math.max(...branch.cards.map((card) => card.y + TREE_CARD_HEIGHT))
-    )
-  );
-  assert.equal(d[0], `M ${layout.root.cx} ${layout.root.y + layout.root.height} V ${lastBottom}`);
-});
-
-test("cladogramPaths: two-up layers get elbows out to each column plus card connectors", () => {
-  /** @param {number} i */
-  const mk = (i) => ({
-    id: `b${i}`,
-    name: `layer ${i}`,
-    oldestDate: i,
-    nodes: [
-      { id: `n${i}-0`, label: "a" },
-      { id: `n${i}-1`, label: "b" },
-      { id: `n${i}-2`, label: "c" },
-      { id: `n${i}-3`, label: "d" },
+test("cladogramPaths: stacked cards get in-column connectors", () => {
+  const layout = treeLayout({
+    rootLabel: "x",
+    branches: [
+      {
+        id: "b0",
+        name: "layer 0",
+        oldestDate: 0,
+        nodes: [
+          { id: "n0", label: "a" },
+          { id: "n1", label: "b" },
+        ],
+      },
     ],
   });
-  const layout = treeLayout(
-    { rootLabel: "x", branches: [mk(0)] },
-    { width: 2 * TREE_CARD_WIDTH + TREE_COLUMN_GAP + 100 }
-  );
   const d = cladogramPaths(layout);
-  // Trunk + two elbows (left and right column) + one in-column connector per
-  // column (2 cards each).
-  assert.equal(d.length, 1 + 2 + 2);
-  // Trunk descends to the deepest card bottom.
-  const lastBottom = Math.max(...layout.branches[0].cards.map((card) => card.y + TREE_CARD_HEIGHT));
-  assert.ok(d[0].endsWith(`V ${lastBottom}`));
-  // Elbows leave the trunk at the divergence depth toward each column.
-  const trunk = layout.root.cx;
-  const elbows = d.slice(1);
-  const cxs = [...new Set(layout.branches[0].cards.map((card) => card.cx))];
-  for (const cx of cxs) {
-    assert.ok(elbows.some((path) => path === `M ${trunk} ${layout.branches[0].divergenceY} H ${cx} V ${layout.branches[0].firstCardY}`));
-  }
+  assert.equal(d.length, 3);
+  const branch = layout.branches[0];
+  assert.equal(
+    d[2],
+    `M ${branch.cx} ${branch.cards[0].y + TREE_CARD_HEIGHT} V ${branch.cards[1].y}`
+  );
 });
 
 // --- convergence nodes (ticket 13) -------------------------------------------

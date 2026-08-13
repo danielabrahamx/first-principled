@@ -1162,11 +1162,11 @@ export function renderMapPage(root, store, options = {}) {
    * its observation story in sequence, oldest at the foundation. Cards carry
    * a dot marking whether the observation record is present or a gap.
    *
-   * Ticket 12 rides the 07 motion prototype onto this geometry: each layer's
-   * band is wrapped in a .tree-layer div so scroll growth can reveal it as a
-   * unit, every card and label buds in staggered by a deterministic delay,
-   * and wireTreeMotion adds the SMIL sap pulses and the scroll wiring. Under
-   * reduced motion nothing is added and the full tree renders instantly.
+   * Ticket 03 rides one-shot grow onto this geometry: each layer is wrapped
+   * in a .tree-layer div so elapsed-time grow can reveal it as a unit, every
+   * card and label buds in staggered by a deterministic delay, and
+   * wireTreeMotion plays the grow then mounts sap. Under reduced motion the
+   * full tree renders instantly.
    *
    * @param {import("../state/session.js").SessionState} state
    */

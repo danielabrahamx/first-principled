@@ -965,12 +965,12 @@ body {
 
 /* Reality phylogenetic tree (session end) */
 
-/* Ticket 10 scroll model: the tree uses natural page scroll with the sticky
-   map header - no nested scroll box. The stage is sized to the column width
-   by treeLayout, so nothing overflows horizontally at 375px/320px. */
+/* Ticket 03: the tree stage is intrinsically wide (v1 cladogram). The page
+   must not overflow; the stage scrolls horizontally. */
 
 .tree {
   padding: 4px 0 12px;
+  overflow-x: auto;
 }
 
 .tree-stage {
