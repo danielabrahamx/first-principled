@@ -29,10 +29,10 @@ STE100 specification is a licensed standard; we do not use its vocabulary.
 - Does NOT apply to: code identifiers, internal module names, commit
   messages, ticket files.
 - A vocabulary check (src/ste-copy.test.js) scans the hand-written UI copy
-  (index.html, chat.js, dock.js) against the approved list plus the
-  documented function-word and UI-chrome allowlists, and fails when new
-  words drift in. Scripted demo content and generated narratives are STE-
-  gated by the generator prompt and steProblems instead.
+  (index.html, dock.js) against the approved list plus the documented
+  function-word and UI-chrome allowlists, and fails when new words drift in.
+  Scripted demo content and generated narratives are STE-gated by the
+  generator prompt and steProblems instead.
 
 ## Approved word list
 

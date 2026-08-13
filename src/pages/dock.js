@@ -1,18 +1,12 @@
 /**
- * The docked chat (ticket 09): a compact chat pane mounted inside the
- * map-first split view, right beside the map on desktop, stacked below it on
- * narrow screens.
+ * The docked Tutor (ticket 09, retargeted by ticket 02): a compact Q&A pane
+ * beside the Tree on desktop, stacked below it on narrow screens. Closed by
+ * default; the header Tutor toggle opens it.
  *
- * The full chat page (chat.js) remains reachable via #chat; the dock is the
- * always-visible conversation surface of the map-first layout. It shares the
- * session store singleton, the same transport (api/agent.js), and the shared
- * generation module (lib/generation.js), so a follow-up answer in the dock is
- * exactly the same loop as the full page.
- *
- * Ticket 11: the dock is follow-up-only. The word input lives in the map
- * header (the map owns tree entry); when there is no tree yet - or the map is
- * still building one, or the session has ended - the dock shows a hint
- * pointing at the map header and hides its composer.
+ * Ticket 11: the dock is follow-up-only. The word input lives in the Tree
+ * header; when there is no tree yet - or the Tree is still building one, or
+ * the session has ended - the dock shows a hint pointing at the word input
+ * and hides its composer.
  *
  * DOM-free by construction: the module exports pure helpers (dockLabel,
  * dockMessages) for node:test and mounts them in the browser inside
@@ -122,7 +116,7 @@ export function renderDock(root, options = {}) {
   const start = document.createElement("div");
   start.className = "dock-start";
   const startHint = document.createElement("p");
-  startHint.textContent = "Enter a word on the Map page to build the tree.";
+  startHint.textContent = "Enter a word to build the tree.";
   start.className = "dock-start";
   start.appendChild(startHint);
 
@@ -209,14 +203,14 @@ export function renderDock(root, options = {}) {
     start.hidden = usable;
     if (state.ended) {
       startHint.textContent =
-        "Session end. Enter a new word on the Map page to build another tree.";
+        "Session end. Enter a new word to build another tree.";
     } else if (state.word === null) {
-      startHint.textContent = "Enter a word on the Map page to build the tree.";
+      startHint.textContent = "Enter a word to build the tree.";
     } else if (state.lastReply !== null) {
       startHint.textContent =
-        "The tree did not build. Enter a different word on the Map page.";
+        "The tree did not build. Enter a different word.";
     } else {
-      startHint.textContent = "The tree is building on the Map page.";
+      startHint.textContent = "The tree is building.";
     }
 
     list.replaceChildren();

@@ -1,11 +1,11 @@
 /**
- * The hash router: two pages (chat and map) as hash routes sharing one
- * session store.
+ * The hash router: one home route (the Tree).
  *
  * Per ticket 07, the frontend is a static site with no server-side rewrites,
- * so routing is hash-based - "#chat" and "#map" are plain anchors any static
- * host serves. Switching pages only changes the hash: the document is never
- * reloaded, so the session store singleton (session.js) survives navigation.
+ * so routing is hash-based - "#map" is a plain anchor any static host serves.
+ * Ticket 02 drops `#chat` as a first-class page: empty hashes, `#chat`, and
+ * unknown hashes all land on home. Switching the hash never reloads the
+ * document, so the session store singleton (session.js) survives.
  *
  * The router takes an optional "location-like" object so node:test can drive
  * it without a DOM; in the browser it defaults to globalThis.location.
@@ -13,16 +13,15 @@
 
 /**
  * @typedef {object} RouterLocation
- * @property {string} hash - the current fragment, "" or "#chat" etc.
+ * @property {string} hash - the current fragment, "" or "#map" etc.
  * @property {(type: string, listener: () => void) => void} [addEventListener]
  */
 
 /** @type {readonly string[]} */
-export const ROUTES = Object.freeze(["chat", "map"]);
+export const ROUTES = Object.freeze(["map"]);
 
-/** The default route when the hash is empty or unknown. Map-first (ticket
- * 09): the map is the home surface; chat is reachable via #chat and the
- * docked panel. */
+/** The default route when the hash is empty or unknown. Tree home
+ * (ticket 02): `#chat` and anything else fall back here. */
 export const DEFAULT_ROUTE = "map";
 
 /**

@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** none
 
@@ -40,17 +40,33 @@ panels, dock markup.
 
 ## Acceptance criteria
 
-- [ ] One header vocabulary on every screen: no Ask/Tree vs Chat/Map/Reality
+- [x] One header vocabulary on every screen: no Ask/Tree vs Chat/Map/Reality
       swap
-- [ ] `#chat` does not mount a second page; it shows the Tree home
-- [ ] No learner-map tab or learner grid
-- [ ] Tutor dock is closed on first paint; a control opens and closes it
-- [ ] Word input still starts generation; skeleton still runs
-- [ ] `ste-copy` test updated; existing tests that assumed two pages retargeted
-- [ ] npm test green, tsc clean, netlify build OK, 375px no header overflow
+- [x] `#chat` does not mount a second page; it shows the Tree home
+- [x] No learner-map tab or learner grid
+- [x] Tutor dock is closed on first paint; a control opens and closes it
+- [x] Word input still starts generation; skeleton still runs
+- [x] `ste-copy` test updated; existing tests that assumed two pages retargeted
+- [x] npm test green, tsc clean, netlify build OK, 375px no header overflow
 
 ## Docs rule
 
 Update `AGENTS.md` (drop the two-page chat/map rule; home is the Tree, Tutor
 is a dock). Update `CONTEXT.md` architecture bullets to match. Do not rewrite
 the v1 spec wholesale.
+
+## Resolution
+
+One route (`ROUTES = ["map"]`). Empty hash, `#chat`, and unknown hashes land
+on the Tree home. `view-chat` and `initChatPage` are gone. Header is logo,
+word input + Build, and a Tutor button (`aria-expanded`, name "Tutor"). Dock
+starts closed (`hidden`, no `tutor-open` class); opening it shows the existing
+dock. Learner grid, comparison, closeness, and "Your mental model" stay
+hidden. Tree shows as soon as a Reality Map lands. `ste-copy` dropped
+unmounted `chat.js`; `chat.test.js` still uses `phaseLabel` / `errorMessage`.
+375px: header wraps, `overflow-x: hidden` on html/body.
+
+Verify: `npx tsc --noEmit` clean. Netlify build OK. Chrome tests (router,
+ste-copy, map, chat helpers) 20/20. Full `npm test` was 354 pass / 2 fail
+in `netlify/functions/agent/agent.test.mjs` rate limiter (writes.length 0);
+those files were not touched.

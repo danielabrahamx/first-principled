@@ -1,37 +1,18 @@
 /**
- * The map page - the home surface of the map-first v2 (tickets 09-12).
+ * The Tree home (ticket 02): one surface, Tutor as a closed-by-default dock.
  *
- * Ticket 09: the map is the primary pane, chat is docked beside it (right
- * rail on desktop, stacked below on narrow screens). The tutor's probe
- * highlight: when a response carries probe.nodeId, that node pulses while
- * the question is live. The router makes # (empty) land here; #chat keeps
- * the full chat page.
+ * Header is logo, word input + Build, and a Tutor toggle. No Chat page, no
+ * learner-map tab. Empty state when there is no Reality Map; skeleton while
+ * generating; Tree when it lands. Node panels and observation hovers still
+ * live on tree cards. The learner grid, comparison block, and closeness
+ * chrome stay hidden (engine may still carry learnerMap).
  *
- * Ticket 10: every learner-grid card is clickable and opens the node panel -
- * reality description (allowed: the no-leak rule now binds chat, not the
- * map - Danny 2026-08-10), current state/confidence, the evidence ledger
- * with turn numbers, the state rotation trail, and linked neighbors with
- * their states. Esc closes; the panel is keyboard-accessible.
+ * Ticket 11: submitting the word input starts generation here. While the
+ * generator works a progressive skeleton mirrors the tree and lights its
+ * layer bands bottom-up; when the tree arrives this page shows it. A refusal
+ * surfaces the model's reply on the page instead.
  *
- * Ticket 11: the map owns tree entry. A word input sits in the sticky
- * header; submitting it starts generation here - no route to chat. While the
- * generator works (mean ~20s, ticket 03) a progressive skeleton mirrors the
- * vertical-path tree and lights its layer bands bottom-up as each layer
- * lands; when the tree arrives the reality tab reveals. Generation runs
- * through the shared lib/generation.js module, the same one chat and the
- * dock use for follow-ups. The old empty state ("start in chat first") is
- * gone; a refusal surfaces the model's reply on the page instead.
- *
- * Ticket 11 (hover): hovering a learner card shows its rotation popover
- * (turn by turn: state, confidence, evidence); hovering a reality-tree layer
- * branch shows the layer story - which of its nodes the learner engaged, in
- * what order, and how their states rotated.
- *
- * Ticket 12: a timeline scrubber under the header - one stop per ledger
- * turn, drag to any stop to render that snapshot, and a play button that
- * replays the shape rotations using the existing diff animation language.
- * Scrubbing renders snapshots from the ledger; it never mutates the store.
- * (Parked hidden: session machinery, moot under the no-session decision.)
+ * Ticket 12 timeline stays parked hidden.
  *
  * Everything reads the shared session store (state/session.js); the page's
  * only network calls are the generation turns it owns (ticket 11).
@@ -182,24 +163,13 @@ function buildSkeleton() {
  *   the browser; tests can disable).
  * @param {typeof defaultCallAgent} [options.callAgent] - the transport for
  *   the generation turns this page owns; injected for tests.
- * @param {(route: string) => void} [options.navigate] - route to another
- *   page (used by the segmented control); defaults to setting location.hash.
  * @returns {{ sync: () => void; destroy: () => void }}
  */
 export function renderMapPage(root, store, options = {}) {
   const responsive = options.responsive !== false;
   const callAgent = options.callAgent ?? defaultCallAgent;
-  const navigate =
-    options.navigate ??
-    ((route) => {
-      /** @type {{ hash: string }} */
-      const location = /** @type {any} */ (globalThis.location);
-      location.hash = `#${route}`;
-    });
 
-  /** The active tab within the map page: "model" or "reality". */
-  let tab = "model";
-  /** The word the last render saw; a new word resets the tab to the model. */
+  /** The word the last render saw. */
   let lastWord = /** @type {string | null} */ (null);
 
   const page = el("div", "map-page");
@@ -207,34 +177,30 @@ export function renderMapPage(root, store, options = {}) {
   const main = el("div", "map-main");
   const dock = el("aside", "map-dock-wrap");
   dock.setAttribute("aria-label", "Tutor conversation");
+  dock.hidden = true;
 
-  /* Header: logo row + segmented control. */
+  /* Header: logo, word input + Build, Tutor toggle (ticket 02). */
   const header = el("header", "map-header");
   const logo = el("div", "logo-row");
   logo.append(el("span", "orb logo-dot"), el("span", "wordmark", "first-principled"));
-  const tabs = el("nav", "seg");
-  tabs.setAttribute("aria-label", "Pages");
-  const chatTab = el("button", "seg-item", "Chat");
-  const modelTab = el("button", "seg-item", "Map");
-  const realityTab = el("button", "seg-item", "Reality");
-  chatTab.dataset.tab = "chat";
-  modelTab.dataset.tab = "model";
-  realityTab.dataset.tab = "reality";
-  realityTab.hidden = true;
-  chatTab.addEventListener("click", () => navigate("chat"));
-  modelTab.addEventListener("click", () => {
-    tab = "model";
-    sync();
-  });
-  realityTab.addEventListener("click", () => {
-    tab = "reality";
-    sync();
-  });
-  tabs.append(chatTab, modelTab, realityTab);
 
-  /* Ticket 11: the word input lives on the map - the map owns tree entry.
-     Submitting starts generation here; chat is follow-up-only. Full-width
-     in the sticky header so it is the first thing seen on a phone. */
+  let tutorOpen = false;
+  /** @type {HTMLButtonElement} */
+  const tutorToggle = /** @type {HTMLButtonElement} */ (
+    el("button", "tutor-toggle", "Tutor")
+  );
+  tutorToggle.type = "button";
+  tutorToggle.setAttribute("aria-label", "Tutor");
+  tutorToggle.setAttribute("aria-expanded", "false");
+  tutorToggle.addEventListener("click", () => {
+    tutorOpen = !tutorOpen;
+    split.classList.toggle("tutor-open", tutorOpen);
+    dock.hidden = !tutorOpen;
+    tutorToggle.setAttribute("aria-expanded", String(tutorOpen));
+  });
+
+  /* Ticket 11: the word input lives on the Tree home. Submitting starts
+     generation here; the Tutor dock is follow-up-only. */
   const entry = el("form", "map-entry");
   /** @type {HTMLInputElement} */
   const entryInput = /** @type {HTMLInputElement} */ (
@@ -254,7 +220,7 @@ export function renderMapPage(root, store, options = {}) {
   entryButton.type = "submit";
   entry.append(entryInput, entryButton);
 
-  header.append(logo, tabs, entry);
+  header.append(logo, entry, tutorToggle);
 
   /* Timeline scrubber (ticket 12). */
   const timeline = el("div", "map-timeline");
@@ -270,8 +236,9 @@ export function renderMapPage(root, store, options = {}) {
   const counter = el("span", "tl-counter", "0/0");
   timeline.append(playBtn, rail, counter);
 
-  /* Title row: eyebrow + concept word, closeness on the right. */
+  /* Title row / closeness / legend: parked from learner chrome (ticket 02). */
   const titleRow = el("div", "map-title-row");
+  titleRow.hidden = true;
   const titleLeft = el("div", "map-title-left");
   const word = el("h1", "map-word");
   titleLeft.append(el("p", "map-eyebrow", "Your mental model"), word);
@@ -289,6 +256,7 @@ export function renderMapPage(root, store, options = {}) {
 
   /* Legend. */
   const legend = el("div", "map-legend");
+  legend.hidden = true;
   legend.appendChild(el("span", "map-legend-label", "Legend"));
   const LEGEND = [
     ["correct", "correct"],
@@ -302,15 +270,16 @@ export function renderMapPage(root, store, options = {}) {
     legend.appendChild(item);
   }
 
-  /* Learner model grid: scrollable stage + SVG edge overlay. */
+  /* Learner model grid: parked from learner chrome (ticket 02). */
   const scroll = el("div", "map-scroll");
+  scroll.hidden = true;
   const stage = el("div", "map-stage");
   const svg = svgEl();
   const nodesLayer = el("div", "map-nodes");
   stage.append(svg, nodesLayer);
   scroll.appendChild(stage);
 
-  /* Reality phylogenetic tree panel (Reality tab). */
+  /* Reality phylogenetic tree panel. */
   const treePanel = el("div", "tree-panel");
   treePanel.hidden = true;
   const treeScroll = el("div", "tree");
@@ -350,11 +319,13 @@ export function renderMapPage(root, store, options = {}) {
     "note map-empty",
     "No mental model yet. Answer a question in chat and watch it take shape here."
   );
+  empty.hidden = true;
   const ended = el(
     "p",
     "map-note",
     "Session complete. This is your final mental model."
   );
+  ended.hidden = true;
 
   main.append(
     header,
@@ -378,15 +349,12 @@ export function renderMapPage(root, store, options = {}) {
   const dockHandle = renderDock(dock);
 
   /* Ticket 11 generation state: the input + skeleton live for the ~20s the
-     generator works, then the reality tab reveals. */
+     generator works, then the Tree shows. */
   const reducedMotion =
     typeof matchMedia === "function" &&
     matchMedia("(prefers-reduced-motion: reduce)").matches;
   /** True while a generation turn is in flight. */
   let generating = false;
-  /** When the next tree lands, reveal the reality tab (the tree is the
-   *  product - Danny 2026-08-13). */
-  let revealOnLand = false;
   /** The skeleton reveal timer. */
   let skeletonTimer = /** @type {number | null} */ (null);
   /** One layer band lights every SKELETON_STEP_MS, bottom-up. */
@@ -453,7 +421,6 @@ export function renderMapPage(root, store, options = {}) {
     if (word.length === 0 || generating) return;
     entryInput.value = "";
     generating = true;
-    revealOnLand = true;
     setEntryBusy(true);
     hideMapError();
     startSkeleton();
@@ -475,7 +442,6 @@ export function renderMapPage(root, store, options = {}) {
     if (generating) return;
     if (store.getState().word === null) return;
     generating = true;
-    revealOnLand = true;
     setEntryBusy(true);
     hideMapError();
     startSkeleton();
@@ -626,21 +592,6 @@ export function renderMapPage(root, store, options = {}) {
     const known = total > 0 ? Math.round(closeness * total) : 0;
     closenessFrac.textContent = `${known}/${total}`;
     closenessFill.style.width = `${Math.round(closeness * 100)}%`;
-  }
-
-  /**
-   * @param {import("../state/session.js").SessionState} state
-   */
-  function updateTabs(state) {
-    const hasReality = state.realityMap !== null;
-    const compare = state.ended && hasReality;
-    modelTab.textContent = compare ? "Learner map" : "Map";
-    realityTab.hidden = !hasReality;
-    chatTab.classList.remove("active");
-    // The highlight always follows the live tab (ticket 11: the map reveals
-    // the reality tab when a generated tree lands, so it must read active).
-    modelTab.classList.toggle("active", tab === "model");
-    realityTab.classList.toggle("active", tab === "reality");
   }
 
   /**
@@ -1189,8 +1140,7 @@ export function renderMapPage(root, store, options = {}) {
     }
   });
 
-  /** Close the popover and panel on Esc - only while the map view is the
-   * visible route (the page stays mounted when #chat is shown). */
+  /** Close the popover and panel on Esc. */
   const onKeydown = (/** @type {KeyboardEvent} */ event) => {
     if (event.key !== "Escape") return;
     if (root.hidden) return;
@@ -1458,52 +1408,32 @@ export function renderMapPage(root, store, options = {}) {
   }
 
   /**
-   * Sync the page with the store: segmented control, title row, legend,
-   * learner grid or reality tree, comparison block, empty and ended states,
-   * the generation skeleton, and the timeline.
+   * Sync the page with the store: empty state, skeleton, Tree, refusal, and
+   * generation error. Learner-map chrome stays hidden (ticket 02).
    */
   function sync() {
     const state = store.getState();
-    const cards = learnerCards(state);
 
     if (state.word !== lastWord) {
       lastWord = state.word;
-      tab = "model";
       tlStop = TL_LIVE;
-    }
-    if (revealOnLand && state.realityMap !== null) {
-      revealOnLand = false;
-      tab = "reality";
     }
 
     const hasWord = state.word !== null;
     const hasReality = state.realityMap !== null;
-    const compare = state.ended && hasReality;
-    const showTree = hasReality && tab === "reality";
 
-    word.textContent = state.word ?? "";
-    titleRow.hidden = !hasWord;
-    legend.hidden = !hasWord;
-    updateCloseness(state);
-    updateTabs(state);
+    titleRow.hidden = true;
+    legend.hidden = true;
+    scroll.hidden = true;
+    cmpBlock.hidden = true;
+    empty.hidden = true;
+    ended.hidden = true;
 
-    cmpBlock.hidden = !compare;
-    if (compare) renderComparison(cmpBlock, state);
-
-    treePanel.hidden = !showTree;
-    if (showTree) renderTree(state);
-
-    // While generation is in flight the skeleton stands in for everything
-    // below the title row; the empty states would only mislead.
     if (generating) {
       noSession.hidden = true;
-      empty.hidden = true;
-      ended.hidden = true;
-      scroll.hidden = true;
-      cmpBlock.hidden = true;
+      refusalNote.hidden = true;
       treePanel.hidden = true;
       mapError.hidden = true;
-      refusalNote.hidden = true;
       skeleton.hidden = false;
       return;
     }
@@ -1511,21 +1441,15 @@ export function renderMapPage(root, store, options = {}) {
 
     if (!hasWord) {
       noSession.hidden = false;
-      empty.hidden = true;
-      scroll.hidden = true;
-      ended.hidden = true;
+      treePanel.hidden = true;
       refusalNote.hidden = true;
       return;
     }
     noSession.hidden = true;
-    if (cards.length === 0) {
-      empty.hidden = false;
-      scroll.hidden = true;
-      ended.hidden = state.ended ? false : true;
-      // The model refused the word (a reply landed, no tree). Show the
-      // refusal instead of the generic empty note (ticket 11).
-      if (!hasReality && state.lastReply !== null) {
-        empty.hidden = true;
+
+    if (!hasReality) {
+      treePanel.hidden = true;
+      if (state.lastReply !== null) {
         refusalNote.textContent = state.lastReply;
         refusalNote.hidden = false;
       } else {
@@ -1533,13 +1457,10 @@ export function renderMapPage(root, store, options = {}) {
       }
       return;
     }
-    refusalNote.hidden = true;
-    empty.hidden = true;
-    scroll.hidden = showTree;
-    if (showTree) return;
-    ended.hidden = state.ended ? false : true;
 
-    renderGrid(state);
+    refusalNote.hidden = true;
+    treePanel.hidden = false;
+    renderTree(state);
   }
 
   const unsubscribe = store.subscribe(sync);

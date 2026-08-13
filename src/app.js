@@ -1,17 +1,15 @@
 /**
- * App entry: wires the hash router to the two pages and the shared session
+ * App entry: wires the hash router to the Tree home and the shared session
  * store.
  *
- * Per ticket 07, chat and map are separate hash routes ("#chat", "#map")
- * that share the session store singleton (session.js), so navigation keeps
- * the session. The chat UI (ticket 08) wires itself here; the map UI
- * (ticket 09) mounts here and re-syncs whenever its route becomes visible.
+ * Ticket 02: one route. Home is the Tree. Tutor is a closed-by-default dock.
+ * `#chat` and unknown hashes land on home. The router still exists so old
+ * hashes resolve without mounting a second page.
  */
 
 import { createRouter } from "./state/router.js";
 import { sessionStore } from "./state/session.js";
 import { renderMapPage } from "./pages/map.js";
-import { initChatPage } from "./pages/chat.js";
 import { wantsDemo, runDemo } from "./demo.js";
 
 /**
@@ -27,31 +25,21 @@ function element(id) {
 }
 
 const router = createRouter();
-const chatView = element("view-chat");
 const mapView = element("view-map");
-const mapPage = renderMapPage(mapView, sessionStore, {
-  navigate: (route) => router.navigate(route),
-});
-initChatPage(chatView, {
-  navigate: (route) => router.navigate(route),
-  subscribeRoute: (listener) => router.subscribe(listener),
-});
+const mapPage = renderMapPage(mapView, sessionStore);
 
 /**
- * @param {string} route
+ * @param {string} [_route]
  */
-function render(route) {
-  chatView.hidden = route !== "chat";
-  mapView.hidden = route !== "map";
-  if (route === "map") {
-    mapPage.sync();
-  }
+function render(_route) {
+  mapView.hidden = false;
+  mapPage.sync();
 }
 
 router.subscribe(render);
 render(router.route);
 
-// ?demo=1 seeds a scripted session so the map-first UI is reviewable
+// ?demo=1 seeds a scripted session so the Tree home is reviewable
 // without the API key (the DeepSeek key is 402 pending top-up, research/03).
 if (wantsDemo()) {
   runDemo(sessionStore);

@@ -34,6 +34,7 @@
 html,
 body {
   height: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -119,6 +120,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 0 0 auto;
 }
 
 .wordmark {
@@ -508,8 +510,7 @@ body {
   z-index: 30;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  gap: 8px 12px;
   flex-wrap: wrap;
   margin-bottom: 36px;
   padding: 12px 0;
@@ -524,12 +525,13 @@ body {
   box-shadow: 0 8px 20px rgba(30, 34, 40, 0.06);
 }
 
-/* Ticket 11: the word entry in the sticky header - the map owns tree entry.
-   Full-width row (flex 1 1 100%) so it is the first thing seen on a phone;
-   on desktop it sits beneath the logo + segmented control. */
+/* Ticket 11: the word entry in the sticky header. Shrinks on a narrow
+   row; wraps under the logo + Tutor toggle at 375px so the header does
+   not overflow. */
 
 .map-entry {
-  flex: 1 1 100%;
+  flex: 1 1 12rem;
+  min-width: 0;
   max-width: 100%;
   display: flex;
   align-items: center;
@@ -592,7 +594,31 @@ body {
   margin-bottom: 16px;
 }
 
-/* Segmented control */
+/* Tutor toggle: a button, not a tab. Closed by default (ticket 02). */
+
+.tutor-toggle {
+  flex: 0 0 auto;
+  margin-left: auto;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 44px;
+}
+
+.tutor-toggle[aria-expanded="true"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: transparent;
+}
+
+/* Segmented control (unused in the Tree header; kept for leftover markup). */
 
 .seg {
   display: inline-flex;
@@ -1260,15 +1286,19 @@ body {
 }
 
 /* --------------------------------------------------------------------------
- * Map-first split layout (ticket 09): the map is the primary pane, the
- * tutor conversation is docked beside it.
+ * Tree home split (ticket 02): single column while Tutor is closed; the
+ * 340px dock rail appears only with .tutor-open.
  * ------------------------------------------------------------------------ */
 
 .map-split {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 28px;
   align-items: start;
+}
+
+.map-split.tutor-open {
+  grid-template-columns: minmax(0, 1fr) 340px;
 }
 
 .map-main {
@@ -1858,7 +1888,8 @@ body {
 /* Narrow viewports */
 
 @media (max-width: 960px) {
-  .map-split {
+  .map-split,
+  .map-split.tutor-open {
     grid-template-columns: 1fr;
   }
 
@@ -1903,6 +1934,19 @@ body {
 
   .map-header {
     margin-bottom: 24px;
+    gap: 8px;
+  }
+
+  .wordmark {
+    font-size: 13px;
+  }
+
+  .map-entry {
+    flex: 1 1 100%;
+  }
+
+  .map-entry-button {
+    padding: 11px 14px;
   }
 
   .map-page {

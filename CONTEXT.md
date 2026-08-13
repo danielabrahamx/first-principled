@@ -31,12 +31,15 @@ _Avoid_: Map tab, learner map (as a nav label)
 
 Current architecture (v1):
 
-- Static frontend, two pages: chat and map.
+- Static frontend, one home surface: the Tree. Tutor is an optional dock,
+  closed by default.
 - One stateless serverless function on Netlify, POST /api/agent. State comes
   in with every request and goes out with the response. It stores nothing.
 - The Mental Model Graph has two sides: the Reality Map (canonical, from the
   model's knowledge, contiguous layer chain) and the Learner Mental Model
-  (node states, confidence, evidence, updated each turn).
+  (node states, confidence, evidence, updated each turn). Learner Mental
+  Model tracking remains in the engine (`src/lib/agent/`, `src/lib/mmg/`)
+  and is parked from the UI.
 - DeepSeek via OpenAI-compatible API. No DB, no auth, no framework.
 - `src/lib/agent/` holds the engine: reality map generation, the Socratic
   turn loop (question, infer, update the learner map, track failed attempts

@@ -1,7 +1,7 @@
 /**
  * Vocabulary check for learner-facing copy (ticket 06, docs/ste.md).
  *
- * Scans the hand-written UI copy in the static page and the two chat surfaces
+ * Scans the hand-written UI copy in the static page and the Tutor dock
  * against the approved word list in docs/ste.md (one meaning per word, rule
  * 1). A word passes when it is on the approved list, a documented function
  * word, a documented UI/product term, or an inflection of an approved word
@@ -12,13 +12,14 @@
  * words (function words) and unavoidable UI chrome (tutor, session, retry)
  * are documented here instead. New drift outside both sets fails the test.
  *
- * Scope: src/index.html, src/pages/chat.js, src/pages/dock.js - the
- * hand-written UI copy. Scripted demo content (src/demo.js) models generated
- * tutor output, which is STE-gated by the generator prompt (rules 1-6) and
- * steProblems, not by this vocabulary list; the same applies to the refusal
- * reasons in realityMap.js and orchestrator.js, which were edited to the
- * rules by hand. Error envelopes in the Netlify function are internal API
- * text the client never shows (api/agent.js maps codes to its own lines).
+ * Scope: src/index.html, src/pages/dock.js - the hand-written UI copy.
+ * chat.js is unmounted (ticket 02); its leftover helpers are not learner-
+ * facing. Scripted demo content (src/demo.js) models generated tutor output,
+ * which is STE-gated by the generator prompt (rules 1-6) and steProblems,
+ * not by this vocabulary list; the same applies to the refusal reasons in
+ * realityMap.js and orchestrator.js, which were edited to the rules by hand.
+ * Error envelopes in the Netlify function are internal API text the client
+ * never shows (api/agent.js maps codes to its own lines).
  */
 
 import { test } from "node:test";
@@ -33,7 +34,6 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const COPY_FILES = [
   path.join(ROOT, "src", "index.html"),
-  path.join(ROOT, "src", "pages", "chat.js"),
   path.join(ROOT, "src", "pages", "dock.js"),
   path.join(ROOT, "src", "lib", "generation.js"),
 ];

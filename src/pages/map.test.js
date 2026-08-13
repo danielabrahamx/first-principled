@@ -1,7 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 
 import { skeletonBands } from "./map.js";
+
+const here = path.dirname(fileURLToPath(import.meta.url));
 
 test("the skeleton mirrors the vertical-path tree with a chain of layer bands", () => {
   const bands = skeletonBands();
@@ -12,4 +17,21 @@ test("the skeleton mirrors the vertical-path tree with a chain of layer bands", 
       `every band carries at least one card placeholder: ${JSON.stringify(band)}`
     );
   }
+});
+
+test("the Tree header has a Tutor toggle and no page tabs", () => {
+  const source = readFileSync(path.join(here, "map.js"), "utf8");
+  assert.match(source, /tutor-toggle/);
+  assert.match(source, /aria-label",\s*"Tutor"/);
+  assert.match(source, /aria-expanded/);
+  assert.doesNotMatch(source, /"Chat"/);
+  assert.doesNotMatch(source, /"Reality"/);
+  assert.doesNotMatch(source, /seg-item/);
+});
+
+test("index.html has one Tree home and no chat view", () => {
+  const html = readFileSync(path.join(here, "..", "index.html"), "utf8");
+  assert.match(html, /id="view-map"/);
+  assert.doesNotMatch(html, /id="view-chat"/);
+  assert.doesNotMatch(html, />Ask</);
 });

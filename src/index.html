@@ -14,74 +14,7 @@
   </head>
   <body>
     <main class="shell">
-      <section id="view-chat" class="view">
-        <div id="chat" class="chat">
-          <header class="chat-header">
-            <div class="logo-row" aria-label="first-principled">
-              <span class="orb logo-dot" aria-hidden="true"></span>
-              <span class="wordmark">first-principled</span>
-            </div>
-            <nav class="seg chat-seg" aria-label="Pages">
-              <button type="button" class="seg-item active" data-tab="chat">Ask</button>
-              <button type="button" class="seg-item" data-tab="map">Tree</button>
-            </nav>
-            <span id="phase-indicator" class="pill" data-phase="starting">Starting</span>
-          </header>
-          <div id="chat-hero" class="chat-hero" hidden>
-            <span class="orb hero-orb" aria-hidden="true"></span>
-            <div class="hero-copy">
-              <p id="hero-eyebrow" class="hero-eyebrow"></p>
-              <h1 id="hero-word" class="hero-word"></h1>
-            </div>
-          </div>
-          <div id="message-list" class="messages" aria-live="polite"></div>
-          <p id="refusal-hint" class="hint" hidden>
-            The tree did not build. Enter a different word on the Map page.
-          </p>
-          <div id="start-panel" class="start-panel">
-            <span class="orb start-orb" aria-hidden="true"></span>
-            <p class="start-eyebrow">First, build the tree</p>
-            <h2 class="start-headline">Enter a word on the Map page</h2>
-            <p class="start-sub">
-              A word or phrase makes the tree. Ask questions about the tree here.
-            </p>
-            <button id="demo-button" type="button" class="demo-button">
-              See a demo session (no key needed)
-            </button>
-          </div>
-          <div id="error-banner" class="error-banner" role="alert" hidden>
-            <p id="error-text" class="error-text"></p>
-            <button id="retry-button" type="button" class="retry-button">Retry</button>
-          </div>
-          <div id="composer-wrap" class="composer-wrap">
-            <p id="composer-status" class="composer-status" hidden>Thinking...</p>
-            <form id="composer" class="composer" hidden>
-              <textarea
-                id="message-input"
-                class="composer-input"
-                rows="1"
-                placeholder="Your answer... (Enter to send)"
-                autocomplete="off"
-              ></textarea>
-              <button
-                id="send-button"
-                type="submit"
-                class="orb send-button"
-                aria-label="Send"
-                title="Send"
-              >
-                &#8593;
-              </button>
-            </form>
-          </div>
-          <div id="end-panel" class="end-panel" hidden>
-            <h2 class="end-title">Session end</h2>
-            <p id="end-status" class="end-status"></p>
-            <a class="compare-link" href="#map">Compare your idea with reality</a>
-          </div>
-        </div>
-      </section>
-      <section id="view-map" class="view" hidden></section>
+      <section id="view-map" class="view"></section>
     </main>
     <script type="module" src="app.js"></script>
   </body>
