@@ -24,6 +24,9 @@
 /** @typedef {import("../mmg/types.js").NodeState} NodeState */
 
 import { nodeHistory } from "../../state/session.js";
+import { observationOf } from "./observation.js";
+
+/** @typedef {import("./observation.js").ObservationView} ObservationView */
 
 /**
  * The slice of the session store the history views read.
@@ -48,6 +51,7 @@ import { nodeHistory } from "../../state/session.js";
  *   nodeId: string;
  *   label: string;
  *   description: string;
+ *   observation: ObservationView;
  *   state: NodeState;
  *   confidence: number;
  *   engaged: boolean;
@@ -123,6 +127,7 @@ export function nodePanelView(state, nodeId) {
     nodeId,
     label,
     description: node ? node.description : "",
+    observation: observationOf(node),
     state: learner ? learner.state : "untested",
     confidence: learner ? learner.confidence : 0,
     engaged: learner !== undefined,

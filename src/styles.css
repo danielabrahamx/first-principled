@@ -542,6 +542,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  flex-wrap: wrap;
   margin-bottom: 36px;
 }
 
@@ -957,9 +958,53 @@ body {
   font-weight: 600;
   color: var(--ink);
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tree-branch-card-label {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Observation state dot (ticket 04): solid when the record is present,
+   dashed outline when the observation is unknown - the visible gap. */
+
+.tree-obs-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.tree-obs-dot.recorded {
+  background: var(--accent);
+}
+
+.tree-obs-dot.gap {
+  background: transparent;
+  border: 2px dashed var(--ink-muted);
+}
+
+.tree-branch-label:focus-visible,
+.tree-branch-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Reduced motion (ticket 04): no transitions, no repeated animations */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Comparison metrics (session end) */
@@ -1377,7 +1422,9 @@ body {
 .history-popover {
   position: fixed;
   z-index: 50;
-  max-width: 320px;
+  max-width: min(360px, calc(100vw - 16px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
   background: var(--ink);
   color: #ffffff;
   border-radius: 14px;
@@ -1419,6 +1466,147 @@ body {
 
 .history-popover-none {
   margin: 0;
+  color: #aeb6c4;
+}
+
+/* Observation-first tree UI (ticket 04): the crux card */
+
+.obs-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  background: var(--ground);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.obs-card.obs-gap {
+  border-style: dashed;
+  border-color: var(--ink-muted);
+}
+
+.obs-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.obs-label {
+  width: 44px;
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.obs-value {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.obs-mark {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.obs-mark-exact {
+  background: #e3f0e8;
+  color: #3f7a5c;
+}
+
+.obs-mark-approximate {
+  background: #f6e8d4;
+  color: #a05f1e;
+}
+
+.obs-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.obs-confidence {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.obs-note {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.obs-gap-copy {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.obs-made-possible {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.obs-story-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.obs-story-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.obs-story-node {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* The popover's dark ground overrides the light observation card */
+
+.history-popover .obs-card {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.history-popover .obs-card.obs-gap {
+  border-color: #8b94a3;
+}
+
+.history-popover .obs-value,
+.history-popover .obs-gap-copy,
+.history-popover .obs-story-node {
+  color: #ffffff;
+}
+
+.history-popover .obs-label,
+.history-popover .obs-confidence,
+.history-popover .obs-note,
+.history-popover .obs-made-possible {
   color: #aeb6c4;
 }
 

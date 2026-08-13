@@ -88,6 +88,18 @@ test("nodePanelView assembles the five content areas from the ledger", () => {
   const panel = nodePanelView(historyState(), "n-transistor");
   assert.equal(panel.label, "transistor");
   assert.match(panel.description, /Semiconductor switch/);
+  // The crux (ticket 04): since ticket 03 the fixture carries the
+  // structured observation record, rendered with marks - never a gap.
+  assert.equal(panel.observation.present, true);
+  assert.equal(panel.observation.legacy, false);
+  assert.equal(
+    panel.observation.discoverer?.value,
+    "John Bardeen, Walter Brattain, William Shockley"
+  );
+  assert.equal(
+    panel.observation.keyObservation?.value,
+    "A small voltage controls a larger current through a germanium crystal."
+  );
   assert.equal(panel.state, "correct");
   assert.equal(panel.confidence, 0.85);
   assert.equal(panel.engaged, true);
@@ -116,6 +128,22 @@ test("nodePanelView reports an unengaged node with reality description and no tr
   assert.deepEqual(panel.evidence, []);
   assert.deepEqual(panel.trail, []);
   assert.match(panel.description, /Software layer/);
+});
+
+test("nodePanelView of a node without a basis renders the explicit gap", () => {
+  // Strip the record from one node - the observation card must render as
+  // the explicit gap, never blank.
+  const realityMap = structuredClone(laptopRealityMap);
+  realityMap.nodes = realityMap.nodes.map((node) => {
+    if (node.id === "n-os") {
+      const { basis, ...rest } = node;
+      return rest;
+    }
+    return node;
+  });
+  const panel = nodePanelView(historyState({ realityMap }), "n-os");
+  assert.equal(panel.observation.present, false);
+  assert.equal(panel.observation.keyObservation, null);
 });
 
 test("nodePanelView lists neighbors with relation, label and edge state", () => {

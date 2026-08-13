@@ -48,11 +48,16 @@ import {
 } from "../lib/mapview/layout.js";
 import {
   nodePanelView,
-  layerStory,
   timelineStops,
   snapshotAt,
   snapshotDiff,
 } from "../lib/mapview/history.js";
+import {
+  observationByNodeId,
+  observationOf,
+  layerObservationStory,
+  dependents,
+} from "../lib/mapview/observation.js";
 import { nodeHistory } from "../state/session.js";
 import { renderDock } from "./dock.js";
 
@@ -279,6 +284,14 @@ export function renderMapPage(root, store, options = {}) {
   let popoverTimer = /** @type {number | null} */ (null);
   let popoverSource = /** @type {HTMLElement | null} */ (null);
 
+  /** Hover delay (ticket 04): 0 under reduced motion, 350ms otherwise. */
+  const hoverDelay = /** @type {number} */ (
+    typeof matchMedia === "function" &&
+    matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? 0
+      : 350
+  );
+
   /**
    * @param {MapCard} card
    * @returns {HTMLElement}
@@ -422,6 +435,25 @@ export function renderMapPage(root, store, options = {}) {
     heading.appendChild(status);
     panelBody.appendChild(heading);
 
+    // The crux first (ticket 04): the observation that enabled the next
+    // stage, or the explicit gap when the record is missing or unknown.
+    const obsSection = el("section", "node-panel-section");
+    obsSection.appendChild(
+      el(
+        "h3",
+        "node-panel-h",
+        view.observation.present ? "The observation" : "Observation unknown"
+      )
+    );
+    obsSection.appendChild(buildObservationCard(view.observation));
+    const built = dependents(state.realityMap, nodeId);
+    if (built.length > 0) {
+      obsSection.appendChild(
+        el("p", "obs-made-possible", `Used to build: ${built.join(", ")}.`)
+      );
+    }
+    panelBody.appendChild(obsSection);
+
     if (view.description.length > 0) {
       const section = el("section", "node-panel-section");
       section.appendChild(el("h3", "node-panel-h", "What it is"));
@@ -548,33 +580,145 @@ export function renderMapPage(root, store, options = {}) {
   }
 
   /**
-   * The layer-story popover for a reality-tree branch (ticket 11).
+   * One row of an observation card: the field label, the value, and the
+   * honesty mark chip (EXACT / APPROXIMATE) when the record carried one.
+   *
+   * @param {string} label
+   * @param {string} value
+   * @param {import("../lib/mapview/observation.js").ObservationMark | null} mark
+   * @returns {HTMLElement}
+   */
+  function obsRow(label, value, mark) {
+    const row = el("div", "obs-row");
+    row.appendChild(el("span", "obs-label", label));
+    row.appendChild(el("span", "obs-value", value));
+    if (mark !== null) {
+      row.appendChild(
+        el("span", `obs-mark obs-mark-${mark.toLowerCase()}`, mark)
+      );
+    }
+    return row;
+  }
+
+  /**
+   * The observation card (ticket 04): the real-history record per ticket 02
+   * and the fail-honest contract (ticket 09 section 2). A present record
+   * renders fully - discoverer, date, key observation, confidence, note,
+   * with the EXACT / APPROXIMATE marks; a missing or UNKNOWN record renders
+   * as the EXPLICIT GAP state - the node exists, the layer chain is unbroken,
+   * the observation is unknown. Never blank.
+   *
+   * @param {import("../lib/mapview/observation.js").ObservationView} view
+   * @returns {HTMLElement}
+   */
+  function buildObservationCard(view) {
+    const card = el("div", view.present ? "obs-card" : "obs-card obs-gap");
+    if (view.present) {
+      if (view.discoverer) {
+        card.appendChild(
+          obsRow("who", view.discoverer.value ?? "", view.discoverer.mark)
+        );
+      }
+      if (view.date) {
+        card.appendChild(obsRow("when", view.date.value ?? "", view.date.mark));
+      }
+      card.appendChild(
+        obsRow("what", view.keyObservation?.value ?? "", view.keyObservation?.mark ?? null)
+      );
+      const foot = el("div", "obs-foot");
+      if (view.confidence) {
+        foot.appendChild(
+          el("span", "obs-confidence", `confidence: ${view.confidence}`)
+        );
+      }
+      if (view.legacy) {
+        foot.appendChild(el("span", "obs-confidence", "unmarked legacy record"));
+      }
+      card.appendChild(foot);
+      if (view.note) {
+        card.appendChild(el("p", "obs-note", view.note));
+      }
+    } else {
+      card.appendChild(
+        el(
+          "p",
+          "obs-gap-copy",
+          "The observation that made the next stage possible is not in the record. The node exists, and the layer chain is unbroken. The record ends here."
+        )
+      );
+      if (view.note) {
+        card.appendChild(el("p", "obs-note", view.note));
+      }
+    }
+    return card;
+  }
+
+  /**
+   * The node observation popover (ticket 04): hovering a tree node surfaces
+   * the observation that enabled the next stage - the crux narrative - plus
+   * what the observation built.
+   *
+   * @param {HTMLElement} source
+   * @param {string} label
+   * @param {import("../lib/mapview/observation.js").ObservationView} view
+   * @param {string[]} built
+   */
+  function showNodeObservation(source, label, view, built) {
+    popover.replaceChildren();
+    popover.appendChild(
+      el(
+        "p",
+        "history-popover-label",
+        view.present ? `${label}: the observation` : `${label}: observation unknown`
+      )
+    );
+    popover.appendChild(buildObservationCard(view));
+    if (built.length > 0) {
+      popover.appendChild(
+        el("p", "obs-made-possible", `Used to build: ${built.join(", ")}.`)
+      );
+    }
+    popover.hidden = false;
+    const rect = source.getBoundingClientRect();
+    const popRect = popover.getBoundingClientRect();
+    let left = rect.left;
+    let top = rect.bottom + 8;
+    if (left + popRect.width > window.innerWidth - 8) {
+      left = Math.max(8, window.innerWidth - popRect.width - 8);
+    }
+    if (top + popRect.height > window.innerHeight - 8) {
+      top = Math.max(8, rect.top - popRect.height - 8);
+    }
+    popover.style.left = `${left}px`;
+    popover.style.top = `${top}px`;
+    popoverSource = source;
+  }
+
+  /**
+   * The layer observation story popover (ticket 04, extending the v2 11
+   * hover): hovering a layer surfaces the observations recorded at that
+   * layer - the observations that made the NEXT stage possible - read
+   * chronologically, oldest at the foundation. Nodes without a record appear
+   * as explicit gap entries; the layer chain stays visibly unbroken.
    *
    * @param {HTMLElement} source
    * @param {string} layerId
    */
-  function showLayerStory(source, layerId) {
+  function showLayerObservations(source, layerId) {
     const state = store.getState();
-    const story = layerStory(state, layerId);
+    const story = layerObservationStory(state.realityMap, layerId);
     popover.replaceChildren();
-    const label = el("p", "history-popover-label", `Layer: ${story.layerName}`);
-    popover.appendChild(label);
-    if (story.engaged.length === 0) {
-      popover.appendChild(
-        el("p", "history-popover-none", "None of this layer's nodes engaged yet.")
-      );
-    } else {
-      const list = el("ul", "history-popover-list");
-      for (const entry of story.engaged) {
-        const item = el(
-          "li",
-          "history-popover-item",
-          `${entry.label}: first at turn ${entry.firstTurn}, now ${entry.current} (${entry.rotations.length} rotation${entry.rotations.length === 1 ? "" : "s"})`
-        );
-        list.appendChild(item);
-      }
-      popover.appendChild(list);
+    popover.appendChild(
+      el("p", "history-popover-label", `Layer: ${story.layerName} - observations in sequence`)
+    );
+    const list = el("ul", "obs-story-list");
+    for (const entry of story.entries) {
+      const item = el("li", "obs-story-item");
+      item.appendChild(el("p", "obs-story-node", entry.label));
+      item.appendChild(buildObservationCard(entry.observation));
+      list.appendChild(item);
     }
+    popover.appendChild(list);
     popover.hidden = false;
     const rect = source.getBoundingClientRect();
     const popRect = popover.getBoundingClientRect();
@@ -622,12 +766,12 @@ export function renderMapPage(root, store, options = {}) {
     });
     node.addEventListener("mouseenter", () => {
       if (popoverTimer !== null) clearTimeout(popoverTimer);
-      popoverTimer = /** @type {any} */ (setTimeout(() => showPopover(node, nodeId), 350));
+      popoverTimer = /** @type {any} */ (setTimeout(() => showPopover(node, nodeId), hoverDelay));
     });
     node.addEventListener("mouseleave", hidePopover);
     node.addEventListener("focus", () => {
       if (popoverTimer !== null) clearTimeout(popoverTimer);
-      popoverTimer = /** @type {any} */ (setTimeout(() => showPopover(node, nodeId), 350));
+      popoverTimer = /** @type {any} */ (setTimeout(() => showPopover(node, nodeId), hoverDelay));
     });
     node.addEventListener("blur", hidePopover);
   }
@@ -767,15 +911,20 @@ export function renderMapPage(root, store, options = {}) {
   document.addEventListener("keydown", onKeydown);
 
   /**
-   * The reality phylogenetic tree: root card (the concept) and the layer
-   * branches below it, with cladogram elbow connectors. Branches carry their
-   * layer stories on hover (ticket 11).
+   * The reality phylogenetic tree (ticket 04, observation-first): root card
+   * (the concept) and the layer branches below it, with cladogram elbow
+   * connectors. Every node card and branch is keyboard-focusable and shows
+   * the observations on hover: a node surfaces the observation that enabled
+   * the next stage (its crux record, or the explicit gap), a layer surfaces
+   * its observation story in sequence, oldest at the foundation. Cards carry
+   * a dot marking whether the observation record is present or a gap.
    *
    * @param {import("../state/session.js").SessionState} state
    */
   function renderTree(state) {
     const tree = realityTree(state.realityMap);
     const layout = treeLayout(tree);
+    const views = observationByNodeId(state.realityMap);
 
     treeStage.style.width = `${layout.width}px`;
     treeStage.style.height = `${layout.height}px`;
@@ -800,24 +949,69 @@ export function renderMapPage(root, store, options = {}) {
       label.setAttribute("aria-label", `Layer ${branch.name}: ${branch.id}`);
       label.addEventListener("mouseenter", () => {
         if (popoverTimer !== null) clearTimeout(popoverTimer);
-        popoverTimer = /** @type {any} */ (setTimeout(() => showLayerStory(label, branch.id), 350));
+        popoverTimer = /** @type {any} */ (setTimeout(() => showLayerObservations(label, branch.id), hoverDelay));
       });
       label.addEventListener("mouseleave", hidePopover);
       label.addEventListener("focus", () => {
         if (popoverTimer !== null) clearTimeout(popoverTimer);
-        popoverTimer = /** @type {any} */ (setTimeout(() => showLayerStory(label, branch.id), 350));
+        popoverTimer = /** @type {any} */ (setTimeout(() => showLayerObservations(label, branch.id), hoverDelay));
       });
       label.addEventListener("blur", hidePopover);
       treeLayer.appendChild(label);
       for (const card of branch.cards) {
-        const node = el("div", "tree-branch-card", card.label);
+        const view = views.get(card.id) ?? observationOf(undefined);
+        const node = el("div", "tree-branch-card");
         node.style.left = `${card.x}px`;
         node.style.top = `${card.y}px`;
         node.style.width = `${TREE_CARD_WIDTH}px`;
+        node.tabIndex = 0;
+        node.setAttribute("role", "button");
+        node.setAttribute(
+          "aria-label",
+          `${card.label}: ${view.present ? "observation recorded" : "observation unknown"}. Activate to open its panel.`
+        );
+        const labelSpan = el("span", "tree-branch-card-label", card.label);
+        const dot = el(
+          "i",
+          view.present ? "tree-obs-dot recorded" : "tree-obs-dot gap"
+        );
+        dot.setAttribute("aria-hidden", "true");
+        node.append(labelSpan, dot);
         node.addEventListener("click", () => {
           hidePopover();
           openPanel(card.id);
         });
+        node.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            hidePopover();
+            openPanel(card.id);
+          }
+        });
+        node.addEventListener("mouseenter", () => {
+          if (popoverTimer !== null) clearTimeout(popoverTimer);
+          popoverTimer = /** @type {any} */ (setTimeout(() => {
+            showNodeObservation(
+              node,
+              card.label,
+              view,
+              dependents(state.realityMap, card.id)
+            );
+          }, hoverDelay));
+        });
+        node.addEventListener("mouseleave", hidePopover);
+        node.addEventListener("focus", () => {
+          if (popoverTimer !== null) clearTimeout(popoverTimer);
+          popoverTimer = /** @type {any} */ (setTimeout(() => {
+            showNodeObservation(
+              node,
+              card.label,
+              view,
+              dependents(state.realityMap, card.id)
+            );
+          }, hoverDelay));
+        });
+        node.addEventListener("blur", hidePopover);
         treeLayer.appendChild(node);
       }
     }
