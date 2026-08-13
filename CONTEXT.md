@@ -9,7 +9,7 @@ distance between the learner's mental model and reality.
 
 ## Frontier (resume here)
 
-v5 map. Open frontier: [Deploy the dependence-path shell](.scratch/first-principled-v5/issues/05-deploy-the-dependence-path-shell.md).
+v5 Destination shipped.
 
 ## Language
 

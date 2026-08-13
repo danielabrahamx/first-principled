@@ -66,6 +66,8 @@ by default, and never steals Tree width. Generator salvaged.
   cladogram removed. Spec section 9 updated.
 - 04: Tutor is a compact bottom sheet. The 340px side rail is gone.
   `forceBrief` unchanged.
+- 05: Destination shipped. Prod
+  https://first-principled.netlify.app deploy id `6a7e012e95f23a8700288a8b`.
 
 ## Not yet specified
 

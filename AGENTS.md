@@ -10,7 +10,7 @@ Netlify, DeepSeek-backed, no database.
 **Map (only):** `.scratch/first-principled-v5/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
-**Resume:** v5 04 shipped Tutor as a bottom sheet. Frontier: Deploy the dependence-path shell.
+**Resume:** v5 Destination shipped.
 
 ## Golden rules
 
