@@ -9,7 +9,7 @@ distance between the learner's mental model and reality.
 
 ## Frontier (resume here)
 
-v5 map. Open frontier: [Ship Tutor as a bottom sheet](.scratch/first-principled-v5/issues/04-ship-tutor-as-a-bottom-sheet.md).
+v5 map. Open frontier: [Deploy the dependence-path shell](.scratch/first-principled-v5/issues/05-deploy-the-dependence-path-shell.md).
 
 ## Language
 
@@ -49,8 +49,8 @@ _Avoid_: Map tab, learner map (as a nav label)
 
 Current architecture (v1):
 
-- Static frontend, one home surface: the Tree. Tutor is an optional dock,
-  closed by default.
+- Static frontend, one home surface: the Tree. Tutor is an optional bottom
+  sheet, closed by default.
 - One stateless serverless function on Netlify, POST /api/agent. State comes
   in with every request and goes out with the response. It stores nothing.
 - The Mental Model Graph has two sides: the Reality Map (canonical, from the
@@ -60,7 +60,7 @@ Current architecture (v1):
   and is parked from the UI.
 - DeepSeek via OpenAI-compatible API. No DB, no auth, no framework.
 - `src/lib/agent/` holds the engine: reality map generation, the Socratic
-  turn loop (kept for later), and the LLM transport. The dock forces every
+  turn loop (kept for later), and the LLM transport. The sheet forces every
   turn to a briefing (`forceBrief`): the Tutor quotes the Reality Map and
   does not open with a Socratic probe. The model still replies with
   `{reply, learnerMap, probe}`; the UI does not show the learner map.

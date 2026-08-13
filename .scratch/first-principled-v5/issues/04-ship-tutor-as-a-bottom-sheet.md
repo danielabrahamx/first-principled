@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** [Tutor is a bottom sheet that does not cover the foundations](02-tutor-is-a-bottom-sheet.md), [Ship the dependence path into the live Tree](03-ship-the-dependence-path-into-the-live-tree.md)
 
@@ -27,14 +27,21 @@ turns. STE-scan new copy.
 
 ## Acceptance criteria
 
-- [ ] Tutor closed on first paint; a control opens and closes it
-- [ ] Open Tutor does not add a side column or steal Tree width
-- [ ] Foundations remain reachable while open
-- [ ] Pull Q&A / `forceBrief` unchanged
-- [ ] 375px and 320px: no horizontal page overflow
-- [ ] npm test green, tsc clean, netlify build OK, ste-copy green
+- [x] Tutor closed on first paint; a control opens and closes it
+- [x] Open Tutor does not add a side column or steal Tree width
+- [x] Foundations remain reachable while open
+- [x] Pull Q&A / `forceBrief` unchanged
+- [x] 375px and 320px: no horizontal page overflow
+- [x] npm test green, tsc clean, netlify build OK, ste-copy green
 
 ## Docs rule
 
 Update `AGENTS.md` stack line (Tutor is a bottom sheet, not a dock rail).
 Update `CONTEXT.md` architecture bullets to match. Same commit as the code.
+
+## Resolution
+
+Accepted 02 pattern shipped: compact 240px / 42dvh bottom sheet, spine
+padding and scroll-margin so electricity stays reachable. No 340px grid
+rail. `forceBrief: true` unchanged in the orchestrator. 375/320 CDP 16/16.
+npm test 341/341, tsc clean, ste-copy green, netlify build OK.

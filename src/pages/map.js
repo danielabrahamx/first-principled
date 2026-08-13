@@ -7,6 +7,9 @@
  * live on tree cards. The learner grid, comparison block, and closeness
  * chrome stay hidden (engine may still carry learnerMap).
  *
+ * Tutor is a compact bottom sheet, closed by default (v5 ticket 04). Opening
+ * it does not steal Tree width. Pull Q&A / forceBrief is unchanged.
+ *
  * Ticket 11: submitting the word input starts generation here. While the
  * generator works a progressive skeleton mirrors the tree and lights its
  * layer bands bottom-up; when the tree arrives this page shows it. A refusal
@@ -174,6 +177,7 @@ export function renderMapPage(root, store, options = {}) {
   const split = el("div", "map-split");
   const main = el("div", "map-main");
   const dock = el("aside", "map-dock-wrap");
+  dock.id = "tutor-sheet";
   dock.setAttribute("aria-label", "Tutor conversation");
   dock.hidden = true;
 
@@ -190,9 +194,10 @@ export function renderMapPage(root, store, options = {}) {
   tutorToggle.type = "button";
   tutorToggle.setAttribute("aria-label", "Tutor");
   tutorToggle.setAttribute("aria-expanded", "false");
+  tutorToggle.setAttribute("aria-controls", "tutor-sheet");
   tutorToggle.addEventListener("click", () => {
     tutorOpen = !tutorOpen;
-    split.classList.toggle("tutor-open", tutorOpen);
+    page.classList.toggle("tutor-open", tutorOpen);
     dock.hidden = !tutorOpen;
     tutorToggle.setAttribute("aria-expanded", String(tutorOpen));
   });
@@ -340,8 +345,8 @@ export function renderMapPage(root, store, options = {}) {
     empty,
     ended
   );
-  split.append(main, dock);
-  page.appendChild(split);
+  split.append(main);
+  page.append(split, dock);
   root.append(page);
 
   const dockHandle = renderDock(dock);

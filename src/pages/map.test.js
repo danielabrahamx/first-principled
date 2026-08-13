@@ -29,6 +29,22 @@ test("the Tree header has a Tutor toggle and no page tabs", () => {
   assert.doesNotMatch(source, /seg-item/);
 });
 
+test("Tutor is a bottom sheet, not a 340px side rail", () => {
+  const css = readFileSync(path.join(here, "..", "styles.css"), "utf8");
+  const source = readFileSync(path.join(here, "map.js"), "utf8");
+  const orchestrator = readFileSync(
+    path.join(here, "..", "lib", "agent", "orchestrator.js"),
+    "utf8"
+  );
+  assert.doesNotMatch(css, /minmax\(0,\s*1fr\)\s+340px/);
+  assert.match(css, /--tutor-sheet/);
+  assert.match(css, /position:\s*fixed/);
+  assert.match(source, /tutor-sheet/);
+  assert.match(source, /page\.classList\.toggle\("tutor-open"/);
+  assert.doesNotMatch(source, /split\.classList\.toggle\("tutor-open"/);
+  assert.match(orchestrator, /forceBrief:\s*true/);
+});
+
 test("index.html has one Tree home and no chat view", () => {
   const html = readFileSync(path.join(here, "..", "index.html"), "utf8");
   assert.match(html, /id="view-map"/);

@@ -64,6 +64,8 @@ by default, and never steals Tree width. Generator salvaged.
   `.scratch/first-principled-v5/research/02-tutor-bottom-sheet/`.
 - 03: live Tree is the dependence-path spine. Date-sort and left/right
   cladogram removed. Spec section 9 updated.
+- 04: Tutor is a compact bottom sheet. The 340px side rail is gone.
+  `forceBrief` unchanged.
 
 ## Not yet specified
 

@@ -10,7 +10,7 @@ Netlify, DeepSeek-backed, no database.
 **Map (only):** `.scratch/first-principled-v5/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
-**Resume:** v5 03 shipped the dependence-path Tree. Frontier: Ship Tutor as a bottom sheet.
+**Resume:** v5 04 shipped Tutor as a bottom sheet. Frontier: Deploy the dependence-path shell.
 
 ## Golden rules
 
@@ -36,9 +36,10 @@ Netlify, DeepSeek-backed, no database.
 - DeepSeek via OpenAI-compatible API. Env: `LLM_API_KEY`, `LLM_MODEL`,
   `LLM_BASE_URL` (from `.env`, gitignored).
 - No DB, no auth, no agent framework (Mastra/LangGraph is v2).
-- Home is the Tree. Tutor is a closed-by-default dock. There is no Chat page
-  and no learner-map tab. Every dock turn is a briefing: the Tutor may quote
-  the Reality Map because the learner asked. Init does not open with a probe.
+- Home is the Tree. Tutor is a closed-by-default bottom sheet. There is no
+  Chat page and no learner-map tab. Every sheet turn is a briefing: the
+  Tutor may quote the Reality Map because the learner asked. Init does not
+  open with a probe.
 
 ## Agent skills
 

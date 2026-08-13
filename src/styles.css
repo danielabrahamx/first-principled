@@ -17,6 +17,7 @@
   --seg-track: #e8eaef;
   --font-display: "Fraunces", Georgia, serif;
   --font-ui: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --tutor-sheet: 240px;
 }
 
 * {
@@ -1305,8 +1306,8 @@ body {
 }
 
 /* --------------------------------------------------------------------------
- * Tree home split (ticket 02): single column while Tutor is closed; the
- * 340px dock rail appears only with .tutor-open.
+ * Tree home: Tutor is a compact bottom sheet (v5 ticket 04). Opening it
+ * never adds a 340px column. Spine padding keeps foundations reachable.
  * ------------------------------------------------------------------------ */
 
 .map-split {
@@ -1316,18 +1317,37 @@ body {
   align-items: start;
 }
 
-.map-split.tutor-open {
-  grid-template-columns: minmax(0, 1fr) 340px;
-}
-
 .map-main {
   min-width: 0;
 }
 
+.map-page.tutor-open .tree {
+  padding-bottom: var(--tutor-sheet);
+}
+
+.map-page.tutor-open .tree-stage,
+.map-page.tutor-open .tree-branch-card {
+  scroll-margin-bottom: var(--tutor-sheet);
+}
+
 .map-dock-wrap {
-  position: sticky;
-  top: 24px;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  z-index: 40;
+  height: var(--tutor-sheet);
+  max-height: 42dvh;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
+  overflow: hidden;
+}
+
+.map-dock-wrap.dock {
+  height: var(--tutor-sheet);
+  max-height: 42dvh;
 }
 
 /* The docked chat pane */
@@ -1336,12 +1356,14 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-height: 0;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-bottom: 0;
+  border-radius: 16px 16px 0 0;
   padding: 16px;
-  box-shadow: 0 8px 28px rgba(30, 34, 40, 0.06);
-  max-height: calc(100dvh - 48px);
+  box-shadow: 0 -8px 28px rgba(30, 34, 40, 0.08);
+  overflow: hidden;
 }
 
 .dock-header {
@@ -1365,8 +1387,7 @@ body {
 
 .dock-messages {
   flex: 1;
-  min-height: 120px;
-  max-height: 320px;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -1907,19 +1928,8 @@ body {
 /* Narrow viewports */
 
 @media (max-width: 960px) {
-  .map-split,
-  .map-split.tutor-open {
+  .map-split {
     grid-template-columns: 1fr;
-  }
-
-  .map-dock-wrap {
-    position: static;
-    order: 2;
-    max-height: 360px;
-  }
-
-  .dock {
-    max-height: 360px;
   }
 
   .node-panel {
