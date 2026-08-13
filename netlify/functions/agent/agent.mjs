@@ -1,15 +1,26 @@
 /**
  * The one serverless function: POST /api/agent, per ticket 06 and spec
- * section 8. Thin HTTP wrapper around the stateless orchestrator
- * (src/lib/agent/orchestrator.js): abuse controls first (body cap, per-IP
- * rate limit, Turnstile), then parse the body, dispatch, map {status, body}
- * onto a Response. All session state travels in the request and the
- * response; the function stores nothing except rate-limit counters in a
- * Netlify Blobs store.
+ * section 8, and since ticket 14 a Netlify BACKGROUND function (netlify.toml
+ * [functions.agent] background = true) so a 20-50s generation survives the
+ * sync 30s cap. The platform answers the POST with an EMPTY 202 immediately
+ * - there is no job id in the response and no built-in status endpoint - so
+ * this wrapper is a thin job recorder around the stateless orchestrator
+ * (src/lib/agent/orchestrator.js): it reads the client-generated jobId from
+ * the body, runs the abuse controls first (body cap, per-IP rate limit,
+ * Turnstile), then dispatch, and writes EVERY outcome as a terminal record
+ * to a Netlify Blobs store ("agent-jobs") under key job:<jobId> with a 30
+ * minute TTL. The client polls the sibling synchronous function
+ * (netlify/functions/agent-status) until that record lands.
+ *
+ * CRITICAL retry contract: Netlify retries a background invocation that
+ * returns an error (after one minute, then after two more). An uncaught
+ * throw after the 202 therefore re-runs the WHOLE generation and
+ * double-spends LLM tokens. Every path writes a terminal job record instead
+ * of throwing; the outer try/catch is the last-resort guard.
  *
  * Abuse controls (ticket 18, in order, all before any LLM call):
- * 1. Body cap: reject requests over 64KB with 413 too_large. The client
- *    never sends more than a few KB; anything larger is an attacker.
+ * 1. Body cap: reject requests over 64KB with too_large. The client never
+ *    sends more than a few KB; anything larger is an attacker.
  * 2. Rate limit: RATE_LIMIT_MAX requests per IP per hour (default 60),
  *    counted in a Netlify Blobs store (no DB, works on every plan).
  *    Fail-open when the store is unavailable so local dev and outages do
@@ -19,25 +30,65 @@
  *    against Cloudflare). Skipped entirely when the secret is unset, so
  *    local dev and the site keep working until the widget is configured.
  *
- * Error mapping: 400 bad JSON body, 413 too_large, 429 rate_limited,
- * 403 captcha_required / captcha_failed, 500 internal for unexpected
- * throws, and the orchestrator's own stable envelope for config, upstream
- * and model-output failures. Raw upstream errors and the key never reach
- * the client.
+ * Job records: success = {status:"success", httpStatus, body}; error =
+ * {status:"error", code, message}. Codes mirror the old HTTP envelope
+ * (bad_request, too_large, rate_limited, captcha_required, captcha_failed,
+ * internal, and the orchestrator's own config/upstream/model-output codes).
+ * The client never receives raw upstream errors, the key, or platform HTML.
  */
 
 import { handleRequest } from "../../../src/lib/agent/orchestrator.js";
 import { getStore } from "@netlify/blobs";
 
 const MAX_BODY_BYTES = 64 * 1024;
+const JOB_TTL_SECONDS = 30 * 60;
 const RATE_LIMIT_MAX = Number.parseInt(process.env.RATE_LIMIT_MAX || "60", 10);
 const RATE_LIMIT_WINDOW_HOURS = 2;
 const TURNSTILE_SITEVERIFY = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 const TURNSTILE_ACTION = "agent_turn";
 
-/** @param {number} status @param {string} code @param {string} message */
-function errorResponse(status, code, message) {
-  return Response.json({ error: { code, message } }, { status });
+/**
+ * A server-generated job id, used when the request body cannot be parsed or
+ * carries no client jobId - there is still a terminal record to write so
+ * the platform never sees a throw, but nothing will poll it.
+ *
+ * @returns {string}
+ */
+function serverJobId() {
+  const rand =
+    typeof globalThis.crypto === "object" &&
+    typeof /** @type {any} */ (globalThis.crypto).randomUUID === "function"
+      ? /** @type {any} */ (globalThis.crypto).randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return `srv-${rand}`;
+}
+
+/**
+ * @param {string} code
+ * @param {string} message
+ * @returns {{ status: "error", code: string, message: string }}
+ */
+function terminalError(code, message) {
+  return { status: "error", code, message };
+}
+
+/**
+ * Write a terminal job record and return the (discarded) response. Never
+ * throws: an uncaught throw after the 202 re-runs the whole generation.
+ *
+ * @param {string} jobId
+ * @param {{ status: "success", httpStatus: number, body: any } | { status: "error", code: string, message: string }} record
+ * @returns {Promise<Response>}
+ */
+async function writeTerminal(jobId, record) {
+  try {
+    const store = getStore({ name: "agent-jobs" });
+    await store.set(`job:${jobId}`, record, { expires: JOB_TTL_SECONDS });
+  } catch {
+    // The job record could not be persisted. Do not throw - the platform
+    // would retry and re-run the generation, double-spending LLM tokens.
+  }
+  return new Response(null, { status: 204 });
 }
 
 /** The real client IP, set by Netlify's proxy layer. */
@@ -149,14 +200,36 @@ async function turnstileError(req, token, ip) {
 }
 
 export default async (req) => {
+  try {
+    return await run(req);
+  } catch {
+    // Last-resort guard: never throw after the 202 (a throw re-runs the
+    // whole generation). Record a terminal internal error and return the
+    // discarded response.
+    await writeTerminal(
+      serverJobId(),
+      terminalError("internal", "An unexpected server error occurred.")
+    );
+    return new Response(null, { status: 204 });
+  }
+};
+
+/**
+ * The whole handler. Every outcome - abuse-control rejection, success, or a
+ * caught dispatch error - is written as a terminal job record instead of an
+ * HTTP response a client will never see. Returns the discarded Response.
+ *
+ * @param {Request} req
+ * @returns {Promise<Response>}
+ */
+async function run(req) {
   const ip = clientIp(req);
 
   const raw = await req.text();
   if (raw.length > MAX_BODY_BYTES) {
-    return errorResponse(
-      413,
-      "too_large",
-      "The request is larger than the tutor accepts."
+    return writeTerminal(
+      serverJobId(),
+      terminalError("too_large", "The request is larger than the tutor accepts.")
     );
   }
 
@@ -164,10 +237,23 @@ export default async (req) => {
   try {
     request = JSON.parse(raw);
   } catch {
-    return errorResponse(
-      400,
-      "bad_request",
-      "The request body must be valid JSON."
+    return writeTerminal(
+      serverJobId(),
+      terminalError("bad_request", "The request body must be valid JSON.")
+    );
+  }
+
+  // The client-generated job id is the polling key. A request without one
+  // has nothing to poll, so it is a terminal bad_request under a
+  // server-generated id (never a throw).
+  const jobId =
+    typeof request.jobId === "string" && request.jobId.length > 0
+      ? request.jobId
+      : null;
+  if (jobId === null) {
+    return writeTerminal(
+      serverJobId(),
+      terminalError("bad_request", "The request is missing a job id.")
     );
   }
 
@@ -178,10 +264,12 @@ export default async (req) => {
     blobStore = null;
   }
   if (await overRateLimit(ip, blobStore)) {
-    return errorResponse(
-      429,
-      "rate_limited",
-      "Too many requests from this address. Please try again later."
+    return writeTerminal(
+      jobId,
+      terminalError(
+        "rate_limited",
+        "Too many requests from this address. Please try again later."
+      )
     );
   }
 
@@ -191,23 +279,28 @@ export default async (req) => {
     ip
   );
   if (captchaCode !== null) {
-    return errorResponse(
-      403,
-      captchaCode,
-      captchaCode === "captcha_required"
-        ? "This request needs a human verification pass."
-        : "Human verification failed. Please try again."
+    return writeTerminal(
+      jobId,
+      terminalError(
+        captchaCode,
+        captchaCode === "captcha_required"
+          ? "This request needs a human verification pass."
+          : "Human verification failed. Please try again."
+      )
     );
   }
 
   try {
     const result = await handleRequest(request);
-    return Response.json(result.body, { status: result.status });
+    return writeTerminal(jobId, {
+      status: "success",
+      httpStatus: result.status,
+      body: result.body,
+    });
   } catch {
-    return errorResponse(
-      500,
-      "internal",
-      "An unexpected server error occurred."
+    return writeTerminal(
+      jobId,
+      terminalError("internal", "An unexpected server error occurred.")
     );
   }
-};
+}
