@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ticket 01 - dependence-path Tree prototype</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="mt-header">
+    <h1>Dependence-path Tree (ticket 01)</h1>
+    <p>
+      Locked shape: crown at the top, foundations at the bottom. Y follows
+      built-on / depends-on / abstraction-of, not observation dates.
+      Electricity sits below silicon below transistor. Layers are named
+      bands. Hover a card for its date. No Tutor on this page.
+    </p>
+    <div class="mt-controls">
+      <label><input type="radio" name="fixture" value="laptop" checked /> Laptop fixture</label>
+      <label><input type="radio" name="fixture" value="llm" /> LLM (convergence ribs)</label>
+    </div>
+  </header>
+
+  <main class="mt-tree-wrap">
+    <div id="tree"></div>
+  </main>
+
+  <footer class="mt-footer">
+    Laptop is the acceptance fixture. LLM shows short ribs at the transformer
+    (combines three fields) instead of left/right layer columns. Dates never
+    drive layout. Horizontal stage-scroll is a failure of this shape.
+  </footer>
+
+  <script type="module">
+    import { buildTree } from "./tree.js";
+    import { laptopRealityMap, llmRealityMap } from "./sample-map.js";
+
+    const mount = document.getElementById("tree");
+    let handle = null;
+
+    const render = () => {
+      if (handle) handle.destroy();
+      mount.replaceChildren();
+      const llm = document.querySelector('input[name="fixture"][value="llm"]').checked;
+      handle = buildTree(mount, llm ? llmRealityMap : laptopRealityMap, {
+        width: Math.max(320, Math.min(window.innerWidth, 720)),
+      });
+    };
+
+    for (const input of document.querySelectorAll('input[name="fixture"]')) {
+      input.addEventListener("change", render);
+    }
+    window.addEventListener("resize", render);
+    render();
+  </script>
+</body>
+</html>

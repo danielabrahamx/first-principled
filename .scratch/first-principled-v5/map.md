@@ -56,6 +56,9 @@ by default, and never steals Tree width. Generator salvaged.
   at convergence nodes (`combines`).
 - Tutor: bottom sheet / inspect panel. Never a side rail.
 - This map ships the shell, like v4.
+- 01: dependence-path prototype accepted as-is (spine from edges, electricity
+  below silicon below transistor, named bands, short ribs at convergence).
+  Asset: `.scratch/first-principled-v5/research/01-dependence-path-prototype/`.
 
 ## Not yet specified
 
