@@ -4,8 +4,9 @@
  * The Tree is a first-principles dependence path of one Reality Map. Crown
  * (the concept) at the top, foundations at the bottom. Y follows existing
  * `built-on` / `depends-on` / `abstraction-of` edges, not observation dates.
- * Dates stay on hover. Layers are named bands, not left/right columns.
- * Extra parents of a convergence node sit as short ribs.
+ * Dates stay on hover. Layers are named bands. A linear chain stays on one
+ * trunk; extra parents of a convergence node occupy full columns so the
+ * path reads as a tree.
  *
  * `treeLayout` takes the Reality Map and a viewport width so 320/375 never
  * page-overflow. `spinePaths` is the SVG stroke list (trunk first). One-shot
@@ -25,7 +26,7 @@ export const TREE_ROOT_WIDTH = 220;
 export const TREE_ROOT_HEIGHT = 74;
 export const TREE_ROOT_GAP = 36;
 export const TREE_BAND_PAD = 10;
-export const TREE_RIB_OFFSET = 44;
+export const TREE_COL_GAP = 32;
 export const TREE_STAGE_PAD = 16;
 /** Stage widths above this may draw convergence fans (chips always show). */
 export const TREE_TWO_UP_MIN_WIDTH = 480;
@@ -142,16 +143,31 @@ export function realityTree(realityMap) {
 }
 
 /**
- * Absolute geometry: crown, spine cards, short ribs at extra convergence
- * parents, named layer bands. `options.width` is the stage width (viewport).
+ * Highest-rank layout parent: the main trunk continues through this one.
+ *
+ * @param {string[]} parents
+ * @param {Map<string, number>} ranks
+ */
+function mainParentOf(parents, ranks) {
+  if (parents.length === 0) return null;
+  let main = parents[0];
+  for (const parent of parents) {
+    if ((ranks.get(parent) || 0) > (ranks.get(main) || 0)) main = parent;
+  }
+  return main;
+}
+
+/**
+ * Absolute geometry: crown, trunk, full-width columns at convergence,
+ * named layer bands. `options.width` is the viewport; the stage may be
+ * wider when branches need more than one column.
  *
  * @param {RealityMap | null | undefined} realityMap
  * @param {{ width?: number }} [options]
  */
 export function treeLayout(realityMap, options = {}) {
-  const width = Math.max(320, Number(options.width) || 375);
+  const viewport = Math.max(320, Number(options.width) || 375);
   const nodes = realityMap && Array.isArray(realityMap.nodes) ? realityMap.nodes : [];
-  const layers = realityMap && Array.isArray(realityMap.layers) ? realityMap.layers : [];
   const edges = layoutEdges(realityMap);
   const ranks = dependenceRanks(realityMap);
   const byId = new Map(nodes.map((node) => [node.id, node]));
@@ -166,32 +182,91 @@ export function treeLayout(realityMap, options = {}) {
   }
 
   const maxRank = nodes.reduce((m, node) => Math.max(m, ranks.get(node.id) || 0), 0);
-  const cardWidth = Math.min(TREE_CARD_WIDTH, width - TREE_STAGE_PAD * 2);
+  const cardWidth = Math.min(TREE_CARD_WIDTH, viewport - TREE_STAGE_PAD * 2);
   const rootWidth = Math.min(TREE_ROOT_WIDTH, cardWidth);
-  const trunk = width / 2;
-  const maxRib = Math.max(0, (width - cardWidth) / 2 - 4);
-  const rib = Math.min(TREE_RIB_OFFSET, maxRib);
+  const colPitch = cardWidth + TREE_COL_GAP;
 
-  /** @type {Set<string>} */
-  const ribIds = new Set();
-  /** @type {Map<string, number>} */
-  const ribSign = new Map();
-  let ribToggle = 1;
+  /** @type {Map<number, typeof nodes>} */
+  const byRank = new Map();
   for (const node of nodes) {
-    const parents = parentsOf.get(node.id) || [];
-    const combines = combineLayerCount(node, byId);
-    if (parents.length < 2 && combines < 2) continue;
-    let main = parents[0];
-    for (const parent of parents) {
-      if ((ranks.get(parent) || 0) > (ranks.get(main) || 0)) main = parent;
-    }
-    for (const parent of parents) {
-      if (parent === main) continue;
-      ribIds.add(parent);
-      ribSign.set(parent, ribToggle);
-      ribToggle *= -1;
+    const rank = ranks.get(node.id) || 0;
+    const row = byRank.get(rank);
+    if (row) row.push(node);
+    else byRank.set(rank, [node]);
+  }
+
+  /** @type {Map<string, number>} */
+  const cxOf = new Map();
+
+  /**
+   * @param {string[]} ids
+   * @param {number} centerX
+   */
+  function packRow(ids, centerX) {
+    const pending = ids.filter((id) => !cxOf.has(id));
+    if (pending.length === 0) return;
+    const total = pending.length * cardWidth + (pending.length - 1) * TREE_COL_GAP;
+    let x = centerX - total / 2 + cardWidth / 2;
+    for (const id of pending) {
+      cxOf.set(id, x);
+      x += colPitch;
     }
   }
+
+  const crownIds = (byRank.get(maxRank) || []).map((node) => node.id).sort();
+  packRow(crownIds, 0);
+
+  for (let r = maxRank; r >= 0; r--) {
+    const row = (byRank.get(r) || [])
+      .slice()
+      .sort((a, b) => (cxOf.get(a.id) || 0) - (cxOf.get(b.id) || 0));
+    for (const node of row) {
+      if (!cxOf.has(node.id)) continue;
+      const parents = parentsOf.get(node.id) || [];
+      if (parents.length === 0) continue;
+      const main = mainParentOf(parents, ranks);
+      if (main && !cxOf.has(main)) cxOf.set(main, /** @type {number} */ (cxOf.get(node.id)));
+      const extras = parents
+        .filter((parent) => parent !== main && !cxOf.has(parent))
+        .sort();
+      let sign = 1;
+      let slot = 1;
+      for (const extra of extras) {
+        cxOf.set(extra, /** @type {number} */ (cxOf.get(node.id)) + sign * slot * colPitch);
+        sign *= -1;
+        if (sign === 1) slot += 1;
+      }
+    }
+  }
+
+  for (let r = maxRank; r >= 0; r--) {
+    packRow(
+      (byRank.get(r) || []).map((node) => node.id).sort(),
+      0
+    );
+  }
+
+  for (let r = 0; r <= maxRank; r++) {
+    const row = (byRank.get(r) || [])
+      .slice()
+      .sort((a, b) => (cxOf.get(a.id) || 0) - (cxOf.get(b.id) || 0));
+    for (let i = 1; i < row.length; i++) {
+      const prev = /** @type {number} */ (cxOf.get(row[i - 1].id));
+      const minCx = prev + colPitch;
+      if (/** @type {number} */ (cxOf.get(row[i].id)) < minCx) cxOf.set(row[i].id, minCx);
+    }
+  }
+
+  const cxs = nodes.map((node) => cxOf.get(node.id) || 0);
+  const minLeft = cxs.length === 0 ? 0 : Math.min(...cxs) - cardWidth / 2;
+  const maxRight = cxs.length === 0 ? cardWidth : Math.max(...cxs) + cardWidth / 2;
+  const width = Math.max(viewport, maxRight - minLeft + TREE_STAGE_PAD * 2);
+  const shift = width / 2 - (minLeft + maxRight) / 2;
+  for (const [id, cx] of cxOf) cxOf.set(id, cx + shift);
+
+  const crownXs = crownIds.map((id) => cxOf.get(id) || 0);
+  const trunk =
+    crownXs.length === 0 ? width / 2 : crownXs.reduce((sum, x) => sum + x, 0) / crownXs.length;
 
   const root = {
     x: trunk - rootWidth / 2,
@@ -206,7 +281,7 @@ export function treeLayout(realityMap, options = {}) {
   for (const node of nodes) {
     const rank = ranks.get(node.id) || 0;
     const fromTop = maxRank - rank;
-    const cx = ribIds.has(node.id) ? trunk + (ribSign.get(node.id) || 1) * rib : trunk;
+    const cx = /** @type {number} */ (cxOf.get(node.id));
     const y =
       TREE_ROOT_HEIGHT +
       TREE_ROOT_GAP +
@@ -217,7 +292,7 @@ export function treeLayout(realityMap, options = {}) {
       layer: node.layer,
       combines: combineLayerCount(node, byId),
       rank,
-      rib: ribIds.has(node.id),
+      rib: Math.abs(cx - trunk) > 1,
       x: cx - cardWidth / 2,
       y,
       cx,
@@ -273,8 +348,8 @@ export function treeLayout(realityMap, options = {}) {
 }
 
 /**
- * SVG strokes: trunk from the crown into the first spine card, then one
- * connector per layout edge (vertical on-spine, elbow for a rib).
+ * SVG strokes: trunk from the crown into the first trunk card, then one
+ * connector per layout edge (vertical on the trunk, elbow into a column).
  *
  * @param {ReturnType<typeof treeLayout>} layout
  * @returns {string[]}

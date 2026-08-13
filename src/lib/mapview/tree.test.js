@@ -93,14 +93,14 @@ test("320 and 375: stage width equals the viewport, cards stay inside", () => {
   }
 });
 
-test("layers are named bands on one spine, not left/right columns", () => {
+test("a linear dependence chain stays on one trunk", () => {
   const layout = treeLayout(laptopRealityMap, { width: 375 });
   assert.deepEqual(
     layout.branches.map((branch) => branch.name),
     ["apps", "OS", "logic", "electronics", "materials", "physics"]
   );
-  const spineCx = new Set(layout.cards.filter((card) => !card.rib).map((card) => card.cx));
-  assert.equal(spineCx.size, 1);
+  const xs = new Set(layout.cards.map((card) => card.cx));
+  assert.equal(xs.size, 1);
 });
 
 test("treeLayout handles an empty tree", () => {
@@ -133,16 +133,29 @@ test("realityTree reports zero combines for an ordinary map", () => {
   }
 });
 
-test("llm transformer extra parents sit as ribs, not a wide column", () => {
-  const layout = treeLayout(llmRealityMap, { width: 375 });
+test("convergence parents occupy full columns, not 44px ribs", () => {
+  const layout = treeLayout(llmRealityMap, { width: 1024 });
   assert.equal(layout.cardById.get("n-transformer")?.combines, 3);
-  const ribs = layout.cards.filter((card) => card.rib);
-  assert.ok(ribs.length >= 2);
+  const transformer = layout.cardById.get("n-transformer");
+  const attention = layout.cardById.get("n-attention");
+  const embedding = layout.cardById.get("n-embedding");
+  const turing = layout.cardById.get("n-turing");
+  assert.ok(transformer && attention && embedding && turing);
+  const parentXs = [attention.cx, embedding.cx, turing.cx];
+  assert.equal(new Set(parentXs).size, 3, "three parents sit in three columns");
+  const spread = Math.max(...parentXs) - Math.min(...parentXs);
+  assert.ok(spread >= transformer.width, `branch spread ${spread} should clear one card`);
+  assert.ok(Math.abs(attention.cx - transformer.cx) < 1, "main parent continues the trunk");
   const span =
     Math.max(...layout.cards.map((c) => c.x + c.width)) -
     Math.min(...layout.cards.map((c) => c.x));
-  assert.ok(span < 375);
-  assert.ok(spinePaths(layout).some((d) => d.includes("H ")));
+  assert.ok(span > 375, "branches may be wider than a phone viewport");
+  const paths = spinePaths(layout);
+  assert.ok(paths.some((d) => d.includes("H ")));
+  assert.ok(
+    paths.some((d) => d.includes(String(embedding.cx)) && d.includes("H ")),
+    "an elbow reaches the extra parent column"
+  );
 });
 
 test("convergenceFanPaths emits one fan per convergence node", () => {

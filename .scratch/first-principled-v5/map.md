@@ -11,8 +11,8 @@ hides the right-hand branches.
 
 A shipped Tree that is a first-principles dependence path: crown at the top,
 foundations at the bottom, existing Reality Map edges (`built-on`,
-`depends-on`, `abstraction-of`) laid out as a vertical spine with short ribs
-at convergence. Layers are named bands, not left/right columns. Observation
+`depends-on`, `abstraction-of`) laid out as a vertical trunk that branches
+into full columns at convergence. Layers are named bands. Observation
 dates stay on hover, not as the layout sort. Tutor is a bottom sheet, closed
 by default, and never steals Tree width. Generator salvaged.
 
@@ -68,10 +68,13 @@ by default, and never steals Tree width. Generator salvaged.
   `forceBrief` unchanged.
 - 05: Destination shipped. Prod
   https://first-principled.netlify.app deploy id `6a7e012e95f23a8700288a8b`.
+- Danny (2026-08-13): the 44px-rib spine reads as a labeled list, not a
+  tree. Extra parents of a convergence occupy full columns; card height is
+  locked so SVG edges stay visible; the stage may scroll horizontally.
 
 ## Not yet specified
 
-- Whether v4 one-shot grow still reads on a spine-and-ribs Tree, or needs a
+- Whether v4 one-shot grow still reads on a branching trunk, or needs a
   retune.
 - Layer-band visual: background stripes vs labels on the spine.
 - If live maps emit weak dependence edges, whether a prompt tweak (not a

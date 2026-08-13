@@ -1159,9 +1159,10 @@ export function renderMapPage(root, store, options = {}) {
   /**
    * The dependence-path Tree: crown (the concept) at the top, foundations
    * at the bottom, y from built-on / depends-on / abstraction-of. Named
-   * layer bands sit behind the spine. Observation hovers, node panels, and
-   * convergence chips stay on the cards. One-shot grow rides `.tree-layer`
-   * wrappers; reduced motion shows the full Tree instantly.
+   * layer bands sit behind the cards. A linear chain stays on one trunk;
+   * extra parents of a convergence occupy full columns. Observation hovers,
+   * node panels, and convergence chips stay on the cards. One-shot grow
+   * rides `.tree-layer` wrappers; reduced motion shows the full Tree instantly.
    *
    * @param {import("../state/session.js").SessionState} state
    */
@@ -1183,6 +1184,7 @@ export function renderMapPage(root, store, options = {}) {
     root.style.left = `${layout.root.x}px`;
     root.style.top = `${layout.root.y}px`;
     root.style.width = `${layout.root.width}px`;
+    root.style.height = `${layout.root.height}px`;
     root.append(
       el("p", "tree-root-eyebrow", "THE CONCEPT"),
       el("h2", "tree-root-word", (state.realityMap && state.realityMap.concept) || "the concept")
@@ -1225,6 +1227,7 @@ export function renderMapPage(root, store, options = {}) {
         node.style.left = `${card.x}px`;
         node.style.top = `${card.y}px`;
         node.style.width = `${card.width}px`;
+        node.style.height = `${card.height}px`;
         node.tabIndex = 0;
         node.setAttribute("role", "button");
         node.setAttribute(
