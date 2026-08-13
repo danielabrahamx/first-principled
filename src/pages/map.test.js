@@ -29,6 +29,13 @@ test("the Tree header has a Tutor toggle and no page tabs", () => {
   assert.doesNotMatch(source, /seg-item/);
 });
 
+test("layer overlays do not steal clicks from cards above them", () => {
+  const css = readFileSync(path.join(here, "..", "styles.css"), "utf8");
+  assert.match(css, /\.tree-layer\s*\{[^}]*pointer-events:\s*none/s);
+  assert.match(css, /\.tree-branch-card\s*\{[^}]*pointer-events:\s*auto/s);
+  assert.match(css, /\.tree-svg\s*\{[^}]*pointer-events:\s*none/s);
+});
+
 test("tree cards lock the layout height so edges are not covered", () => {
   const source = readFileSync(path.join(here, "map.js"), "utf8");
   assert.match(source, /root\.style\.height/);

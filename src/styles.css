@@ -983,6 +983,7 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
+  pointer-events: none;
 }
 
 .tree-root-card {
@@ -1059,6 +1060,7 @@ body {
   width: 280px;
   height: 64px;
   overflow: hidden;
+  pointer-events: auto;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -1142,6 +1144,7 @@ body {
 .tree-layer {
   position: absolute;
   inset: 0;
+  pointer-events: none;
   transition: opacity 0.15s linear, transform 0.15s ease-out;
 }
 
