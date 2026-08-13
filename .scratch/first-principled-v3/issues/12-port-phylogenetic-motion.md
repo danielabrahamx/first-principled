@@ -9,7 +9,72 @@ vertical path geometry, with reduced-motion support, mobile-clean.
 **Blocked by:** 10 - Vertical path layout + strict chronology + panel close
 fix
 
-**Status:** ready-for-agent
+**Status:** resolved (opencode, DeepSeek v4 flash, Daniel session, 2026-08-13)
+
+## Answer
+
+Shipped. The ticket 07 motion prototype is ported onto the ticket 10 vertical
+path - sap pulses, scroll-driven growth, and the node lifecycle stagger all
+ride the real tree geometry (root top, trunk descending, layer bands in a
+single column, two-up only when the stage fits).
+
+- New module `src/lib/motion.js` (zero-dep plain ES module, imported by the
+  map page): `sapPulsePaths` (SMIL centerlines in the rising direction),
+  `trunkReveal` / `layerReveal` (growth math), `budDelay` (deterministic
+  stagger), and `wireTreeMotion` (sap group, trunk dashoffset, one passive
+  rAF-throttled scroll listener, destroy handle). Pure math is node-tested in
+  `src/lib/motion.test.js` (8 tests).
+- map.js `renderTree`: each layer's band is wrapped in a `.tree-layer` div
+  (absolute, inset 0 - no geometry change), every root/label/card gets a
+  `tree-bud` class and a `--mt-delay`, and `wireTreeMotion` is wired with a
+  destroy-on-rebuild handle. styles.css adds the band transition, the sap
+  glow, and the bud keyframes.
+- Sap: 1 pulse train on the trunk (deepest card bottom up to the crown) + one
+  per branch (its cards up to the trunk; a two-up layer rides each column
+  elbow). Pure SMIL, zero JS animation loop. Verified in the probe: 7 pulses
+  for the 6-layer laptop tree (1 trunk + 6 branches).
+- Scroll growth: trunk draws over the first half of the scroll
+  (pathLength-normalised dashoffset), then layers bud deepest-foundation
+  first. Probe-verified: at scroll top dashoffset 1 + crown layer opacity 0;
+  at the bottom dashoffset 0 + every layer opacity 1.
+- Reduced motion (the 07 contract): `reducedMotion` (matchMedia) skips the
+  sap group and the scroll wiring, no `tree-bud` classes; the CSS media query
+  kills animations and the sap glow. Emulated via CDP: 0 sap pulses, trunk
+  renders full (no dashoffset), every layer visible, no stagger.
+- Mobile: 375px/320px clean - no horizontal overflow (docScrollWidth ==
+  viewport), cards centered on the trunk, no layout shift (the sap group is
+  inside the existing absolutely-positioned SVG; the layer bands add no size).
+- Evidence: `research/12-cdp-probe.mjs` 25/25 headless-Edge checks, and
+  screenshots in `research/12-tree-*.png` (375, 320, 375 mid-growth, desktop)
+  for Danny's approval before deploy.
+
+One note on the shared working tree: the parallel ticket 11 session's final
+commit swept the map.js/styles.css motion wiring into its own `v3 11: resolve`
+commit (both sessions share one checkout), so those two files already live on
+main under ticket 11's commit; this ticket's commit carries the module, the
+tests, the probe, and the docs.
+
+## Acceptance criteria
+
+- [x] Sap pulses animate on trunk + branches in the live tree (SMIL
+      animateMotion, rising direction)
+- [x] Scroll-driven growth: trunk draws on scroll, layers bud in sequence
+- [x] Node lifecycle stagger ships
+- [x] Reduced-motion: no SMIL, no scroll wiring, CSS animations killed -
+      verified in the prototype's simulate-reduced-motion check
+- [x] Works on the vertical path layout from ticket 10
+- [x] 375px and 320px CDP audits clean; screenshots delivered for Danny
+      approval before deploy
+- [ ] npm test green, tsc clean; deploy via the manual Netlify command;
+      probes re-run against the live URL (npm test 326 green + tsc clean;
+      deploy deferred per Danny - all tickets 10-13 deploy together in a new
+      session)
+
+## Docs rule
+
+Update the map's Decisions so far with the motion-shipped resolution. The
+07 decision line stays as the source of truth for what ships vs. what does
+not.
 
 ## Question
 
