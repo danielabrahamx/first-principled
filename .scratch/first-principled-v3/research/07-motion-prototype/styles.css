@@ -1,0 +1,240 @@
+/* Ticket 07 motion prototype styles. Light theme to match the app. */
+
+:root {
+  --ground: #f3f4f6;
+  --surface: #ffffff;
+  --ink: #1e2228;
+  --ink-muted: #5a6472;
+  --accent: #5b4bc4;
+  --accent-soft: #edebfa;
+  --border: #e2e5ea;
+  --stroke: #b9b3e8;
+  --sap: #2f9e63;
+  --gold: #c8a84b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+/* Demo page chrome */
+
+.mt-header {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px 24px 8px;
+}
+
+.mt-header h1 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+
+.mt-header p {
+  margin: 0 0 16px;
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+
+.mt-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.mt-controls label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.mt-controls input {
+  accent-color: var(--accent);
+}
+
+.mt-status {
+  margin-left: auto;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+/* The tree */
+
+.mt-tree-wrap {
+  padding: 8px 24px 0;
+}
+
+.mt-tree-scroll {
+  max-width: 1080px;
+  margin: 0 auto;
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+.mt-stage {
+  position: relative;
+  margin: 0 auto;
+}
+
+.mt-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.mt-nodes {
+  position: relative;
+  height: 100%;
+}
+
+.mt-root {
+  position: absolute;
+  background: var(--ink);
+  border-radius: 16px;
+  padding: 12px 36px;
+  box-shadow: 0 10px 32px rgba(30, 34, 40, 0.18);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.mt-root-eyebrow {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8b94a3;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mt-root-word {
+  margin: 0;
+  font-weight: 700;
+  font-size: 24px;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.mt-branch-label {
+  position: absolute;
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.mt-card {
+  position: absolute;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(30, 34, 40, 0.05);
+}
+
+/* Cladogram strokes */
+
+.mt-strokes path {
+  fill: none;
+  stroke: var(--stroke);
+  stroke-width: 2;
+}
+
+.mt-strokes .mt-trunk {
+  stroke-width: 3;
+}
+
+/* Node lifecycle: every card and label buds in on load, staggered by its
+ * --mt-delay. The backwards fill keeps each element hidden until its turn. */
+.mt-bud {
+  animation: mt-bud-in 0.6s ease-out backwards;
+  animation-delay: var(--mt-delay, 0s);
+}
+
+@keyframes mt-bud-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* Sap pulses glow softly as they rise */
+
+.mt-sap-pulse {
+  filter: drop-shadow(0 0 4px rgba(47, 158, 99, 0.85));
+}
+
+/* Layer reveal motion is JS-driven (inline opacity/transform) and gets a
+ * gentle transition so scroll growth reads as growth, not teleporting. */
+.mt-layer {
+  transition: opacity 0.15s linear, transform 0.15s ease-out;
+}
+
+/* Reduced motion: everything static, no transitions. The JS side also skips
+ * the sap pulses and the scroll wiring entirely - this CSS block is the
+ * backstop for what CSS can reach. */
+@media (prefers-reduced-motion: reduce) {
+  .mt-bud,
+  .mt-sap-pulse,
+  .mt-layer {
+    animation: none;
+    transition: none;
+  }
+  .mt-sap-pulse {
+    filter: none;
+  }
+}
+
+/* Body-level simulation of reduced motion for the demo checkbox. */
+body.mt-reduced .mt-bud,
+body.mt-reduced .mt-sap-pulse,
+body.mt-reduced .mt-layer {
+  animation: none;
+  transition: none;
+}
+body.mt-reduced .mt-sap-pulse {
+  filter: none;
+}
+
+/* Scroll room below the tree so growth has distance to play out */
+
+.mt-spacer {
+  height: 90vh;
+}
+
+.mt-footer {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}

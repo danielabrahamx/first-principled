@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ticket 07 - phylogenetic motion prototype</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="mt-header">
+    <h1>Phylogenetic motion prototype (ticket 07)</h1>
+    <p>
+      The portfoolio RootTree motion ported onto our zero-dep SVG concept
+      tree: sap pulses rising from foundations to the crown, scroll-driven
+      growth, node lifecycle animation, reduced-motion respect. Plain ES
+      modules + SVG + CSS, no React.
+    </p>
+    <div class="mt-controls">
+      <label><input type="checkbox" id="sap" checked /> Sap pulses</label>
+      <label><input type="checkbox" id="growth" checked /> Scroll growth</label>
+      <label><input type="checkbox" id="simulate-reduced" /> Simulate reduced motion</label>
+      <span class="mt-status" id="os-status"></span>
+    </div>
+  </header>
+
+  <main class="mt-tree-wrap">
+    <div class="mt-tree-scroll">
+      <div id="tree"></div>
+    </div>
+  </main>
+
+  <div class="mt-spacer" aria-hidden="true"></div>
+
+  <footer class="mt-footer">
+    Scroll to grow the tree: the trunk draws down, then each layer buds in
+    from the deepest foundation up to the crown. Sap pulses ride the trunk
+    and branches upward via SMIL animateMotion. Toggle each effect or
+    simulate reduced motion to compare. The OS status line reports the real
+    prefers-reduced-motion setting; when it is reduce, the JS gate skips sap
+    and scroll wiring entirely.
+  </footer>
+
+  <script type="module">
+    import { buildTree } from "./motion-tree.js";
+    import { sampleMap } from "./sample-map.js";
+
+    const mount = document.getElementById("tree");
+    const sapCb = document.getElementById("sap");
+    const growthCb = document.getElementById("growth");
+    const reducedCb = document.getElementById("simulate-reduced");
+    const osStatus = document.getElementById("os-status");
+
+    const osReduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateOsStatus = () => {
+      osStatus.textContent = `OS prefers-reduced-motion: ${osReduced.matches ? "reduce" : "no-preference"}`;
+    };
+    osReduced.addEventListener("change", () => {
+      updateOsStatus();
+      render();
+    });
+    updateOsStatus();
+
+    let handle = null;
+    const render = () => {
+      if (handle) handle.destroy();
+      mount.replaceChildren();
+      const reduced = reducedCb.checked || osReduced.matches;
+      handle = buildTree(mount, sampleMap, {
+        sap: sapCb.checked,
+        growth: growthCb.checked,
+        reduced,
+      });
+      document.body.classList.toggle("mt-reduced", reduced);
+    };
+
+    for (const cb of [sapCb, growthCb, reducedCb]) {
+      cb.addEventListener("change", render);
+    }
+    render();
+  </script>
+</body>
+</html>
