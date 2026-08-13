@@ -36,7 +36,8 @@ export default async (req) => {
   let store;
   try {
     store = getStore({ name: "agent-jobs" });
-  } catch {
+  } catch (e) {
+    console.error("agent-status getStore failed:", e && e.message);
     return errorResponse(500, "internal", "An unexpected server error occurred.");
   }
 
@@ -58,7 +59,8 @@ export default async (req) => {
   let record = null;
   try {
     record = await store.get(`job:${jobId}`, { type: "json" });
-  } catch {
+  } catch (e) {
+    console.error("agent-status store.get failed:", e && e.message, "job:", jobId);
     return errorResponse(500, "internal", "An unexpected server error occurred.");
   }
 

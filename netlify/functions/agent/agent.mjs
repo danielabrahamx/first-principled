@@ -83,10 +83,14 @@ function terminalError(code, message) {
 async function writeTerminal(jobId, record) {
   try {
     const store = getStore({ name: "agent-jobs" });
-    await store.set(`job:${jobId}`, record, { expires: JOB_TTL_SECONDS });
-  } catch {
+    // setJSON, not set: @netlify/blobs v10 set() sends the value as a raw
+    // body, so an object would be stored as the literal string
+    // "[object Object]" and the poll would never parse it.
+    await store.setJSON(`job:${jobId}`, record, { expires: JOB_TTL_SECONDS });
+  } catch (e) {
     // The job record could not be persisted. Do not throw - the platform
     // would retry and re-run the generation, double-spending LLM tokens.
+    console.error("writeTerminal failed:", e && e.message, "job:", jobId);
   }
   return new Response(null, { status: 204 });
 }
@@ -126,7 +130,10 @@ export async function overRateLimit(ip, store = null) {
       const current = await store.get(key, { type: "json" });
       const count = current && current.hour === hour ? current.count || 0 : 0;
       if (count >= RATE_LIMIT_MAX) return true;
-      await store.set(
+      // setJSON, not set: set() stores an object as the literal string
+      // "[object Object]", which the get() above would fail to parse and
+      // the gate would silently fall back to in-memory counting.
+      await store.setJSON(
         key,
         { count: count + 1, hour },
         { expires: RATE_LIMIT_WINDOW_HOURS * 60 * 60 }
@@ -212,6 +219,18 @@ export default async (req) => {
     );
     return new Response(null, { status: 204 });
   }
+};
+
+/**
+ * Netlify background mode: the platform answers the POST with an EMPTY 202
+ * immediately and runs this function out of band (15-minute budget, no 30s
+ * sync cap). In-source config is the docs-preferred mechanism
+ * (docs.netlify.com/build/functions/api#background); netlify.toml
+ * [functions.agent] background = true is kept alongside it for
+ * git-based builds.
+ */
+export const config = {
+  background: true,
 };
 
 /**
