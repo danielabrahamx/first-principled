@@ -530,6 +530,7 @@ body {
 
 .map-entry {
   flex: 1 1 100%;
+  max-width: 100%;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1049,6 +1050,43 @@ body {
   outline-offset: 2px;
 }
 
+/* Tree motion (ticket 12): the 07 prototype shipped onto the vertical path.
+   Sap pulses (SMIL animateMotion, rising foundations-to-crown), scroll-driven
+   growth (trunk draws, layers bud deepest-first), and the node lifecycle
+   stagger. The JS gate skips the sap + scroll wiring under reduced motion;
+   this CSS backstop kills what CSS can reach. */
+
+/* One band per layer: the scroll-growth unit. Absolute and inset 0 so the
+   band overlays the stage exactly - the cards inside keep their treeLayout
+   coordinates, and the band adds no size, so there is no layout shift. */
+.tree-layer {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.15s linear, transform 0.15s ease-out;
+}
+
+.tree-sap {
+  pointer-events: none;
+}
+
+.tree-sap-pulse {
+  filter: drop-shadow(0 0 4px rgba(47, 158, 99, 0.85));
+}
+
+/* Node lifecycle: every card and label buds in on load, staggered by its
+   --mt-delay (deterministic hash, ticket 07). The backwards fill keeps each
+   element hidden until its turn. */
+.tree-bud {
+  animation: tree-bud-in 0.6s ease-out backwards;
+  animation-delay: var(--mt-delay, 0s);
+}
+
+@keyframes tree-bud-in {
+  from {
+    opacity: 0;
+  }
+}
+
 /* Ticket 11: progressive skeleton - mirrors the vertical-path tree (root
    block top, trunk, then layer bands down to the foundation) and lights its
    bands bottom-up as each layer lands. Card placeholders match the real
@@ -1148,6 +1186,12 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  /* The JS gate skips the sap pulses entirely (SMIL cannot be killed by
+     CSS); this kills the glow for any CSS-reachable residue. */
+  .tree-sap-pulse {
+    filter: none;
   }
 }
 

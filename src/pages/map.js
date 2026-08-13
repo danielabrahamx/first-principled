@@ -75,6 +75,7 @@ import {
   runAgentTurn,
   errorMessage,
 } from "../lib/generation.js";
+import { budDelay, wireTreeMotion } from "../lib/motion.js";
 import { renderDock } from "./dock.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -498,6 +499,8 @@ export function renderMapPage(root, store, options = {}) {
   const pathEls = new Map();
   /** The last diff reference whose animation has been replayed. */
   let renderedDiff = /** @type {import("../lib/mmg/types.js").Diff | null} */ (null);
+  /** The reality tree's motion handle (ticket 12): destroyed on rebuild. */
+  let treeMotion = /** @type {ReturnType<typeof wireTreeMotion> | null} */ (null);
 
   /** @typedef {ReturnType<typeof learnerCards>[number]} MapCard */
   /** @typedef {ReturnType<typeof nodeDelta>} NodeDelta */
@@ -631,8 +634,10 @@ export function renderMapPage(root, store, options = {}) {
     modelTab.textContent = compare ? "Learner map" : "Map";
     realityTab.hidden = !hasReality;
     chatTab.classList.remove("active");
-    modelTab.classList.toggle("active", !compare || tab === "model");
-    realityTab.classList.toggle("active", compare && tab === "reality");
+    // The highlight always follows the live tab (ticket 11: the map reveals
+    // the reality tab when a generated tree lands, so it must read active).
+    modelTab.classList.toggle("active", tab === "model");
+    realityTab.classList.toggle("active", tab === "reality");
   }
 
   /**
@@ -1173,9 +1178,19 @@ export function renderMapPage(root, store, options = {}) {
    * its observation story in sequence, oldest at the foundation. Cards carry
    * a dot marking whether the observation record is present or a gap.
    *
+   * Ticket 12 rides the 07 motion prototype onto this geometry: each layer's
+   * band is wrapped in a .tree-layer div so scroll growth can reveal it as a
+   * unit, every card and label buds in staggered by a deterministic delay,
+   * and wireTreeMotion adds the SMIL sap pulses and the scroll wiring. Under
+   * reduced motion nothing is added and the full tree renders instantly.
+   *
    * @param {import("../state/session.js").SessionState} state
    */
   function renderTree(state) {
+    if (treeMotion !== null) {
+      treeMotion.destroy();
+      treeMotion = null;
+    }
     const tree = realityTree(state.realityMap);
     const width = Math.round(treeScroll.clientWidth || main.clientWidth || 480);
     const layout = treeLayout(tree, { width });
@@ -1194,9 +1209,14 @@ export function renderMapPage(root, store, options = {}) {
       el("p", "tree-root-eyebrow", "ROOT - THE CONCEPT"),
       el("h2", "tree-root-word", tree.rootLabel || "the concept")
     );
+    if (!reducedMotion) root.classList.add("tree-bud");
+    root.style.setProperty("--mt-delay", budDelay("root", "root"));
     treeLayer.appendChild(root);
 
+    /** @type {HTMLElement[]} */
+    const layers = [];
     for (const branch of layout.branches) {
+      const layer = el("div", "tree-layer");
       const label = el("p", "tree-branch-label", `BRANCH - ${branch.name}`);
       label.style.left = `${branch.cx}px`;
       label.style.top = `${branch.labelY}px`;
@@ -1212,7 +1232,9 @@ export function renderMapPage(root, store, options = {}) {
         popoverTimer = /** @type {any} */ (setTimeout(() => showLayerObservations(label, branch.id), hoverDelay));
       });
       label.addEventListener("blur", hidePopover);
-      treeLayer.appendChild(label);
+      if (!reducedMotion) label.classList.add("tree-bud");
+      label.style.setProperty("--mt-delay", budDelay(branch.id, "label"));
+      layer.appendChild(label);
       for (const card of branch.cards) {
         const view = views.get(card.id) ?? observationOf(undefined);
         const node = el("div", "tree-branch-card");
@@ -1267,8 +1289,12 @@ export function renderMapPage(root, store, options = {}) {
           }, hoverDelay));
         });
         node.addEventListener("blur", hidePopover);
-        treeLayer.appendChild(node);
+        if (!reducedMotion) node.classList.add("tree-bud");
+        node.style.setProperty("--mt-delay", budDelay(card.id, "card"));
+        layer.appendChild(node);
       }
+      treeLayer.appendChild(layer);
+      layers.push(layer);
     }
 
     treeSvg.replaceChildren();
@@ -1280,6 +1306,8 @@ export function renderMapPage(root, store, options = {}) {
       path.setAttribute("stroke-width", "2");
       treeSvg.appendChild(path);
     }
+
+    treeMotion = wireTreeMotion({ svg: treeSvg, layout, layers, reduced: reducedMotion });
   }
 
   /**
@@ -1472,6 +1500,10 @@ export function renderMapPage(root, store, options = {}) {
       if (skeletonTimer !== null) {
         clearTimeout(skeletonTimer);
         skeletonTimer = null;
+      }
+      if (treeMotion !== null) {
+        treeMotion.destroy();
+        treeMotion = null;
       }
       unsubscribe();
       dockHandle.destroy();
