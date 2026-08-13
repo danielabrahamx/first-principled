@@ -34,14 +34,14 @@ test("the phase indicator starts at Starting and survives an init refusal", () =
   );
 });
 
-test("active with an empty learner map is Exploring (observation-first)", () => {
+test("active with an empty learner map is Seeing (observation-first)", () => {
   assert.deepEqual(phaseLabel(state({ phase: "active" })), {
     kind: "exploring",
-    label: "Exploring",
+    label: "Seeing",
   });
 });
 
-test("active with a populated learner map is Refining (gap-first)", () => {
+test("active with a populated learner map is Testing (gap-first)", () => {
   assert.deepEqual(
     phaseLabel(
       state({
@@ -52,7 +52,7 @@ test("active with a populated learner map is Refining (gap-first)", () => {
         },
       })
     ),
-    { kind: "refining", label: "Refining" }
+    { kind: "refining", label: "Testing" }
   );
 });
 

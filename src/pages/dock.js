@@ -36,8 +36,8 @@ import { errorMessage } from "./chat.js";
  */
 export function dockLabel(state) {
   if (state.phase === "init") return "Starting";
-  if (state.phase === "end") return "Session complete";
-  return state.learnerMap.nodes.length > 0 ? "Refining" : "Exploring";
+  if (state.phase === "end") return "Session end";
+  return state.learnerMap.nodes.length > 0 ? "Testing" : "Seeing";
 }
 
 /**
@@ -119,7 +119,7 @@ export function renderDock(root, options = {}) {
   start.className = "dock-start";
   const startHint = document.createElement("p");
   startHint.textContent =
-    "Type a word or phrase - laptop, recursion - and the tutor will help you map what you know.";
+    "Type a word or phrase - laptop, recursion - and the tutor will build a tree of the concept.";
   start.className = "dock-start";
   start.appendChild(startHint);
 
@@ -233,8 +233,8 @@ export function renderDock(root, options = {}) {
       : "Your answer... (Enter to send)";
     // The start hint doubles as the post-session prompt.
     startHint.textContent = state.ended
-      ? "Session complete. Type a new word or phrase to start another."
-      : "Type a word or phrase - laptop, recursion - and the tutor will help you map what you know.";
+      ? "Session end. Type a new word or phrase to start another."
+      : "Type a word or phrase - laptop, recursion - and the tutor will build a tree of the concept.";
     start.hidden = !(starting || state.ended);
 
     list.replaceChildren();

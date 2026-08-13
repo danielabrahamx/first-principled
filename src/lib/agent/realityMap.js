@@ -137,6 +137,7 @@ If a year is contested in the historical record, give the best-documented year a
  */
 function steBlock() {
   return `Write every narrative (descriptions, keyObservation, note, self-review) in simplified technical English:
+- One meaning per word: use each word with one fixed meaning.
 - Short sentences: under 20 words.
 - Active voice: the subject does the action.
 - One idea per sentence.
@@ -202,7 +203,7 @@ function unpackFoundation(parsed) {
       reason:
         typeof reply.reason === "string" && reply.reason.length > 0
           ? reply.reason
-          : "The model did not recognize a teachable concept here.",
+          : "The tutor did not find a concept to explain here.",
     };
   }
   if (reply.foundation && typeof reply.foundation === "object") {
@@ -337,7 +338,7 @@ function unpackNextLayer(parsed) {
       reason:
         typeof reply.reason === "string" && reply.reason.length > 0
           ? reply.reason
-          : "The model could not derive a teachable chain here.",
+          : "The tutor could not derive a sequence here.",
     };
   }
   if (reply.done === true) {
@@ -623,7 +624,7 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
       ok: false,
       map: null,
       kind: "refused",
-      reason: "Please type a word or phrase that names something you want to understand.",
+      reason: "Use a word or phrase that names a concept you want to learn.",
       errors: [],
       latencyMs: 0,
       retried: false,

@@ -57,17 +57,17 @@ import { loadDemoSession } from "../demo.js";
  * @type {Record<string, string>}
  */
 const ERROR_MESSAGES = {
-  bad_request: "The tutor did not accept that. Please try again.",
-  config_error: "The tutor is not fully set up yet. Please try again later.",
-  internal: "Something went wrong on our side. Please try again.",
-  upstream_error: "The tutor had trouble responding. Please try again.",
+  bad_request: "The tutor did not accept the input. Please try again.",
+  config_error: "The tutor is not ready yet. Please try again later.",
+  internal: "A fault happened on our side. Please try again.",
+  upstream_error: "The tutor could not answer. Please try again.",
   invalid_model_output: "The tutor produced an unreadable answer. Please try again.",
-  network: "Could not reach the tutor. Check your connection and try again.",
-  too_large: "That message was too large. Please try a shorter one.",
-  rate_limited: "Too many requests from this device. Please wait a moment and try again.",
+  network: "We could not reach the tutor. Check your connection, then try again.",
+  too_large: "Your message was too large. Please use a short message.",
+  rate_limited: "Too many requests. Please wait a moment, then try again.",
   captcha_required: "One quick human check, then we continue.",
   captcha_failed: "The human check did not pass. Please try again.",
-  unknown: "Something went wrong. Please try again.",
+  unknown: "A fault happened. Please try again.",
 };
 
 /**
@@ -97,8 +97,8 @@ export function phaseLabel(state) {
   if (state.phase === "init") return { kind: "starting", label: "Starting" };
   if (state.phase === "end") return { kind: "end", label: "Session end" };
   return state.learnerMap.nodes.length > 0
-    ? { kind: "refining", label: "Refining" }
-    : { kind: "exploring", label: "Exploring" };
+    ? { kind: "refining", label: "Testing" }
+    : { kind: "exploring", label: "Seeing" };
 }
 
 /**
@@ -303,11 +303,11 @@ export function initChatPage(root, options = {}) {
   function heroEyebrowText(kind) {
     switch (kind) {
       case "exploring":
-        return "You're exploring";
+        return "You are seeing";
       case "refining":
-        return "You're refining";
+        return "You are testing";
       case "end":
-        return "Session complete";
+        return "Session end";
       default:
         return "";
     }
@@ -320,7 +320,7 @@ export function initChatPage(root, options = {}) {
     sending = on;
     wordInput.disabled = on;
     beginButton.disabled = on;
-    beginButton.textContent = on ? "Thinking..." : "Begin";
+    beginButton.textContent = on ? "Thinking..." : "Start";
     messageInput.disabled = on;
     sendButton.disabled = on;
     composerStatus.hidden = !on;
@@ -349,7 +349,7 @@ export function initChatPage(root, options = {}) {
     composerWrap.hidden = !composing;
     messageInput.placeholder =
       state.phase === "end"
-        ? "Your answer to the transfer question..."
+        ? "Your answer to the last question..."
         : "Your answer... (Enter to send)";
 
     hero.hidden = starting;
@@ -359,8 +359,8 @@ export function initChatPage(root, options = {}) {
     endPanel.hidden = !(state.ended && state.transferResult);
     if (state.ended && state.transferResult) {
       endStatus.textContent = state.transferResult.passed
-        ? "Transfer question passed"
-        : "Transfer question not passed";
+        ? "Your answer was right."
+        : "Your answer was not right.";
     }
   }
 

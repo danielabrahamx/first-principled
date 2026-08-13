@@ -22,8 +22,8 @@
               <span class="wordmark">first-principled</span>
             </div>
             <nav class="seg chat-seg" aria-label="Pages">
-              <button type="button" class="seg-item active" data-tab="chat">Chat</button>
-              <button type="button" class="seg-item" data-tab="map">Map</button>
+              <button type="button" class="seg-item active" data-tab="chat">Ask</button>
+              <button type="button" class="seg-item" data-tab="map">Tree</button>
             </nav>
             <span id="phase-indicator" class="pill" data-phase="starting">Starting</span>
           </header>
@@ -37,17 +37,17 @@
           <div id="message-list" class="messages" aria-live="polite"></div>
           <div id="start-panel" class="start-panel">
             <span class="orb start-orb" aria-hidden="true"></span>
-            <p class="start-eyebrow">The Socratic orb is listening</p>
-            <h2 class="start-headline">What would you like to understand?</h2>
+            <p class="start-eyebrow">The tutor is ready</p>
+            <h2 class="start-headline">What would you like to learn?</h2>
             <p class="start-sub">
-              A word or phrase - laptop, recursion, photosynthesis. The orb will help you map
-              what you actually know.
+              A word or phrase - laptop, recursion, photosynthesis. The tutor will build a tree of
+              the concept.
             </p>
             <p id="start-hint" class="hint" hidden>
-              That input did not work. Try a different word or phrase.
+              The input did not work. Use a different word or phrase.
             </p>
             <button id="demo-button" type="button" class="demo-button">
-              Try a demo session (no API key needed)
+              See a demo session (no key needed)
             </button>
             <form id="start-form" class="start-form">
               <textarea
@@ -57,7 +57,7 @@
                 placeholder="Type a word or phrase..."
                 autocomplete="off"
               ></textarea>
-              <button id="begin-button" type="submit" class="begin-button">Begin</button>
+              <button id="begin-button" type="submit" class="begin-button">Start</button>
             </form>
           </div>
           <div id="error-banner" class="error-banner" role="alert" hidden>
@@ -86,9 +86,9 @@
             </form>
           </div>
           <div id="end-panel" class="end-panel" hidden>
-            <h2 class="end-title">Session complete</h2>
+            <h2 class="end-title">Session end</h2>
             <p id="end-status" class="end-status"></p>
-            <a class="compare-link" href="#map">Compare your model with reality</a>
+            <a class="compare-link" href="#map">Compare your idea with reality</a>
           </div>
         </div>
       </section>

@@ -41,7 +41,7 @@ function turnResponse(turn, ended = false) {
     body.sessionEnded = true;
     body.transferResult = {
       passed: true,
-      assessment: "You traced the failure to the power path - exactly right.",
+      assessment: "You found the fault in the power path. That is right.",
     };
   }
   return body;

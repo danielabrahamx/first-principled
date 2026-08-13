@@ -420,7 +420,7 @@ async function handleInit(request, callLLM) {
         body: {
           reply:
             generation.reason ??
-            "I could not find a teachable concept in that input. Try a word that names a thing or idea.",
+            "I could not find a concept in that input. Use a word or phrase that names an idea.",
           learnerMap: { nodes: [], edges: [] },
           diff: { added: [], flipped: [], updated: [] },
           phase: "init",
