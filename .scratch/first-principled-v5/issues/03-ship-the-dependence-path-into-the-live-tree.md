@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** [Prototype the dependence-path Tree](01-prototype-the-dependence-path-tree.md)
 
@@ -32,15 +32,27 @@ rail for this ticket (ticket 04 replaces chrome).
 
 ## Acceptance criteria
 
-- [ ] Live Tree is a vertical dependence path, not a left/right cladogram
-- [ ] Layout uses `built-on` / `depends-on` / `abstraction-of`, not dates
-- [ ] Within a lineage, earlier sits below later
-- [ ] Observation hovers, node panel, and convergence chip still work
-- [ ] 375px and 320px: no horizontal page overflow
-- [ ] npm test green, tsc clean, netlify build OK
-- [ ] Screenshots in `.scratch/first-principled-v5/research/` for Danny
+- [x] Live Tree is a vertical dependence path, not a left/right cladogram
+- [x] Layout uses `built-on` / `depends-on` / `abstraction-of`, not dates
+- [x] Within a lineage, earlier sits below later
+- [x] Observation hovers, node panel, and convergence chip still work
+- [x] 375px and 320px: no horizontal page overflow
+- [x] npm test green, tsc clean, netlify build OK
+- [x] Screenshots in `.scratch/first-principled-v5/research/` for Danny
 
 ## Docs rule
 
 If spec section 9 still describes the v4 cladogram, update it to the
 dependence-path contract. Same commit as the code.
+
+## Resolution
+
+Live Tree is the 01 spine: `treeLayout` takes the Reality Map, y from
+layout edges, named layer bands, short ribs at extra convergence parents.
+Electricity-below-transistor is a unit-test contract. Dates swapped in
+tests do not move y. Observation hover, node panel (CDP click on
+transistor), and convergence chips remain. One-shot grow kept (trunk then
+deepest-first bands). 375/320 CDP: scrollWidth equals viewport. npm test
+340/340, tsc clean, netlify build OK. Screenshots:
+`.scratch/first-principled-v5/research/03-375.png` and `03-320.png`.
+Tutor rail unchanged - ticket 04.

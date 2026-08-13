@@ -26,11 +26,9 @@ import {
 } from "../lib/mapview/viewmodel.js";
 import { comparisonMetrics } from "../lib/mapview/comparison.js";
 import {
-  TREE_CARD_WIDTH,
   TREE_TWO_UP_MIN_WIDTH,
-  cladogramPaths,
   convergenceFanPaths,
-  realityTree,
+  spinePaths,
   treeLayout,
 } from "../lib/mapview/tree.js";
 import {
@@ -1154,19 +1152,11 @@ export function renderMapPage(root, store, options = {}) {
   document.addEventListener("keydown", onKeydown);
 
   /**
-   * The reality phylogenetic tree (ticket 04, observation-first): root card
-   * (the concept) and the layer branches below it, with cladogram elbow
-   * connectors. Every node card and branch is keyboard-focusable and shows
-   * the observations on hover: a node surfaces the observation that enabled
-   * the next stage (its crux record, or the explicit gap), a layer surfaces
-   * its observation story in sequence, oldest at the foundation. Cards carry
-   * a dot marking whether the observation record is present or a gap.
-   *
-   * Ticket 03 rides one-shot grow onto this geometry: each layer is wrapped
-   * in a .tree-layer div so elapsed-time grow can reveal it as a unit, every
-   * card and label buds in staggered by a deterministic delay, and
-   * wireTreeMotion plays the grow then mounts sap. Under reduced motion the
-   * full tree renders instantly.
+   * The dependence-path Tree: crown (the concept) at the top, foundations
+   * at the bottom, y from built-on / depends-on / abstraction-of. Named
+   * layer bands sit behind the spine. Observation hovers, node panels, and
+   * convergence chips stay on the cards. One-shot grow rides `.tree-layer`
+   * wrappers; reduced motion shows the full Tree instantly.
    *
    * @param {import("../state/session.js").SessionState} state
    */
@@ -1175,9 +1165,8 @@ export function renderMapPage(root, store, options = {}) {
       treeMotion.destroy();
       treeMotion = null;
     }
-    const tree = realityTree(state.realityMap);
     const width = Math.round(treeScroll.clientWidth || main.clientWidth || 480);
-    const layout = treeLayout(tree, { width });
+    const layout = treeLayout(state.realityMap, { width });
     const views = observationByNodeId(state.realityMap);
 
     treeStage.style.width = `${layout.width}px`;
@@ -1190,8 +1179,8 @@ export function renderMapPage(root, store, options = {}) {
     root.style.top = `${layout.root.y}px`;
     root.style.width = `${layout.root.width}px`;
     root.append(
-      el("p", "tree-root-eyebrow", "ROOT - THE CONCEPT"),
-      el("h2", "tree-root-word", tree.rootLabel || "the concept")
+      el("p", "tree-root-eyebrow", "THE CONCEPT"),
+      el("h2", "tree-root-word", (state.realityMap && state.realityMap.concept) || "the concept")
     );
     if (!reducedMotion) root.classList.add("tree-bud");
     root.style.setProperty("--mt-delay", budDelay("root", "root"));
@@ -1199,10 +1188,15 @@ export function renderMapPage(root, store, options = {}) {
 
     /** @type {HTMLElement[]} */
     const layers = [];
-    for (const branch of layout.branches) {
+    layout.branches.forEach((branch, i) => {
       const layer = el("div", "tree-layer");
-      const label = el("p", "tree-branch-label", `BRANCH - ${branch.name}`);
-      label.style.left = `${branch.cx}px`;
+      const band = el("div", i % 2 === 0 ? "tree-band tree-band-even" : "tree-band tree-band-odd");
+      band.style.top = `${branch.bandY}px`;
+      band.style.height = `${branch.bandHeight}px`;
+      layer.appendChild(band);
+
+      const label = el("p", "tree-branch-label", branch.name);
+      label.style.left = "8px";
       label.style.top = `${branch.labelY}px`;
       label.tabIndex = 0;
       label.setAttribute("aria-label", `Layer ${branch.name}: ${branch.id}`);
@@ -1221,10 +1215,11 @@ export function renderMapPage(root, store, options = {}) {
       layer.appendChild(label);
       for (const card of branch.cards) {
         const view = views.get(card.id) ?? observationOf(undefined);
-        const node = el("div", "tree-branch-card");
+        const node = el("div", card.rib ? "tree-branch-card tree-card-rib" : "tree-branch-card");
+        node.dataset.nodeId = card.id;
         node.style.left = `${card.x}px`;
         node.style.top = `${card.y}px`;
-        node.style.width = `${TREE_CARD_WIDTH}px`;
+        node.style.width = `${card.width}px`;
         node.tabIndex = 0;
         node.setAttribute("role", "button");
         node.setAttribute(
@@ -1288,10 +1283,10 @@ export function renderMapPage(root, store, options = {}) {
       }
       treeLayer.appendChild(layer);
       layers.push(layer);
-    }
+    });
 
     treeSvg.replaceChildren();
-    for (const d of cladogramPaths(layout)) {
+    for (const d of spinePaths(layout)) {
       const path = document.createElementNS(SVG_NS, "path");
       path.setAttribute("d", d);
       path.setAttribute("fill", "none");
@@ -1302,12 +1297,6 @@ export function renderMapPage(root, store, options = {}) {
 
     treeMotion = wireTreeMotion({ svg: treeSvg, layout, layers, reduced: reducedMotion });
 
-    /* Ticket 13: the convergence fan-in. On desktop (a stage wide enough to
-     * draw them) each convergence node gets a small fan of branch lines
-     * rising into its bottom edge, one per combined field. Mobile carries the
-     * "combines N fields" chip instead - the fan would crowd a 375px column.
-     * Drawn after wireTreeMotion so the fan strokes are never mistaken for
-     * cladogram elbows by the motion wiring. */
     if (width > TREE_TWO_UP_MIN_WIDTH) {
       const fanGroup = document.createElementNS(SVG_NS, "g");
       fanGroup.setAttribute("class", "tree-converge-fans");

@@ -218,24 +218,16 @@ recipe live in `research/13-ui-design-spec.md`.
   Changes from each turn's diff animate: new nodes pop in, state flips
   transition color on the same element, evidence or confidence changes flash,
   edge colors transition. The page makes no network requests - every update
-  comes from the shared session store. Since ticket 15 (Danny's product call,
-  2026-08-08) the Reality segment is visible from session start: the reality
-  phylogenetic tree - the concept as the root crown, each reality
-  layer branching down below it, because a reality map IS a lineage (every
-  concept is built on simpler concepts beneath it) - is an information
-  surface the learner may open at any time a reality map is held, not a
-  session-end reveal. The tree reads chronologically as a lineage (ticket
-  17, restored in v4 ticket 03): a central trunk descends from the crown
-  and each layer diverges from it at its own depth - the top layer (most
-  derived) diverges highest, nearest the crown, and the deepest foundation
-  lowest - with the branch label at each divergence point. Branch columns
-  alternate left and right around the trunk (deepest branch nearest the
-  trunk on each side), so the elbows never cross another branch's cards;
-  columns keep the horizontal spread (280px cards, 32px gaps) and wide maps
-  scroll the stage horizontally. On land the tree plays a one-shot elapsed
-  grow (~1s: trunk, then deepest-first layers) and then stays fully
-  visible; scroll never gates opacity. Reduced motion skips grow and sap. A
-  metrics row of closeness
+  comes from the shared session store. Home is the Tree: a first-principles
+  dependence path of the held Reality Map. Crown (the concept) at the top,
+  foundations at the bottom. Y follows existing `built-on` / `depends-on` /
+  `abstraction-of` edges, not observation dates (dates stay on hover). Layers
+  are named bands behind the spine, not left/right columns. Extra parents of
+  a convergence node sit as short ribs. The stage width is the viewport;
+  horizontal stage-scroll is a failure of this shape. On land the tree plays
+  a one-shot elapsed grow (~1s: trunk, then deepest-first layer bands) and
+  then stays fully visible; scroll never gates opacity. Reduced motion skips
+  grow and sap. A metrics row of closeness
   score, gap closures and the transfer result, plus the transfer assessment,
   render on both tabs at session end only. The chat page NEVER leaks reality
   content (labels, layers, descriptions) in either direction: the no-leak

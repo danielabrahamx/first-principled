@@ -1,330 +1,337 @@
 /**
- * Reality phylogenetic tree (ticket 13, design spec): viewmodel plus pure
- * geometry for the reality view.
+ * Dependence-path Tree (v5 ticket 03): viewmodel plus pure geometry.
  *
- * Why a tree: a reality map IS a lineage. Every concept is built on simpler
- * concepts beneath it (built-on / part-of / depends-on edges), which is
- * exactly the branching structure of a phylogenetic tree. The concept is the
- * crown; its foundations branch down like ancestry.
+ * The Tree is a first-principles dependence path of one Reality Map. Crown
+ * (the concept) at the top, foundations at the bottom. Y follows existing
+ * `built-on` / `depends-on` / `abstraction-of` edges, not observation dates.
+ * Dates stay on hover. Layers are named bands, not left/right columns.
+ * Extra parents of a convergence node sit as short ribs.
  *
- * `realityTree` turns the reality map into {rootLabel, branches}: the root is
- * the concept word, and each layer is a branch of stacked node cards. Layers
- * are ordered chronologically - the most recently-observed layer nearest the
- * crown, the oldest foundations lowest - so the tree reads as discovery
- * history, oldest at the bottom. `treeLayout` and `cladogramPaths` turn that
- * into absolute card positions and SVG strokes.
+ * `treeLayout` takes the Reality Map and a viewport width so 320/375 never
+ * page-overflow. `spinePaths` is the SVG stroke list (trunk first). One-shot
+ * grow in motion.js still rides `.tree-layer` wrappers, deepest band first.
  *
- * The geometry is the v1 ticket 17 cladogram (v4 ticket 03): a central trunk
- * descends from the crown and each layer diverges at its own depth - even
- * branches right, odd left, deepest-nearest the trunk per side. Strict
- * chronology (ticket 10) drives the ordering: within a layer, cards sort by
- * observation date oldest first (unknown dates last, in original order,
- * stable); layers sort by their oldest date, oldest nearest the foundation.
- * The layer chain structure is the invariant - the sort never moves a node
- * across a layer boundary (ticket 08 contract).
- *
- * Reading direction: concept at top, oldest foundations at the bottom; sap
- * rises bottom to top. One-shot grow (ticket 03) rides this geometry.
- *
- * This is a comparison view: it renders full reality content (layer names,
- * node labels), so the map page may mount it ONLY at session end - the
- * no-leak rule binds mid-session only.
- *
- * Pure and DOM-free so node:test covers the shapes and the geometry.
+ * Pure and DOM-free so node:test covers ranks, y-order, and fit.
  */
-
-import { realitySections } from "./comparison.js";
-import { observationOf, observationDateKey } from "./observation.js";
 
 /** @typedef {import("../mmg/types.js").RealityMap} RealityMap */
 
-/** The default card metrics shared by the tree renderer. */
+export const LAYOUT_EDGE_TYPES = ["built-on", "depends-on", "abstraction-of"];
+
 export const TREE_CARD_WIDTH = 280;
 export const TREE_CARD_HEIGHT = 64;
-/** Horizontal gap between branch columns. */
-export const TREE_COLUMN_GAP = 32;
-/** Vertical gap between stacked cards inside a branch. */
-export const TREE_CARD_GAP = 12;
-/** Root card box. */
+export const TREE_CARD_GAP = 28;
 export const TREE_ROOT_WIDTH = 220;
 export const TREE_ROOT_HEIGHT = 74;
-/** Root card bottom to the first branch divergence point. */
-export const TREE_ROOT_GAP = 72;
-/** Vertical step between successive branch divergence points. */
-export const TREE_DIVERGENCE_STEP = 36;
-/** Branch divergence point to the first card top (the branch label sits
- * between). */
-export const TREE_LABEL_GAP = 34;
+export const TREE_ROOT_GAP = 36;
+export const TREE_BAND_PAD = 10;
+export const TREE_RIB_OFFSET = 44;
+export const TREE_STAGE_PAD = 16;
 /** Stage widths above this may draw convergence fans (chips always show). */
 export const TREE_TWO_UP_MIN_WIDTH = 480;
 
 /**
- * The first number in a node's observation date, as a sort key - 600 BC ->
- * 600, "1947" -> 1947. Nodes with no usable date sort last (Infinity).
+ * Layout-only edges: source rests on target, so target sits lower.
  *
- * @param {any} node
- * @returns {number}
+ * @param {RealityMap | null | undefined} map
+ * @returns {Array<{ source: string; target: string; type: string }>}
  */
-function nodeDateKey(node) {
-  const view = observationOf(node);
-  return observationDateKey(view.date ? view.date.value : null);
+export function layoutEdges(map) {
+  const edges = map && Array.isArray(map.edges) ? map.edges : [];
+  return edges.filter(
+    (edge) =>
+      edge &&
+      typeof edge.source === "string" &&
+      typeof edge.target === "string" &&
+      LAYOUT_EDGE_TYPES.includes(edge.type)
+  );
 }
 
 /**
- * The tree's visual model: the concept as the root, each reality layer as a
- * branch of node cards, in strict chronological order (ticket 10) - cards
- * oldest first within each layer, layers oldest at the bottom (nearest the
- * foundation), stable. The layer chain structure is never re-sorted across
- * layer boundaries.
+ * Longest-path rank from foundations. Rank 0 = no layout parents.
+ * Observation dates are ignored.
  *
- * Ticket 13 convergence: a node that carries a `combines` list is a
- * CONVERGENCE node - a true synthesis of discoveries from several fields.
- * Its card records `combines`: the number of DISTINCT LAYERS its enabling
- * observations come from (the "combines N fields" chip), so the renderer can
- * fan in that many branches and label the count.
- *
- * @param {RealityMap | null | undefined} realityMap
- * @returns {{ rootLabel: string; branches: Array<{ id: string; name: string; oldestDate: number; nodes: Array<{ id: string; label: string; combines: number }> }> }}
+ * @param {RealityMap | null | undefined} map
+ * @returns {Map<string, number>}
  */
-export function realityTree(realityMap) {
-  const sections = realitySections(realityMap);
-  const byId = new Map(
-    realityMap && Array.isArray(realityMap.nodes)
-      ? realityMap.nodes.map((node) => [node.id, node])
-      : []
-  );
-
-  /** The distinct layers a node's combines list reaches into: a convergence
-   * node combines enabling observations from 2+ distinct lower layers.
-   * @param {any} node */
-  function combineLayerCount(node) {
-    if (!node || !Array.isArray(node.combines)) return 0;
-    const layers = new Set();
-    for (const entry of node.combines) {
-      if (!entry || typeof entry.id !== "string") continue;
-      const source = byId.get(entry.id);
-      if (source && typeof source.layer === "string") layers.add(source.layer);
-    }
-    return layers.size;
+export function dependenceRanks(map) {
+  const nodes = map && Array.isArray(map.nodes) ? map.nodes : [];
+  const edges = layoutEdges(map);
+  /** @type {Map<string, string[]>} */
+  const parents = new Map(nodes.map((node) => [node.id, []]));
+  for (const edge of edges) {
+    const list = parents.get(edge.source);
+    if (list && parents.has(edge.target)) list.push(edge.target);
   }
 
-  // Cards sorted by date within each layer: oldest first, unknown dates last
-  // in original order (stable). Each layer keeps its own oldest date for the
-  // layer ordering below.
-  const layers = sections.map((section) => {
-    const indexed = section.nodes.map((node, index) => {
-      const date = nodeDateKey(byId.get(node.id));
-      const combines = combineLayerCount(byId.get(node.id));
-      return { id: node.id, label: node.label, date, index, combines };
-    });
-    indexed.sort((a, b) => a.date - b.date || a.index - b.index);
+  /** @type {Map<string, number>} */
+  const ranks = new Map();
+  const visiting = new Set();
+
+  /** @param {string} id */
+  function rankOf(id) {
+    if (ranks.has(id)) return /** @type {number} */ (ranks.get(id));
+    if (visiting.has(id)) return 0;
+    visiting.add(id);
+    const deps = parents.get(id) || [];
+    let rank = 0;
+    for (const dep of deps) rank = Math.max(rank, rankOf(dep) + 1);
+    visiting.delete(id);
+    ranks.set(id, rank);
+    return rank;
+  }
+
+  for (const node of nodes) rankOf(node.id);
+  return ranks;
+}
+
+/**
+ * Distinct lower-layer count of a node's `combines` list.
+ *
+ * @param {any} node
+ * @param {Map<string, any>} byId
+ */
+function combineLayerCount(node, byId) {
+  if (!node || !Array.isArray(node.combines)) return 0;
+  const layers = new Set();
+  for (const entry of node.combines) {
+    if (!entry || typeof entry.id !== "string") continue;
+    const source = byId.get(entry.id);
+    if (source && typeof source.layer === "string") layers.add(source.layer);
+  }
+  return layers.size;
+}
+
+/**
+ * Layer-grouped view of the map (chain order, crown-nearest first). No date
+ * sort. Used by tests and as the grow-band grouping for `treeLayout`.
+ *
+ * @param {RealityMap | null | undefined} realityMap
+ * @returns {{ rootLabel: string; branches: Array<{ id: string; name: string; nodes: Array<{ id: string; label: string; combines: number }> }> }}
+ */
+export function realityTree(realityMap) {
+  const layers = realityMap && Array.isArray(realityMap.layers) ? realityMap.layers : [];
+  const nodes = realityMap && Array.isArray(realityMap.nodes) ? realityMap.nodes : [];
+  const byId = new Map(nodes.map((node) => [node.id, node]));
+
+  const branches = layers.map((layer) => {
+    const ids = Array.isArray(layer.nodes) ? layer.nodes : [];
     return {
-      id: section.id,
-      name: section.name,
-      oldestDate: indexed.length > 0 ? indexed[0].date : Infinity,
-      nodes: indexed.map((node) => ({
-        id: node.id,
-        label: node.label,
-        combines: node.combines,
-      })),
+      id: layer.id,
+      name: layer.name,
+      nodes: ids.flatMap((id) => {
+        const node = byId.get(id);
+        if (!node) return [];
+        return [
+          {
+            id: node.id,
+            label: node.label,
+            combines: combineLayerCount(node, byId),
+          },
+        ];
+      }),
     };
   });
-
-  // Layers ordered by their oldest date, oldest at the bottom (the foundation
-  // sits lowest): branch 0 renders nearest the crown, so sort newest-oldest-
-  // date first. Stable so equal-date layers keep their chain order.
-  const indexedLayers = layers.map((layer, index) => ({ layer, index }));
-  indexedLayers.sort(
-    (a, b) => b.layer.oldestDate - a.layer.oldestDate || a.index - b.index
-  );
+  branches.reverse();
 
   return {
     rootLabel:
       realityMap && typeof realityMap.concept === "string" ? realityMap.concept : "",
-    branches: indexedLayers.map(({ layer }) => ({
-      id: layer.id,
-      name: layer.name,
-      oldestDate: layer.oldestDate,
-      nodes: layer.nodes,
-    })),
+    branches,
   };
 }
 
 /**
- * Absolute geometry for the tree as a phylogenetic cladogram (v1 ticket 17,
- * v4 ticket 03): root card at the top, a central trunk, layers hanging left
- * and right (even right, odd left, deepest-nearest the trunk per side).
- * `options.width` is ignored; the stage width is intrinsic so wide maps
- * scroll the stage horizontally (the v1 375px fit). A convergence node's
- * card carries its `combines` count (distinct combined layers, ticket 13).
+ * Absolute geometry: crown, spine cards, short ribs at extra convergence
+ * parents, named layer bands. `options.width` is the stage width (viewport).
  *
- * @param {{ rootLabel: string; branches: Array<{ id: string; name: string; oldestDate: number; nodes: Array<{ id: string; label: string; combines?: number }> }> }} tree
- *   from realityTree.
- * @param {object} [_options] - kept for call-site compatibility; unused.
- * @returns {{
- *   width: number;
- *   height: number;
- *   trunk: number;
- *   root: { x: number; y: number; width: number; height: number; cx: number };
- *   branches: Array<{
- *     id: string;
- *     name: string;
- *     cx: number;
- *     divergenceY: number;
- *     labelY: number;
- *     firstCardY: number;
- *     cards: Array<{ id: string; label: string; combines: number; x: number; y: number; cx: number }>;
- *   }>;
- * }}
+ * @param {RealityMap | null | undefined} realityMap
+ * @param {{ width?: number }} [options]
  */
-export function treeLayout(tree, _options = {}) {
-  const count = tree.branches.length;
-  const step = TREE_CARD_WIDTH + TREE_COLUMN_GAP;
-  /** @param {number} rank */
-  const dist = (rank) => TREE_CARD_WIDTH / 2 + TREE_COLUMN_GAP / 2 + rank * step;
-  /** @param {number} rank */
-  const extent = (rank) => dist(rank) + TREE_CARD_WIDTH / 2;
-  /** @param {number} i */
-  const divergenceY = (i) =>
-    TREE_ROOT_HEIGHT + TREE_ROOT_GAP + i * TREE_DIVERGENCE_STEP;
+export function treeLayout(realityMap, options = {}) {
+  const width = Math.max(320, Number(options.width) || 375);
+  const nodes = realityMap && Array.isArray(realityMap.nodes) ? realityMap.nodes : [];
+  const layers = realityMap && Array.isArray(realityMap.layers) ? realityMap.layers : [];
+  const edges = layoutEdges(realityMap);
+  const ranks = dependenceRanks(realityMap);
+  const byId = new Map(nodes.map((node) => [node.id, node]));
+  const tree = realityTree(realityMap);
 
-  /** @type {number[]} */
-  const cx = new Array(count);
-  let trunk;
-  let width;
-  if (count === 0) {
-    trunk = TREE_CARD_WIDTH / 2;
-    width = TREE_CARD_WIDTH;
-  } else if (count === 1) {
-    trunk = TREE_CARD_WIDTH / 2;
-    width = TREE_CARD_WIDTH;
-    cx[0] = trunk;
-  } else {
-    const leftCount = Math.floor(count / 2);
-    const rightCount = Math.ceil(count / 2);
-    const maxOdd = 2 * leftCount - 1;
-    const maxEven = 2 * rightCount - 2;
-    trunk = extent(leftCount - 1);
-    width = extent(leftCount - 1) + extent(rightCount - 1);
-    for (let i = 0; i < count; i++) {
-      const rank = i % 2 === 0 ? (maxEven - i) / 2 : (maxOdd - i) / 2;
-      cx[i] = i % 2 === 0 ? trunk + dist(rank) : trunk - dist(rank);
+  /** @type {Map<string, string[]>} */
+  const parentsOf = new Map(nodes.map((node) => [node.id, []]));
+  for (const edge of edges) {
+    if (!byId.has(edge.source) || !byId.has(edge.target)) continue;
+    const list = parentsOf.get(edge.source);
+    if (list) list.push(edge.target);
+  }
+
+  const maxRank = nodes.reduce((m, node) => Math.max(m, ranks.get(node.id) || 0), 0);
+  const cardWidth = Math.min(TREE_CARD_WIDTH, width - TREE_STAGE_PAD * 2);
+  const rootWidth = Math.min(TREE_ROOT_WIDTH, cardWidth);
+  const trunk = width / 2;
+  const maxRib = Math.max(0, (width - cardWidth) / 2 - 4);
+  const rib = Math.min(TREE_RIB_OFFSET, maxRib);
+
+  /** @type {Set<string>} */
+  const ribIds = new Set();
+  /** @type {Map<string, number>} */
+  const ribSign = new Map();
+  let ribToggle = 1;
+  for (const node of nodes) {
+    const parents = parentsOf.get(node.id) || [];
+    const combines = combineLayerCount(node, byId);
+    if (parents.length < 2 && combines < 2) continue;
+    let main = parents[0];
+    for (const parent of parents) {
+      if ((ranks.get(parent) || 0) > (ranks.get(main) || 0)) main = parent;
+    }
+    for (const parent of parents) {
+      if (parent === main) continue;
+      ribIds.add(parent);
+      ribSign.set(parent, ribToggle);
+      ribToggle *= -1;
     }
   }
 
   const root = {
-    x: trunk - TREE_ROOT_WIDTH / 2,
+    x: trunk - rootWidth / 2,
     y: 0,
-    width: TREE_ROOT_WIDTH,
+    width: rootWidth,
     height: TREE_ROOT_HEIGHT,
     cx: trunk,
   };
 
-  const branches = tree.branches.map((branch, i) => {
-    const dy = divergenceY(i);
-    const firstCardY = dy + TREE_LABEL_GAP;
+  /** @type {Map<string, { id: string; label: string; layer: string; combines: number; rank: number; rib: boolean; x: number; y: number; cx: number; width: number; height: number }>} */
+  const cardById = new Map();
+  for (const node of nodes) {
+    const rank = ranks.get(node.id) || 0;
+    const fromTop = maxRank - rank;
+    const cx = ribIds.has(node.id) ? trunk + (ribSign.get(node.id) || 1) * rib : trunk;
+    const y =
+      TREE_ROOT_HEIGHT +
+      TREE_ROOT_GAP +
+      fromTop * (TREE_CARD_HEIGHT + TREE_CARD_GAP);
+    cardById.set(node.id, {
+      id: node.id,
+      label: node.label,
+      layer: node.layer,
+      combines: combineLayerCount(node, byId),
+      rank,
+      rib: ribIds.has(node.id),
+      x: cx - cardWidth / 2,
+      y,
+      cx,
+      width: cardWidth,
+      height: TREE_CARD_HEIGHT,
+    });
+  }
+
+  const cards = [...cardById.values()];
+
+  const branches = tree.branches.map((branch) => {
+    const branchCards = branch.nodes
+      .flatMap((node) => {
+        const card = cardById.get(node.id);
+        return card ? [card] : [];
+      })
+      .sort((a, b) => a.y - b.y);
+    const first = branchCards[0];
+    const last = branchCards[branchCards.length - 1];
+    const top = first ? first.y - TREE_BAND_PAD : TREE_ROOT_HEIGHT + TREE_ROOT_GAP;
+    const bottom = last ? last.y + TREE_CARD_HEIGHT + TREE_BAND_PAD : top;
     return {
       id: branch.id,
       name: branch.name,
-      cx: cx[i],
-      divergenceY: dy,
-      labelY: dy + 10,
-      firstCardY,
-      cards: branch.nodes.map((node, j) => ({
-        id: node.id,
-        label: node.label,
-        combines: node.combines ?? 0,
-        x: cx[i] - TREE_CARD_WIDTH / 2,
-        y: firstCardY + j * (TREE_CARD_HEIGHT + TREE_CARD_GAP),
-        cx: cx[i],
-      })),
+      cx: trunk,
+      divergenceY: first ? first.y : top,
+      labelY: top + 8,
+      firstCardY: first ? first.y : top,
+      bandY: top,
+      bandHeight: Math.max(bottom - top, TREE_CARD_HEIGHT),
+      cards: branchCards,
     };
   });
 
-  const lastCardBottom =
-    branches.length === 0
+  const lastBottom =
+    cards.length === 0
       ? TREE_ROOT_HEIGHT + TREE_ROOT_GAP
-      : Math.max(
-          ...branches.map((branch) => {
-            const last = branch.cards[branch.cards.length - 1];
-            return last ? last.y + TREE_CARD_HEIGHT : branch.firstCardY;
-          })
-        );
-  const height = Math.max(lastCardBottom + 16, TREE_ROOT_HEIGHT + 16);
+      : Math.max(...cards.map((card) => card.y + TREE_CARD_HEIGHT));
 
-  return { width, height, trunk, root, branches };
+  return {
+    width,
+    height: lastBottom + 24,
+    trunk,
+    cardWidth,
+    root,
+    branches,
+    cards,
+    cardById,
+    edges,
+    parentsOf,
+    maxRank,
+  };
 }
 
 /**
- * Cladogram elbow strokes: a vertical trunk from the root card bottom down
- * to the deepest divergence, one elbow per branch (horizontal run from the
- * trunk to the column, then a vertical drop into its cards), and vertical
- * connectors between stacked cards. Fill none, strokeWidth 2, stroke
- * #B9B3E8.
+ * SVG strokes: trunk from the crown into the first spine card, then one
+ * connector per layout edge (vertical on-spine, elbow for a rib).
  *
  * @param {ReturnType<typeof treeLayout>} layout
- * @returns {string[]} SVG `d` strings.
+ * @returns {string[]}
  */
-export function cladogramPaths(layout) {
+export function spinePaths(layout) {
   /** @type {string[]} */
   const d = [];
-  if (layout.branches.length === 0) return d;
-
-  const last = layout.branches[layout.branches.length - 1];
-  d.push(
-    `M ${layout.root.cx} ${layout.root.y + layout.root.height} V ${last.divergenceY}`
-  );
-
-  for (const branch of layout.branches) {
-    d.push(
-      `M ${layout.root.cx} ${branch.divergenceY} H ${branch.cx} V ${branch.firstCardY}`
-    );
-    for (let j = 1; j < branch.cards.length; j++) {
-      const prev = branch.cards[j - 1];
-      const card = branch.cards[j];
-      d.push(`M ${branch.cx} ${prev.y + TREE_CARD_HEIGHT} V ${card.y}`);
+  const onSpine = layout.cards
+    .filter((card) => !card.rib)
+    .sort((a, b) => a.y - b.y);
+  if (onSpine.length === 0) return d;
+  const first = onSpine[0];
+  d.push(`M ${layout.root.cx} ${layout.root.y + layout.root.height} V ${first.y}`);
+  for (const edge of layout.edges) {
+    const child = layout.cardById.get(edge.source);
+    const parent = layout.cardById.get(edge.target);
+    if (!child || !parent) continue;
+    const x1 = parent.cx;
+    const y1 = parent.y;
+    const x2 = child.cx;
+    const y2 = child.y + child.height;
+    if (Math.abs(x1 - x2) < 1) d.push(`M ${x1} ${y1} V ${y2}`);
+    else {
+      const midY = (y1 + y2) / 2;
+      d.push(`M ${x1} ${y1} V ${midY} H ${x2} V ${y2}`);
     }
   }
   return d;
 }
 
+/** @deprecated use spinePaths - kept as the motion/render call name during the port */
+export const cladogramPaths = spinePaths;
+
 /**
- * The convergence fan-in strokes (ticket 13): for every convergence node
- * card (a card whose `combines` is 2+), a small fan of branch lines rising
- * from below the card up into its bottom edge - one line per combined field
- * (distinct layer). These mark the node as the meeting point of several
- * streams on desktop, where there is room to draw them; on the vertical path
- * they hang just under the card, one stroke per combined field, converging
- * into the node. Each stroke is a short diagonal from a point below the card
- * up into the card bottom, fanned across the card width.
- *
- * Pure geometry, DOM-free for node:test.
+ * Convergence fan-in strokes: one short diagonal per combined field into
+ * the card bottom. Chips always show; fans are optional on a wide stage.
  *
  * @param {ReturnType<typeof treeLayout>} layout
- * @returns {Array<{ id: string; d: string }>} one path per convergence card,
- *   a multi-segment `d` string with one fan stroke per combined field.
+ * @returns {Array<{ id: string; d: string }>}
  */
 export function convergenceFanPaths(layout) {
   /** @type {Array<{ id: string; d: string }>} */
   const paths = [];
-  for (const branch of layout.branches) {
-    for (const card of branch.cards) {
-      const fields = card.combines;
-      if (typeof fields !== "number" || fields < 2) continue;
-      const cx = card.cx;
-      const bottom = card.y + TREE_CARD_HEIGHT;
-      // Fan the strokes across the card bottom: the middle stroke rises
-      // straight up into the node, the outer strokes angle in from the sides.
-      const fanHalf = TREE_CARD_WIDTH / 2 - 18;
-      const segments = [];
-      for (let i = 0; i < fields; i++) {
-        const t = fields === 1 ? 0.5 : i / (fields - 1);
-        const x = cx - fanHalf + t * 2 * fanHalf;
-        const startY = bottom + 20 + (Math.abs(x - cx) / fanHalf) * 8;
-        segments.push(`M ${x} ${startY} L ${cx} ${bottom}`);
-      }
-      paths.push({ id: card.id, d: segments.join(" ") });
+  for (const card of layout.cards) {
+    const fields = card.combines;
+    if (typeof fields !== "number" || fields < 2) continue;
+    const cx = card.cx;
+    const bottom = card.y + TREE_CARD_HEIGHT;
+    const fanHalf = card.width / 2 - 18;
+    const segments = [];
+    for (let i = 0; i < fields; i++) {
+      const t = fields === 1 ? 0.5 : i / (fields - 1);
+      const x = cx - fanHalf + t * 2 * fanHalf;
+      const startY = bottom + 20 + (Math.abs(x - cx) / fanHalf) * 8;
+      segments.push(`M ${x} ${startY} L ${cx} ${bottom}`);
     }
+    paths.push({ id: card.id, d: segments.join(" ") });
   }
   return paths;
 }

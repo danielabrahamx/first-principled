@@ -1,16 +1,16 @@
 /**
- * Tree motion (ticket 03): one-shot elapsed-time grow on the v1 ticket 17
- * cladogram (src/lib/mapview/tree.js).
+ * Tree motion (v5 ticket 03): one-shot elapsed-time grow on the dependence-
+ * path spine (src/lib/mapview/tree.js).
  *
- * Three effects ride the cladogram centerlines - root concept card top,
- * trunk descending, layers hanging left and right of the trunk:
+ * Three effects ride the spine - root concept card top, trunk descending,
+ * named layer bands along the path:
  *
  * 1. Flowing sap pulses via SMIL animateMotion - one pulse train on the trunk
- *    (deepest foundation up to the crown) and one per branch. Mounted after
+ *    (deepest foundation up to the crown) and one per rib. Mounted after
  *    the grow freezes. Pure SMIL, zero JS animation loop.
  * 2. One-shot grow - the trunk draws over the first half of a ~1s elapsed
- *    timeline, then each layer buds in, deepest foundation first. When the
- *    timeline ends, freeze at full visibility. Opacity is never bound to
+ *    timeline, then each layer band buds in, deepest foundation first. When
+ *    the timeline ends, freeze at full visibility. Opacity is never bound to
  *    window.scrollY.
  * 3. Node lifecycle stagger - a deterministic --mt-delay per element that the
  *    caller (map.js) applies as the CSS tree-bud animation.
@@ -106,8 +106,8 @@ export function layerReveal(progress, count, index) {
 
 /**
  * The centerlines the sap pulses ride along, in the rising direction: the
- * trunk runs from the deepest divergence up to the crown, and each branch
- * runs from its last card up to its divergence and into the trunk.
+ * trunk runs from the deepest spine card up to the crown, and each rib
+ * runs from its card into the trunk.
  *
  * @param {ReturnType<typeof import("./mapview/tree.js").treeLayout>} layout
  * @returns {Array<{ id: string; d: string }>}
@@ -115,19 +115,24 @@ export function layerReveal(progress, count, index) {
 export function sapPulsePaths(layout) {
   /** @type {Array<{ id: string; d: string }>} */
   const paths = [];
-  if (layout.branches.length === 0) return paths;
+  const onSpine = (layout.cards || [])
+    .filter((card) => !card.rib)
+    .sort((a, b) => a.y - b.y);
+  if (onSpine.length === 0) return paths;
 
-  const last = layout.branches[layout.branches.length - 1];
+  const last = onSpine[onSpine.length - 1];
+  if (!last) return paths;
   const trunkTop = layout.root.y + layout.root.height;
   const trunkX = layout.trunk ?? layout.root.cx;
-  paths.push({ id: "trunk", d: `M ${trunkX} ${last.divergenceY} V ${trunkTop}` });
+  paths.push({
+    id: "trunk",
+    d: `M ${trunkX} ${last.y + TREE_CARD_HEIGHT} V ${trunkTop}`,
+  });
 
-  for (const branch of layout.branches) {
-    const lastCard = branch.cards[branch.cards.length - 1];
-    const startY = lastCard ? lastCard.y + TREE_CARD_HEIGHT : branch.firstCardY;
+  for (const card of layout.cards.filter((c) => c.rib)) {
     paths.push({
-      id: branch.id,
-      d: `M ${branch.cx} ${startY} V ${branch.divergenceY} H ${trunkX}`,
+      id: card.id,
+      d: `M ${card.cx} ${card.y + TREE_CARD_HEIGHT} V ${card.y} H ${trunkX}`,
     });
   }
 
@@ -135,28 +140,29 @@ export function sapPulsePaths(layout) {
 }
 
 /**
- * For every cladogram stroke after the trunk (elbows and in-column
- * connectors), the layout order of the layer it belongs to. Aligned 1:1 with
- * `cladogramPaths(layout)` minus its first entry.
+ * For every spine stroke after the trunk (one per layout edge), the layout
+ * order of the layer the child card belongs to. Aligned 1:1 with
+ * `spinePaths(layout)` minus its first entry.
  *
  * @param {ReturnType<typeof import("./mapview/tree.js").treeLayout>} layout
  * @returns {number[]}
  */
 export function elbowLayerIndexes(layout) {
-  /** @type {number[]} */
-  const indexes = [];
+  /** @type {Map<string, number>} */
+  const layerOf = new Map();
   layout.branches.forEach((branch, branchIndex) => {
-    indexes.push(branchIndex);
-    for (let j = 1; j < branch.cards.length; j++) {
-      indexes.push(branchIndex);
-    }
+    for (const card of branch.cards) layerOf.set(card.id, branchIndex);
   });
-  return indexes;
+  return layout.edges
+    .filter(
+      (edge) => layout.cardById.has(edge.source) && layout.cardById.has(edge.target)
+    )
+    .map((edge) => layerOf.get(edge.source) ?? 0);
 }
 
 /**
  * Wire the 07 motion onto the rendered live tree. The caller (map.js) has
- * already laid out the SVG strokes (cladogramPaths) and built one `.tree-layer`
+ * already laid out the SVG strokes (spinePaths) and built one `.tree-layer`
  * wrapper per branch; this tags the trunk, plays the one-shot grow, then
  * mounts sap pulses after freeze.
  *

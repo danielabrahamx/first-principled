@@ -9,7 +9,7 @@ distance between the learner's mental model and reality.
 
 ## Frontier (resume here)
 
-v5 map charted. Open frontier: [Prototype the dependence-path Tree](.scratch/first-principled-v5/issues/01-prototype-the-dependence-path-tree.md).
+v5 map. Open frontier: [Ship Tutor as a bottom sheet](.scratch/first-principled-v5/issues/04-ship-tutor-as-a-bottom-sheet.md).
 
 ## Language
 

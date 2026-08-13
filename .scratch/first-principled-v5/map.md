@@ -62,6 +62,8 @@ by default, and never steals Tree width. Generator salvaged.
 - 02: compact bottom sheet (240px / 42dvh) plus spine padding so foundations
   stay reachable. Never a side rail. Asset:
   `.scratch/first-principled-v5/research/02-tutor-bottom-sheet/`.
+- 03: live Tree is the dependence-path spine. Date-sort and left/right
+  cladogram removed. Spec section 9 updated.
 
 ## Not yet specified
 

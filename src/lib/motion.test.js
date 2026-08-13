@@ -2,9 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import {
-  realityTree,
   treeLayout,
-  cladogramPaths,
+  spinePaths,
   TREE_CARD_HEIGHT,
 } from "./mapview/tree.js";
 import { laptopRealityMap } from "./mmg/fixtures.js";
@@ -56,8 +55,6 @@ const closeTo = (actual, expected, message, epsilon = 1e-9) =>
   assert.ok(Math.abs(actual - expected) < epsilon, `${message}: ${actual} ~ ${expected}`);
 
 test("layerReveal buds layers deepest-first after the trunk", () => {
-  // 3 layers; chronological = count - 1 - index, so the deepest (index 2)
-  // reveals first and the crown-most (index 0) reveals last.
   assert.equal(layerReveal(0.5, 3, 2), 0, "deepest starts revealing at 0.5");
   assert.equal(layerReveal(0.75, 3, 2), 1, "deepest fully revealed by 0.75");
   closeTo(layerReveal(0.75, 3, 1), 0.5, "middle half-revealed at 0.75");
@@ -67,47 +64,29 @@ test("layerReveal buds layers deepest-first after the trunk", () => {
   assert.equal(layerReveal(1, 0, 0), 1, "no layers renders fully");
 });
 
-test("sapPulsePaths: one trunk pulse plus one per branch, all rising", () => {
-  const tree = realityTree(laptopRealityMap);
-  const layout = treeLayout(tree);
+test("sapPulsePaths: one trunk pulse rising from the foundation", () => {
+  const layout = treeLayout(laptopRealityMap, { width: 375 });
   const paths = sapPulsePaths(layout);
-
-  assert.equal(paths.length, 7);
+  assert.ok(paths.length >= 1);
   assert.equal(paths[0].id, "trunk");
-
-  const last = layout.branches[layout.branches.length - 1];
+  const electricity = layout.cardById.get("n-electricity");
+  assert.ok(electricity);
   const trunkTop = layout.root.y + layout.root.height;
-  assert.equal(paths[0].d, `M ${layout.trunk} ${last.divergenceY} V ${trunkTop}`);
-
-  layout.branches.forEach((branch, i) => {
-    const sap = paths[i + 1];
-    assert.equal(sap.id, branch.id);
-    const lastCard = branch.cards[branch.cards.length - 1];
-    const startY = lastCard ? lastCard.y + TREE_CARD_HEIGHT : branch.firstCardY;
-    assert.ok(
-      sap.d.startsWith(`M ${branch.cx} ${startY} V ${branch.divergenceY} H ${layout.trunk}`)
-    );
-  });
+  assert.equal(
+    paths[0].d,
+    `M ${layout.trunk} ${electricity.y + TREE_CARD_HEIGHT} V ${trunkTop}`
+  );
 });
 
 test("sapPulsePaths: empty tree emits no pulses", () => {
-  const layout = treeLayout({ rootLabel: "x", branches: [] });
+  const layout = treeLayout({ concept: "x", layers: [], nodes: [], edges: [] });
   assert.deepEqual(sapPulsePaths(layout), []);
 });
 
-test("elbowLayerIndexes aligns with cladogramPaths past the trunk", () => {
-  const layout = treeLayout(realityTree(laptopRealityMap));
-  const clad = cladogramPaths(layout);
+test("elbowLayerIndexes aligns with spinePaths past the trunk", () => {
+  const layout = treeLayout(laptopRealityMap, { width: 375 });
+  const paths = spinePaths(layout);
   const elbows = elbowLayerIndexes(layout);
-  assert.equal(elbows.length, clad.length - 1);
-  let cursor = 0;
-  layout.branches.forEach((branch, i) => {
-    assert.equal(elbows[cursor], i);
-    cursor += 1;
-    for (let j = 1; j < branch.cards.length; j++) {
-      assert.equal(elbows[cursor], i);
-      cursor += 1;
-    }
-  });
-  assert.equal(cursor, elbows.length);
+  assert.equal(elbows.length, paths.length - 1);
+  assert.ok(elbows.every((i) => i >= 0 && i < layout.branches.length));
 });

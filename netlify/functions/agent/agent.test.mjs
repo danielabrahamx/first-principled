@@ -27,6 +27,10 @@ function fakeStore(initial = null) {
       async get(key) {
         return data.has(key) ? data.get(key) : null;
       },
+      async setJSON(key, value, options) {
+        data.set(key, value);
+        writes.push({ key, value, options });
+      },
       async set(key, value, options) {
         data.set(key, value);
         writes.push({ key, value, options });
