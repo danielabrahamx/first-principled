@@ -83,6 +83,10 @@ this effort.
 - 12 - Port the phylogenetic motion into the live tree (unblocked by 10;
   Danny 2026-08-13: tree was never rebuilt to look like portfoolio-clone2;
   07 is prototype-only today)
+- 13 - Multi-stream convergence: nodes with many parents (blocked by 11 and
+  12; Danny 2026-08-13: a layer can combine discoveries from multiple
+  fields at any depth - LLM is not only transformers but also encoders,
+  decoders, embeddings, compute; the tree must show all streams)
 
 ## Not yet specified
 
