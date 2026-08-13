@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ticket 01 - cladogram and one-shot grow prototype</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="mt-header">
+    <h1>Cladogram + one-shot grow (ticket 01)</h1>
+    <p>
+      Locked v1 ticket 17 geometry: crown at the top, central trunk, layers
+      hanging left and right (even right, odd left, deepest nearest the trunk
+      per side). One-shot elapsed grow on load (~1s), then freeze at full
+      visibility. Opacity is never bound to scroll.
+    </p>
+    <div class="mt-controls">
+      <label><input type="checkbox" id="sap" checked /> Sap pulses (after grow)</label>
+      <label><input type="checkbox" id="simulate-reduced" /> Simulate reduced motion</label>
+      <span class="mt-status" id="os-status"></span>
+    </div>
+  </header>
+
+  <main class="mt-tree-wrap">
+    <div class="mt-tree-scroll">
+      <div id="tree"></div>
+    </div>
+  </main>
+
+  <footer class="mt-footer">
+    On load the trunk draws, then layers bud deepest-first (physics first,
+    apps last). When the timeline ends every layer stays at opacity 1.
+    Scrolling the page or the stage must not hide or fade anything. Reduced
+    motion (OS or the checkbox) skips grow and sap and shows the full Tree
+    instantly. Horizontal scroll of the stage is the 375px fit: the document
+    itself must not overflow.
+  </footer>
+
+  <script type="module">
+    import { buildTree } from "./tree.js";
+    import { sampleMap } from "./sample-map.js";
+
+    const mount = document.getElementById("tree");
+    const sapCb = document.getElementById("sap");
+    const reducedCb = document.getElementById("simulate-reduced");
+    const osStatus = document.getElementById("os-status");
+
+    const osReduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateOsStatus = () => {
+      osStatus.textContent = `OS prefers-reduced-motion: ${osReduced.matches ? "reduce" : "no-preference"}`;
+    };
+    osReduced.addEventListener("change", () => {
+      updateOsStatus();
+      render();
+    });
+    updateOsStatus();
+
+    let handle = null;
+    const render = () => {
+      if (handle) handle.destroy();
+      mount.replaceChildren();
+      const reduced = reducedCb.checked || osReduced.matches;
+      handle = buildTree(mount, sampleMap, {
+        sap: sapCb.checked,
+        reduced,
+      });
+      document.body.classList.toggle("mt-reduced", reduced);
+    };
+
+    for (const cb of [sapCb, reducedCb]) {
+      cb.addEventListener("change", render);
+    }
+    render();
+  </script>
+</body>
+</html>

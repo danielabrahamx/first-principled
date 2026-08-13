@@ -53,6 +53,7 @@ Generation, observations, and gap-free layer chain stay.
   learner-map tab.
 - Motion: one-shot grow on land, then fully visible.
 - Tutor: briefing-style Q&A over the Reality Map, learner asks first.
+- 01: prototype accepted as-is (v1 ticket 17 cladogram + one-shot elapsed grow, no scroll-gated hide). Asset: research/01-cladogram-prototype/.
 
 ## Not yet specified
 

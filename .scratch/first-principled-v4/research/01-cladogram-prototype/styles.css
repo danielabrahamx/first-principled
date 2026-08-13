@@ -1,0 +1,258 @@
+/* Ticket 01 cladogram prototype. Light theme to match the app. */
+
+:root {
+  --ground: #f3f4f6;
+  --surface: #ffffff;
+  --ink: #1e2228;
+  --ink-muted: #5a6472;
+  --accent: #5b4bc4;
+  --accent-soft: #edebfa;
+  --border: #e2e5ea;
+  --stroke: #b9b3e8;
+  --sap: #2f9e63;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+.mt-header {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px 16px 8px;
+}
+
+.mt-header h1 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+
+.mt-header p {
+  margin: 0 0 16px;
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+
+.mt-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.mt-controls label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.mt-controls input {
+  accent-color: var(--accent);
+}
+
+.mt-status {
+  margin-left: auto;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.mt-tree-wrap {
+  padding: 8px 16px 0;
+  max-width: 100%;
+}
+
+.mt-tree-scroll {
+  max-width: 100%;
+  margin: 0 auto;
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+.mt-stage {
+  position: relative;
+  margin: 0 auto;
+}
+
+.mt-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.mt-nodes {
+  position: relative;
+  height: 100%;
+}
+
+.mt-root {
+  position: absolute;
+  background: var(--ink);
+  border-radius: 16px;
+  padding: 12px 36px;
+  box-shadow: 0 10px 32px rgba(30, 34, 40, 0.18);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.mt-root-eyebrow {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8b94a3;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mt-root-word {
+  margin: 0;
+  font-weight: 700;
+  font-size: 24px;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.mt-branch-label {
+  position: absolute;
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.mt-card {
+  position: absolute;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 2px 6px rgba(30, 34, 40, 0.05);
+}
+
+.mt-card-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mt-card-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mt-card-date {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.mt-obs-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.mt-obs-dot.recorded {
+  background: var(--accent);
+}
+
+.mt-obs-dot.gap {
+  background: transparent;
+  border: 2px dashed var(--ink-muted);
+}
+
+.mt-converge-chip {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(91, 75, 196, 0.1);
+  border: 1px solid rgba(91, 75, 196, 0.35);
+  border-radius: 999px;
+  padding: 1px 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mt-strokes path {
+  fill: none;
+  stroke: var(--stroke);
+  stroke-width: 2;
+}
+
+.mt-sap-pulse {
+  filter: drop-shadow(0 0 4px rgba(47, 158, 99, 0.85));
+}
+
+.mt-layer {
+  transition: opacity 0.12s linear, transform 0.12s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mt-sap-pulse,
+  .mt-layer {
+    animation: none;
+    transition: none;
+  }
+  .mt-sap-pulse {
+    filter: none;
+  }
+}
+
+body.mt-reduced .mt-sap-pulse,
+body.mt-reduced .mt-layer {
+  animation: none;
+  transition: none;
+}
+body.mt-reduced .mt-sap-pulse {
+  filter: none;
+}
+
+.mt-footer {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
