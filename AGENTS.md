@@ -7,7 +7,7 @@ knowledge, then a Socratic conversation refines the learner's Mental Model
 against it. v1 is a static web app plus one stateless serverless function on
 Netlify, DeepSeek-backed, no database.
 
-**Map (only):** `.scratch/first-principled/map.md`
+**Map (only):** `.scratch/first-principled-v4/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
 
