@@ -59,6 +59,9 @@ by default, and never steals Tree width. Generator salvaged.
 - 01: dependence-path prototype accepted as-is (spine from edges, electricity
   below silicon below transistor, named bands, short ribs at convergence).
   Asset: `.scratch/first-principled-v5/research/01-dependence-path-prototype/`.
+- 02: compact bottom sheet (240px / 42dvh) plus spine padding so foundations
+  stay reachable. Never a side rail. Asset:
+  `.scratch/first-principled-v5/research/02-tutor-bottom-sheet/`.
 
 ## Not yet specified
 
@@ -67,7 +70,6 @@ by default, and never steals Tree width. Generator salvaged.
 - Layer-band visual: background stripes vs labels on the spine.
 - If live maps emit weak dependence edges, whether a prompt tweak (not a
   generator rebuild) is required.
-- Bottom-sheet height vs scroll after [Tutor is a bottom sheet that does not cover the foundations](issues/02-tutor-is-a-bottom-sheet.md) has been seen.
 - Discovery timeline (still parked).
 
 ## Out of scope

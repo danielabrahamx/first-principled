@@ -1,0 +1,375 @@
+/* Ticket 01 dependence-path prototype. Light theme to match the app. */
+
+:root {
+  --ground: #f3f4f6;
+  --surface: #ffffff;
+  --ink: #1e2228;
+  --ink-muted: #5a6472;
+  --accent: #5b4bc4;
+  --accent-soft: #edebfa;
+  --border: #e2e5ea;
+  --stroke: #b9b3e8;
+  --band-even: #eceff3;
+  --band-odd: #f7f8fa;
+  --tutor-sheet: 240px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+.mt-header {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 8px;
+}
+
+.mt-header h1 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+
+.mt-header p {
+  margin: 0 0 16px;
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+
+.mt-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.mt-controls label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.mt-controls input {
+  accent-color: var(--accent);
+}
+
+.mt-tree-wrap {
+  padding: 8px 0 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.mt-stage {
+  position: relative;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.mt-bands {
+  position: absolute;
+  inset: 0;
+}
+
+.mt-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+.mt-band-even {
+  background: var(--band-even);
+}
+
+.mt-band-odd {
+  background: var(--band-odd);
+}
+
+.mt-band-name {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.mt-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.mt-nodes {
+  position: relative;
+  height: 100%;
+}
+
+.mt-root {
+  position: absolute;
+  background: var(--ink);
+  border-radius: 16px;
+  padding: 12px 24px;
+  box-shadow: 0 10px 32px rgba(30, 34, 40, 0.18);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.mt-root-eyebrow {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8b94a3;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mt-root-word {
+  margin: 0;
+  font-weight: 700;
+  font-size: 22px;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.mt-card {
+  position: absolute;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 2px 6px rgba(30, 34, 40, 0.05);
+}
+
+.mt-card-rib {
+  border-color: var(--accent);
+}
+
+.mt-card-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mt-card-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mt-obs-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.mt-obs-dot.recorded {
+  background: var(--accent);
+}
+
+.mt-obs-dot.gap {
+  background: transparent;
+  border: 2px dashed var(--ink-muted);
+}
+
+.mt-converge-chip {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(91, 75, 196, 0.1);
+  border: 1px solid rgba(91, 75, 196, 0.35);
+  border-radius: 999px;
+  padding: 1px 8px;
+  white-space: nowrap;
+  flex-shrink: 1;
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mt-hover {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.mt-card:hover .mt-hover,
+.mt-card:focus-visible .mt-hover {
+  display: block;
+}
+
+.mt-strokes path {
+  fill: none;
+  stroke: var(--stroke);
+  stroke-width: 2;
+}
+
+.mt-footer {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.mt-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mt-tutor-toggle {
+  flex-shrink: 0;
+  margin-top: 2px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mt-tutor-toggle[aria-expanded="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+body.tutor-open .mt-tree-wrap {
+  padding-bottom: var(--tutor-sheet);
+}
+
+body.tutor-open .mt-stage,
+body.tutor-open .mt-card {
+  scroll-margin-bottom: var(--tutor-sheet);
+}
+
+body.tutor-open .mt-footer {
+  padding-bottom: calc(24px + var(--tutor-sheet));
+}
+
+.mt-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--tutor-sheet);
+  max-height: 42dvh;
+  z-index: 8;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -8px 28px rgba(30, 34, 40, 0.08);
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.mt-sheet[hidden] {
+  display: none;
+}
+
+.mt-sheet-grab {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border);
+  margin: 0 auto 4px;
+}
+
+.mt-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mt-sheet-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.mt-sheet-close {
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.mt-sheet-body {
+  margin: 0;
+  flex: 1;
+  overflow: auto;
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.mt-sheet-composer {
+  display: flex;
+  gap: 8px;
+}
+
+.mt-sheet-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 14px;
+}
+

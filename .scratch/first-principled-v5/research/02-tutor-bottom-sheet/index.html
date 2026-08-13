@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ticket 02 - Tutor bottom sheet prototype</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="mt-header">
+    <div class="mt-header-row">
+      <h1>Tutor bottom sheet (ticket 02)</h1>
+      <button type="button" class="mt-tutor-toggle" id="tutor-toggle" aria-expanded="false" aria-controls="tutor-sheet">Tutor</button>
+    </div>
+    <p>
+      Compact bottom sheet, closed by default. Opening it does not steal Tree
+      width. Spine padding keeps electricity reachable while the sheet is open.
+    </p>
+    <div class="mt-controls">
+      <label><input type="radio" name="fixture" value="laptop" checked /> Laptop fixture</label>
+      <label><input type="radio" name="fixture" value="llm" /> LLM (convergence ribs)</label>
+    </div>
+  </header>
+
+  <main class="mt-tree-wrap">
+    <div id="tree"></div>
+  </main>
+
+  <footer class="mt-footer">
+    Accepted pattern: compact sheet (240px / 42dvh) plus padding-bottom on the
+    spine equal to the sheet height. Not a side rail. Not a full-screen swap.
+  </footer>
+
+  <section class="mt-sheet" id="tutor-sheet" hidden>
+    <div class="mt-sheet-grab" aria-hidden="true"></div>
+    <div class="mt-sheet-header">
+      <p class="mt-sheet-title">Tutor</p>
+      <button type="button" class="mt-sheet-close" id="tutor-close">Close</button>
+    </div>
+    <p class="mt-sheet-body">
+      Ask about a node on the Tree. The Tutor quotes the Reality Map. This
+      prototype is chrome only - pull Q&amp;A ships in ticket 04.
+    </p>
+    <div class="mt-sheet-composer">
+      <input class="mt-sheet-input" type="text" placeholder="Ask about the Tree..." disabled />
+    </div>
+  </section>
+
+  <script type="module">
+    import { buildTree } from "./tree.js";
+    import { laptopRealityMap, llmRealityMap } from "./sample-map.js";
+
+    const mount = document.getElementById("tree");
+    const toggle = document.getElementById("tutor-toggle");
+    const closeBtn = document.getElementById("tutor-close");
+    const sheet = document.getElementById("tutor-sheet");
+    let handle = null;
+
+    const render = () => {
+      if (handle) handle.destroy();
+      mount.replaceChildren();
+      const llm = document.querySelector('input[name="fixture"][value="llm"]').checked;
+      handle = buildTree(mount, llm ? llmRealityMap : laptopRealityMap, {
+        width: Math.max(320, Math.min(window.innerWidth, 720)),
+      });
+    };
+
+    const setOpen = (open) => {
+      document.body.classList.toggle("tutor-open", open);
+      sheet.hidden = !open;
+      toggle.setAttribute("aria-expanded", String(open));
+    };
+
+    toggle.addEventListener("click", () => {
+      setOpen(sheet.hidden);
+    });
+    closeBtn.addEventListener("click", () => setOpen(false));
+
+    for (const input of document.querySelectorAll('input[name="fixture"]')) {
+      input.addEventListener("change", render);
+    }
+    window.addEventListener("resize", render);
+    setOpen(false);
+    render();
+  </script>
+</body>
+</html>
