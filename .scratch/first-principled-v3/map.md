@@ -76,6 +76,16 @@ this effort.
 
 ## Open frontier
 
+- 10 - Vertical path layout + strict chronology + panel close fix (Danny
+  2026-08-13: tree too horizontal, unreadable on mobile; dates must drive
+  tree order; the node panel X is unresponsive)
+- 11 - Map word entry + shared generation + progressive skeleton (blocked
+  by 10; Danny 2026-08-13: entry must live on the map, skeleton loader
+  during ~20s generation)
+- 12 - Port the phylogenetic motion into the live tree (blocked by 10;
+  Danny 2026-08-13: tree was never rebuilt to look like portfoolio-clone2;
+  07 is prototype-only today)
+
 ## Not yet specified
 
 - Discovery timeline: the parked scrubber/replay machinery (v2 12) could be
