@@ -222,10 +222,10 @@ recipe live in `research/13-ui-design-spec.md`.
   dependence path of the held Reality Map. Crown (the concept) at the top,
   foundations at the bottom. Y follows existing `built-on` / `depends-on` /
   `abstraction-of` edges, not observation dates (dates stay on hover). Layers
-  are named bands. A linear chain stays on one trunk; extra parents of a
-  convergence node occupy full columns so the path reads as a tree. The stage
-  is at least the viewport and may grow wider for branches (the Tree scrolls
-  horizontally; html/body do not overflow). On land the tree plays
+  are captions on the hang, not table rows. Cards hang off a continuous
+  trunk; extra parents of a convergence occupy the other side or a further
+  column. The stage is at least the viewport and may grow wider for branches
+  (the Tree scrolls horizontally; html/body do not overflow). On land the tree plays
   a one-shot elapsed grow (~1s: trunk, then deepest-first layer bands) and
   then stays fully visible; scroll never gates opacity. Reduced motion skips
   grow and sap. A metrics row of closeness

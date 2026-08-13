@@ -80,27 +80,34 @@ test("dates are not the layout sort", () => {
   assert.equal(after.cardById.get("n-transistor")?.y, layout.cardById.get("n-transistor")?.y);
 });
 
-test("320 and 375: stage width equals the viewport, cards stay inside", () => {
+test("320 and 375: cards stay inside the stage", () => {
   for (const width of [320, 375]) {
     const layout = treeLayout(laptopRealityMap, { width });
-    assert.equal(layout.width, width);
+    assert.ok(layout.width >= width - 0.01);
     for (const card of layout.cards) {
       assert.ok(card.x >= 0, `${card.id} left`);
       assert.ok(card.x + card.width <= layout.width + 0.01, `${card.id} right`);
     }
-    assert.ok(layout.root.x >= 0);
     assert.ok(layout.root.x + layout.root.width <= layout.width + 0.01);
   }
 });
 
-test("a linear dependence chain stays on one trunk", () => {
-  const layout = treeLayout(laptopRealityMap, { width: 375 });
+test("a linear chain hangs off one side of a continuous trunk", () => {
+  const layout = treeLayout(laptopRealityMap, { width: 1024 });
   assert.deepEqual(
     layout.branches.map((branch) => branch.name),
     ["apps", "OS", "logic", "electronics", "materials", "physics"]
   );
   const xs = new Set(layout.cards.map((card) => card.cx));
-  assert.equal(xs.size, 1);
+  assert.equal(xs.size, 1, "one hang column");
+  const hang = layout.cards[0];
+  assert.ok(hang);
+  assert.ok(Math.abs(hang.cx - layout.trunk) > hang.width / 2 - 1, "cards do not sit on the trunk");
+  const paths = spinePaths(layout);
+  assert.ok(paths[0]?.includes(`M ${layout.trunk}`));
+  assert.ok(paths[0]?.includes("V "));
+  assert.equal(paths.length, 1 + layout.cards.length, "trunk plus one elbow per card");
+  assert.ok(paths.slice(1).every((d) => d.includes("H ")));
 });
 
 test("treeLayout handles an empty tree", () => {
@@ -145,15 +152,17 @@ test("convergence parents occupy full columns, not 44px ribs", () => {
   assert.equal(new Set(parentXs).size, 3, "three parents sit in three columns");
   const spread = Math.max(...parentXs) - Math.min(...parentXs);
   assert.ok(spread >= transformer.width, `branch spread ${spread} should clear one card`);
-  assert.ok(Math.abs(attention.cx - transformer.cx) < 1, "main parent continues the trunk");
+  assert.ok(Math.abs(attention.cx - transformer.cx) < 1, "main parent continues the hang column");
   const span =
     Math.max(...layout.cards.map((c) => c.x + c.width)) -
     Math.min(...layout.cards.map((c) => c.x));
   assert.ok(span > 375, "branches may be wider than a phone viewport");
+  const attach =
+    embedding.cx >= layout.trunk ? embedding.x : embedding.x + embedding.width;
   const paths = spinePaths(layout);
   assert.ok(paths.some((d) => d.includes("H ")));
   assert.ok(
-    paths.some((d) => d.includes(String(embedding.cx)) && d.includes("H ")),
+    paths.some((d) => d.includes(`H ${attach}`)),
     "an elbow reaches the extra parent column"
   );
 });

@@ -15,8 +15,9 @@ v5 Destination shipped.
 
 **Tree**:
 The product surface. A first-principles dependence path of one concept:
-crown at the top, foundations at the bottom, a vertical trunk of
-dependence that branches at convergence. Layers are named bands.
+crown at the top, foundations at the bottom, a continuous trunk with
+cards hanging off it. Extra parents branch to the other side. Layers are
+captions, not table rows.
 _Avoid_: Map (as a page or tab name), Reality (as a tab name), Ask, cladogram,
 phylogenetic tree (as the product metaphor)
 

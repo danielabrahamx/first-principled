@@ -140,9 +140,9 @@ export function sapPulsePaths(layout) {
 }
 
 /**
- * For every spine stroke after the trunk (one per layout edge), the layout
- * order of the layer the child card belongs to. Aligned 1:1 with
- * `spinePaths(layout)` minus its first entry.
+ * For every spine stroke after the trunk (one elbow per card), the layout
+ * order of that card's layer. Aligned 1:1 with `spinePaths(layout)` minus
+ * its first entry.
  *
  * @param {ReturnType<typeof import("./mapview/tree.js").treeLayout>} layout
  * @returns {number[]}
@@ -153,11 +153,10 @@ export function elbowLayerIndexes(layout) {
   layout.branches.forEach((branch, branchIndex) => {
     for (const card of branch.cards) layerOf.set(card.id, branchIndex);
   });
-  return layout.edges
-    .filter(
-      (edge) => layout.cardById.has(edge.source) && layout.cardById.has(edge.target)
-    )
-    .map((edge) => layerOf.get(edge.source) ?? 0);
+  return layout.cards
+    .slice()
+    .sort((a, b) => a.y - b.y || a.x - b.x)
+    .map((card) => layerOf.get(card.id) ?? 0);
 }
 
 /**

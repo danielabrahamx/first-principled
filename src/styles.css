@@ -1027,11 +1027,12 @@ body {
   text-transform: uppercase;
   text-align: left;
   white-space: nowrap;
-  min-height: 20px;
+  min-height: 14px;
   display: flex;
   align-items: center;
   padding: 0;
   z-index: 1;
+  pointer-events: auto;
 }
 
 .tree-band {

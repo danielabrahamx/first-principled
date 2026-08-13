@@ -1195,15 +1195,11 @@ export function renderMapPage(root, store, options = {}) {
 
     /** @type {HTMLElement[]} */
     const layers = [];
-    layout.branches.forEach((branch, i) => {
+    layout.branches.forEach((branch) => {
       const layer = el("div", "tree-layer");
-      const band = el("div", i % 2 === 0 ? "tree-band tree-band-even" : "tree-band tree-band-odd");
-      band.style.top = `${branch.bandY}px`;
-      band.style.height = `${branch.bandHeight}px`;
-      layer.appendChild(band);
 
       const label = el("p", "tree-branch-label", branch.name);
-      label.style.left = "8px";
+      label.style.left = `${branch.labelX ?? (branch.cards[0] ? branch.cards[0].x : 8)}px`;
       label.style.top = `${branch.labelY}px`;
       label.tabIndex = 0;
       label.setAttribute("aria-label", `Layer ${branch.name}: ${branch.id}`);
