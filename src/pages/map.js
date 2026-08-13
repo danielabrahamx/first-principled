@@ -270,12 +270,30 @@ export function renderMapPage(root, store, options = {}) {
   panel.hidden = true;
   panel.setAttribute("role", "dialog");
   panel.setAttribute("aria-modal", "false");
+  const panelBackdrop = el("div", "node-panel-backdrop");
+  panelBackdrop.hidden = true;
   const panelClose = el("button", "node-panel-close", "\u00D7");
   panelClose.setAttribute("aria-label", "Close node panel");
   const panelBody = el("div", "node-panel-body");
   panel.append(panelClose, panelBody);
-  page.appendChild(panel);
+  page.append(panelBackdrop, panel);
   let panelOpen = false;
+  /** The card element that opened the panel; focus returns to it on close. */
+  let panelSource = /** @type {HTMLElement | null} */ (null);
+
+  /** Close the panel and return focus to the card that opened it (ticket 10).
+   * Esc, the X button, and a backdrop click all land here. */
+  function closePanel() {
+    panel.hidden = true;
+    panelBackdrop.hidden = true;
+    panelOpen = false;
+    const source = panelSource;
+    panelSource = null;
+    if (source && typeof source.focus === "function") source.focus();
+  }
+
+  panelClose.addEventListener("click", closePanel);
+  panelBackdrop.addEventListener("click", closePanel);
 
   /** The hover popover (ticket 11): one element, repositioned per hover. */
   const popover = el("div", "history-popover");
@@ -419,10 +437,13 @@ export function renderMapPage(root, store, options = {}) {
    * and linked neighbors.
    *
    * @param {string} nodeId
+   * @param {HTMLElement | null} [source] - the card that opened the panel;
+   *   focus returns to it on close (ticket 10).
    */
-  function openPanel(nodeId) {
+  function openPanel(nodeId, source = null) {
     const state = store.getState();
     const view = nodePanelView(state, nodeId);
+    panelSource = source;
     panelBody.replaceChildren();
 
     const heading = el("div", "node-panel-heading");
@@ -528,13 +549,9 @@ export function renderMapPage(root, store, options = {}) {
     }
 
     panel.hidden = false;
+    panelBackdrop.hidden = false;
     panelOpen = true;
     panelClose.focus();
-  }
-
-  function closePanel() {
-    panel.hidden = true;
-    panelOpen = false;
   }
 
   /**
@@ -755,13 +772,13 @@ export function renderMapPage(root, store, options = {}) {
     if (!nodeId) return;
     node.addEventListener("click", () => {
       hidePopover();
-      openPanel(nodeId);
+      openPanel(nodeId, node);
     });
     node.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         hidePopover();
-        openPanel(nodeId);
+        openPanel(nodeId, node);
       }
     });
     node.addEventListener("mouseenter", () => {
@@ -923,7 +940,8 @@ export function renderMapPage(root, store, options = {}) {
    */
   function renderTree(state) {
     const tree = realityTree(state.realityMap);
-    const layout = treeLayout(tree);
+    const width = Math.round(treeScroll.clientWidth || main.clientWidth || 480);
+    const layout = treeLayout(tree, { width });
     const views = observationByNodeId(state.realityMap);
 
     treeStage.style.width = `${layout.width}px`;
@@ -979,13 +997,13 @@ export function renderMapPage(root, store, options = {}) {
         node.append(labelSpan, dot);
         node.addEventListener("click", () => {
           hidePopover();
-          openPanel(card.id);
+          openPanel(card.id, node);
         });
         node.addEventListener("keydown", (event) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
             hidePopover();
-            openPanel(card.id);
+            openPanel(card.id, node);
           }
         });
         node.addEventListener("mouseenter", () => {
@@ -1173,6 +1191,13 @@ export function renderMapPage(root, store, options = {}) {
     window.addEventListener("resize", sync);
   }
 
+  /* Sticky header (ticket 10): mark the header when the tree has scrolled
+     under it, so the hairline reads. Natural page scroll drives it. */
+  const onScroll = () => {
+    header.classList.toggle("is-stuck", window.scrollY > 0);
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+
   sync();
 
   return {
@@ -1183,6 +1208,7 @@ export function renderMapPage(root, store, options = {}) {
       unsubscribe();
       dockHandle.destroy();
       document.removeEventListener("keydown", onKeydown);
+      window.removeEventListener("scroll", onScroll);
       if (responsive) {
         window.removeEventListener("resize", sync);
       }

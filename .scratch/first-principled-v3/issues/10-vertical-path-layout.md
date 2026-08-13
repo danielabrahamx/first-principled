@@ -9,7 +9,38 @@ unresponsive close button. Make the tree strictly chronological.
 
 **Blocked by:** none
 
-**Status:** ready-for-agent
+**Status:** resolved (opencode, 2026-08-13)
+
+## Resolution
+
+Shipped. The reality tree is now a vertical path (ticket 10): root card at
+the top, a central trunk descending, and every layer a band of cards stacked
+in a single column centered on the trunk. Cards sort by observation date
+oldest-first within each layer; layers sort by their oldest date, oldest at
+the bottom (nearest the foundation) - the layer chain is never re-sorted
+across boundaries. The node panel's X now closes it (it had no click
+listener), a backdrop closes on click, focus returns to the opening card, and
+Esc keeps working. Sticky map header + natural page scroll (no nested scroll
+box on the tree).
+
+- tree.js: `realityTree` orders chronologically (node `basis` dates via a
+  shared `observationDateKey` exported from observation.js); `treeLayout`
+  takes `{ width }` and lays out the vertical path, fanning layers with 4+
+  cards two-up around the trunk only when the stage is wide enough to fit
+  both columns (no-overflow rule wins); `cladogramPaths` is a single trunk
+  plus elbows to two-up columns.
+- map.js: `renderTree` passes the container width; panel close via X +
+  backdrop + focus return; sticky-header `.is-stuck` scroll marker.
+- styles.css: `.map-header` sticky; `.tree` no longer a nested scroll box;
+  `.node-panel-backdrop`; 44px touch targets on `.seg-item`,
+  `.tree-branch-label`, `.node-panel-close` (TREE_LABEL_GAP widened to fit).
+- Evidence: `research/10-cdp-probe.mjs` 18/18 headless-Edge checks at 375px
+  and 320px (root + 8 cards render, docScrollWidth == viewport, cards
+  centered on the trunk, all inside the viewport, sticky header, 44px tap
+  targets, X/backdrop/Esc close, focus return); `research/10-tree-*.png`
+  screenshots; desktop audit shows the chronological layer order live
+  (apps -> OS -> electronics -> logic -> materials -> physics). 310 tests
+  green, tsc clean. Deploy pending Danny's screenshot approval (per AC).
 
 ## Question
 
@@ -43,17 +74,17 @@ order. The node panel's X button has no click listener (only Esc closes).
 
 ## Acceptance criteria
 
-- [ ] Reality tree renders as a vertical path: root top, trunk descends,
+- [x] Reality tree renders as a vertical path: root top, trunk descends,
       layers below, readable top to bottom without horizontal scrolling
-- [ ] 375px and 320px CDP audits: docScrollWidth == viewport width, overflow
+- [x] 375px and 320px CDP audits: docScrollWidth == viewport width, overflow
       0, tap targets >= 44px, contrast passes
-- [ ] Tree cards sorted by date within each layer; layers ordered by oldest
+- [x] Tree cards sorted by date within each layer; layers ordered by oldest
       date; layer boundaries never crossed by the sort
-- [ ] X button closes the node panel; clicking the backdrop closes it;
+- [x] X button closes the node panel; clicking the backdrop closes it;
       focus returns to the opening card; Esc still closes
-- [ ] Sticky header, natural page scroll on the reality tree (no nested
+- [x] Sticky header, natural page scroll on the reality tree (no nested
       scroll box)
-- [ ] Screenshots at 375px and 320px delivered for Danny approval before
+- [x] Screenshots at 375px and 320px delivered for Danny approval before
       deploy
 - [ ] npm test green, tsc clean; deploy via the manual Netlify command;
       375px + DOM probes re-run against the live URL

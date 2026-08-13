@@ -538,12 +538,25 @@ body {
 }
 
 .map-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
   margin-bottom: 36px;
+  padding: 12px 0;
+  background: var(--ground);
+  border-bottom: 1px solid transparent;
+}
+
+/* When the header sticks, show a hairline so the tree scrolls under a
+   defined edge. */
+.map-header.is-stuck {
+  border-bottom-color: var(--border);
+  box-shadow: 0 8px 20px rgba(30, 34, 40, 0.06);
 }
 
 /* Segmented control */
@@ -567,6 +580,7 @@ body {
   border-radius: 9px;
   cursor: pointer;
   white-space: nowrap;
+  min-height: 44px;
 }
 
 .seg-item.active {
@@ -888,8 +902,11 @@ body {
 
 /* Reality phylogenetic tree (session end) */
 
+/* Ticket 10 scroll model: the tree uses natural page scroll with the sticky
+   map header - no nested scroll box. The stage is sized to the column width
+   by treeLayout, so nothing overflows horizontally at 375px/320px. */
+
 .tree {
-  overflow-x: auto;
   padding: 4px 0 12px;
 }
 
@@ -945,6 +962,11 @@ body {
   text-align: center;
   transform: translateX(-50%);
   white-space: nowrap;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
 }
 
 .tree-branch-card {
@@ -1282,6 +1304,15 @@ body {
 
 /* Node panel (ticket 10) */
 
+/* Backdrop (ticket 10): clicking it closes the panel. Sits below the panel
+   and above the page content. */
+.node-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 34, 40, 0.32);
+  z-index: 35;
+}
+
 .node-panel {
   position: fixed;
   right: 16px;
@@ -1302,8 +1333,8 @@ body {
   position: sticky;
   top: 0;
   float: right;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 1px solid var(--border);
   background: var(--surface);

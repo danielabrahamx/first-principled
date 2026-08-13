@@ -184,12 +184,12 @@ export function observationByNodeId(realityMap) {
 /**
  * The first number in a date value, as a sort key - "1847" -> 1847,
  * "c. 1954" -> 1954, "1950s" -> 1950. Values with no number (unknown dates)
- * sort after known dates, in their original layer order.
+ * sort after known dates (Infinity), in their original order. Stable.
  *
  * @param {string | null} value
  * @returns {number}
  */
-function dateKey(value) {
+export function observationDateKey(value) {
   if (typeof value !== "string") return Infinity;
   const match = value.match(/\d{3,4}/);
   if (match === null) return Infinity;
@@ -248,7 +248,7 @@ export function layerObservationStory(realityMap, layerId) {
   const indexed = entries.map((entry, index) => ({
     entry,
     index,
-    key: dateKey(entry.observation.date && entry.observation.date.value),
+    key: observationDateKey(entry.observation.date && entry.observation.date.value),
   }));
   indexed.sort((a, b) => (a.key - b.key) || (a.index - b.index));
   return { layerId, layerName, entries: indexed.map((x) => x.entry) };

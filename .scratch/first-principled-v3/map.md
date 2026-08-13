@@ -73,16 +73,14 @@ this effort.
 - [07 - Port the phylogenetic motion](issues/07-port-the-phylogenetic-motion.md) - sap pulses (SMIL animateMotion, rising foundations-to-crown), scroll-driven growth (trunk draws, layers bud deepest-first) and node lifecycle stagger ship; parallax, cursor hydrotropism, root hairs, grain filter do not. Reduced motion: JS skips SMIL + scroll wiring, CSS media query kills animations. Prototype in research/07-motion-prototype (2026-08-13).
 - [03 - Concept tree generation with observations](issues/03-concept-tree-generation-with-observations.md) - every node's basis is a real-history observation record (discoverer/date/keyObservation with EXACT|APPROXIMATE|UNKNOWN marks, confidence, note), foundation included; deriveCheck requires a valid record on every node; a value under an UNKNOWN mark is dropped at validation (contract rule 5, normalization not rejection); empty replies retry with the honesty repair message; max_tokens 4096 in the 3000-5000 band; narratives STE-clean (prompt rules + mechanical gate, vague words reported not gated); self-review gaps no longer gate (honesty notes are legal) and mid-chain refusals retry once before being honored (both live-run fixes to 08 behavior). Live: 30/30 concepts on real DeepSeek, mean 22.5s, EXACT 448 / APPROXIMATE 330 / UNKNOWN 170 fields, evidence in research/03-observations-verification.md (2026-08-13).
 - [06 - Apply STE to all learner-facing copy](issues/06-apply-ste-to-all-learner-facing-copy.md) - every hand-written learner-facing string rewritten to the subset: banners without vague words, unified phase labels (Starting/Seeing/Testing/Session end), de-contracted eyebrows, Start/Ask/Tree microcopy, v3 tree wording in hints and empty states, refusal reasons STE'd; generator prompt now carries rules 1-8 (rule 1 added). Zero-dep vocabulary check (src/ste-copy.test.js) scans UI copy against the approved list + documented function/chrome allowlists, and runs steProblems over every copy string. map.js/styles.css copy left to 04 (its uncommitted edits) (2026-08-13).
+- [10 - Vertical path layout + strict chronology + panel close fix](issues/10-vertical-path-layout.md) - the tree is now a vertical path: root top, one central trunk descending, each layer a band of cards stacked in a single column centered on the trunk (layers with 4+ cards fan two-up around the trunk only when the stage fits both columns - no-overflow wins). Strict chronology: cards sort by observation date oldest-first within each layer (unknown dates last, stable), layers sort by their oldest date oldest at the bottom; the layer chain is never re-sorted across boundaries. Panel close fixed: X had no click listener - now X + backdrop + Esc all close, focus returns to the opening card. Sticky map header, natural page scroll (no nested scroll box). Tap targets 44px (seg, branch labels, close). Headless CDP 18/18 at 375/320 (no overflow, cards centered, close behaviors); live layer order chronological (apps->OS->electronics->logic->materials->physics). 310 tests + tsc clean. Screenshots in research/ for Danny; deploy pending his approval (2026-08-13).
 
 ## Open frontier
 
-- 10 - Vertical path layout + strict chronology + panel close fix (Danny
-  2026-08-13: tree too horizontal, unreadable on mobile; dates must drive
-  tree order; the node panel X is unresponsive)
-- 11 - Map word entry + shared generation + progressive skeleton (blocked
+- 11 - Map word entry + shared generation + progressive skeleton (unblocked
   by 10; Danny 2026-08-13: entry must live on the map, skeleton loader
   during ~20s generation)
-- 12 - Port the phylogenetic motion into the live tree (blocked by 10;
+- 12 - Port the phylogenetic motion into the live tree (unblocked by 10;
   Danny 2026-08-13: tree was never rebuilt to look like portfoolio-clone2;
   07 is prototype-only today)
 
