@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** [Ship the cladogram and one-shot grow into the live Tree](03-ship-cladogram-and-one-shot-grow.md), [Tutor is pull Q&A over the Tree](04-tutor-is-pull-qa-over-the-tree.md)
 
@@ -27,12 +27,36 @@ Windows/PowerShell. Do not ship secrets.
 
 ## Acceptance criteria
 
-- [ ] Prod deploy succeeded; unique deploy id recorded on this ticket
-- [ ] Live: one chrome, branching Tree visible at scroll 0, Tutor closed
+- [x] Prod deploy succeeded; unique deploy id recorded on this ticket
+- [x] Live: one chrome, branching Tree visible at scroll 0, Tutor closed
       until toggled, one briefing turn works
-- [ ] Key-leak grep clean on tracked files
-- [ ] README / AGENTS.md deploy notes still accurate
+- [x] Key-leak grep clean on tracked files
+- [x] README / AGENTS.md deploy notes still accurate
 
 ## Docs rule
 
 If the README still says chat-first or two pages, fix it in this commit.
+
+## Resolution
+
+Prod deploy via `& "$env:APPDATA\npm\netlify.cmd" deploy --prod`. Unique
+deploy id: `6a7dec58cb069f5f8edc9db9`. Live:
+https://first-principled.netlify.app. Unique URL:
+https://6a7dec58cb069f5f8edc9db9--first-principled.netlify.app.
+
+Key-leak grep clean: `.env` gitignored and untracked; LLM_API_KEY value in
+0 tracked files and 0 files under `src/` and `netlify/`; no `sk-` secrets
+in tracked files. README already tree-first (no chat-first / two-page copy).
+AGENTS.md deploy notes still match the linked Netlify site.
+
+Live CDP smoke (`bit` at 375px, 11/11):
+`.scratch/first-principled-v4/research/05-live-smoke.mjs`. One chrome
+(Build + Tutor only). Header right 361 / vw 375 (stage may scroll-x). Tree
+is a branching cladogram (7 cards, 6 unique cx), layers opacity 1 at scroll
+0. Tutor closed until toggled; no opening probe. One briefing on "What is a
+bit?" (does not end with `?`). Screenshots: `05-375-empty.png`,
+`05-375-tree.png`, `05-375-brief.png`.
+
+Live API smoke also PASS (init silent, 8 nodes; briefing 381 chars, no
+closing probe): `research/05-api-smoke.mjs`. Two earlier UI inits flaked
+(`invalid_model_output`, then `internal`) and were retried; not 402.

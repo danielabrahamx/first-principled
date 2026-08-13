@@ -10,7 +10,7 @@ Netlify, DeepSeek-backed, no database.
 **Map (only):** `.scratch/first-principled-v4/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
-**Resume:** `CONTEXT.md` section Frontier. Ticket 04 resolved. Ticket 05 is next.
+**Resume:** v4 Destination shipped.
 
 ## Golden rules
 

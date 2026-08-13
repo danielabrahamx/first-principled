@@ -9,9 +9,7 @@ model and reality.
 
 ## Frontier (resume here)
 
-Ticket 04 resolved. Ticket 05 is next: claim, `netlify deploy --prod`, live
-smoke, record deploy id. Do not add parked v2 files. Do not pop `stash@{0}`
-until after 04 is on origin.
+v4 Destination shipped.
 
 ## Language
 

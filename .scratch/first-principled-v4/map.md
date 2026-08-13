@@ -57,6 +57,7 @@ Generation, observations, and gap-free layer chain stay.
 - 02: one chrome, one route. Tree is home. Tutor is a closed-by-default dock. No Chat page, no learner-map tab.
 - 03: live Tree is the v1 ticket 17 cladogram with one-shot elapsed grow; scroll never gates opacity.
 - 04: Tutor is pull Q&A. Init has no opening probe. Every dock turn is a briefing (`forceBrief`). Live DeepSeek verified (`bit`).
+- 05: Destination shipped. Prod deploy `6a7dec58cb069f5f8edc9db9` at https://first-principled.netlify.app. Live smoke: branching cladogram at scroll 0, one chrome, Tutor closed until toggled, one briefing.
 
 ## Not yet specified
 
