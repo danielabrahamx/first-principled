@@ -186,9 +186,6 @@ export function treeLayout(realityMap, options = {}) {
   }
 
   const maxRank = nodes.reduce((m, node) => Math.max(m, ranks.get(node.id) || 0), 0);
-  const cardWidth = Math.min(TREE_CARD_WIDTH, viewport - TREE_STAGE_PAD * 2 - TREE_HANG);
-  const rootWidth = Math.min(TREE_ROOT_WIDTH, cardWidth);
-  const colPitch = cardWidth + TREE_COL_GAP;
 
   /** @type {Map<number, typeof nodes>} */
   const byRank = new Map();
@@ -237,6 +234,28 @@ export function treeLayout(realityMap, options = {}) {
   const minCol = cols.length === 0 ? 0 : Math.min(...cols);
   const maxCol = cols.length === 0 ? 0 : Math.max(...cols);
   const leftCols = Math.max(0, -minCol);
+
+  // Single-column trees shrink their cards so the whole tree fits the
+  // viewport with no horizontal scroll (mobile bar: no overflow at 375/320).
+  // Convergent trees keep full-width columns and let the stage scroll
+  // horizontally (Danny 2026-08-13).
+  /** @type {number} */
+  let cardWidth;
+  if (leftCols === 0) {
+    const trunkEstimate = Math.max(
+      TREE_ROOT_WIDTH / 2 + TREE_STAGE_PAD,
+      Math.min(viewport * 0.32, 280)
+    );
+    cardWidth = Math.min(
+      TREE_CARD_WIDTH,
+      viewport - TREE_STAGE_PAD * 2 - TREE_HANG,
+      viewport - trunkEstimate - TREE_HANG - TREE_STAGE_PAD
+    );
+  } else {
+    cardWidth = Math.min(TREE_CARD_WIDTH, viewport - TREE_STAGE_PAD * 2 - TREE_HANG);
+  }
+  const rootWidth = Math.min(TREE_ROOT_WIDTH, cardWidth);
+  const colPitch = cardWidth + TREE_COL_GAP;
 
   let trunk = Math.max(
     TREE_ROOT_WIDTH / 2 + TREE_STAGE_PAD,

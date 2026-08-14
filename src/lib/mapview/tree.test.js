@@ -8,6 +8,8 @@ import {
   layoutEdges,
   dependenceRanks,
   convergenceFanPaths,
+  TREE_CARD_WIDTH,
+  TREE_STAGE_PAD,
   TREE_LABEL_SLOT,
 } from "./tree.js";
 import { laptopRealityMap, llmRealityMap } from "../mmg/fixtures.js";
@@ -200,7 +202,7 @@ test("layer captions stay on their hang and do not share a box", () => {
       { source: "n-top", target: "n-right", type: "built-on" },
     ],
   };
-  const layout = treeLayout(map, { width: 1024 });
+  const layout = treeLayout(/** @type {any} */ (map), { width: 1024 });
   const left = layout.branches.find((branch) => branch.id === "l0");
   const right = layout.branches.find((branch) => branch.id === "l1");
   assert.ok(left && right);
@@ -228,4 +230,31 @@ test("a linear chain gives each layer caption its own y", () => {
   const layout = treeLayout(laptopRealityMap, { width: 1024 });
   const ys = layout.branches.map((branch) => branch.labelY);
   assert.equal(new Set(ys).size, ys.length);
+});
+
+test("a single-column tree fits the viewport at 375 and 320 with no horizontal overflow", () => {
+  const map = {
+    concept: "computer",
+    layers: [
+      { id: "l0", name: "logic", nodes: ["n-a"] },
+      { id: "l1", name: "circuit", nodes: ["n-b"] },
+      { id: "l2", name: "machine", nodes: ["n-c"] },
+    ],
+    nodes: [
+      { id: "n-a", label: "gate", layer: "l0" },
+      { id: "n-b", label: "circuit board", layer: "l1" },
+      { id: "n-c", label: "CPU", layer: "l2" },
+    ],
+    edges: [
+      { source: "n-b", target: "n-a", type: "built-on" },
+      { source: "n-c", target: "n-b", type: "built-on" },
+    ],
+  };
+  for (const viewport of [375, 320]) {
+    const layout = treeLayout(/** @type {any} */ (map), { width: viewport });
+    assert.equal(layout.width, viewport, `stage equals the viewport at ${viewport}px`);
+    assert.ok(layout.cardWidth < TREE_CARD_WIDTH, `cards shrink at ${viewport}px`);
+    const maxRight = Math.max(...layout.branches.flatMap((branch) => branch.cards.map((card) => card.x + card.width)));
+    assert.ok(maxRight + TREE_STAGE_PAD <= viewport, `every card is fully on-stage at ${viewport}px (maxRight ${maxRight})`);
+  }
 });

@@ -71,6 +71,12 @@ by default, and never steals Tree width. Generator salvaged.
 - Danny (2026-08-13): the 44px-rib spine reads as a labeled list, not a
   tree. Extra parents of a convergence occupy full columns; card height is
   locked so SVG edges stay visible; the stage may scroll horizontally.
+- Post-05 fix (2026-08-14): single-column trees shrink their cards so the
+  whole tree fits the viewport at 375/320 with no horizontal scroll; trees
+  with convergence columns keep the wide stage (Danny's 2026-08-13
+  direction unchanged). Shipped with the four post-05 layout commits
+  (convergence columns, trunk hang, hover/click, caption placement) in one
+  deploy.
 
 ## Not yet specified
 
