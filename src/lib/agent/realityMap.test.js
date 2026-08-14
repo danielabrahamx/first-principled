@@ -1108,3 +1108,86 @@ test("a skipped intermediate step is structurally impossible at the prompt level
     }
   }
 });
+
+/** A valid one-shot reply: a 2-layer chain that passes both gates. */
+const ONE_SHOT_REPLY = JSON.stringify({
+  isValidConcept: true,
+  layers: [
+    { id: "l0", name: "optics", nodes: ["n-lens"] },
+    { id: "l1", name: "microscope", nodes: ["n-microscope"] },
+  ],
+  nodes: [
+    {
+      id: "n-lens",
+      label: "lens",
+      layer: "l0",
+      description: "A piece of glass that bends light.",
+      basis: {
+        discoverer: { value: "Ibn al-Haytham", mark: "EXACT" },
+        date: { value: "1011", mark: "APPROXIMATE" },
+        keyObservation: { value: "Light bends when it passes from air into glass.", mark: "EXACT" },
+        confidence: "high",
+        note: "",
+      },
+    },
+    {
+      id: "n-microscope",
+      label: "microscope",
+      layer: "l1",
+      description: "An instrument that magnifies small things.",
+      basis: {
+        discoverer: { value: "Zacharias Janssen", mark: "APPROXIMATE" },
+        date: { value: "1595", mark: "APPROXIMATE" },
+        keyObservation: { value: "Two lenses in a tube magnify a small object.", mark: "EXACT" },
+        confidence: "medium",
+        note: "",
+      },
+    },
+  ],
+  edges: [{ source: "n-microscope", target: "n-lens", type: "built-on" }],
+});
+
+/** A one-shot reply that fails the gates: a node with no observation record. */
+const ONE_SHOT_BAD = JSON.stringify({
+  isValidConcept: true,
+  layers: [{ id: "l0", name: "optics", nodes: ["n-lens"] }],
+  nodes: [{ id: "n-lens", label: "lens", layer: "l0", description: "A piece of glass." }],
+  edges: [],
+});
+
+test("the one-shot fast path returns a valid map in a single call", async () => {
+  const { callLLM, requests } = stubTransport([ONE_SHOT_REPLY]);
+  const result = await generateRealityMap(
+    { concept: "microscope", callLLM },
+    { fastPath: true }
+  );
+  assert.equal(result.ok, true);
+  assert.ok(result.map, "a one-shot map exists");
+  assert.equal(result.generationPath, "oneshot");
+  assert.equal(requests.length, 1, "one call, not one per layer");
+  assert.equal(result.map.layers.length, 2);
+  assert.equal(result.map.nodes.length, 2);
+  assert.equal(result.map.layers[0].id, "l0");
+  assert.equal(result.map.layers[1].id, "l1");
+  assert.equal(validateRealityMap(result.map).ok, true);
+  assert.equal(deriveCheck(result.map).ok, true);
+});
+
+test("the one-shot fast path falls back to the serial path when the map fails the gates", async () => {
+  const { callLLM, requests } = stubTransport([ONE_SHOT_BAD, ...HAPPY_SCRIPT]);
+  const result = await generateRealityMap(
+    { concept: "laptop", callLLM },
+    { fastPath: true }
+  );
+  assert.equal(result.ok, true);
+  assert.equal(result.generationPath, "serial");
+  assert.ok(requests.length > 1, "the serial path re-ran after the one-shot failed");
+});
+
+test("without fastPath the one-shot prompt is never sent", async () => {
+  const { callLLM, requests } = stubTransport(HAPPY_SCRIPT);
+  const result = await generateRealityMap({ concept: "laptop", callLLM });
+  assert.equal(result.ok, true);
+  assert.equal(result.generationPath, "serial");
+  assert.ok(requests.every((request) => !request.messages[0].content.includes("complete Reality Map in ONE reply")));
+});

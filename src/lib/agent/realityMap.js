@@ -99,6 +99,9 @@ import { observationProblems, dropUnknownValues } from "../mmg/observation.js";
  *   inside the fail-honest contract's 3000-5000 band (ticket 09 section 3;
  *   a lower cap truncates JSON or burns the budget on reasoning).
  * @property {string} [conceptLabel] - display name used in error messages.
+ * @property {boolean} [fastPath] - try the whole map in ONE call first
+ *   (the ?fast=1 staging spike 2026-08-14), falling back to the serial
+ *   per-layer path when the one-shot map fails the gates. Default false.
  */
 
 /**
@@ -110,6 +113,8 @@ import { observationProblems, dropUnknownValues } from "../mmg/observation.js";
  * @property {string[]} errors - validation errors when kind is "invalid".
  * @property {number} latencyMs - elapsed time of the LLM call(s).
  * @property {boolean} retried - whether a repair attempt was used.
+ * @property {"oneshot" | "serial"} [generationPath] - which pipeline built
+ *   the map (staging spike 2026-08-14).
  */
 
 /* ---------------------------------------------------------------------------
@@ -693,13 +698,185 @@ const MAX_LAYER_ATTEMPTS = 3;
  * chances as a layer. */
 const MAX_FOUNDATION_ATTEMPTS = 3;
 
+/* ---------------------------------------------------------------------------
+ * One-shot fast path (staging spike 2026-08-14): the whole map in one call.
+ * Same content contract as the serial path (observation records, combines,
+ * typed edges, contiguous chain, STE, fail-honest) but one reply instead of
+ * one call per layer. The final validator gates (contiguity + deriveCheck)
+ * are the SAME gates the serial path ends with, so a map that passes here is
+ * structurally as valid as a serial map. Any failure - unparseable, wrong
+ * shape, or failing the gates - falls back to the serial path.
+ * ------------------------------------------------------------------------- */
+
+/**
+ * The one-shot system prompt: ask for the complete bottom-up chain in one
+ * reply. Foundation l0 at the bottom, the concept at the crown, each layer
+ * built on the layer below.
+ *
+ * @param {number} maxLayers
+ * @returns {string}
+ */
+export function buildOneShotSystemPrompt(maxLayers) {
+  return `You are first-principled, an AI tutor whose mission is to reduce the cognitive distance between a learner's mental model and reality.
+
+A learner typed a word or phrase naming a thing or concept they want to understand from first principles. Build its complete Reality Map in ONE reply: a bottom-up chain of layers, foundation at the bottom, the concept itself at the top.
+
+The foundation (l0) is the deepest, most observable layer the thing is ultimately built on - what a learner can observe or meet directly, before any abstraction. For "laptop" that foundation is physics (electricity); for "photosynthesis" it is light and matter; for "recursion" it is the call stack. The foundation has 1 to 3 nodes.
+
+Above the foundation, derive each next layer as the layer that the layers below make possible. The chain must stay contiguous: at least one edge of every layer must connect it to the layer immediately below, so no intermediate step is ever skipped. For "laptop", given the physics foundation, the chain runs materials, electronics, logic gates, operating system, applications. Keep the whole chain around ${maxLayers} layers total, foundation included (a soft cap; do not plan deeper unless the thing genuinely requires it).
+
+Real discovery history is CONVERGENT: independent streams meet at a layer and combine. When a node's crux is a TRUE SYNTHESIS - its discovery combines observations from several different fields - you may add a "combines" array to that node: entries of {"id": "n-...", "observation": {...}} naming the enabling nodes you created and their observation records, and cross-layer edges to those nodes at any depth. A convergence node always keeps ONE crux "basis" (the discovery that combined the streams, e.g. Vaswani 2017) and must list combines from 2+ DISTINCT LAYERS. Cross-layer edges are for true syntheses only, never to hide a skipped step: the contiguous chain stays the rule.
+
+Requirements:
+- Every node has an id, a label, a layer id, a one to two sentence description, and a "basis": the observation record - the REAL discovery history the abstraction compresses (who discovered it, when, what was observed). Give every node a NEW unique id.
+- 1 to 3 typed edges per layer. At least one edge per layer connects it to the layer immediately below. The ONLY allowed edge types are: built-on, abstraction-of, part-of, depends-on, predicts, contradicts. Never invent an edge type.
+- Before replying, self-review: is every layer really built on the layer below? Does every node carry a real observation record? Are there invented steps or invented observations? Do NOT treat UNKNOWN observations as gaps - UNKNOWN is a legal, honest state.
+
+${failHonestBlock()}
+
+${steBlock()}
+
+Reply as JSON only. No markdown fences, no commentary. Two shapes:
+
+When the input names a real, teachable thing:
+{"isValidConcept": true, "layers": [{"id": "l0", "name": "...", "nodes": ["n-..."]}], "nodes": [{"id": "n-...", "label": "...", "layer": "l0", "description": "...", "basis": {"discoverer": {"value": "...", "mark": "EXACT"}, "date": {"value": "...", "mark": "EXACT"}, "keyObservation": {"value": "...", "mark": "EXACT"}, "confidence": "high", "note": "..."}, "combines": [{"id": "n-...", "observation": {"discoverer": {"value": "...", "mark": "EXACT"}, "date": {"value": "...", "mark": "EXACT"}, "keyObservation": {"value": "...", "mark": "EXACT"}, "confidence": "high", "note": "..."}}]}], "edges": [{"source": "n-...", "target": "n-...", "type": "built-on"}]}
+
+When the input is not a teachable thing - gibberish, random characters, an empty phrase, a command, or anything that is not a real concept or object:
+{"isValidConcept": false, "reason": "one short sentence explaining why not"}`;
+}
+
+/**
+ * Unpacks a one-shot reply into a full map or a refusal.
+ *
+ * @param {unknown} parsed
+ * @returns {{ refused: true; reason: string } | { refused: false; layers: any[]; nodes: any[]; edges: any[] } | null}
+ */
+function unpackOneShot(parsed) {
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    return null;
+  }
+  const reply = /** @type {any} */ (parsed);
+  if (reply.isValidConcept === false) {
+    return {
+      refused: true,
+      reason:
+        typeof reply.reason === "string" && reply.reason.length > 0
+          ? reply.reason
+          : "The tutor did not find a concept to explain here.",
+    };
+  }
+  if (!Array.isArray(reply.layers) || !Array.isArray(reply.nodes)) return null;
+  return {
+    refused: false,
+    layers: reply.layers,
+    nodes: reply.nodes,
+    edges: Array.isArray(reply.edges) ? reply.edges : [],
+  };
+}
+
+/**
+ * Normalizes a one-shot reply into a candidate map: the code owns the layer
+ * ids (l0, l1, ... in the order the model returned them, so the id sequence
+ * itself cannot skip), every node is re-bound to its layer by the id or name
+ * the model used, then the mechanical cleanup runs (stray edges dropped,
+ * UNKNOWN values dropped, combine ids validated).
+ *
+ * @param {string} concept
+ * @param {{ layers: any[]; nodes: any[]; edges: any[] }} unpacked
+ * @returns {any}
+ */
+function normalizeOneShot(concept, unpacked) {
+  const byOriginal = new Map();
+  const layers = unpacked.layers.map((layer, i) => {
+    const id = `l${i}`;
+    const name =
+      layer !== null && typeof layer === "object" && typeof layer.name === "string"
+        ? layer.name
+        : "";
+    const original =
+      layer !== null && typeof layer === "object" && typeof layer.id === "string"
+        ? layer.id
+        : "";
+    if (original) byOriginal.set(original, id);
+    if (name) byOriginal.set(name, id);
+    return {
+      id,
+      name,
+      nodes:
+        layer !== null && typeof layer === "object" && Array.isArray(layer.nodes)
+          ? layer.nodes
+          : [],
+    };
+  });
+  const nodes = unpacked.nodes
+    .filter((node) => node !== null && typeof node === "object")
+    .map((node) => {
+      const original = String(node.layer ?? "");
+      return { ...node, layer: byOriginal.get(original) ?? "" };
+    });
+  return repairMap({ concept, layers, nodes, edges: unpacked.edges });
+}
+
+/**
+ * The one-shot attempt. Returns a terminal result (ok or refused) - the
+ * caller falls back to the serial path on every failure except refusal.
+ *
+ * @param {{ concept: string; transport: CallLLM; thinking: boolean; maxTokens: number; maxLayers: number }} input
+ * @returns {Promise<{ ok: true; map: any } | { ok: false; kind: "refused"; reason: string } | { ok: false; kind: "invalid" | "error"; reason: string }>}
+ */
+async function generateOneShotMap({ concept, transport, thinking, maxTokens, maxLayers }) {
+  let reply;
+  try {
+    reply = await transport({
+      messages: [
+        { role: "system", content: buildOneShotSystemPrompt(maxLayers) },
+        { role: "user", content: `Word or phrase: ${concept}` },
+      ],
+      jsonMode: true,
+      thinking,
+      maxTokens,
+    });
+  } catch (err) {
+    return {
+      ok: false,
+      kind: "error",
+      reason: err instanceof Error ? err.message : String(err),
+    };
+  }
+  const parsed = parseModelJson(reply.content);
+  const unpacked = unpackOneShot(parsed);
+  if (unpacked === null) {
+    return {
+      ok: false,
+      kind: "invalid",
+      reason: "The one-shot reply was not valid JSON in the required shape.",
+    };
+  }
+  if (unpacked.refused) {
+    return { ok: false, kind: "refused", reason: unpacked.reason };
+  }
+  const candidate = normalizeOneShot(concept, unpacked);
+  const gate = validateRealityMap(candidate);
+  const derive = deriveCheck(candidate);
+  if (gate.ok && derive.ok) {
+    return { ok: true, map: candidate };
+  }
+  return {
+    ok: false,
+    kind: "invalid",
+    reason: "The one-shot map failed the validator gates.",
+  };
+}
+
 /**
  * Generates a Reality Map for a word or phrase, bottom-up and layer by
  * layer: the foundation first, then each layer derived only from the layer
  * immediately below it, so a skipped intermediate step is structurally
  * impossible rather than merely validated against. The contiguity validator
  * and deriveCheck gate every layer and the final map as the backstop; the
- * repair loop fixes flagged layers up to twice each.
+ * repair loop fixes flagged layers up to twice each. With options.fastPath
+ * the whole map is tried in one call first, falling back to this serial
+ * path when the one-shot map fails the gates.
  *
  * @param {{ concept: string; callLLM?: CallLLM }} input
  * @param {GenerateOptions} [options]
@@ -736,6 +913,46 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
   const totalStarted = Date.now();
   /** Whether any repair attempt was used across any phase. */
   let repaired = false;
+
+  /* One-shot fast path (staging spike 2026-08-14): try the whole map in one
+   * call when the client asks for it (?fast=1). Any failure except a refusal
+   * falls back to the serial path below; a refusal is terminal - gibberish
+   * is refused once, not twice. The one-shot map passes through the SAME
+   * final gates (contiguity + deriveCheck) as the serial path, so a map that
+   * lands here is structurally as valid as a serial map. */
+  if (options.fastPath === true) {
+    const fast = await generateOneShotMap({
+      concept: trimmed,
+      transport,
+      thinking,
+      maxTokens: 8192,
+      maxLayers,
+    });
+    if (fast.ok) {
+      return {
+        ok: true,
+        map: /** @type {RealityMap} */ (fast.map),
+        kind: null,
+        reason: null,
+        errors: [],
+        latencyMs: Date.now() - totalStarted,
+        retried: false,
+        generationPath: "oneshot",
+      };
+    }
+    if (fast.kind === "refused") {
+      return {
+        ok: false,
+        map: null,
+        kind: "refused",
+        reason: fast.reason,
+        errors: [],
+        latencyMs: Date.now() - totalStarted,
+        retried: false,
+        generationPath: "oneshot",
+      };
+    }
+  }
 
   /**
    * @param {import("./llm.js").ChatMessage[]} messages
@@ -982,6 +1199,7 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
       errors: [],
       latencyMs: Date.now() - totalStarted,
       retried: repaired,
+      generationPath: "serial",
     };
   }
 

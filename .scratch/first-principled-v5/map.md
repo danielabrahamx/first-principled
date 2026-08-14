@@ -77,6 +77,12 @@ by default, and never steals Tree width. Generator salvaged.
   direction unchanged). Shipped with the four post-05 layout commits
   (convergence columns, trunk hang, hover/click, caption placement) in one
   deploy.
+- Staging spike (2026-08-14): one-shot tree generation via ?fast=1 - the
+  whole map in ONE call (same content contract, same final validator gates:
+  contiguity + deriveCheck), falling back to the serial per-layer path when
+  the one-shot map fails. Response body carries generationPath
+  (oneshot/serial). Deployed to a non-prod URL for Danny to test; ships to
+  prod only after his sign-off.
 
 ## Not yet specified
 

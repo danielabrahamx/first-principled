@@ -66,12 +66,16 @@ export function errorMessage(code) {
  * @param {SessionStore} store
  * @param {object} [options]
  * @param {typeof defaultCallAgent} [options.callAgent] - injected for tests.
+ * @param {boolean} [options.fastPath] - ask the server for the one-shot
+ *   tree path (?fast=1 staging test); init turns only.
  * @returns {Promise<TurnResult>}
  */
 export async function runAgentTurn(store, options = {}) {
   const callAgent = options.callAgent ?? defaultCallAgent;
   const token = await getTurnstileToken("agent_turn");
-  const result = await callAgent(store.toRequest(), {
+  const request = store.toRequest();
+  if (options.fastPath === true) request.fastPath = true;
+  const result = await callAgent(request, {
     turnstileToken: token ?? undefined,
   });
   if (result.ok) {
@@ -79,6 +83,20 @@ export async function runAgentTurn(store, options = {}) {
     return applied ? { ok: true } : { ok: false, code: "internal" };
   }
   return { ok: false, code: result.code };
+}
+
+/**
+ * Whether the staging fast-path flag (?fast=1) is on the page URL. Only
+ * reachable in the browser; tests run with no location and get false.
+ *
+ * @returns {boolean}
+ */
+function wantsFastPath() {
+  return (
+    typeof location !== "undefined" &&
+    typeof location.search === "string" &&
+    /[?&]fast=1/.test(location.search)
+  );
 }
 
 /**
@@ -94,5 +112,5 @@ export async function runAgentTurn(store, options = {}) {
  */
 export async function generateTree(store, word, options = {}) {
   if (!store.startSession(word)) return { ok: false, code: "bad_request" };
-  return runAgentTurn(store, options);
+  return runAgentTurn(store, { ...options, fastPath: wantsFastPath() });
 }

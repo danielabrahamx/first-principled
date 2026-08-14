@@ -223,10 +223,12 @@ test("init generates the map (per-layer bottom-up) with no opening probe", async
   assert.deepEqual(Object.keys(result.body).sort(), [
     "diff",
     "failedAttempts",
+    "generationPath",
     "learnerMap",
     "phase",
     "realityMap",
   ]);
+  assert.equal(result.body.generationPath, "serial");
   assertRealityMapEqual(result.body.realityMap, laptopRealityMap);
   assert.equal(result.body.phase, "active");
   assert.equal(result.body.reply, undefined, "no tutor question on init");

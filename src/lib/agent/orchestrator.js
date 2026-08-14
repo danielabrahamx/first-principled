@@ -413,7 +413,10 @@ async function handleInit(request, callLLM) {
     );
   }
 
-  const generation = await generateRealityMap({ concept: word, callLLM });
+  const generation = await generateRealityMap(
+    { concept: word, callLLM },
+    { fastPath: request.fastPath === true }
+  );
   if (!generation.ok) {
     if (generation.kind === "refused") {
       return {
@@ -440,6 +443,7 @@ async function handleInit(request, callLLM) {
       phase: "active",
       failedAttempts: {},
       realityMap: /** @type {RealityMap} */ (generation.map),
+      generationPath: generation.generationPath ?? "serial",
     },
   };
 }
