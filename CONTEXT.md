@@ -17,7 +17,7 @@ v5 Destination shipped.
 The product surface. A first-principles dependence path of one concept:
 crown at the top, foundations at the bottom, a continuous trunk with
 cards hanging off it. Extra parents branch to the other side. Layers are
-captions, not table rows.
+captions on the hang, capped to the card width, not table rows.
 _Avoid_: Map (as a page or tab name), Reality (as a tab name), Ask, cladogram,
 phylogenetic tree (as the product metaphor)
 
@@ -33,7 +33,7 @@ records. What the Tree renders.
 _Avoid_: Reality tab, the map
 
 **Layer**:
-A named band on the Tree (physics, digital logic). Pedagogical grouping,
+A named caption on the Tree (physics, digital logic). Pedagogical grouping,
 not a spatial branch.
 _Avoid_: cladogram branch, column
 

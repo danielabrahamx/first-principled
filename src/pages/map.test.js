@@ -36,6 +36,14 @@ test("layer overlays do not steal clicks from cards above them", () => {
   assert.match(css, /\.tree-svg\s*\{[^}]*pointer-events:\s*none/s);
 });
 
+test("layer captions wrap inside the card width instead of nowrap", () => {
+  const css = readFileSync(path.join(here, "..", "styles.css"), "utf8");
+  const source = readFileSync(path.join(here, "map.js"), "utf8");
+  assert.match(css, /\.tree-branch-label\s*\{[^}]*white-space:\s*normal/s);
+  assert.match(css, /\.tree-branch-label\s*\{[^}]*-webkit-line-clamp:\s*2/s);
+  assert.match(source, /label\.style\.width/);
+});
+
 test("tree cards lock the layout height so edges are not covered", () => {
   const source = readFileSync(path.join(here, "map.js"), "utf8");
   assert.match(source, /root\.style\.height/);

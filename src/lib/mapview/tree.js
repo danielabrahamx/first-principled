@@ -6,7 +6,8 @@
  * `built-on` / `depends-on` / `abstraction-of` edges, not observation dates.
  * Dates stay on hover. Cards hang off a continuous trunk (they never sit
  * on it). Extra parents of a convergence occupy the opposite side or a
- * further column. Layers are captions, not table rows.
+ * further column. Layers are captions on the hang, capped to the card
+ * width so they never cross the trunk, not table rows.
  *
  * `treeLayout` takes the Reality Map and a viewport width so 320/375 never
  * page-overflow. `spinePaths` is the SVG stroke list (trunk first). One-shot
@@ -29,6 +30,8 @@ export const TREE_BAND_PAD = 10;
 export const TREE_COL_GAP = 32;
 export const TREE_HANG = 22;
 export const TREE_STAGE_PAD = 16;
+/** Reserved height above a layer's first card so the caption cannot sit on it. */
+export const TREE_LABEL_SLOT = 32;
 /** Stage widths above this may draw convergence fans (chips always show). */
 export const TREE_TWO_UP_MIN_WIDTH = 480;
 
@@ -260,17 +263,35 @@ export function treeLayout(realityMap, options = {}) {
   const shift = leftEdge < TREE_STAGE_PAD ? TREE_STAGE_PAD - leftEdge : 0;
   const width = Math.max(viewport, rightEdge + shift + TREE_STAGE_PAD);
 
+  /** Rank where each layer's crown-nearest card sits (the caption row). */
+  /** @type {Map<string, number>} */
+  const layerStartRank = new Map();
+  for (const node of nodes) {
+    const rank = ranks.get(node.id) || 0;
+    const layer = typeof node.layer === "string" ? node.layer : "";
+    const prev = layerStartRank.get(layer);
+    if (prev === undefined || rank > prev) layerStartRank.set(layer, rank);
+  }
+  const ranksWithLabel = new Set(layerStartRank.values());
+
+  /** @type {Map<number, number>} */
+  const yOfRank = new Map();
+  let cursorY = TREE_ROOT_HEIGHT + TREE_ROOT_GAP;
+  for (let fromTop = 0; fromTop <= maxRank; fromTop++) {
+    const rank = maxRank - fromTop;
+    if (fromTop > 0) cursorY += TREE_CARD_GAP;
+    if (ranksWithLabel.has(rank)) cursorY += TREE_LABEL_SLOT;
+    yOfRank.set(rank, cursorY);
+    cursorY += TREE_CARD_HEIGHT;
+  }
+
   /** @type {Map<string, { id: string; label: string; layer: string; combines: number; rank: number; rib: boolean; x: number; y: number; cx: number; cy: number; width: number; height: number }>} */
   const cardById = new Map();
   for (const node of nodes) {
     const rank = ranks.get(node.id) || 0;
-    const fromTop = maxRank - rank;
     const col = colOf.get(node.id) || 0;
     const x = xForCol(col) + shift;
-    const y =
-      TREE_ROOT_HEIGHT +
-      TREE_ROOT_GAP +
-      fromTop * (TREE_CARD_HEIGHT + TREE_CARD_GAP);
+    const y = yOfRank.get(rank) ?? TREE_ROOT_HEIGHT + TREE_ROOT_GAP;
     cardById.set(node.id, {
       id: node.id,
       label: node.label,
@@ -315,7 +336,8 @@ export function treeLayout(realityMap, options = {}) {
       cx: trunk,
       divergenceY: first ? first.y : top,
       labelX: first ? first.x : trunk + TREE_HANG,
-      labelY: first ? first.y - 16 : top + 8,
+      labelY: first ? first.y - TREE_LABEL_SLOT : top + 8,
+      labelWidth: cardWidth,
       firstCardY: first ? first.y : top,
       bandY: top,
       bandHeight: Math.max(bottom - top, TREE_CARD_HEIGHT),

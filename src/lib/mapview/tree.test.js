@@ -8,6 +8,7 @@ import {
   layoutEdges,
   dependenceRanks,
   convergenceFanPaths,
+  TREE_LABEL_SLOT,
 } from "./tree.js";
 import { laptopRealityMap, llmRealityMap } from "../mmg/fixtures.js";
 
@@ -179,4 +180,52 @@ test("convergenceFanPaths emits one fan per convergence node", () => {
 test("convergenceFanPaths is empty for a map with no convergence nodes", () => {
   const layout = treeLayout(laptopRealityMap, { width: 1024 });
   assert.deepEqual(convergenceFanPaths(layout), []);
+});
+
+test("layer captions stay on their hang and do not share a box", () => {
+  const map = {
+    concept: "computer",
+    layers: [
+      { id: "l0", name: "electronic and sequential logic", nodes: ["n-left"] },
+      { id: "l1", name: "sequential circuits and microarchitecture", nodes: ["n-right"] },
+      { id: "l2", name: "machine", nodes: ["n-top"] },
+    ],
+    nodes: [
+      { id: "n-left", label: "OR Gate", layer: "l0" },
+      { id: "n-right", label: "NOT Gate", layer: "l1" },
+      { id: "n-top", label: "CPU", layer: "l2" },
+    ],
+    edges: [
+      { source: "n-top", target: "n-left", type: "built-on" },
+      { source: "n-top", target: "n-right", type: "built-on" },
+    ],
+  };
+  const layout = treeLayout(map, { width: 1024 });
+  const left = layout.branches.find((branch) => branch.id === "l0");
+  const right = layout.branches.find((branch) => branch.id === "l1");
+  assert.ok(left && right);
+  assert.equal(left.labelWidth, layout.cardWidth);
+  assert.equal(right.labelWidth, layout.cardWidth);
+  assert.equal(left.labelY + TREE_LABEL_SLOT, left.firstCardY);
+  assert.equal(right.labelY + TREE_LABEL_SLOT, right.firstCardY);
+  assert.equal(left.labelY, right.labelY);
+  assert.notEqual(left.labelX, right.labelX);
+  assert.equal(left.labelX, left.cards[0].x);
+  assert.equal(right.labelX, right.cards[0].x);
+  const sides = [left.cards[0].cx < layout.trunk, right.cards[0].cx < layout.trunk];
+  assert.notEqual(sides[0], sides[1], "same-rank parents occupy opposite hangs");
+  for (const branch of [left, right]) {
+    const card = branch.cards[0];
+    if (card.cx < layout.trunk) {
+      assert.ok(branch.labelX + branch.labelWidth <= layout.trunk + 1, `${branch.id} stays on the left hang`);
+    } else {
+      assert.ok(branch.labelX >= layout.trunk - 1, `${branch.id} stays on the right hang`);
+    }
+  }
+});
+
+test("a linear chain gives each layer caption its own y", () => {
+  const layout = treeLayout(laptopRealityMap, { width: 1024 });
+  const ys = layout.branches.map((branch) => branch.labelY);
+  assert.equal(new Set(ys).size, ys.length);
 });

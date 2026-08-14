@@ -1201,6 +1201,7 @@ export function renderMapPage(root, store, options = {}) {
       const label = el("p", "tree-branch-label", branch.name);
       label.style.left = `${branch.labelX ?? (branch.cards[0] ? branch.cards[0].x : 8)}px`;
       label.style.top = `${branch.labelY}px`;
+      label.style.width = `${branch.labelWidth ?? layout.cardWidth}px`;
       label.tabIndex = 0;
       label.setAttribute("aria-label", `Layer ${branch.name}: ${branch.id}`);
       label.addEventListener("mouseenter", () => {

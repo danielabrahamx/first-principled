@@ -222,7 +222,8 @@ recipe live in `research/13-ui-design-spec.md`.
   dependence path of the held Reality Map. Crown (the concept) at the top,
   foundations at the bottom. Y follows existing `built-on` / `depends-on` /
   `abstraction-of` edges, not observation dates (dates stay on hover). Layers
-  are captions on the hang, not table rows. Cards hang off a continuous
+  are captions on the hang, capped to the card width so they do not cross
+  the trunk, not table rows. Cards hang off a continuous
   trunk; extra parents of a convergence occupy the other side or a further
   column. The stage is at least the viewport and may grow wider for branches
   (the Tree scrolls horizontally; html/body do not overflow). On land the tree plays
