@@ -138,6 +138,8 @@ For each fact field, respond with EXACT, APPROXIMATE, or UNKNOWN.
 
 Most concepts in a first-principles chain have documented history in your knowledge. Give the best-documented discoverer and year and mark them EXACT or APPROXIMATE. For an abstract concept, the observation is the idea's first rigorous statement or first construction: for recursion that is McCarthy's 1960 introduction of recursion in LISP (EXACT); where several people contributed, name the best-documented and mark APPROXIMATE. Reserve UNKNOWN for facts with no defensible record - never use UNKNOWN to dodge a fact you actually know, and never invent one to avoid it.
 
+The keyObservation is the ENABLING INSIGHT - the realization that made the thing come to be, the observation its creators acted on - NEVER the event of the thing's first construction. The microprocessor card must say how the microprocessor came to be, not that Intel released the 4004 in 1971. For the microprocessor the keyObservation is the insight that a whole central processing unit could be built on one chip of silicon. For the logic gate it is that logical reasoning follows the rules of algebra, not that Boole published a book in 1847. An invention's event is its launch; its observation is the insight that made the launch possible - what was seen or realized, in one or two short sentences.
+
 If a year is contested in the historical record, give the best-documented year and mark APPROXIMATE. Where credit is shared or disputed, name all documented parties and mark APPROXIMATE when the primary credit is not settled.`;
 }
 
@@ -175,7 +177,7 @@ export function buildFoundationSystemPrompt() {
 A learner typed a word or phrase naming a thing or concept they want to understand from first principles. Step one of building its Reality Map: name the FOUNDATION layer - the deepest, most observable layer the thing is ultimately built on. For "laptop" that foundation is physics (electricity); for "photosynthesis" it is light and matter; for "recursion" it is the call stack. The foundation is what a learner can observe or meet directly, before any abstraction.
 
 Requirements for the foundation:
-- Exactly one layer, with 1 to 3 nodes. Each node has an id, label, layer, a one to two sentence description, and a "basis": the observation record - the REAL discovery history of the phenomenon the node names (who discovered it, when, what was observed). The foundation is the first observation a learner can point at.
+- Exactly one layer, with 1 to 3 nodes. Each node has an id, label, layer, a one to two sentence description, and a "basis": the observation record - the REAL discovery history of the phenomenon the node names (who discovered it, when, and the enabling insight: the observation that made the thing come to be, never the event of its first construction). The foundation is the first observation a learner can point at.
 - The foundation must be real and observable, not a metaphor or a slogan.
 
 ${failHonestBlock()}
@@ -261,7 +263,7 @@ The whole chain will be around ${maxLayers} layers total, foundation included (a
 
 Requirements for the next layer:
 - Build exactly ONE layer, with the id stated in the prompt (l1, l2, ...).
-- 1 to 3 nodes; each node has an id, a label, the new layer id, a one to two sentence description, and a "basis": the observation record - the REAL discovery history the abstraction compresses (who discovered it, when, what was observed). Example: logic gate -> basis: Boole 1847, logical reasoning follows the rules of algebra.
+- 1 to 3 nodes; each node has an id, a label, the new layer id, a one to two sentence description, and a "basis": the observation record - the REAL discovery history the abstraction compresses (who discovered it, when, and the enabling insight: the observation that made the thing come to be, never the event of its first construction). Example: logic gate -> basis: Boole 1847, logical reasoning follows the rules of algebra.
 - A node whose crux is a true synthesis across fields may additionally carry "combines": an array of {"id": "n-...", "observation": {...}} entries naming the enabling nodes you were given and their observation records. Keep combines to real enabling discoveries you were shown - never invent a stream.
 - Give every node a NEW unique id - never reuse a node id from the layers you were given; the same concept at a higher layer is a NEW node with a NEW id.
 - 1 to 3 typed edges. At least one edge must connect the new layer to the layer immediately below it. The ONLY allowed edge types are: built-on, abstraction-of, part-of, depends-on, predicts, contradicts. Never invent an edge type. Edges may also connect nodes within the new layer, and cross-layer edges to any lower layer are legal for a true synthesis (pair them with a combines entry). Reference only node ids you were given or ids you create.
