@@ -820,8 +820,47 @@ function normalizeOneShot(concept, unpacked) {
 }
 
 /**
+ * Whether a candidate map actually reaches the concept: some node's label
+ * matches the concept (normalized, whole-word containment either way). The
+ * one-shot path must satisfy this, because the serial path only stops when
+ * the model reports the concept is reached (done), while a one-shot map can
+ * pass the structural gates and still stop one layer short of the crown.
+ * A map that never names the concept is treated as failed and falls back to
+ * the serial path. A concept with no checkable letters (empty after
+ * normalization) is vacuously reached.
+ *
+ * @param {string} concept
+ * @param {any} map
+ * @returns {boolean}
+ */
+function conceptReached(concept, map) {
+  /** @param {unknown} s */
+  const normalize = (s) =>
+    String(s)
+      .toLowerCase()
+      .replace(/[^a-z0-9 ]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  const target = normalize(concept);
+  if (target.length === 0) return true;
+  const nodes = Array.isArray(map && map.nodes) ? map.nodes : [];
+  return nodes.some(
+    /** @param {unknown} node */
+    (node) => {
+      if (node === null || typeof node !== "object" || Array.isArray(node)) return false;
+      const record = /** @type {{ label?: unknown }} */ (node);
+      if (typeof record.label !== "string") return false;
+      const label = normalize(record.label);
+      return label.includes(target) || target.includes(label);
+    }
+  );
+}
+
+/**
  * The one-shot attempt. Returns a terminal result (ok or refused) - the
  * caller falls back to the serial path on every failure except refusal.
+ * The map must pass the structural gates AND reach the concept as a node
+ * (the serial path's done condition); otherwise it is invalid.
  *
  * @param {{ concept: string; transport: CallLLM; thinking: boolean; maxTokens: number; maxLayers: number }} input
  * @returns {Promise<{ ok: true; map: any } | { ok: false; kind: "refused"; reason: string } | { ok: false; kind: "invalid" | "error"; reason: string }>}
@@ -860,13 +899,15 @@ async function generateOneShotMap({ concept, transport, thinking, maxTokens, max
   const candidate = normalizeOneShot(concept, unpacked);
   const gate = validateRealityMap(candidate);
   const derive = deriveCheck(candidate);
-  if (gate.ok && derive.ok) {
+  if (gate.ok && derive.ok && conceptReached(concept, candidate)) {
     return { ok: true, map: candidate };
   }
   return {
     ok: false,
     kind: "invalid",
-    reason: "The one-shot map failed the validator gates.",
+    reason: gate.ok && derive.ok
+      ? "The one-shot map never reached the concept as a node."
+      : "The one-shot map failed the validator gates.",
   };
 }
 

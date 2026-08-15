@@ -1155,6 +1155,32 @@ const ONE_SHOT_BAD = JSON.stringify({
   edges: [],
 });
 
+/**
+ * A structurally valid one-shot reply that stops one layer short of the
+ * concept: the chain passes contiguity and deriveCheck but no node ever
+ * names the concept itself - the tree would end before the crown.
+ */
+const ONE_SHOT_NO_CROWN = JSON.stringify({
+  isValidConcept: true,
+  layers: [{ id: "l0", name: "optics", nodes: ["n-lens"] }],
+  nodes: [
+    {
+      id: "n-lens",
+      label: "lens",
+      layer: "l0",
+      description: "A piece of glass that bends light.",
+      basis: {
+        discoverer: { value: "Ibn al-Haytham", mark: "EXACT" },
+        date: { value: "1011", mark: "APPROXIMATE" },
+        keyObservation: { value: "Light bends when it passes from air into glass.", mark: "EXACT" },
+        confidence: "high",
+        note: "",
+      },
+    },
+  ],
+  edges: [],
+});
+
 test("the one-shot fast path returns a valid map in a single call", async () => {
   const { callLLM, requests } = stubTransport([ONE_SHOT_REPLY]);
   const result = await generateRealityMap(
@@ -1182,6 +1208,17 @@ test("the one-shot fast path falls back to the serial path when the map fails th
   assert.equal(result.ok, true);
   assert.equal(result.generationPath, "serial");
   assert.ok(requests.length > 1, "the serial path re-ran after the one-shot failed");
+});
+
+test("the one-shot fast path falls back when the map never reaches the concept", async () => {
+  const { callLLM, requests } = stubTransport([ONE_SHOT_NO_CROWN, ...HAPPY_SCRIPT]);
+  const result = await generateRealityMap(
+    { concept: "microscope", callLLM },
+    { fastPath: true }
+  );
+  assert.equal(result.ok, true);
+  assert.equal(result.generationPath, "serial", "a crown-less one-shot map must not ship");
+  assert.ok(requests.length > 1, "the serial path re-ran after the crown check failed");
 });
 
 test("without fastPath the one-shot prompt is never sent", async () => {
