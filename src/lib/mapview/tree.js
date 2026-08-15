@@ -230,6 +230,45 @@ export function treeLayout(realityMap, options = {}) {
     if (!colOf.has(node.id)) colOf.set(node.id, 0);
   }
 
+  /* Collision resolution (Danny's laptop report 2026-08-15): the assignment
+   * above can give the SAME column to two nodes at the SAME rank - two main
+   * parents of col-0 children, or two first-extras both claiming col -1 -
+   * which renders their cards stacked on the exact same spot (Silicon
+   * stacked on Transistor). Fix it as a POST-PASS so the layout of every
+   * tree that has no collision stays pixel-identical (the mobile shrink-to-
+   * fit path is untouched): walk each rank, remember the columns already
+   * taken at that rank, and nudge any card onto a shared column to the
+   * nearest free column. Same column on DIFFERENT ranks is fine - the trunk
+   * is one column used by every rank. */
+  const usedColsAtRank = new Map();
+  for (let r = maxRank; r >= 0; r--) {
+    const row = (byRank.get(r) || [])
+      .slice()
+      .sort((a, b) => (colOf.get(a.id) || 0) - (colOf.get(b.id) || 0));
+    let used = usedColsAtRank.get(r);
+    if (used === undefined) {
+      used = new Set();
+      usedColsAtRank.set(r, used);
+    }
+    for (const node of row) {
+      let col = colOf.get(node.id) || 0;
+      if (used.has(col)) {
+        for (let dist = 1; ; dist++) {
+          if (!used.has(col - dist)) {
+            col = col - dist;
+            break;
+          }
+          if (!used.has(col + dist)) {
+            col = col + dist;
+            break;
+          }
+        }
+        colOf.set(node.id, col);
+      }
+      used.add(col);
+    }
+  }
+
   const cols = [...colOf.values()];
   const minCol = cols.length === 0 ? 0 : Math.min(...cols);
   const maxCol = cols.length === 0 ? 0 : Math.max(...cols);

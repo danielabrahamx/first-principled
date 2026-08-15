@@ -258,3 +258,53 @@ test("a single-column tree fits the viewport at 375 and 320 with no horizontal o
     assert.ok(maxRight + TREE_STAGE_PAD <= viewport, `every card is fully on-stage at ${viewport}px (maxRight ${maxRight})`);
   }
 });
+
+test("two same-rank convergence extras never land on the same spot", () => {
+  // Two mid nodes (X, Y), each with a main parent and an extra parent at the
+  // foundation. Both extras naively claim col -1 (the per-node slot counter
+  // resets), stacking B and D on the same (x, y) - Danny's laptop report
+  // (Silicon stacked on Transistor). The collision post-pass nudges the
+  // second card to the nearest free column at that rank.
+  const map = {
+    concept: "x",
+    layers: [
+      { id: "l0", name: "base", nodes: ["n-a", "n-b", "n-c", "n-d"] },
+      { id: "l1", name: "mid", nodes: ["n-x", "n-y"] },
+      { id: "l2", name: "crown", nodes: ["n-e", "n-f"] },
+    ],
+    nodes: [
+      { id: "n-a", label: "A", layer: "l0" },
+      { id: "n-b", label: "B", layer: "l0" },
+      { id: "n-c", label: "C", layer: "l0" },
+      { id: "n-d", label: "D", layer: "l0" },
+      { id: "n-x", label: "X", layer: "l1" },
+      { id: "n-y", label: "Y", layer: "l1" },
+      { id: "n-e", label: "E", layer: "l2" },
+      { id: "n-f", label: "F", layer: "l2" },
+    ],
+    edges: [
+      { source: "n-x", target: "n-a", type: "built-on" },
+      { source: "n-x", target: "n-b", type: "built-on" },
+      { source: "n-y", target: "n-c", type: "built-on" },
+      { source: "n-y", target: "n-d", type: "built-on" },
+      { source: "n-e", target: "n-x", type: "built-on" },
+      { source: "n-f", target: "n-y", type: "built-on" },
+    ],
+  };
+  const layout = treeLayout(/** @type {any} */ (map), { width: 1024 });
+  const seen = new Set();
+  for (const card of layout.cards) {
+    const spot = `${card.x},${card.y}`;
+    assert.equal(seen.has(spot), false, `no two cards share a spot (${spot} = ${card.label})`);
+    seen.add(spot);
+  }
+});
+
+test("a tree with no collision keeps the exact pre-fix layout", () => {
+  // The collision post-pass must be a no-op for trees that never share a
+  // column at a rank, so the mobile shrink-to-fit layout is untouched.
+  const layout = treeLayout(laptopRealityMap, { width: 375 });
+  const xs = new Set(layout.cards.map((card) => card.x));
+  assert.equal(xs.size, 1, "a single-column tree stays one column");
+  assert.ok(layout.cardWidth < TREE_CARD_WIDTH, "mobile cards still shrink");
+});
