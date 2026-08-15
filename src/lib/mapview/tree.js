@@ -199,50 +199,8 @@ export function treeLayout(realityMap, options = {}) {
   /** @type {Map<string, number>} */
   const colOf = new Map();
 
-  /**
-   * Columns already claimed per rank. Two nodes at the same rank must never
-   * share a column, or their cards render stacked on the same spot (a
-   * convergence tree can otherwise claim col -1 for two different extras,
-   * or claim a main-parent column that is already taken at that rank).
-   *
-   * @type {Map<number, Set<number>>}
-   */
-  const usedColsAtRank = new Map();
-
-  /**
-   * Claim a column for a node at its rank: the preferred column when it is
-   * free, otherwise the nearest free column (alternating sides). Records
-   * the claim so a later node at the same rank never lands on it.
-   *
-   * @param {string} nodeId
-   * @param {number} rank
-   * @param {number} preferred
-   */
-  function claimCol(nodeId, rank, preferred) {
-    let used = usedColsAtRank.get(rank);
-    if (used === undefined) {
-      used = new Set();
-      usedColsAtRank.set(rank, used);
-    }
-    let col = preferred;
-    if (used.has(col)) {
-      for (let dist = 1; ; dist++) {
-        if (!used.has(preferred - dist)) {
-          col = preferred - dist;
-          break;
-        }
-        if (!used.has(preferred + dist)) {
-          col = preferred + dist;
-          break;
-        }
-      }
-    }
-    used.add(col);
-    colOf.set(nodeId, col);
-  }
-
   const crownIds = (byRank.get(maxRank) || []).map((node) => node.id).sort();
-  crownIds.forEach((id, i) => claimCol(id, maxRank, i));
+  crownIds.forEach((id, i) => colOf.set(id, i));
 
   for (let r = maxRank; r >= 0; r--) {
     const row = (byRank.get(r) || [])
@@ -254,16 +212,14 @@ export function treeLayout(realityMap, options = {}) {
       const parents = parentsOf.get(node.id) || [];
       if (parents.length === 0) continue;
       const main = mainParentOf(parents, ranks);
-      if (main && !colOf.has(main)) {
-        claimCol(main, ranks.get(main) || 0, col);
-      }
+      if (main && !colOf.has(main)) colOf.set(main, col);
       const extras = parents
         .filter((parent) => parent !== main && !colOf.has(parent))
         .sort();
       let sign = -1;
       let slot = 1;
       for (const extra of extras) {
-        claimCol(extra, ranks.get(extra) || 0, sign < 0 ? -slot : slot);
+        colOf.set(extra, sign < 0 ? -slot : slot);
         sign *= -1;
         if (sign === -1) slot += 1;
       }
@@ -271,7 +227,7 @@ export function treeLayout(realityMap, options = {}) {
   }
 
   for (const node of nodes) {
-    if (!colOf.has(node.id)) claimCol(node.id, ranks.get(node.id) || 0, 0);
+    if (!colOf.has(node.id)) colOf.set(node.id, 0);
   }
 
   const cols = [...colOf.values()];
