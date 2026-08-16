@@ -10,10 +10,10 @@ cognitive distance between the learner's mental model and reality.
 
 ## Frontier (resume here)
 
-v6 charted. OpenRouter is the LLM transport. How-it-works chrome
-prototype is at
-`.scratch/first-principled-v6/research/03-how-it-works-prototype/`
-(`npm run prototype:how-it-works`); recommended variant A. Map:
+v6 charted. Tickets 01-04 resolved (OpenRouter is the LLM transport;
+how-it-works prototype recommends variant A; Tutor is parked from chrome).
+Open frontier: Ship how-it-works into the Tree home, Node panel is an
+invitation card, Reality Map quality eval. Map:
 `.scratch/first-principled-v6/map.md`.
 
 ## Language
@@ -53,8 +53,8 @@ nested generated Tree.
 _Avoid_: nested tree, generate from node, chat about the node
 
 **Tutor**:
-Parked from chrome this effort. The engine remains. Was optional Q&A as a
-bottom sheet.
+Parked from chrome. Toggle and bottom sheet are gone from the Tree home.
+The engine remains (`socratic.js`, `forceBrief`, `dock.js`), unmounted.
 _Avoid_: Chat page, Ask, Chat (as a nav item), dock (as a side rail)
 
 **Learner Mental Model**:
@@ -64,9 +64,9 @@ _Avoid_: Map tab, learner map (as a nav label)
 
 Current architecture (v1):
 
-- Static frontend, one home surface: the Tree. v6 removes Tutor from the
-  chrome (toggle and bottom sheet). How it works lives in the header; the
-  empty Tree carries one sentence of framing.
+- Static frontend, one home surface: the Tree. Tutor is parked from the
+  chrome (toggle and bottom sheet removed). How it works and the empty-Tree
+  sentence ship in ticket 05.
 - One stateless serverless function on Netlify, POST /api/agent. State comes
   in with every request and goes out with the response. It stores nothing.
 - The Mental Model Graph has two sides: the Reality Map (canonical, from the

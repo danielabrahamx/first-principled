@@ -1,14 +1,13 @@
 /**
- * The Tree home (ticket 02): one surface, Tutor as a closed-by-default dock.
+ * The Tree home: one surface. Header is logo and word box. No Chat page, no
+ * learner-map tab, no Tutor toggle or bottom sheet. Empty state when there
+ * is no Reality Map; skeleton while generating; Tree when it lands. Node
+ * panels and observation hovers still live on tree cards. The learner grid,
+ * comparison block, and closeness chrome stay hidden (engine may still
+ * carry learnerMap).
  *
- * Header is logo, word input + Build, and a Tutor toggle. No Chat page, no
- * learner-map tab. Empty state when there is no Reality Map; skeleton while
- * generating; Tree when it lands. Node panels and observation hovers still
- * live on tree cards. The learner grid, comparison block, and closeness
- * chrome stay hidden (engine may still carry learnerMap).
- *
- * Tutor is a compact bottom sheet, closed by default (v5 ticket 04). Opening
- * it does not steal Tree width. Pull Q&A / forceBrief is unchanged.
+ * Tutor is parked from chrome. The Socratic engine, forceBrief, and dock
+ * module stay in the repo, unmounted.
  *
  * Ticket 11: submitting the word input starts generation here. While the
  * generator works a progressive skeleton mirrors the tree and lights its
@@ -61,7 +60,6 @@ import {
   errorMessage,
 } from "../lib/generation.js";
 import { budDelay, wireTreeMotion } from "../lib/motion.js";
-import { renderDock } from "./dock.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -176,34 +174,14 @@ export function renderMapPage(root, store, options = {}) {
   const page = el("div", "map-page");
   const split = el("div", "map-split");
   const main = el("div", "map-main");
-  const dock = el("aside", "map-dock-wrap");
-  dock.id = "tutor-sheet";
-  dock.setAttribute("aria-label", "Tutor conversation");
-  dock.hidden = true;
 
-  /* Header: logo, word input + Build, Tutor toggle (ticket 02). */
+  /* Header: logo and word input + Build. Tutor chrome is parked. */
   const header = el("header", "map-header");
   const logo = el("div", "logo-row");
   logo.append(el("span", "orb logo-dot"), el("span", "wordmark", "first-principled"));
 
-  let tutorOpen = false;
-  /** @type {HTMLButtonElement} */
-  const tutorToggle = /** @type {HTMLButtonElement} */ (
-    el("button", "tutor-toggle", "Tutor")
-  );
-  tutorToggle.type = "button";
-  tutorToggle.setAttribute("aria-label", "Tutor");
-  tutorToggle.setAttribute("aria-expanded", "false");
-  tutorToggle.setAttribute("aria-controls", "tutor-sheet");
-  tutorToggle.addEventListener("click", () => {
-    tutorOpen = !tutorOpen;
-    page.classList.toggle("tutor-open", tutorOpen);
-    dock.hidden = !tutorOpen;
-    tutorToggle.setAttribute("aria-expanded", String(tutorOpen));
-  });
-
   /* Ticket 11: the word input lives on the Tree home. Submitting starts
-     generation here; the Tutor dock is follow-up-only. */
+     generation here. */
   const entry = el("form", "map-entry");
   /** @type {HTMLInputElement} */
   const entryInput = /** @type {HTMLInputElement} */ (
@@ -223,7 +201,7 @@ export function renderMapPage(root, store, options = {}) {
   entryButton.type = "submit";
   entry.append(entryInput, entryButton);
 
-  header.append(logo, entry, tutorToggle);
+  header.append(logo, entry);
 
   /* Timeline scrubber (ticket 12). */
   const timeline = el("div", "map-timeline");
@@ -346,10 +324,8 @@ export function renderMapPage(root, store, options = {}) {
     ended
   );
   split.append(main);
-  page.append(split, dock);
+  page.append(split);
   root.append(page);
-
-  const dockHandle = renderDock(dock);
 
   /* Ticket 11 generation state: the input + skeleton live for the ~20s the
      generator works, then the Tree shows. */
@@ -1485,7 +1461,6 @@ export function renderMapPage(root, store, options = {}) {
         treeMotion = null;
       }
       unsubscribe();
-      dockHandle.destroy();
       document.removeEventListener("keydown", onKeydown);
       window.removeEventListener("scroll", onScroll);
       if (responsive) {

@@ -17,7 +17,6 @@
   --seg-track: #e8eaef;
   --font-display: "Fraunces", Georgia, serif;
   --font-ui: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --tutor-sheet: 240px;
 }
 
 * {
@@ -527,8 +526,7 @@ body {
 }
 
 /* Ticket 11: the word entry in the sticky header. Shrinks on a narrow
-   row; wraps under the logo + Tutor toggle at 375px so the header does
-   not overflow. */
+   row; wraps under the logo at 375px so the header does not overflow. */
 
 .map-entry {
   flex: 1 1 12rem;
@@ -593,30 +591,6 @@ body {
 
 .map-error {
   margin-bottom: 16px;
-}
-
-/* Tutor toggle: a button, not a tab. Closed by default (ticket 02). */
-
-.tutor-toggle {
-  flex: 0 0 auto;
-  margin-left: auto;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 8px 16px;
-  border-radius: 12px;
-  cursor: pointer;
-  white-space: nowrap;
-  min-height: 44px;
-}
-
-.tutor-toggle[aria-expanded="true"] {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-color: transparent;
 }
 
 /* Segmented control (unused in the Tree header; kept for leftover markup). */
@@ -1317,8 +1291,8 @@ body {
 }
 
 /* --------------------------------------------------------------------------
- * Tree home: Tutor is a compact bottom sheet (v5 ticket 04). Opening it
- * never adds a 340px column. Spine padding keeps foundations reachable.
+ * Tree home: one column. Tutor sheet chrome is parked; dock module CSS
+ * stays below so the unmounted dock.js can remount without a restyle.
  * ------------------------------------------------------------------------ */
 
 .map-split {
@@ -1332,36 +1306,7 @@ body {
   min-width: 0;
 }
 
-.map-page.tutor-open .tree {
-  padding-bottom: var(--tutor-sheet);
-}
-
-.map-page.tutor-open .tree-stage,
-.map-page.tutor-open .tree-branch-card {
-  scroll-margin-bottom: var(--tutor-sheet);
-}
-
-.map-dock-wrap {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  top: auto;
-  z-index: 40;
-  height: var(--tutor-sheet);
-  max-height: 42dvh;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.map-dock-wrap.dock {
-  height: var(--tutor-sheet);
-  max-height: 42dvh;
-}
-
-/* The docked chat pane */
+/* Parked dock pane (src/pages/dock.js, unmounted from the Tree home). */
 
 .dock {
   display: flex;

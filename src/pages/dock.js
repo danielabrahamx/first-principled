@@ -1,7 +1,7 @@
 /**
- * The docked Tutor (ticket 09, retargeted by ticket 02): a compact Q&A pane
- * beside the Tree on desktop, stacked below it on narrow screens. Closed by
- * default; the header Tutor toggle opens it.
+ * The docked Tutor, parked from chrome (v6 ticket 04). Module stays so
+ * tests and a later remount can still import dockLabel, dockMessages, and
+ * renderDock. The Tree home no longer mounts it.
  *
  * Ticket 11: the dock is follow-up-only. The word input lives in the Tree
  * header; when there is no tree yet - or the Tree is still building one, or

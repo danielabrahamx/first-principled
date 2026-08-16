@@ -2,7 +2,7 @@
  * App entry: wires the hash router to the Tree home and the shared session
  * store.
  *
- * Ticket 02: one route. Home is the Tree. Tutor is a closed-by-default dock.
+ * Ticket 02: one route. Home is the Tree. Tutor is parked from chrome.
  * `#chat` and unknown hashes land on home. The router still exists so old
  * hashes resolve without mounting a second page.
  */

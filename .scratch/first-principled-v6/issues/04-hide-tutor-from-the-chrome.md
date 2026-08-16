@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** none
 
@@ -30,13 +30,25 @@ chrome look like without deleting the engine?
 
 ## Acceptance criteria
 
-- [ ] Live Tree home has no Tutor toggle and no bottom sheet
-- [ ] Word box still builds a tree
-- [ ] `src/lib/agent/` Socratic / briefing code is not deleted
-- [ ] `npm test` and `npx tsc --noEmit` pass
-- [ ] Spec UX section records: Tutor is parked from chrome
+- [x] Live Tree home has no Tutor toggle and no bottom sheet
+- [x] Word box still builds a tree
+- [x] `src/lib/agent/` Socratic / briefing code is not deleted
+- [x] `npm test` and `npx tsc --noEmit` pass
+- [x] Spec UX section records: Tutor is parked from chrome
 
 ## Docs rule
 
 Spec section 9 (UX) and CONTEXT.md Tutor entry update in the same commit
 as the chrome removal.
+
+## Answer
+
+Home is logo, word box, Tree. The Tutor toggle, `#tutor-sheet` mount, and
+`tutor-open` layout are gone from `src/pages/map.js` and live CSS
+(`--tutor-sheet`, `.tutor-toggle`, sheet positioning). Header copy is no
+longer a Tutor control; the word-box placeholder stays temporary until
+[Ship how-it-works into the Tree home](05-ship-how-it-works.md). `#chat`
+still lands on home.
+
+Engine stays: `socratic.js`, `forceBrief` in the orchestrator, and
+`src/pages/dock.js` (unmounted, with parked `.dock` CSS).

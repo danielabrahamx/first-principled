@@ -19,11 +19,10 @@ test("the skeleton mirrors the vertical-path tree with a chain of layer bands", 
   }
 });
 
-test("the Tree header has a Tutor toggle and no page tabs", () => {
+test("the Tree header has no Tutor toggle and no page tabs", () => {
   const source = readFileSync(path.join(here, "map.js"), "utf8");
-  assert.match(source, /tutor-toggle/);
-  assert.match(source, /aria-label",\s*"Tutor"/);
-  assert.match(source, /aria-expanded/);
+  assert.doesNotMatch(source, /tutor-toggle/);
+  assert.doesNotMatch(source, /aria-label",\s*"Tutor"/);
   assert.doesNotMatch(source, /"Chat"/);
   assert.doesNotMatch(source, /"Reality"/);
   assert.doesNotMatch(source, /seg-item/);
@@ -50,7 +49,7 @@ test("tree cards lock the layout height so edges are not covered", () => {
   assert.match(source, /node\.style\.height/);
 });
 
-test("Tutor is a bottom sheet, not a 340px side rail", () => {
+test("Tutor is parked from chrome; the briefing engine stays", () => {
   const css = readFileSync(path.join(here, "..", "styles.css"), "utf8");
   const source = readFileSync(path.join(here, "map.js"), "utf8");
   const orchestrator = readFileSync(
@@ -58,11 +57,12 @@ test("Tutor is a bottom sheet, not a 340px side rail", () => {
     "utf8"
   );
   assert.doesNotMatch(css, /minmax\(0,\s*1fr\)\s+340px/);
-  assert.match(css, /--tutor-sheet/);
-  assert.match(css, /position:\s*fixed/);
-  assert.match(source, /tutor-sheet/);
-  assert.match(source, /page\.classList\.toggle\("tutor-open"/);
-  assert.doesNotMatch(source, /split\.classList\.toggle\("tutor-open"/);
+  assert.doesNotMatch(css, /--tutor-sheet/);
+  assert.doesNotMatch(css, /\.tutor-toggle/);
+  assert.doesNotMatch(css, /tutor-open/);
+  assert.doesNotMatch(source, /tutor-sheet/);
+  assert.doesNotMatch(source, /tutor-open/);
+  assert.doesNotMatch(source, /renderDock/);
   assert.match(orchestrator, /forceBrief:\s*true/);
 });
 

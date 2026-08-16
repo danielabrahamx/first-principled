@@ -1,11 +1,12 @@
 /**
  * Vocabulary check for learner-facing copy (ticket 06, docs/ste.md).
  *
- * Scans the hand-written UI copy in the static page and the Tutor dock
- * against the approved word list in docs/ste.md (one meaning per word, rule
- * 1). A word passes when it is on the approved list, a documented function
- * word, a documented UI/product term, or an inflection of an approved word
- * (plural, -ing, -ed). Everything else is a violation, reported per string.
+ * Scans the hand-written UI copy in the static page and the parked Tutor
+ * dock against the approved word list in docs/ste.md (one meaning per word,
+ * rule 1). A word passes when it is on the approved list, a documented
+ * function word, a documented UI/product term, or an inflection of an
+ * approved word (plural, -ing, -ed). Everything else is a violation,
+ * reported per string.
  *
  * The check is a report, not a gate on the approved list alone: the approved
  * list is a domain vocabulary for the tree content, so plain-English glue

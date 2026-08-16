@@ -1,6 +1,6 @@
 /**
  * Phase helpers kept for tests after ticket 02 unmounted the Chat page.
- * The Tutor dock (dock.js) is the conversation surface; errorMessage lives
+ * Tutor chrome is parked (dock.js stays unmounted); errorMessage lives
  * in generation.js and is re-exported here so chat.test.js stays green.
  */
 

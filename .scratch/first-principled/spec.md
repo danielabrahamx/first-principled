@@ -179,29 +179,28 @@ Space Grotesk. Mental-model states use stained-glass colors: untested gray,
 missing red, misconception amber, correct green. Exact tokens and the orb CSS
 recipe live in `research/13-ui-design-spec.md`.
 
-- Chat page (`src/pages/chat.js`, ticket 08): starts on a word or phrase
-  input; after an init refusal the input returns with a "try a different
-  word" hint (a new word starts a new session). Then a message list (learner
-  and agent turns), a composer (Enter sends, Shift+Enter newlines), and a
-  sending state that disables the composer and shows "Thinking..." while the
-  call is in flight. A phase pill shows: Starting (phase init), Exploring
-  (active with an empty learner map - the observation-first opening), Refining
-  (active with a populated learner map - gap-first), Session end (phase end).
-  The exploring/refining split mirrors the engine's opening rule in section 8,
-  and the chat hero mirrors it in the eyebrow over the concept word ("You're
-  exploring" / "You're refining"). Agent messages carry a 36px orb avatar and
-  a TUTOR label; learner messages are ink-dark bubbles with a YOU label.
-  Errors render as one friendly line plus a Retry button that re-sends the
-  exact failed request; raw JSON and provider text never reach the learner.
-  A learner who asks for direct information ("just tell me about X", "brief
-  me on Y", "how do I decide between A and B") receives a direct briefing
-  instead of a Socratic question - the one mode where reality content is
-  delivered in chat, because the learner asked for it (ticket 16).
-  Session end: the transfer question appears as a normal message, the learner
-  answers, and a result panel shows passed or not passed plus the comparison
-  entry point (a link to the map page). No reality map content ever renders
-  here.
-- Map page (`src/pages/map.js`, tickets 09, 13, 15): separate route. Renders the
+- Tree home chrome (v6): one surface. Header is logo and word box; submitting
+  the word still builds a tree. Tutor is parked from chrome: no toggle, no
+  bottom sheet. `#chat` lands on home. There is no Chat page. The Socratic
+  engine, `forceBrief`, and `src/pages/dock.js` remain in the repo, unmounted.
+- Chat page (`src/pages/chat.js`, ticket 08): unmounted. Helpers remain for
+  tests. Was a word-or-phrase start, then a message list (learner and agent
+  turns), a composer (Enter sends, Shift+Enter newlines), and a sending state
+  that disables the composer and shows "Thinking..." while the call is in
+  flight. A phase pill shows: Starting (phase init), Exploring (active with
+  an empty learner map - the observation-first opening), Refining (active
+  with a populated learner map - gap-first), Session end (phase end). The
+  exploring/refining split mirrors the engine's opening rule in section 8.
+  Agent messages carry a 36px orb avatar and a TUTOR label; learner messages
+  are ink-dark bubbles with a YOU label. Errors render as one friendly line
+  plus a Retry button that re-sends the exact failed request; raw JSON and
+  provider text never reach the learner. A learner who asks for direct
+  information ("just tell me about X", "brief me on Y", "how do I decide
+  between A and B") receives a direct briefing instead of a Socratic question
+  - the one mode where reality content is delivered in chat, because the
+  learner asked for it (ticket 16). Session end: the transfer question
+  appears as a normal message. No reality map content ever renders here.
+- Map page (`src/pages/map.js`, tickets 09, 13, 15): the Tree home. Renders the
   learner's model: nodes colored by state (untested gray, missing red,
   misconception orange, correct green), edges with their own state, confidence
   shown per node (a status line "state - 0.9" plus a thin bar). A node's
@@ -212,13 +211,8 @@ recipe live in `research/13-ui-design-spec.md`.
   grid. Nodes
   flow into a responsive grid (no graph library; an SVG overlay draws the
   edges between cards) in the order the learner engaged with them; no reality
-  structure (layers) is used for layout. A header segmented control switches
-  between the pages, and a title row shows the concept word over a Closeness
-  count ("4/11") with a progress bar; a legend explains the four states.
-  Changes from each turn's diff animate: new nodes pop in, state flips
-  transition color on the same element, evidence or confidence changes flash,
-  edge colors transition. The page makes no network requests - every update
-  comes from the shared session store. Home is the Tree: a first-principles
+  structure (layers) is used for layout. Learner-grid chrome, closeness, and
+  the page tabs stay hidden. Home is the Tree: a first-principles
   dependence path of the held Reality Map. Crown (the concept) at the top,
   foundations at the bottom. Y follows existing `built-on` / `depends-on` /
   `abstraction-of` edges, not observation dates (dates stay on hover). Layers
@@ -231,10 +225,9 @@ recipe live in `research/13-ui-design-spec.md`.
   then stays fully visible; scroll never gates opacity. Reduced motion skips
   grow and sap. A metrics row of closeness
   score, gap closures and the transfer result, plus the transfer assessment,
-  render on both tabs at session end only. The chat page NEVER leaks reality
-  content (labels, layers, descriptions) in either direction: the no-leak
-  rule now binds chat, not the map page.
-- Session end: comparison view - reality map vs learner map, closed-gap summary, closeness score, transfer result.
+  stay parked with the learner chrome. The unmounted chat helpers NEVER leak
+  reality content (labels, layers, descriptions).
+- Session end: comparison view - reality map vs learner map, closed-gap summary, closeness score, transfer result. Parked from chrome this effort.
 
 ## 10. Metrics
 
