@@ -70,6 +70,7 @@ measured, not hoped. Provider for this effort: OpenRouter
 - Provider: OpenRouter `nvidia/nemotron-3-ultra-550b-a55b:free`. Stay on
   `:free` unless research proves it unusable, then switch slug not provider.
 - Quality bar: Danny-scored rubric plus a small automated gate on gold maps.
+- OpenRouter Nemotron `:free` can serve schema-valid one-shot Reality Maps; raise llm.js timeout to 240s, drop DeepSeek thinking, send reasoning effort none, stay on `:free`. [OpenRouter Nemotron can serve the Reality Map contract](issues/01-openrouter-nemotron-map-contract.md)
 
 ## Not yet specified
 

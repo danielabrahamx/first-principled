@@ -2,7 +2,7 @@
 
 **Type:** research
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** none
 
@@ -48,13 +48,21 @@ live beside it. No `src/` changes in this ticket.
 
 ## Acceptance criteria
 
-- [ ] Findings file exists, every claim cited to a primary source or a
+- [x] Findings file exists, every claim cited to a primary source or a
       live probe
-- [ ] Live probe ran (or recorded the exact blocker: missing key, 4xx)
-- [ ] Recommendation covers: usable or not, timeout, one-shot vs serial,
+- [x] Live probe ran (or recorded the exact blocker: missing key, 4xx)
+- [x] Recommendation covers: usable or not, timeout, one-shot vs serial,
       reasoning vs thinking, stay on `:free` or switch slug
-- [ ] Transport diff is specific enough that ticket 02 does not re-research
-- [ ] No secrets in the findings file, probe output, or git history
+- [x] Transport diff is specific enough that ticket 02 does not re-research
+- [x] No secrets in the findings file, probe output, or git history
+
+## Answer
+
+`:free` is usable. One-shot `laptop` map was schema-valid in 118s with
+reasoning off. Raise `llm.js` timeout to 240s, drop DeepSeek `thinking`,
+send OpenRouter `reasoning: { effort: "none" }` for JSON maps, keep the
+`:free` slug. Findings:
+[01-openrouter-nemotron-map-contract.md](../research/01-openrouter-nemotron-map-contract.md)
 
 ## Docs rule
 
