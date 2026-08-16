@@ -3,8 +3,8 @@
  * How it works. No Chat page, no learner-map tab, no Tutor toggle or bottom
  * sheet. Empty state when there is no Reality Map; skeleton while generating;
  * Tree when it lands. `#how` swaps the canvas for the short How it works
- * page without unmounting the word box. Node panels and observation hovers
- * still live on tree cards. The learner grid, comparison block, and
+ * page without unmounting the word box. Clicking a tree card opens an
+ * invitation card. Observation hovers stay on tree cards. The learner grid, comparison block, and
  * closeness chrome stay hidden (engine may still carry learnerMap).
  *
  * Tutor is parked from chrome. The Socratic engine, forceBrief, and dock
@@ -635,9 +635,9 @@ export function renderMapPage(root, store, options = {}) {
   }
 
   /**
-   * The node panel content (ticket 10): reality description (allowed), the
-   * learner's current state, evidence with turn numbers, the rotation trail,
-   * and linked neighbors.
+   * Invitation card (v6 ticket 06): what this is, the observation, what it
+   * rests on / what rests on it, and one rabbit-hole line. No learner-state
+   * chrome and no control that generates a nested Tree.
    *
    * @param {string} nodeId
    * @param {HTMLElement | null} [source] - the card that opened the panel;
@@ -651,12 +651,7 @@ export function renderMapPage(root, store, options = {}) {
 
     const heading = el("div", "node-panel-heading");
     heading.appendChild(el("h2", "node-panel-label", view.label));
-    const status = el(
-      "span",
-      "map-status",
-      `${view.engaged ? view.state : "untested"} - ${view.confidence.toFixed(1)}`
-    );
-    heading.appendChild(status);
+    heading.appendChild(el("p", "node-panel-invite", view.invitation));
     panelBody.appendChild(heading);
 
     // The crux first (ticket 04): the observation that enabled the next
@@ -716,76 +711,34 @@ export function renderMapPage(root, store, options = {}) {
       panelBody.appendChild(section);
     }
 
-    if (view.trail.length > 0) {
-      const section = el("section", "node-panel-section");
-      section.appendChild(el("h3", "node-panel-h", "How your model changed"));
-      const list = el("ul", "node-panel-trail");
-      for (const entry of view.trail) {
-        const item = el("li", "node-panel-trail-item");
-        const head = el(
-          "span",
-          "node-panel-trail-head",
-          `turn ${entry.turn} - ${entry.state} (${pct(entry.confidence)})`
-        );
-        item.appendChild(head);
-        for (const quote of entry.evidence) {
-          item.appendChild(el("span", "node-panel-quote", `\u201C${quote}\u201D`));
-        }
-        list.appendChild(item);
-      }
-      section.appendChild(list);
-      panelBody.appendChild(section);
-    }
-
-    if (view.evidence.length > 0) {
-      const section = el("section", "node-panel-section");
-      section.appendChild(el("h3", "node-panel-h", "Your words"));
-      const list = el("ul", "node-panel-evidence");
-      for (const entry of view.evidence) {
-        const item = el("li", "node-panel-evidence-item");
-        item.append(
-          el("span", "node-panel-turn", `t${entry.turn}`),
-          document.createTextNode(`\u201C${entry.quote}\u201D`)
-        );
-        list.appendChild(item);
-      }
-      section.appendChild(list);
-      panelBody.appendChild(section);
-    }
-
-    if (view.neighbors.length > 0) {
-      const section = el("section", "node-panel-section");
-      section.appendChild(el("h3", "node-panel-h", "Connected to"));
-      const list = el("ul", "node-panel-neighbors");
-      for (const neighbor of view.neighbors) {
-        const item = el(
-          "li",
-          "node-panel-neighbor",
-          `${neighbor.label} (${neighbor.relation})`
-        );
-        item.append(
-          document.createTextNode(`${neighbor.label} ${neighbor.relation === "out" ? "\u2192" : "\u2190"}`),
-          el("span", `legend-swatch ${stateClass(neighbor.state)}`),
-          document.createTextNode(` ${neighbor.state}`)
-        );
-        list.appendChild(item);
-      }
-      section.appendChild(list);
-      panelBody.appendChild(section);
-    }
-
-    if (!view.engaged) {
-      const section = el("section", "node-panel-section");
-      section.appendChild(
-        el("p", "node-panel-empty", "You haven't engaged this node yet - it will appear when you do.")
-      );
-      panelBody.appendChild(section);
-    }
+    appendDependence("What it rests on", view.restsOn);
+    appendDependence("What rests on it", view.restsOnIt);
 
     panel.hidden = false;
     panelBackdrop.hidden = false;
     panelOpen = true;
     panelClose.focus();
+  }
+
+  /**
+   * @param {string} heading
+   * @param {Array<{ nodeId: string; label: string; type: string }>} items
+   */
+  function appendDependence(heading, items) {
+    if (items.length === 0) return;
+    const section = el("section", "node-panel-section");
+    section.appendChild(el("h3", "node-panel-h", heading));
+    const list = el("ul", "node-panel-neighbors");
+    for (const neighbor of items) {
+      const item = el("li", "node-panel-neighbor");
+      item.append(
+        el("span", "node-panel-neighbor-label", neighbor.label),
+        el("span", "node-panel-neighbor-type", neighbor.type)
+      );
+      list.appendChild(item);
+    }
+    section.appendChild(list);
+    panelBody.appendChild(section);
   }
 
   /**

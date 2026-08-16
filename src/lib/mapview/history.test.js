@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { laptopRealityMap, laptopLearnerMap } from "../mmg/fixtures.js";
 import {
   nodePanelView,
+  RABBIT_HOLE_INVITE,
   layerStory,
   timelineStops,
   snapshotAt,
@@ -84,10 +85,13 @@ function historyState(overrides = {}) {
   };
 }
 
-test("nodePanelView assembles the five content areas from the ledger", () => {
+test("nodePanelView is an invitation card: description, observation, neighbors", () => {
   const panel = nodePanelView(historyState(), "n-transistor");
   assert.equal(panel.label, "transistor");
   assert.match(panel.description, /Semiconductor switch/);
+  assert.equal(panel.invitation, RABBIT_HOLE_INVITE);
+  assert.match(panel.invitation, /rabbit hole/);
+  assert.match(panel.invitation, /not a chat topic/);
   // The crux (ticket 04): since ticket 03 the fixture carries the
   // structured observation record, rendered with marks - never a gap.
   assert.equal(panel.observation.present, true);
@@ -100,34 +104,25 @@ test("nodePanelView assembles the five content areas from the ledger", () => {
     panel.observation.keyObservation?.value,
     "A small voltage controls a larger current through a germanium crystal."
   );
-  assert.equal(panel.state, "correct");
-  assert.equal(panel.confidence, 0.85);
-  assert.equal(panel.engaged, true);
-  // Evidence with the turn it first appeared on.
-  assert.deepEqual(panel.evidence, [
-    { quote: "a transistor is a switch you flick by hand", turn: 1 },
-    { quote: "transistors mainly amplify audio", turn: 2 },
-    { quote: "so it's a tiny switch controlled by a voltage", turn: 3 },
-  ]);
-  // The rotation trail: misconception (t1), update (t2), correct (t3).
-  assert.deepEqual(
-    panel.trail.map((entry) => [entry.turn, entry.state, entry.confidence]),
-    [
-      [1, "misconception", 0.4],
-      [2, "misconception", 0.35],
-      [3, "correct", 0.85],
-    ]
-  );
+  // Learner-state chrome is off the card (v6 ticket 06).
+  assert.equal("state" in panel, false);
+  assert.equal("confidence" in panel, false);
+  assert.equal("engaged" in panel, false);
+  assert.equal("evidence" in panel, false);
+  assert.equal("trail" in panel, false);
+  assert.equal("neighbors" in panel, false);
 });
 
-test("nodePanelView reports an unengaged node with reality description and no trail", () => {
+test("nodePanelView of any node still shows the reality description", () => {
   const panel = nodePanelView(historyState(), "n-os");
-  assert.equal(panel.engaged, false);
-  assert.equal(panel.state, "untested");
-  assert.equal(panel.confidence, 0);
-  assert.deepEqual(panel.evidence, []);
-  assert.deepEqual(panel.trail, []);
   assert.match(panel.description, /Software layer/);
+  assert.equal(panel.invitation, RABBIT_HOLE_INVITE);
+  assert.deepEqual(panel.restsOn, [
+    { nodeId: "n-bit", label: "bit", type: "built-on" },
+  ]);
+  assert.deepEqual(panel.restsOnIt, [
+    { nodeId: "n-app", label: "application", type: "depends-on" },
+  ]);
 });
 
 test("nodePanelView of a node without a basis renders the explicit gap", () => {
@@ -146,32 +141,19 @@ test("nodePanelView of a node without a basis renders the explicit gap", () => {
   assert.equal(panel.observation.keyObservation, null);
 });
 
-test("nodePanelView lists neighbors with relation, label and edge state", () => {
-  const state = historyState();
-  // Give the learner map an edge so the panel has neighbors.
-  state.learnerMap = {
-    nodes: state.learnerMap.nodes,
-    edges: [
-      { source: "n-bit", target: "n-transistor", state: "correct", confidence: 0.6, evidence: ["bits ride on switches"] },
-    ],
-  };
-  const panel = nodePanelView(state, "n-transistor");
-  assert.deepEqual(panel.neighbors, [
-    { nodeId: "n-bit", label: "bit", state: "correct", relation: "in" },
+test("nodePanelView lists what the node rests on from Reality Map edges", () => {
+  const panel = nodePanelView(historyState(), "n-transistor");
+  assert.deepEqual(panel.restsOn, [
+    { nodeId: "n-silicon", label: "silicon", type: "built-on" },
   ]);
 });
 
-test("nodePanelView of a node with an outgoing edge lists it as out", () => {
-  const state = historyState();
-  state.learnerMap = {
-    nodes: state.learnerMap.nodes,
-    edges: [
-      { source: "n-transistor", target: "n-bit", state: "misconception", confidence: 0.4, evidence: [] },
-    ],
-  };
-  const panel = nodePanelView(state, "n-transistor");
-  assert.deepEqual(panel.neighbors, [
-    { nodeId: "n-bit", label: "bit", state: "misconception", relation: "out" },
+test("nodePanelView lists what rests on the node, skipping non-dependence edges", () => {
+  const panel = nodePanelView(historyState(), "n-transistor");
+  // circuit built-on transistor; electricity predicts and silicon part-of
+  // are not dependence and stay off the card.
+  assert.deepEqual(panel.restsOnIt, [
+    { nodeId: "n-circuit", label: "circuit", type: "built-on" },
   ]);
 });
 

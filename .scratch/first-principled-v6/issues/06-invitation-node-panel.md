@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** none
 
@@ -29,10 +29,25 @@ Retarget the live node panel. Do not generate a nested Tree.
 
 ## Acceptance criteria
 
-- [ ] Node click shows description, observation, and dependence neighbors
-- [ ] No learner-state chrome on the panel
-- [ ] No control that generates a new Tree from the node
-- [ ] `npm test` and `npx tsc --noEmit` pass
+- [x] Node click shows description, observation, and dependence neighbors
+- [x] No learner-state chrome on the panel
+- [x] No control that generates a new Tree from the node
+- [x] `npm test` and `npx tsc --noEmit` pass
+
+## Answer
+
+The live panel is an invitation card, not a learner-state inspect.
+
+- Keep: label, description, observation / crux, Reality Map dependence
+  neighbors (`built-on` / `depends-on` / `abstraction-of`) as "What it
+  rests on" and "What rests on it".
+- Strip: status/confidence, rotation trail, evidence quotes, unengaged
+  copy. `nodePanelView` no longer returns those fields.
+- Invitation line: `This node is a rabbit hole: a thing to go understand,
+  not a chat topic.` No nested Build.
+- Neighbors read from the Reality Map, not the learner map.
+
+Spec section 9 and CONTEXT.md Rabbit hole updated in this commit.
 
 ## Docs rule
 

@@ -75,6 +75,7 @@ measured, not hoped. Provider for this effort: OpenRouter
 - How-it-works chrome prototype uses the locked copy as-is; recommended layout is A (header How it works + header word box + empty-Tree sentence). [Prototype how-it-works chrome](issues/03-prototype-how-it-works-chrome.md)
 - Tutor toggle, bottom sheet, and tutor-open layout are gone from the Tree home; Socratic engine and dock module stay unmounted. [Hide Tutor from the chrome](issues/04-hide-tutor-from-the-chrome.md)
 - Live Tree home is variant A: header How it works + `#how` page, foundations word box, empty-Tree sentence. Copy unchanged from the grilling lock. [Ship how-it-works into the Tree home](issues/05-ship-how-it-works.md)
+- Node click opens an invitation card: description, observation, dependence neighbors, rabbit-hole line. No learner-state chrome and no nested Build. [Node panel is an invitation card](issues/06-invitation-node-panel.md)
 
 ## Not yet specified
 

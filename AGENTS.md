@@ -10,10 +10,10 @@ Netlify, OpenRouter-backed, no database.
 **Map (only):** `.scratch/first-principled-v6/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
-**Resume:** v6 charted. Tickets 01-05 resolved (OpenRouter Nemotron
+**Resume:** v6 charted. Tickets 01-06 resolved (OpenRouter Nemotron
 `:free` is the LLM transport; how-it-works chrome is live on the Tree home;
-Tutor is parked from chrome). Open frontier: Node panel is an invitation
-card, Reality Map quality eval.
+Tutor is parked from chrome; node panel is an invitation card). Open
+frontier: Reality Map quality eval.
 
 ## Golden rules
 

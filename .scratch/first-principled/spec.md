@@ -230,7 +230,12 @@ recipe live in `research/13-ui-design-spec.md`.
   (the Tree scrolls horizontally; html/body do not overflow). On land the tree plays
   a one-shot elapsed grow (~1s: trunk, then deepest-first layer bands) and
   then stays fully visible; scroll never gates opacity. Reduced motion skips
-  grow and sap. A metrics row of closeness
+  grow and sap. Clicking a node opens an invitation card: label, reality
+  description, observation / crux, dependence neighbors (what it rests on /
+  what rests on it), and one line that the node is a rabbit hole - a thing
+  to go understand, not a chat topic. No learner-state chrome (confidence,
+  evidence, rotation trail, untested copy) and no control that generates a
+  nested Tree. A metrics row of closeness
   score, gap closures and the transfer result, plus the transfer assessment,
   stay parked with the learner chrome. The unmounted chat helpers NEVER leak
   reality content (labels, layers, descriptions).

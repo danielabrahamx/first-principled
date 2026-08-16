@@ -100,3 +100,21 @@ test("header How it works wraps instead of overflowing the page", () => {
   assert.match(css, /\.map-entry\s*\{[^}]*min-width:\s*0/s);
   assert.match(css, /\.how-link\s*\{[^}]*flex:\s*0 0 auto/s);
 });
+
+test("node panel is an invitation card without learner-state chrome", () => {
+  const source = readFileSync(path.join(here, "map.js"), "utf8");
+  const history = readFileSync(
+    path.join(here, "..", "lib", "mapview", "history.js"),
+    "utf8"
+  );
+  assert.match(source, /node-panel-invite/);
+  assert.match(source, /view\.invitation/);
+  assert.match(source, /What it rests on/);
+  assert.match(source, /What rests on it/);
+  assert.match(history, /This node is a rabbit hole: a thing to go understand, not a chat topic\./);
+  assert.doesNotMatch(source, /How your model changed/);
+  assert.doesNotMatch(source, /Your words/);
+  assert.doesNotMatch(source, /You haven't engaged this node yet/);
+  assert.doesNotMatch(source, /Build from this node/);
+  assert.doesNotMatch(source, /view\.trail|view\.evidence|view\.engaged/);
+});

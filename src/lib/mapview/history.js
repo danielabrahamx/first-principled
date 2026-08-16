@@ -1,20 +1,16 @@
 /**
- * Map-first history viewmodels (tickets 10, 11, 12): pure functions that
- * turn the session store's ledger into the node panel, the hover rotation
- * trails, the layer stories, and the timeline scrubber's snapshot model.
+ * Map-first history viewmodels (tickets 10, 11, 12; v6 ticket 06 retargets
+ * the node panel): pure functions that turn the session store into the
+ * invitation card, hover trails, layer stories, and timeline snapshots.
  *
  * The data source is the turn ledger (ticket 08): one deep-copied learner
  * map per turn, plus the diff, reply and probe of that turn. Everything
  * here is derived, so the UI never mutates the store and the store never
  * grows beyond the ledger.
  *
- * No-leak: these views render mid-session, where the learner grid may only
- * show engaged nodes. Node panels may show the reality description (Danny's
- * 2026-08-10 decision: the no-leak rule now binds chat, not the map - the
- * Reality tab and node panels show ground truth at any time). Layer stories
- * read reality layer names and the learner's engagement per node - they
- * describe what the learner did with each node, never the node's reality
- * description.
+ * Node panels show Reality Map ground truth (description, observation,
+ * dependence neighbors) plus a rabbit-hole invitation. Learner state stays
+ * in the engine. Layer stories still read engagement from the ledger.
  *
  * Pure and DOM-free so node:test covers the shapes directly.
  */
@@ -27,6 +23,21 @@ import { nodeHistory } from "../../state/session.js";
 import { observationOf } from "./observation.js";
 
 /** @typedef {import("./observation.js").ObservationView} ObservationView */
+/** @typedef {import("../mmg/types.js").EdgeType} EdgeType */
+
+/** Dependence edges the invitation card lists as neighbors. */
+const DEPENDENCE_TYPES = new Set(["built-on", "depends-on", "abstraction-of"]);
+
+/** One line on every node panel: inspect, then go study. Not a chat topic. */
+export const RABBIT_HOLE_INVITE =
+  "This node is a rabbit hole: a thing to go understand, not a chat topic.";
+
+/**
+ * @typedef {object} DependenceNeighbor
+ * @property {string} nodeId
+ * @property {string} label
+ * @property {EdgeType} type
+ */
 
 /**
  * The slice of the session store the history views read.
@@ -41,9 +52,9 @@ import { observationOf } from "./observation.js";
 /** @typedef {import("../../state/session.js").NodeHistoryEntry} NodeHistoryEntry */
 
 /**
- * The node panel's full content model (ticket 10): the reality card, the
- * learner's current state, the evidence with turn numbers, the rotation
- * trail, and the linked neighbors with their states.
+ * The invitation card (v6 ticket 06): what this node is, its observation,
+ * and dependence neighbors. Learner state, confidence, evidence, and the
+ * rotation trail stay in the engine; they do not belong on this card.
  *
  * @param {HistoryState} state
  * @param {string} nodeId
@@ -52,89 +63,73 @@ import { observationOf } from "./observation.js";
  *   label: string;
  *   description: string;
  *   observation: ObservationView;
- *   state: NodeState;
- *   confidence: number;
- *   engaged: boolean;
- *   evidence: Array<{ quote: string; turn: number }>;
- *   trail: NodeHistoryEntry[];
- *   neighbors: Array<{ nodeId: string; label: string; state: NodeState; relation: "in" | "out" }>;
+ *   invitation: string;
+ *   restsOn: DependenceNeighbor[];
+ *   restsOnIt: DependenceNeighbor[];
  * }}
  */
 export function nodePanelView(state, nodeId) {
   const reality = state.realityMap;
   const node =
     reality && Array.isArray(reality.nodes) ? reality.nodes.find((n) => n.id === nodeId) : undefined;
-  const learner = state.learnerMap.nodes.find((n) => n.id === nodeId);
   const label = node ? node.label : nodeId;
-
-  // Evidence quotes with the turn they arrived on: the last ledger snapshot
-  // holding the quote is the turn it was first recorded (rotations replace
-  // the list; a quote's first appearance turn is what matters for the story).
-  /** @type {Array<{ quote: string; turn: number }>} */
-  const evidence = [];
-  if (learner) {
-    const seen = new Set();
-    for (let i = 0; i < state.ledger.length; i++) {
-      const entry = state.ledger[i];
-      const snap = entry.learnerMap.nodes.find((n) => n.id === nodeId);
-      if (!snap) continue;
-      for (const quote of snap.evidence) {
-        if (!seen.has(quote)) {
-          seen.add(quote);
-          evidence.push({ quote, turn: entry.turn });
-        }
-      }
-    }
-  }
-
-  // The rotation trail comes from the store's own nodeHistory (ticket 08) -
-  // one implementation, reused by the panel, the popover and the layer
-  // stories so they can never drift apart.
-  const trail = nodeHistory(state, nodeId);
-
-  // Neighbors: learner edges touching the node, with the other endpoint's
-  // label and state. Reality labels only for engaged endpoints (the grid's
-  // no-leak rule); unengaged endpoints show their id.
-  /** @type {Array<{ nodeId: string; label: string; state: NodeState; relation: "in" | "out" }>} */
-  const neighbors = [];
-  const learnerById = new Map(state.learnerMap.nodes.map((n) => [n.id, n]));
-  const labelOf = (/** @type {string} */ id) => {
-    const realityNode =
-      reality && Array.isArray(reality.nodes) ? reality.nodes.find((n) => n.id === id) : undefined;
-    const engaged = learnerById.has(id);
-    if (engaged && realityNode) return realityNode.label;
-    return id;
-  };
-  for (const edge of state.learnerMap.edges) {
-    if (edge.source === nodeId) {
-      neighbors.push({
-        nodeId: edge.target,
-        label: labelOf(edge.target),
-        state: edge.state,
-        relation: "out",
-      });
-    } else if (edge.target === nodeId) {
-      neighbors.push({
-        nodeId: edge.source,
-        label: labelOf(edge.source),
-        state: edge.state,
-        relation: "in",
-      });
-    }
-  }
+  const { restsOn, restsOnIt } = dependenceNeighbors(reality, nodeId);
 
   return {
     nodeId,
     label,
     description: node ? node.description : "",
     observation: observationOf(node),
-    state: learner ? learner.state : "untested",
-    confidence: learner ? learner.confidence : 0,
-    engaged: learner !== undefined,
-    evidence,
-    trail,
-    neighbors,
+    invitation: RABBIT_HOLE_INVITE,
+    restsOn,
+    restsOnIt,
   };
+}
+
+/**
+ * Reality Map dependence neighbors: what this node rests on (outgoing
+ * built-on / depends-on / abstraction-of) and what rests on it (incoming).
+ * part-of / predicts / contradicts are not dependence and stay off the card.
+ *
+ * @param {RealityMap | null} reality
+ * @param {string} nodeId
+ * @returns {{ restsOn: DependenceNeighbor[]; restsOnIt: DependenceNeighbor[] }}
+ */
+function dependenceNeighbors(reality, nodeId) {
+  /** @type {DependenceNeighbor[]} */
+  const restsOn = [];
+  /** @type {DependenceNeighbor[]} */
+  const restsOnIt = [];
+  if (
+    reality === null ||
+    typeof reality !== "object" ||
+    !Array.isArray(reality.nodes) ||
+    !Array.isArray(reality.edges)
+  ) {
+    return { restsOn, restsOnIt };
+  }
+  const labelOf = (/** @type {string} */ id) => {
+    const found = reality.nodes.find((n) => n.id === id);
+    return found ? found.label : id;
+  };
+  for (const edge of reality.edges) {
+    if (edge === null || typeof edge !== "object") continue;
+    if (!DEPENDENCE_TYPES.has(edge.type)) continue;
+    if (edge.source === nodeId) {
+      restsOn.push({
+        nodeId: edge.target,
+        label: labelOf(edge.target),
+        type: edge.type,
+      });
+    } else if (edge.target === nodeId) {
+      restsOnIt.push({
+        nodeId: edge.source,
+        label: labelOf(edge.source),
+        type: edge.type,
+      });
+    }
+  }
+  return { restsOn, restsOnIt };
 }
 
 /**
@@ -163,19 +158,20 @@ export function layerStory(state, layerId) {
   const unengaged = [];
 
   for (const id of nodeIds) {
-    const panel = nodePanelView(state, id);
-    if (!panel.engaged) {
+    const learner = state.learnerMap.nodes.find((n) => n.id === id);
+    if (!learner) {
       unengaged.push(id);
       continue;
     }
+    const trail = nodeHistory(state, id);
     const realityNode =
       reality && Array.isArray(reality.nodes) ? reality.nodes.find((n) => n.id === id) : undefined;
     engaged.push({
       nodeId: id,
       label: realityNode ? realityNode.label : id,
-      firstTurn: panel.trail.length > 0 ? panel.trail[0].turn : 0,
-      current: panel.state,
-      rotations: panel.trail,
+      firstTurn: trail.length > 0 ? trail[0].turn : 0,
+      current: learner.state,
+      rotations: trail,
     });
   }
   engaged.sort((a, b) => a.firstTurn - b.firstTurn);

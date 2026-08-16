@@ -10,9 +10,9 @@ cognitive distance between the learner's mental model and reality.
 
 ## Frontier (resume here)
 
-v6 charted. Tickets 01-05 resolved (OpenRouter is the LLM transport;
+v6 charted. Tickets 01-06 resolved (OpenRouter is the LLM transport;
 how-it-works chrome is live on the Tree home as variant A; Tutor is parked
-from chrome). Open frontier: Node panel is an invitation card, Reality Map
+from chrome; node panel is an invitation card). Open frontier: Reality Map
 quality eval. Map: `.scratch/first-principled-v6/map.md`.
 
 ## Language
@@ -47,8 +47,8 @@ learner to start from.
 _Avoid_: atomic facts, atomic principles
 
 **Rabbit hole**:
-A node as an invitation to go study that thing. Inspect, then read. Not a
-nested generated Tree.
+A node as an invitation to go understand that thing. Inspect, then study.
+Not a chat topic and not a nested generated Tree.
 _Avoid_: nested tree, generate from node, chat about the node
 
 **Tutor**:
