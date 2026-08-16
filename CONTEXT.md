@@ -10,7 +10,10 @@ cognitive distance between the learner's mental model and reality.
 
 ## Frontier (resume here)
 
-v6 charted. OpenRouter is the LLM transport. Map:
+v6 charted. OpenRouter is the LLM transport. How-it-works chrome
+prototype is at
+`.scratch/first-principled-v6/research/03-how-it-works-prototype/`
+(`npm run prototype:how-it-works`); recommended variant A. Map:
 `.scratch/first-principled-v6/map.md`.
 
 ## Language

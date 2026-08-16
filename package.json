@@ -9,7 +9,8 @@
     "build": "node -e \"console.log('static site, nothing to build')\"",
     "test": "node --test",
     "typecheck": "tsc --noEmit",
-    "eval": "node eval/run.js"
+    "eval": "node eval/run.js",
+    "prototype:how-it-works": "node .scratch/first-principled-v6/research/03-how-it-works-prototype/serve.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

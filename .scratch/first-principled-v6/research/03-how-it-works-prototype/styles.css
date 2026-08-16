@@ -1,0 +1,416 @@
+/* Throwaway how-it-works chrome prototype.
+   Three variants of empty Tree + How it works + foundations word box.
+   Chapel tokens copied from src/styles.css so the chrome can be judged
+   against the live Tree, not a vacuum. */
+
+:root {
+  --ground: #f3f4f6;
+  --surface: #ffffff;
+  --ink: #1e2228;
+  --ink-muted: #5a6472;
+  --accent: #5b4bc4;
+  --accent-soft: #edebfa;
+  --border: #e2e5ea;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-ui: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  height: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  line-height: 1.5;
+}
+
+#root {
+  min-height: 100dvh;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.page {
+  min-height: 100dvh;
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 24px 20px 120px;
+}
+
+.orb {
+  display: inline-block;
+  border-radius: 999px;
+  background: radial-gradient(circle at 32% 26%, #c4baf2, #5b4bc4 52%, #352a85 100%);
+  flex-shrink: 0;
+}
+
+.logo-dot {
+  width: 14px;
+  height: 14px;
+  box-shadow:
+    0 2px 8px rgba(91, 75, 196, 0.5),
+    inset -2px -3px 6px rgba(30, 20, 80, 0.35),
+    inset 2px 3px 5px rgba(255, 255, 255, 0.25);
+}
+
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.wordmark {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 8px 12px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+  padding: 12px 0;
+  background: var(--ground);
+}
+
+.how-link {
+  flex: 0 0 auto;
+  margin-left: auto;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  min-height: 44px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.how-link[aria-current="page"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: transparent;
+}
+
+.entry {
+  flex: 1 1 12rem;
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 6px 6px 6px 18px;
+  box-shadow: 0 8px 28px rgba(30, 34, 40, 0.06);
+}
+
+.entry-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  background: transparent;
+  color: var(--ink);
+  border: none;
+  padding: 10px 0;
+}
+
+.entry-input::placeholder {
+  color: #8a94a3;
+}
+
+.entry-input:focus {
+  outline: none;
+}
+
+.entry-button {
+  border: none;
+  border-radius: 13px;
+  padding: 11px 16px;
+  background: radial-gradient(circle at 32% 26%, #c4baf2, #5b4bc4 52%, #352a85 100%);
+  box-shadow:
+    0 8px 20px rgba(91, 75, 196, 0.45),
+    inset -2px -3px 8px rgba(30, 20, 80, 0.35),
+    inset 2px 3px 6px rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 44px;
+}
+
+.empty-line {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 15px;
+  max-width: 36rem;
+}
+
+.would-build {
+  margin: 12px 0 0;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Variant A: sentence sits in the empty Tree canvas. */
+.variant-a .canvas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 28px;
+  padding: 24px 0 8px;
+}
+
+.variant-a .empty-line {
+  margin-top: 8px;
+}
+
+/* Variant B: word box is the canvas hero. */
+.variant-b .canvas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 18px;
+  padding: 40px 0 8px;
+}
+
+.variant-b .canvas .entry {
+  width: 100%;
+  max-width: 32rem;
+}
+
+.variant-b .empty-line {
+  font-size: 16px;
+}
+
+/* Variant C: sentence + ghost tree; box docks at the bottom. */
+.variant-c .canvas {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.variant-c .empty-line {
+  max-width: 28rem;
+}
+
+.variant-c .dock {
+  position: sticky;
+  bottom: 72px;
+  z-index: 20;
+  margin-top: 24px;
+  background: var(--ground);
+  padding: 8px 0 0;
+}
+
+.how-page {
+  max-width: 36rem;
+}
+
+.how-page h1 {
+  margin: 0 0 16px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.how-page p {
+  margin: 0 0 14px;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.how-page p:last-of-type {
+  margin-bottom: 0;
+  color: var(--ink-muted);
+}
+
+.back-row {
+  margin-top: 28px;
+}
+
+.back-link {
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Faint empty Tree so the sentence is judged on the Tree, not a blank page. */
+.ghost-tree {
+  width: min(220px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.ghost-crown {
+  width: min(160px, 100%);
+  height: 56px;
+  background: var(--ink);
+  border-radius: 14px;
+}
+
+.ghost-trunk {
+  width: 3px;
+  height: 88px;
+  background: var(--ink);
+}
+
+.ghost-hang {
+  width: min(180px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.ghost-card {
+  width: 100%;
+  height: 44px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.ghost-label {
+  margin: 8px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* Prototype switcher: not part of the design under evaluation. */
+.switcher {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 16px);
+  padding: 8px 10px;
+  background: #1e2228;
+  color: #f3f4f6;
+  border-radius: 999px;
+  box-shadow: 0 10px 28px rgba(30, 34, 40, 0.35);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.switcher button {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 999px;
+  background: #3a414c;
+  color: #f3f4f6;
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.switcher-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 4px;
+}
+
+.proto-flag {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 70;
+  max-width: calc(100vw - 16px);
+  padding: 4px 8px;
+  background: #1e2228;
+  color: #f3f4f6;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 6px;
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 16px 14px 128px;
+  }
+
+  .header {
+    margin-bottom: 20px;
+    gap: 8px;
+  }
+
+  .wordmark {
+    font-size: 13px;
+  }
+
+  .variant-a .header .entry,
+  .variant-c .dock .entry {
+    flex: 1 1 100%;
+  }
+
+  .how-link {
+    padding: 8px 12px;
+  }
+
+  .entry-button {
+    padding: 11px 14px;
+  }
+}

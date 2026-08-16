@@ -10,10 +10,10 @@ Netlify, OpenRouter-backed, no database.
 **Map (only):** `.scratch/first-principled-v6/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
-**Resume:** v6 charted. Tickets 01-02 resolved (OpenRouter Nemotron
-`:free` is the LLM transport; 240s timeout). Open frontier: Prototype
-how-it-works chrome, Hide Tutor from the chrome, Node panel is an
-invitation card.
+**Resume:** v6 charted. Tickets 01-03 resolved (OpenRouter Nemotron
+`:free` is the LLM transport; how-it-works chrome prototype recommends
+variant A). Open frontier: Hide Tutor from the chrome, Node panel is an
+invitation card, Reality Map quality eval.
 
 ## Golden rules
 

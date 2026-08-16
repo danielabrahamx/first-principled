@@ -2,7 +2,7 @@
 
 **Type:** prototype
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** none
 
@@ -41,12 +41,28 @@ Locked copy (grilling 2026-08-16):
 
 ## Acceptance criteria
 
-- [ ] Prototype opens via a static server and shows empty-state + How it
+- [x] Prototype opens via a static server and shows empty-state + How it
       works page + word box with the locked copy
-- [ ] No Tutor control
-- [ ] 375px and 320px: no horizontal page overflow
-- [ ] Asset path linked; Danny can react before
+- [x] No Tutor control
+- [x] 375px and 320px: no horizontal page overflow
+- [x] Asset path linked; Danny can react before
       [Ship how-it-works into the Tree home](05-ship-how-it-works.md)
+
+## Answer
+
+Copy is the grilling lock, unchanged. No "atomic facts" language. No dock
+toggle.
+
+Layout: three variants in
+[03-how-it-works-prototype](../research/03-how-it-works-prototype/).
+Recommended for
+[Ship how-it-works into the Tree home](05-ship-how-it-works.md): **A
+(Header chrome)** - word box stays in the header, How it works is a
+header control plus a short page, the one sentence sits on the empty
+Tree. B (Canvas hero) and C (Docked box) stay in the prototype to steal
+from. Serve with `npm run prototype:how-it-works` then
+http://127.0.0.1:4173/. 320px and 375px: no horizontal overflow on tree
+and how pages for A-C.
 
 ## Docs rule
 
