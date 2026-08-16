@@ -2,9 +2,9 @@
 
 An AI tutor. The learner types a word or phrase (laptop, recursion,
 photosynthesis). The agent builds a Reality Map of that thing from the model's
-own knowledge. Home is the Tree of that map. A closed-by-default Tutor dock
-is optional Q&A. Learner Mental Model tracking remains in the engine and is
-parked from the UI.
+own knowledge. Home is the Tree of that map. How it works lives in the header.
+Tutor is parked from the chrome. Learner Mental Model tracking remains in the
+engine and is parked from the UI.
 
 Mission (immutable): **reduce the cognitive distance between the learner's
 mental model and reality.** See `docs/MISSION.md`.
@@ -12,7 +12,8 @@ mental model and reality.** See `docs/MISSION.md`.
 ## Layout
 
 - `src/` - static frontend (plain HTML/CSS/JS, no build step). Home is the
-  Tree; Tutor is a closed-by-default dock.
+  Tree. How it works is a header control plus `#how`. Tutor is parked from
+  chrome.
 - `src/lib/mmg/` - the shared Mental Model Graph schema (types, validators,
   closeness score, fixtures), imported by both the frontend and the function.
 - `src/lib/agent/` - the agent engine: LLM transport (llm.js), defensive JSON
@@ -22,8 +23,9 @@ mental model and reality.** See `docs/MISSION.md`.
 - `netlify/functions/agent/` - the one serverless function, `POST /api/agent`
   (rewritten from `/.netlify/functions/agent` by `netlify.toml`). Stateless:
   it receives the full session state with every call and stores nothing.
-- `.scratch/first-principled/` - the build map (`map.md`), product spec
-  (`spec.md`), and ticket files (`issues/`). See `docs/agents/issue-tracker.md`.
+- `.scratch/first-principled/` - v1 product spec (`spec.md`). Current
+  effort map: `.scratch/first-principled-v6/map.md`. See
+  `docs/agents/issue-tracker.md`.
 - `docs/MISSION.md` - immutable mission, theory of learning, 12 core principles.
 - `AGENTS.md` - instructions for agent sessions working this repo.
 
@@ -62,7 +64,8 @@ client-side - the function reads it from the environment, and the published
 
 Deploy: `netlify deploy --prod` publishes `src/` plus
 `netlify/functions/` per `netlify.toml` (no build step). New env values
-require a redeploy to take effect.
+require a redeploy to take effect. v6 rotated `LLM_*` to OpenRouter
+Nemotron `:free` (deploy `6a821d5637d95139bd35956f`).
 
 ## Stack (v1)
 

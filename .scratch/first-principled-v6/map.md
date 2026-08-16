@@ -78,12 +78,14 @@ measured, not hoped. Provider for this effort: OpenRouter
 - Live Tree home is variant A: header How it works + `#how` page, foundations word box, empty-Tree sentence. Copy unchanged from the grilling lock. [Ship how-it-works into the Tree home](issues/05-ship-how-it-works.md)
 - Node click opens an invitation card: description, observation, dependence neighbors, rabbit-hole line. No learner-state chrome and no nested Build. [Node panel is an invitation card](issues/06-invitation-node-panel.md)
 - Reality Map quality is `eval/map-quality`: structural gate, gold overlap, Danny rubric. Live Nemotron `:free` baseline recorded; recursion and photosynthesis pass the gate with low gold overlap; battery fails contiguity; laptop returned no choices. [Reality Map quality eval](issues/07-reality-map-quality-eval.md)
+- Tree-only explorer is live at https://first-principled.netlify.app (deploy `6a821d5637d95139bd35956f`). Netlify `LLM_*` rotated to OpenRouter Nemotron `:free`. Chrome smoke 12/12. Live init is flaky: bit returned 1 node; recursion and photosynthesis returned `invalid_model_output`. [Deploy the tree-only explorer](issues/08-deploy-the-tree-only-explorer.md)
 
 ## Not yet specified
 
-- Prompt / generator retune if live Nemotron maps are structurally valid
-  but not followable. Live baseline exists; Danny rubric scores are still
-  open. Gold-label overlap on the passing maps was low.
+- Prompt / generator retune so prod OpenRouter Nemotron `:free` init
+  returns a followable tree. Ticket 07 local live runs mixed; ticket 08
+  prod init failed (`bit` 1-node stub; `recursion` and `photosynthesis`
+  `invalid_model_output`). Danny rubric scores are still open.
 - Spine / layout retune if a live Nemotron tree still reads as a labeled
   list.
 - Grow motion on a branching trunk.

@@ -10,11 +10,12 @@ Netlify, OpenRouter-backed, no database.
 **Map (only):** `.scratch/first-principled-v6/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
-**Resume:** v6 charted. Tickets 01-07 resolved (OpenRouter Nemotron
-`:free` is the LLM transport; how-it-works chrome is live on the Tree home;
-Tutor is parked from chrome; node panel is an invitation card; Reality Map
-quality eval is `eval/map-quality`). Open frontier: deploy the tree-only
-explorer.
+**Resume:** v6 Destination shipped. Tree-only explorer is live at
+https://first-principled.netlify.app. OpenRouter Nemotron `:free` is the
+LLM transport; how-it-works chrome, parked Tutor, invitation node panel,
+and `eval/map-quality` are in. Live init is flaky (see
+[Deploy the tree-only explorer](.scratch/first-principled-v6/issues/08-deploy-the-tree-only-explorer.md)).
+Prompt retune remains fog.
 
 ## Golden rules
 
@@ -59,5 +60,6 @@ Single-context: `CONTEXT.md` + `docs/adr/` at the repo root. See
 ## Deploy
 
 - Netlify CLI (authed as danielftabraham@outlook.com, team danielabrahamx):
-  `"$APPDATA/npm/netlify.cmd"` in git-bash. Ticket 11 links the site and sets
-  the env secrets.
+  `"$APPDATA/npm/netlify.cmd"` in git-bash. Site is linked. Ticket 08
+  rotated `LLM_*` to OpenRouter. `netlify deploy --prod` publishes `src/`
+  plus `netlify/functions/`.

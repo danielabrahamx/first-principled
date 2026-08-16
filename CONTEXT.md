@@ -10,11 +10,12 @@ cognitive distance between the learner's mental model and reality.
 
 ## Frontier (resume here)
 
-v6 charted. Tickets 01-07 resolved (OpenRouter is the LLM transport;
-how-it-works chrome is live on the Tree home as variant A; Tutor is parked
-from chrome; node panel is an invitation card; Reality Map quality eval
-is `eval/map-quality`). Open frontier: deploy the tree-only explorer.
-Map: `.scratch/first-principled-v6/map.md`.
+v6 Destination shipped. Tree-only explorer is live at
+https://first-principled.netlify.app. OpenRouter is the LLM transport;
+how-it-works chrome is variant A; Tutor is parked from chrome; node panel
+is an invitation card; Reality Map quality eval is `eval/map-quality`.
+Live init is flaky on Nemotron `:free` (see ticket 08). Prompt retune
+remains fog. Map: `.scratch/first-principled-v6/map.md`.
 
 ## Language
 
