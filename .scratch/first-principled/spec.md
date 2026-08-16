@@ -253,6 +253,13 @@ recipe live in `research/13-ui-design-spec.md`.
   discovery, not a closure), the transfer result arrives with the graded end
   response, and closeness is recomputed on every response. They reset on a
   new session, and a future analytics surface can read them from the store.
+- Reality Map quality (v6): automated gate (crown reached, contiguity,
+  deriveCheck, dependence edges, no skipped layer) plus gold-label overlap
+  on laptop, recursion, photosynthesis, and battery. Harness:
+  `eval/map-quality`, command `npm run eval:map-quality` (no key). Live
+  path is `node --env-file=.env eval/map-quality/run.js --live`.
+  Followability is the written rubric in `eval/map-quality/rubric.md`.
+  Tutor-question scorers are not this bar.
 
 ## 11. Deployment
 

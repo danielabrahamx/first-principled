@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** [Land OpenRouter as the LLM transport](02-land-openrouter-transport.md)
 
@@ -38,11 +38,27 @@ quality eval under `.scratch/first-principled-v6/` or a clearly named
 
 ## Acceptance criteria
 
-- [ ] Harness runs locally with a single command
-- [ ] Rubric is written down
-- [ ] Baseline against the landed model is recorded (or the exact blocker)
-- [ ] Tutor-question scorers are not the bar this ticket reports
-- [ ] No secrets in the baseline file
+- [x] Harness runs locally with a single command
+- [x] Rubric is written down
+- [x] Baseline against the landed model is recorded (or the exact blocker)
+- [x] Tutor-question scorers are not the bar this ticket reports
+- [x] No secrets in the baseline file
+
+## Answer
+
+Map quality is `eval/map-quality`, not the parked tutor harness.
+
+- Gate: schema, deriveCheck, crown reached, dependence edges (`built-on` /
+  `depends-on` / `abstraction-of`), no skipped layer. Gold overlap is
+  label and dependence-pair hit rate when ids differ.
+- Rubric: `eval/map-quality/rubric.md` (foundations, invented history,
+  relationships, rabbit hole). Danny scores are not in the baseline.
+- Commands: `npm run eval:map-quality` (no key). Live:
+  `node --env-file=.env eval/map-quality/run.js --live`.
+- Live Nemotron `:free` baseline (LLM-dependent): recursion and
+  photosynthesis pass the gate with low gold overlap; battery fails
+  contiguity; laptop returned no choices. Record:
+  [07-map-quality-baseline.md](../research/07-map-quality-baseline.md).
 
 ## Docs rule
 

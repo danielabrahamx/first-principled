@@ -10,6 +10,7 @@
     "test": "node --test",
     "typecheck": "tsc --noEmit",
     "eval": "node eval/run.js",
+    "eval:map-quality": "node eval/map-quality/run.js",
     "prototype:how-it-works": "node .scratch/first-principled-v6/research/03-how-it-works-prototype/serve.mjs"
   },
   "devDependencies": {

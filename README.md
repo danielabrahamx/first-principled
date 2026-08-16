@@ -44,6 +44,9 @@ Requirements: Node 18+, Netlify CLI (installed globally as
 
 - `npm test` - unit tests (built-in node:test runner).
 - `npm run typecheck` - JSDoc type checking over `src/` (tsc --noEmit).
+- `npm run eval:map-quality` - Reality Map quality gate on the gold maps
+  (no API key). Live Nemotron baseline:
+  `node --env-file=.env eval/map-quality/run.js --live`.
 
 ## Deploy
 

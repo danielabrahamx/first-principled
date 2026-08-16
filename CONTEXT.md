@@ -10,10 +10,11 @@ cognitive distance between the learner's mental model and reality.
 
 ## Frontier (resume here)
 
-v6 charted. Tickets 01-06 resolved (OpenRouter is the LLM transport;
+v6 charted. Tickets 01-07 resolved (OpenRouter is the LLM transport;
 how-it-works chrome is live on the Tree home as variant A; Tutor is parked
-from chrome; node panel is an invitation card). Open frontier: Reality Map
-quality eval. Map: `.scratch/first-principled-v6/map.md`.
+from chrome; node panel is an invitation card; Reality Map quality eval
+is `eval/map-quality`). Open frontier: deploy the tree-only explorer.
+Map: `.scratch/first-principled-v6/map.md`.
 
 ## Language
 

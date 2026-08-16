@@ -27,7 +27,8 @@ measured, not hoped. Provider for this effort: OpenRouter
 - Salvage: `src/lib/agent/` (reality map, observations) and `src/lib/mmg/`
   stay. Do not rebuild the generator unless fog graduates a prompt-retune
   ticket after eval. Do not touch uncommitted v2 engine-thread files
-  (`src/lib/agent/gaps.js`, `confidence.js`, `eval/`).
+  (`src/lib/agent/gaps.js`, `confidence.js`, parked `eval/concepts.js`
+  and tutor scorers). This effort owns `eval/map-quality`.
 - Provider: OpenRouter, OpenAI-compatible. Env remains `LLM_API_KEY`,
   `LLM_MODEL`, `LLM_BASE_URL`. Key lives only in `.env` (gitignored) and
   later as a Netlify secret. Never paste keys into chat, tickets, or
@@ -76,11 +77,13 @@ measured, not hoped. Provider for this effort: OpenRouter
 - Tutor toggle, bottom sheet, and tutor-open layout are gone from the Tree home; Socratic engine and dock module stay unmounted. [Hide Tutor from the chrome](issues/04-hide-tutor-from-the-chrome.md)
 - Live Tree home is variant A: header How it works + `#how` page, foundations word box, empty-Tree sentence. Copy unchanged from the grilling lock. [Ship how-it-works into the Tree home](issues/05-ship-how-it-works.md)
 - Node click opens an invitation card: description, observation, dependence neighbors, rabbit-hole line. No learner-state chrome and no nested Build. [Node panel is an invitation card](issues/06-invitation-node-panel.md)
+- Reality Map quality is `eval/map-quality`: structural gate, gold overlap, Danny rubric. Live Nemotron `:free` baseline recorded; recursion and photosynthesis pass the gate with low gold overlap; battery fails contiguity; laptop returned no choices. [Reality Map quality eval](issues/07-reality-map-quality-eval.md)
 
 ## Not yet specified
 
 - Prompt / generator retune if live Nemotron maps are structurally valid
-  but not followable.
+  but not followable. Live baseline exists; Danny rubric scores are still
+  open. Gold-label overlap on the passing maps was low.
 - Spine / layout retune if a live Nemotron tree still reads as a labeled
   list.
 - Grow motion on a branching trunk.
