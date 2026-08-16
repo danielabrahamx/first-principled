@@ -34,9 +34,9 @@ Requirements: Node 18+, Netlify CLI (installed globally as
 
 1. `npm install` - installs the lockfile; the only dependencies are the
    dev-only type checker (typescript, @types/node) for `npm run typecheck`.
-2. Copy `.env.example` to `.env` and fill in `LLM_API_KEY` (see
-   `~/.local/share/opencode/auth.json` for the deepseek entry). `LLM_MODEL` and
-   `LLM_BASE_URL` are pre-filled for DeepSeek.
+2. Copy `.env.example` to `.env` and fill in `LLM_API_KEY`. `LLM_MODEL` and
+   `LLM_BASE_URL` are pre-filled for OpenRouter Nemotron `:free`. Point local
+   `.env` at those same values if it still names DeepSeek.
 3. `npm run dev` - serves `src/` at `http://localhost:8888` with the function
    available at `/api/agent`.
 
@@ -63,5 +63,5 @@ require a redeploy to take effect.
 
 ## Stack (v1)
 
-Static frontend + one stateless serverless function, DeepSeek via the
+Static frontend + one stateless serverless function, OpenRouter via the
 OpenAI-compatible API, no database, no auth, no agent framework.

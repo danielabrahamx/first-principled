@@ -71,6 +71,7 @@ measured, not hoped. Provider for this effort: OpenRouter
   `:free` unless research proves it unusable, then switch slug not provider.
 - Quality bar: Danny-scored rubric plus a small automated gate on gold maps.
 - OpenRouter Nemotron `:free` can serve schema-valid one-shot Reality Maps; raise llm.js timeout to 240s, drop DeepSeek thinking, send reasoning effort none, stay on `:free`. [OpenRouter Nemotron can serve the Reality Map contract](issues/01-openrouter-nemotron-map-contract.md)
+- Transport defaults, headers, and `reasoning` payload now match that finding; DeepSeek `thinking` is gone. [Land OpenRouter as the LLM transport](issues/02-land-openrouter-transport.md)
 
 ## Not yet specified
 

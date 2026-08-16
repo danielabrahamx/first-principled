@@ -1,17 +1,22 @@
 /**
- * Minimal OpenAI-compatible chat completion transport for the DeepSeek API.
+ * Minimal OpenAI-compatible chat completion transport for OpenRouter.
  *
- * Per the ticket 03 findings:
- * - Base URL https://api.deepseek.com/v1, Bearer auth via LLM_API_KEY.
- * - Model id from LLM_MODEL (deepseek-v4-flash).
+ * Per the v6 ticket 01 findings:
+ * - Base URL https://openrouter.ai/api/v1, Bearer auth via LLM_API_KEY.
+ * - Model id from LLM_MODEL (nvidia/nemotron-3-ultra-550b-a55b:free).
  * - JSON mode is best-effort (response_format json_object only; no server-side
  *   schema enforcement), so callers must parse defensively - see jsonParse.js.
- * - v4 models think by default; reasoning arrives in `reasoning_content` and
- *   is never passed back or parsed as JSON.
+ * - Reasoning arrives in `message.reasoning` (and possibly
+ *   `reasoning_details`), not DeepSeek `reasoning_content`. Callers that pass
+ *   `thinking: false` send OpenRouter `reasoning: { effort: "none" }`.
  *
  * Zero dependencies: global fetch (Node 18+, browsers). The stateless Netlify
  * function and the static frontend both run this code.
  */
+
+const DEFAULT_TIMEOUT_MS = 240000;
+const OPENROUTER_REFERER = "https://first-principled.netlify.app";
+const OPENROUTER_TITLE = "first-principled";
 
 /**
  * @typedef {object} ChatMessage
@@ -24,15 +29,13 @@
  * @property {ChatMessage[]} messages
  * @property {boolean} [jsonMode] - request response_format json_object (the
  *   prompt must then mention "json" and show an example - see realityMap.js).
- * @property {boolean} [thinking] - default true: let the model think (better
- *   structure, more tokens, no temperature effect). false disables thinking
- *   per call by sending the top-level `thinking` parameter (verified live in
- *   ticket 04; the OpenAI-SDK style `extra_body` nesting is ignored by this
- *   API).
+ * @property {boolean} [thinking] - maps to OpenRouter `reasoning`. false sends
+ *   `{ effort: "none" }` (required for JSON maps). true sends
+ *   `{ enabled: true }`. Omit to leave the provider default.
  * @property {number} [maxTokens] - headroom matters: a low cap truncates JSON.
  *   Default 4096.
  * @property {number} [timeoutMs] - abort the fetch after this long. Default
- *   45000; the app-level latency budget for one call is 30s (ticket 04 AC).
+ *   240000 (covers OpenRouter Nemotron `:free` e2e P95 plus margin).
  */
 
 /**
@@ -49,7 +52,7 @@
  * @returns {string}
  */
 export function llmBaseUrl() {
-  return process.env.LLM_BASE_URL || "https://api.deepseek.com/v1";
+  return process.env.LLM_BASE_URL || "https://openrouter.ai/api/v1";
 }
 
 /**
@@ -58,7 +61,7 @@ export function llmBaseUrl() {
  * @returns {string}
  */
 export function llmModel() {
-  return process.env.LLM_MODEL || "deepseek-v4-flash";
+  return process.env.LLM_MODEL || "nvidia/nemotron-3-ultra-550b-a55b:free";
 }
 
 /**
@@ -87,11 +90,14 @@ export async function callChatCompletion(options) {
     payload.response_format = { type: "json_object" };
   }
   if (options.thinking === false) {
-    payload.thinking = { type: "disabled" };
+    payload.reasoning = { effort: "none" };
+  } else if (options.thinking === true) {
+    payload.reasoning = { enabled: true };
   }
 
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? 45000);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   let response;
   try {
@@ -100,13 +106,15 @@ export async function callChatCompletion(options) {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
+        "HTTP-Referer": OPENROUTER_REFERER,
+        "X-OpenRouter-Title": OPENROUTER_TITLE,
       },
       body: JSON.stringify(payload),
       signal: controller.signal,
     });
   } catch (err) {
     throw new Error(
-      `LLM request failed: ${err instanceof Error && err.name === "AbortError" ? `aborted after ${options.timeoutMs ?? 45000}ms` : err instanceof Error ? err.message : String(err)}`
+      `LLM request failed: ${err instanceof Error && err.name === "AbortError" ? `aborted after ${timeoutMs}ms` : err instanceof Error ? err.message : String(err)}`
     );
   } finally {
     clearTimeout(timer);
@@ -136,7 +144,9 @@ export async function callChatCompletion(options) {
     reasoningContent:
       typeof choice.message.reasoning_content === "string"
         ? choice.message.reasoning_content
-        : null,
+        : typeof choice.message.reasoning === "string"
+          ? choice.message.reasoning
+          : null,
     usage: body.usage || null,
   };
 }

@@ -10,7 +10,8 @@ cognitive distance between the learner's mental model and reality.
 
 ## Frontier (resume here)
 
-v6 charted. Map: `.scratch/first-principled-v6/map.md`.
+v6 charted. OpenRouter is the LLM transport. Map:
+`.scratch/first-principled-v6/map.md`.
 
 ## Language
 
@@ -70,8 +71,9 @@ Current architecture (v1):
   (node states, confidence, evidence, updated each turn). Learner Mental
   Model tracking remains in the engine (`src/lib/agent/`, `src/lib/mmg/`)
   and is parked from the UI.
-- OpenAI-compatible LLM via `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL`.
-  This effort lands OpenRouter. No DB, no auth, no framework.
+- OpenRouter via the OpenAI-compatible API (`LLM_API_KEY`, `LLM_MODEL`,
+  `LLM_BASE_URL`). Default: `nvidia/nemotron-3-ultra-550b-a55b:free`.
+  No DB, no auth, no framework.
 - `src/lib/agent/` holds the engine: reality map generation, the Socratic
   turn loop (kept, not shown), and the LLM transport.
 

@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** [OpenRouter Nemotron can serve the Reality Map contract](01-openrouter-nemotron-map-contract.md)
 
@@ -33,13 +33,28 @@ Apply the ticket 01 recommendation. Do not re-research.
 
 ## Acceptance criteria
 
-- [ ] A local call with `.env` pointed at OpenRouter returns a completion
+- [x] A local call with `.env` pointed at OpenRouter returns a completion
       (or the ticket records the exact local blocker)
-- [ ] Defaults and `.env.example` match the chosen slug and
+- [x] Defaults and `.env.example` match the chosen slug and
       `https://openrouter.ai/api/v1`
-- [ ] DeepSeek-specific payload fields that break OpenRouter are gone
-- [ ] `npm test` and `npx tsc --noEmit` pass
-- [ ] Key-leak grep clean (no `sk-` values in tracked files)
+- [x] DeepSeek-specific payload fields that break OpenRouter are gone
+- [x] `npm test` and `npx tsc --noEmit` pass
+- [x] Key-leak grep clean (no `sk-` values in tracked files)
+
+## Answer
+
+Mechanical swap from ticket 01, no re-research. `llm.js` defaults to
+OpenRouter `nvidia/nemotron-3-ultra-550b-a55b:free` at
+`https://openrouter.ai/api/v1`, timeout 240s, attribution headers,
+`reasoning` instead of DeepSeek `thinking`. JSON parse fallback stays.
+`realityMap.js` is unchanged.
+
+Live smoke via `callChatCompletion` (key from gitignored `.env`; model and
+base overridden in-process because local `.env` still names DeepSeek):
+HTTP 200, `{"ok":true,"n":4}`, 3519 ms, no reasoning tokens. Point local
+`.env` `LLM_MODEL` / `LLM_BASE_URL` at the `.env.example` values.
+Netlify secrets stay for
+[Deploy the tree-only explorer](08-deploy-the-tree-only-explorer.md).
 
 ## Docs rule
 

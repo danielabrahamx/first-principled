@@ -5,15 +5,15 @@ the cognitive distance between the learner's mental model and reality. The
 learner types a word or phrase; the agent builds a Reality Map from the model's
 knowledge, then a Socratic conversation refines the learner's Mental Model
 against it. v1 is a static web app plus one stateless serverless function on
-Netlify, DeepSeek-backed, no database.
+Netlify, OpenRouter-backed, no database.
 
 **Map (only):** `.scratch/first-principled-v6/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
-**Resume:** v6 charted. Ticket 01 resolved (OpenRouter Nemotron `:free`
-serves one-shot maps; 240s timeout). Open frontier: Land OpenRouter as
-the LLM transport, Prototype how-it-works chrome, Hide Tutor from the
-chrome, Node panel is an invitation card.
+**Resume:** v6 charted. Tickets 01-02 resolved (OpenRouter Nemotron
+`:free` is the LLM transport; 240s timeout). Open frontier: Prototype
+how-it-works chrome, Hide Tutor from the chrome, Node panel is an
+invitation card.
 
 ## Golden rules
 
@@ -22,8 +22,7 @@ chrome, Node panel is an invitation card.
   (research excepted).
 - **Commit and push before done.** Never end a session with uncommitted work.
 - **Never commit secrets:** `.env`, any `sk-*` key, Netlify tokens. `.env` is
-  gitignored; the LLM key lives there and in
-  `~/.local/share/opencode/auth.json` (deepseek entry).
+  gitignored; the LLM key lives there.
 - Single dashes only - never em-dashes or en-dashes. No emojis.
 - Windows/PowerShell-tested before shipping. Done means working.
 - Docs update in the SAME commit as the code they describe.
@@ -36,10 +35,10 @@ chrome, Node panel is an invitation card.
 - Static frontend (`src/`) + one stateless serverless function
   (`netlify/functions/agent`), `POST /api/agent` per the spec turn contract.
 - Client holds session state in memory; the function stores nothing.
-- DeepSeek via OpenAI-compatible API until
-  [Land OpenRouter as the LLM transport](.scratch/first-principled-v6/issues/02-land-openrouter-transport.md).
+- OpenRouter via the OpenAI-compatible API.
   Env: `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` (from `.env`, gitignored).
-  v6 destination provider: OpenRouter `nvidia/nemotron-3-ultra-550b-a55b:free`.
+  Default model: `nvidia/nemotron-3-ultra-550b-a55b:free` at
+  `https://openrouter.ai/api/v1`.
 - No DB, no auth, no agent framework (Mastra/LangGraph is v2).
 - Home is the Tree. v6 parks Tutor from the chrome (engine stays). There
   is no Chat page and no learner-map tab. How it works lives in the header.
