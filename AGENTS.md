@@ -10,10 +10,11 @@ Netlify, OpenRouter-backed, no database.
 **Map (only):** `.scratch/first-principled-v6/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
-**Resume:** v6 chrome shipped; live init is still flaky. Frontier:
-[Why prod init fails on Nemotron free](.scratch/first-principled-v6/issues/09-why-prod-init-fails-on-nemotron-free.md).
-Then retune, deploy, and Danny scoring. Map:
-`.scratch/first-principled-v6/map.md`.
+**Resume:** v6 chrome shipped. Ticket 09: prod init is serial, not a
+dead `:free` slug. Frontier:
+[Retune the one-shot Reality Map prompt](.scratch/first-principled-v6/issues/10-retune-the-one-shot-reality-map-prompt.md)
+(apply the named `fastPath` default; no serial fallback). Then deploy
+and Danny scoring. Map: `.scratch/first-principled-v6/map.md`.
 
 ## Golden rules
 

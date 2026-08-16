@@ -10,12 +10,10 @@ cognitive distance between the learner's mental model and reality.
 
 ## Frontier (resume here)
 
-v6 chrome is live at https://first-principled.netlify.app. Live init on
-Nemotron `:free` is flaky. Next:
-[Why prod init fails on Nemotron free](.scratch/first-principled-v6/issues/09-why-prod-init-fails-on-nemotron-free.md).
-Blocked on that:
-[Retune the one-shot Reality Map prompt](.scratch/first-principled-v6/issues/10-retune-the-one-shot-reality-map-prompt.md),
-then
+v6 chrome is live at https://first-principled.netlify.app. Ticket 09
+classified prod init as serial-path failure, not `:free` unusable. Next:
+[Retune the one-shot Reality Map prompt](.scratch/first-principled-v6/issues/10-retune-the-one-shot-reality-map-prompt.md)
+(default `fastPath` true, no serial fallback). Then
 [Deploy a followable tree](.scratch/first-principled-v6/issues/11-deploy-a-followable-tree.md)
 and
 [Danny scores followability](.scratch/first-principled-v6/issues/12-danny-scores-followability.md).

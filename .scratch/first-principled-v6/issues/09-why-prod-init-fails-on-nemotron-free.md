@@ -2,7 +2,7 @@
 
 **Type:** research
 
-**Status:** claimed (research-agent, 2026-08-16)
+**Status:** resolved
 
 **Blocked by:** none
 
@@ -54,14 +54,24 @@ may live beside it.
 
 ## Acceptance criteria
 
-- [ ] Findings file exists, every claim cited to a primary source or a
+- [x] Findings file exists, every claim cited to a primary source or a
       live probe
-- [ ] Each known failure (prod `bit`, prod recursion, prod
+- [x] Each known failure (prod `bit`, prod recursion, prod
       photosynthesis, local laptop, local battery) is classified
-- [ ] Recommendation names the ticket 10 lever: prompt, transport/parse,
+- [x] Recommendation names the ticket 10 lever: prompt, transport/parse,
       or `:free` unusable
-- [ ] No secrets in the findings file, probe output, or git history
-- [ ] No `src/` changes
+- [x] No secrets in the findings file, probe output, or git history
+- [x] No `src/` changes
+
+## Answer
+
+Prod init is still serial. `invalid_model_output` is serial layer-repair
+exhaustion (`kind: "invalid"`), not empty choices. `bit` 1-node is
+foundation plus `done`. Photosynthesis local vs prod is path drift
+(one-shot eval vs serial API), not flake. Lever (b): default `fastPath`
+true and do not fall back to serial.
+Findings:
+[09-why-prod-init-fails-on-nemotron-free.md](../research/09-why-prod-init-fails-on-nemotron-free.md)
 
 ## Docs rule
 

@@ -87,6 +87,7 @@ measured, not hoped. Provider for this effort: OpenRouter
 - Node click opens an invitation card: description, observation, dependence neighbors, rabbit-hole line. No learner-state chrome and no nested Build. [Node panel is an invitation card](issues/06-invitation-node-panel.md)
 - Reality Map quality is `eval/map-quality`: structural gate, gold overlap, Danny rubric. Live Nemotron `:free` baseline recorded; recursion and photosynthesis pass the gate with low gold overlap; battery fails contiguity; laptop returned no choices. [Reality Map quality eval](issues/07-reality-map-quality-eval.md)
 - Tree-only explorer is live at https://first-principled.netlify.app (deploy `6a821d5637d95139bd35956f`). Netlify `LLM_*` rotated to OpenRouter Nemotron `:free`. Chrome smoke 12/12. Live init is flaky: bit returned 1 node; recursion and photosynthesis returned `invalid_model_output`. [Deploy the tree-only explorer](issues/08-deploy-the-tree-only-explorer.md)
+- Prod init fails because it still runs serial per-layer generation; `invalid_model_output` is layer-repair exhaustion, not empty choices, and photosynthesis local vs prod is one-shot vs serial path drift. Ticket 10 lever is default `fastPath` true with no serial fallback. [Why prod init fails on Nemotron free](issues/09-why-prod-init-fails-on-nemotron-free.md)
 
 ## Not yet specified
 
