@@ -22,8 +22,8 @@ function fakeLocation(initialHash = "") {
   };
 }
 
-test("ROUTES is only map", () => {
-  assert.deepEqual(ROUTES, ["map"]);
+test("ROUTES is map and how", () => {
+  assert.deepEqual(ROUTES, ["map", "how"]);
 });
 
 test("the default route is map when the hash is empty", () => {
@@ -40,6 +40,23 @@ test("#chat falls back to the default route", () => {
 test("an unknown hash falls back to map", () => {
   const router = createRouter({ location: fakeLocation("#about") });
   assert.equal(router.route, "map");
+});
+
+test("#how is the How it works page", () => {
+  const router = createRouter({ location: fakeLocation("#how") });
+  assert.equal(router.route, "how");
+});
+
+test("navigate to how notifies once", () => {
+  const location = fakeLocation("");
+  const router = createRouter({ location });
+  /** @type {string[]} */
+  const seen = [];
+  router.subscribe((route) => seen.push(route));
+  router.navigate("how");
+  assert.equal(router.route, "how");
+  assert.equal(location.hash, "#how");
+  assert.deepEqual(seen, ["how"]);
 });
 
 test("navigate to map does not notify when already on home", () => {

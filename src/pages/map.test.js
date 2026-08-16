@@ -72,3 +72,31 @@ test("index.html has one Tree home and no chat view", () => {
   assert.doesNotMatch(html, /id="view-chat"/);
   assert.doesNotMatch(html, />Ask</);
 });
+
+test("How it works chrome uses the locked foundations copy", () => {
+  const source = readFileSync(path.join(here, "map.js"), "utf8");
+  const how = readFileSync(path.join(here, "how.js"), "utf8");
+  assert.match(source, /from "\.\/how\.js"/);
+  assert.match(source, /how-link/);
+  assert.match(source, /WORD_PLACEHOLDER/);
+  assert.match(source, /EMPTY_LINE/);
+  assert.doesNotMatch(source, /Type a word or phrase/);
+  assert.match(how, /A thing in reality \(laptop, photosynthesis\)/);
+  assert.match(
+    how,
+    /Type the thing you want to understand from its foundations\./
+  );
+  assert.match(how, /not designed to replace reading/);
+  assert.match(how, /relationships between layers/);
+  assert.match(how, /rabbit holes/);
+  assert.doesNotMatch(how, /Tutor/);
+  assert.doesNotMatch(how, /atomic facts|atomic principles/);
+});
+
+test("header How it works wraps instead of overflowing the page", () => {
+  const css = readFileSync(path.join(here, "..", "styles.css"), "utf8");
+  assert.match(css, /html,\s*body\s*\{[^}]*overflow-x:\s*hidden/s);
+  assert.match(css, /\.map-header\s*\{[^}]*flex-wrap:\s*wrap/s);
+  assert.match(css, /\.map-entry\s*\{[^}]*min-width:\s*0/s);
+  assert.match(css, /\.how-link\s*\{[^}]*flex:\s*0 0 auto/s);
+});

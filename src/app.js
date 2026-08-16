@@ -2,9 +2,10 @@
  * App entry: wires the hash router to the Tree home and the shared session
  * store.
  *
- * Ticket 02: one route. Home is the Tree. Tutor is parked from chrome.
- * `#chat` and unknown hashes land on home. The router still exists so old
- * hashes resolve without mounting a second page.
+ * Ticket 02: home is the Tree. Tutor is parked from chrome. `#chat` and
+ * unknown hashes land on home. Ticket 05: `#how` is the How it works page
+ * on the same Tree chrome (header word box stays). The router still exists
+ * so old hashes resolve without mounting a second product page.
  */
 
 import { createRouter } from "./state/router.js";
@@ -29,11 +30,11 @@ const mapView = element("view-map");
 const mapPage = renderMapPage(mapView, sessionStore);
 
 /**
- * @param {string} [_route]
+ * @param {string} [route]
  */
-function render(_route) {
+function render(route) {
   mapView.hidden = false;
-  mapPage.sync();
+  mapPage.sync(route);
 }
 
 router.subscribe(render);

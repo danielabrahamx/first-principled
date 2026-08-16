@@ -4,8 +4,9 @@
  * Per ticket 07, the frontend is a static site with no server-side rewrites,
  * so routing is hash-based - "#map" is a plain anchor any static host serves.
  * Ticket 02 drops `#chat` as a first-class page: empty hashes, `#chat`, and
- * unknown hashes all land on home. Switching the hash never reloads the
- * document, so the session store singleton (session.js) survives.
+ * unknown hashes all land on home. Ticket 05 adds `#how` as the How it works
+ * page; the header word box stays mounted. Switching the hash never reloads
+ * the document, so the session store singleton (session.js) survives.
  *
  * The router takes an optional "location-like" object so node:test can drive
  * it without a DOM; in the browser it defaults to globalThis.location.
@@ -18,10 +19,11 @@
  */
 
 /** @type {readonly string[]} */
-export const ROUTES = Object.freeze(["map"]);
+export const ROUTES = Object.freeze(["map", "how"]);
 
 /** The default route when the hash is empty or unknown. Tree home
- * (ticket 02): `#chat` and anything else fall back here. */
+ * (ticket 02): `#chat` and anything else fall back here. `#how` is the
+ * How it works page (ticket 05). */
 export const DEFAULT_ROUTE = "map";
 
 /**

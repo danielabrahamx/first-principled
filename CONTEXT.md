@@ -10,11 +10,10 @@ cognitive distance between the learner's mental model and reality.
 
 ## Frontier (resume here)
 
-v6 charted. Tickets 01-04 resolved (OpenRouter is the LLM transport;
-how-it-works prototype recommends variant A; Tutor is parked from chrome).
-Open frontier: Ship how-it-works into the Tree home, Node panel is an
-invitation card, Reality Map quality eval. Map:
-`.scratch/first-principled-v6/map.md`.
+v6 charted. Tickets 01-05 resolved (OpenRouter is the LLM transport;
+how-it-works chrome is live on the Tree home as variant A; Tutor is parked
+from chrome). Open frontier: Node panel is an invitation card, Reality Map
+quality eval. Map: `.scratch/first-principled-v6/map.md`.
 
 ## Language
 
@@ -65,8 +64,8 @@ _Avoid_: Map tab, learner map (as a nav label)
 Current architecture (v1):
 
 - Static frontend, one home surface: the Tree. Tutor is parked from the
-  chrome (toggle and bottom sheet removed). How it works and the empty-Tree
-  sentence ship in ticket 05.
+  chrome (toggle and bottom sheet removed). How it works is a header control
+  plus `#how`; the empty Tree holds the foundations sentence.
 - One stateless serverless function on Netlify, POST /api/agent. State comes
   in with every request and goes out with the response. It stores nothing.
 - The Mental Model Graph has two sides: the Reality Map (canonical, from the

@@ -1,10 +1,11 @@
 /**
- * The Tree home: one surface. Header is logo and word box. No Chat page, no
- * learner-map tab, no Tutor toggle or bottom sheet. Empty state when there
- * is no Reality Map; skeleton while generating; Tree when it lands. Node
- * panels and observation hovers still live on tree cards. The learner grid,
- * comparison block, and closeness chrome stay hidden (engine may still
- * carry learnerMap).
+ * The Tree home: one surface. Header is logo, foundations word box, and
+ * How it works. No Chat page, no learner-map tab, no Tutor toggle or bottom
+ * sheet. Empty state when there is no Reality Map; skeleton while generating;
+ * Tree when it lands. `#how` swaps the canvas for the short How it works
+ * page without unmounting the word box. Node panels and observation hovers
+ * still live on tree cards. The learner grid, comparison block, and
+ * closeness chrome stay hidden (engine may still carry learnerMap).
  *
  * Tutor is parked from chrome. The Socratic engine, forceBrief, and dock
  * module stay in the repo, unmounted.
@@ -60,6 +61,15 @@ import {
   errorMessage,
 } from "../lib/generation.js";
 import { budDelay, wireTreeMotion } from "../lib/motion.js";
+import {
+  EMPTY_LINE,
+  HOW_BACK,
+  HOW_TITLE,
+  WORD_ARIA,
+  WORD_PLACEHOLDER,
+  isHowRoute,
+  renderHowPage,
+} from "./how.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -151,7 +161,7 @@ function buildSkeleton() {
 
 /**
  * Mount the map page into `root`, driven by the shared session store.
- * Returns a handle with `sync()` for route changes; the page also
+ * Returns a handle with `sync(route)` for route changes; the page also
  * subscribes to the store, so it re-renders live as turns land.
  *
  * @param {HTMLElement} root - the #view-map section.
@@ -162,7 +172,7 @@ function buildSkeleton() {
  *   the browser; tests can disable).
  * @param {typeof defaultCallAgent} [options.callAgent] - the transport for
  *   the generation turns this page owns; injected for tests.
- * @returns {{ sync: () => void; destroy: () => void }}
+ * @returns {{ sync: (route?: string) => void; destroy: () => void }}
  */
 export function renderMapPage(root, store, options = {}) {
   const responsive = options.responsive !== false;
@@ -175,13 +185,13 @@ export function renderMapPage(root, store, options = {}) {
   const split = el("div", "map-split");
   const main = el("div", "map-main");
 
-  /* Header: logo and word input + Build. Tutor chrome is parked. */
+  /* Header: logo, foundations word box, How it works. Tutor chrome is parked. */
   const header = el("header", "map-header");
   const logo = el("div", "logo-row");
   logo.append(el("span", "orb logo-dot"), el("span", "wordmark", "first-principled"));
 
   /* Ticket 11: the word input lives on the Tree home. Submitting starts
-     generation here. */
+     generation here. Ticket 05: foundations placeholder and aria. */
   const entry = el("form", "map-entry");
   /** @type {HTMLInputElement} */
   const entryInput = /** @type {HTMLInputElement} */ (
@@ -189,19 +199,20 @@ export function renderMapPage(root, store, options = {}) {
   );
   entryInput.className = "map-entry-input";
   entryInput.type = "text";
-  entryInput.placeholder = "Type a word or phrase...";
+  entryInput.placeholder = WORD_PLACEHOLDER;
   entryInput.setAttribute("autocomplete", "off");
-  entryInput.setAttribute(
-    "aria-label",
-    "Build the tree from a word or phrase"
-  );
+  entryInput.setAttribute("aria-label", WORD_ARIA);
   const entryButton = /** @type {HTMLButtonElement} */ (
     el("button", "map-entry-button", "Build")
   );
   entryButton.type = "submit";
   entry.append(entryInput, entryButton);
 
-  header.append(logo, entry);
+  const howLink = /** @type {HTMLButtonElement} */ (
+    el("button", "how-link", HOW_TITLE)
+  );
+  howLink.type = "button";
+  header.append(logo, entry, howLink);
 
   /* Timeline scrubber (ticket 12). */
   const timeline = el("div", "map-timeline");
@@ -290,11 +301,7 @@ export function renderMapPage(root, store, options = {}) {
   const refusalNote = el("p", "note map-empty");
   refusalNote.hidden = true;
 
-  const noSession = el(
-    "p",
-    "note map-empty",
-    "Enter a word above to build the tree."
-  );
+  const noSession = el("p", "note map-empty map-empty-invite", EMPTY_LINE);
   const empty = el(
     "p",
     "note map-empty",
@@ -308,8 +315,28 @@ export function renderMapPage(root, store, options = {}) {
   );
   ended.hidden = true;
 
+  function goHow() {
+    if (typeof location !== "undefined") location.hash = "how";
+  }
+
+  function goTree() {
+    if (typeof location !== "undefined") location.hash = "";
+  }
+
+  function onHowPage() {
+    return typeof location !== "undefined" && isHowRoute(location.hash);
+  }
+
+  howLink.addEventListener("click", () => {
+    if (onHowPage()) goTree();
+    else goHow();
+  });
+
+  const howPage = renderHowPage(goTree);
+
   main.append(
     header,
+    howPage,
     timeline,
     titleRow,
     legend,
@@ -398,6 +425,7 @@ export function renderMapPage(root, store, options = {}) {
   async function submitWord() {
     const word = entryInput.value.trim();
     if (word.length === 0 || generating) return;
+    if (onHowPage()) goTree();
     entryInput.value = "";
     generating = true;
     setEntryBusy(true);
@@ -1379,9 +1407,30 @@ export function renderMapPage(root, store, options = {}) {
 
   /**
    * Sync the page with the store: empty state, skeleton, Tree, refusal, and
-   * generation error. Learner-map chrome stays hidden (ticket 02).
+   * generation error. Learner-map chrome stays hidden (ticket 02). `#how`
+   * shows the How it works page and keeps the header word box (ticket 05).
+   *
+   * @param {string} [route]
    */
-  function sync() {
+  function sync(route) {
+    const onHow =
+      !generating &&
+      (route === "how" || (route === undefined && onHowPage()));
+    howLink.textContent = onHow ? HOW_BACK : HOW_TITLE;
+    if (onHow) howLink.setAttribute("aria-current", "page");
+    else howLink.removeAttribute("aria-current");
+    howPage.hidden = !onHow;
+    if (onHow) {
+      noSession.hidden = true;
+      refusalNote.hidden = true;
+      treePanel.hidden = true;
+      skeleton.hidden = true;
+      mapError.hidden = true;
+      empty.hidden = true;
+      ended.hidden = true;
+      return;
+    }
+
     const state = store.getState();
 
     if (state.word !== lastWord) {
@@ -1434,8 +1483,11 @@ export function renderMapPage(root, store, options = {}) {
   }
 
   const unsubscribe = store.subscribe(sync);
+  const onResize = () => {
+    sync();
+  };
   if (responsive) {
-    window.addEventListener("resize", sync);
+    window.addEventListener("resize", onResize);
   }
 
   /* Sticky header (ticket 10): mark the header when the tree has scrolled
@@ -1464,7 +1516,7 @@ export function renderMapPage(root, store, options = {}) {
       document.removeEventListener("keydown", onKeydown);
       window.removeEventListener("scroll", onScroll);
       if (responsive) {
-        window.removeEventListener("resize", sync);
+        window.removeEventListener("resize", onResize);
       }
       root.replaceChildren();
     },

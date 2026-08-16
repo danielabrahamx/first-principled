@@ -34,6 +34,7 @@
 html,
 body {
   height: 100%;
+  max-width: 100%;
   overflow-x: hidden;
 }
 
@@ -120,7 +121,8 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .wordmark {
@@ -128,6 +130,9 @@ body {
   font-weight: 600;
   color: var(--ink);
   letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Chat page */
@@ -499,7 +504,7 @@ body {
 /* Map page */
 
 .map-page {
-  max-width: 60rem;
+  max-width: min(60rem, 100%);
   margin: 0 auto;
   padding: 24px 20px 48px;
 }
@@ -587,6 +592,75 @@ body {
 .map-entry-button:disabled {
   opacity: 0.55;
   cursor: default;
+}
+
+.how-link {
+  flex: 0 0 auto;
+  margin-left: auto;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.how-link[aria-current="page"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: transparent;
+}
+
+.how-page {
+  max-width: 36rem;
+  margin: 0 auto;
+}
+
+.how-page h1 {
+  margin: 0 0 16px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.how-page p {
+  margin: 0 0 14px;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.how-page p:last-of-type {
+  margin-bottom: 0;
+  color: var(--ink-muted);
+}
+
+.how-back-row {
+  margin-top: 28px;
+}
+
+.how-back-link {
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.map-empty-invite {
+  margin: 24px auto 0;
+  max-width: 36rem;
+  text-align: center;
 }
 
 .map-error {
@@ -1928,6 +2002,10 @@ body {
 
   .map-entry {
     flex: 1 1 100%;
+  }
+
+  .how-link {
+    padding: 8px 12px;
   }
 
   .map-entry-button {

@@ -13,9 +13,9 @@
  * words (function words) and unavoidable UI chrome (tutor, session, retry)
  * are documented here instead. New drift outside both sets fails the test.
  *
- * Scope: src/index.html, src/pages/dock.js - the hand-written UI copy.
- * chat.js is unmounted (ticket 02); its leftover helpers are not learner-
- * facing. Scripted demo content (src/demo.js) models generated tutor output,
+ * Scope: src/index.html, src/pages/dock.js, src/pages/how.js - the
+ * hand-written UI copy. chat.js is unmounted (ticket 02); its leftover
+ * helpers are not learner-facing. Scripted demo content (src/demo.js) models
  * which is STE-gated by the generator prompt (rules 1-6) and steProblems,
  * not by this vocabulary list; the same applies to the refusal reasons in
  * realityMap.js and orchestrator.js, which were edited to the rules by hand.
@@ -36,6 +36,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const COPY_FILES = [
   path.join(ROOT, "src", "index.html"),
   path.join(ROOT, "src", "pages", "dock.js"),
+  path.join(ROOT, "src", "pages", "how.js"),
   path.join(ROOT, "src", "lib", "generation.js"),
 ];
 
@@ -67,7 +68,7 @@ const FUNCTION_WORDS = new Set(
    shall should may might must please try later too very just even still
    also ever never already about as because if than while although though
    unless until during since into onto through within without with between
-   among against one`
+   among against one from`
     .split(/\s+/)
     .filter(Boolean)
 );
@@ -82,7 +83,8 @@ const CHROME_WORDS = new Set(
   `tutor session demo key pages word phrase type enter send retry end new
    input message answer question request wait moment human pass continue
    ready fault happen side accept reach produce unreadable work large right
-   like want name principled quick needed map page`
+   like want name principled quick needed map page thing understand design
+   replace reading gain relationship meant help open rabbit hole back`
     .split(/\s+/)
     .filter(Boolean)
 );

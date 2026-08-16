@@ -40,7 +40,7 @@ Founders building things, learning as they build, avoiding technical debt. v1: o
 - Static frontend, minimal web UI, two pages: chat and map.
 - One stateless serverless function, POST /api/agent, on Netlify. It receives the full session state with every call, calls OpenRouter, returns the reply plus the updated learner map and diffs. It stores nothing.
 - No database, no auth, no agent framework.
-- Client holds session state in memory (`src/state/session.js`: word, reality map, learner map, history, failedAttempts, phase, gap closures, transfer result, metrics) and sends it with every request. The chat and map pages are hash routes (`#chat`, `#map`) sharing one store instance, so navigation keeps the session. Nothing is written to disk, localStorage, or any server.
+- Client holds session state in memory (`src/state/session.js`: word, reality map, learner map, history, failedAttempts, phase, gap closures, transfer result, metrics) and sends it with every request. Home is the Tree (`#` / `#map`); `#how` is the How it works page on the same chrome; `#chat` lands on home. Navigation keeps the session. Nothing is written to disk, localStorage, or any server.
 - OpenRouter via the OpenAI-compatible API. Provider, model, base URL are environment configuration. Default model: nvidia/nemotron-3-ultra-550b-a55b:free at https://openrouter.ai/api/v1.
 - No web grounding in v1. The reality map comes from the model's knowledge only.
 
@@ -179,10 +179,17 @@ Space Grotesk. Mental-model states use stained-glass colors: untested gray,
 missing red, misconception amber, correct green. Exact tokens and the orb CSS
 recipe live in `research/13-ui-design-spec.md`.
 
-- Tree home chrome (v6): one surface. Header is logo and word box; submitting
-  the word still builds a tree. Tutor is parked from chrome: no toggle, no
-  bottom sheet. `#chat` lands on home. There is no Chat page. The Socratic
-  engine, `forceBrief`, and `src/pages/dock.js` remain in the repo, unmounted.
+- Tree home chrome (v6): one surface. Header is logo, foundations word box,
+  and How it works. Placeholder: "A thing in reality (laptop, photosynthesis)".
+  Empty Tree sentence: "Type the thing you want to understand from its
+  foundations." `#how` is a short page (not an overlay) that states: this is
+  not designed to replace reading; it is for relationships between layers;
+  it helps the learner open rabbit holes; type a thing in reality from its
+  foundations. Back to the Tree keeps whatever is in the word box.
+  Submitting the word still builds a tree. Tutor is parked from chrome: no
+  toggle, no bottom sheet. `#chat` lands on home. There is no Chat page. The
+  Socratic engine, `forceBrief`, and `src/pages/dock.js` remain in the repo,
+  unmounted.
 - Chat page (`src/pages/chat.js`, ticket 08): unmounted. Helpers remain for
   tests. Was a word-or-phrase start, then a message list (learner and agent
   turns), a composer (Enter sends, Shift+Enter newlines), and a sending state
