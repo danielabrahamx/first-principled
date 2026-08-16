@@ -10,12 +10,16 @@ cognitive distance between the learner's mental model and reality.
 
 ## Frontier (resume here)
 
-v6 Destination shipped. Tree-only explorer is live at
-https://first-principled.netlify.app. OpenRouter is the LLM transport;
-how-it-works chrome is variant A; Tutor is parked from chrome; node panel
-is an invitation card; Reality Map quality eval is `eval/map-quality`.
-Live init is flaky on Nemotron `:free` (see ticket 08). Prompt retune
-remains fog. Map: `.scratch/first-principled-v6/map.md`.
+v6 chrome is live at https://first-principled.netlify.app. Live init on
+Nemotron `:free` is flaky. Next:
+[Why prod init fails on Nemotron free](.scratch/first-principled-v6/issues/09-why-prod-init-fails-on-nemotron-free.md).
+Blocked on that:
+[Retune the one-shot Reality Map prompt](.scratch/first-principled-v6/issues/10-retune-the-one-shot-reality-map-prompt.md),
+then
+[Deploy a followable tree](.scratch/first-principled-v6/issues/11-deploy-a-followable-tree.md)
+and
+[Danny scores followability](.scratch/first-principled-v6/issues/12-danny-scores-followability.md).
+Map: `.scratch/first-principled-v6/map.md`.
 
 ## Language
 

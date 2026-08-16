@@ -25,8 +25,12 @@ measured, not hoped. Provider for this effort: OpenRouter
 - Rabbit hole means invitation: inspect a node, then go study. Not a nested
   generated Tree. Nested generation is out of scope.
 - Salvage: `src/lib/agent/` (reality map, observations) and `src/lib/mmg/`
-  stay. Do not rebuild the generator unless fog graduates a prompt-retune
-  ticket after eval. Do not touch uncommitted v2 engine-thread files
+  stay. Prompt retune is
+  [Retune the one-shot Reality Map prompt](issues/10-retune-the-one-shot-reality-map-prompt.md),
+  blocked on
+  [Why prod init fails on Nemotron free](issues/09-why-prod-init-fails-on-nemotron-free.md).
+  Do not rebuild the generator unless that research says the one-shot
+  prompt cannot work. Do not touch uncommitted v2 engine-thread files
   (`src/lib/agent/gaps.js`, `confidence.js`, parked `eval/concepts.js`
   and tutor scorers). This effort owns `eval/map-quality`.
 - Provider: OpenRouter, OpenAI-compatible. Env remains `LLM_API_KEY`,
@@ -50,9 +54,13 @@ measured, not hoped. Provider for this effort: OpenRouter
   the judge of "would I follow this." Code catches structural lies.
 - Spine/layout retune, grow motion, and layer-band visuals stay fog unless
   a live Nemotron tree still reads as a labeled list.
-- Skills: grilling + domain-modeling on HITL; prototype skill on
+- Skills: grilling + domain-modeling on HITL, including
+  [Danny scores followability](issues/12-danny-scores-followability.md);
+  prototype skill on
   [Prototype how-it-works chrome](issues/03-prototype-how-it-works-chrome.md);
-  `/research` on ticket 01. Existing test/tsc/netlify-build discipline.
+  `/research` on
+  [Why prod init fails on Nemotron free](issues/09-why-prod-init-fails-on-nemotron-free.md).
+  Existing test/tsc/netlify-build discipline.
 - Style: single dashes, no emojis. Windows/PowerShell-tested. Docs in the
   same commit as the code they describe.
 
@@ -82,16 +90,15 @@ measured, not hoped. Provider for this effort: OpenRouter
 
 ## Not yet specified
 
-- Prompt / generator retune so prod OpenRouter Nemotron `:free` init
-  returns a followable tree. Ticket 07 local live runs mixed; ticket 08
-  prod init failed (`bit` 1-node stub; `recursion` and `photosynthesis`
-  `invalid_model_output`). Danny rubric scores are still open.
 - Spine / layout retune if a live Nemotron tree still reads as a labeled
   list.
 - Grow motion on a branching trunk.
 - Layer-band visual: background stripes vs labels on the hang.
-- Paid OpenRouter slug, only if `:free` fails the contract.
-- Discovery timeline (still parked).
+- Paid OpenRouter slug, only if
+  [Why prod init fails on Nemotron free](issues/09-why-prod-init-fails-on-nemotron-free.md)
+  or
+  [Retune the one-shot Reality Map prompt](issues/10-retune-the-one-shot-reality-map-prompt.md)
+  proves `:free` unusable.
 
 ## Out of scope
 
@@ -104,6 +111,7 @@ measured, not hoped. Provider for this effort: OpenRouter
 - Accounts, auth, persistence, web grounding, agent frameworks.
 - Cross-concept linking.
 - Deleting the Tutor engine from `src/lib/agent/`.
+- Discovery timeline (parked; not in this destination).
 
 ## Ticket sequence (dependency overview)
 
@@ -116,4 +124,8 @@ measured, not hoped. Provider for this effort: OpenRouter
 06 node panel is an invitation card
 02 -> 07 Reality Map quality eval
 02 + 04 + 05 + 06 + 07 -> 08 deploy the tree-only explorer
+08 -> 09 why prod init fails on Nemotron free
+09 -> 10 retune the one-shot Reality Map prompt
+10 -> 11 deploy a followable tree
+10 -> 12 Danny scores followability
 ```

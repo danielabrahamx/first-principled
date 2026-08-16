@@ -10,12 +10,10 @@ Netlify, OpenRouter-backed, no database.
 **Map (only):** `.scratch/first-principled-v6/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
-**Resume:** v6 Destination shipped. Tree-only explorer is live at
-https://first-principled.netlify.app. OpenRouter Nemotron `:free` is the
-LLM transport; how-it-works chrome, parked Tutor, invitation node panel,
-and `eval/map-quality` are in. Live init is flaky (see
-[Deploy the tree-only explorer](.scratch/first-principled-v6/issues/08-deploy-the-tree-only-explorer.md)).
-Prompt retune remains fog.
+**Resume:** v6 chrome shipped; live init is still flaky. Frontier:
+[Why prod init fails on Nemotron free](.scratch/first-principled-v6/issues/09-why-prod-init-fails-on-nemotron-free.md).
+Then retune, deploy, and Danny scoring. Map:
+`.scratch/first-principled-v6/map.md`.
 
 ## Golden rules
 
