@@ -4,9 +4,9 @@
 
 **Status:** ready-for-agent
 
-**Blocked by:** [Retune the one-shot Reality Map prompt](10-retune-the-one-shot-reality-map-prompt.md)
+**Blocked by:** [Init uses one-shot with no serial fallback](10-init-uses-one-shot-with-no-serial-fallback.md)
 
-**Related:** [Reality Map quality eval](07-reality-map-quality-eval.md), [Deploy a followable tree](11-deploy-a-followable-tree.md)
+**Related:** [Reality Map quality eval](07-reality-map-quality-eval.md), [Deploy a followable tree](11-deploy-a-followable-tree.md), [One-shot gold maps pass the quality gate](13-one-shot-gold-maps-pass-the-quality-gate.md)
 
 ## Question
 

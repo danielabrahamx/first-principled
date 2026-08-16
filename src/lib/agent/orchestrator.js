@@ -415,7 +415,7 @@ async function handleInit(request, callLLM) {
 
   const generation = await generateRealityMap(
     { concept: word, callLLM },
-    { fastPath: request.fastPath === true }
+    { fastPath: request.fastPath !== false }
   );
   if (!generation.ok) {
     if (generation.kind === "refused") {

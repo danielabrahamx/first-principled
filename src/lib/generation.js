@@ -67,7 +67,7 @@ export function errorMessage(code) {
  * @param {object} [options]
  * @param {typeof defaultCallAgent} [options.callAgent] - injected for tests.
  * @param {boolean} [options.fastPath] - ask the server for the one-shot
- *   tree path (?fast=1 staging test); init turns only.
+ *   tree path; init turns only. generateTree always sets this.
  * @returns {Promise<TurnResult>}
  */
 export async function runAgentTurn(store, options = {}) {
@@ -86,23 +86,10 @@ export async function runAgentTurn(store, options = {}) {
 }
 
 /**
- * Whether the staging fast-path flag (?fast=1) is on the page URL. Only
- * reachable in the browser; tests run with no location and get false.
- *
- * @returns {boolean}
- */
-function wantsFastPath() {
-  return (
-    typeof location !== "undefined" &&
-    typeof location.search === "string" &&
-    /[?&]fast=1/.test(location.search)
-  );
-}
-
-/**
  * Start tree generation for a word: begin the session and run the init turn
  * that grows the reality map - the word-to-tree call. Returns ok true when
  * a tree (or a refusal) landed, or ok false with a transport code.
+ * Init always requests the one-shot path; serial is not a client option.
  *
  * @param {SessionStore} store
  * @param {string} word
@@ -112,5 +99,5 @@ function wantsFastPath() {
  */
 export async function generateTree(store, word, options = {}) {
   if (!store.startSession(word)) return { ok: false, code: "bad_request" };
-  return runAgentTurn(store, { ...options, fastPath: wantsFastPath() });
+  return runAgentTurn(store, { ...options, fastPath: true });
 }

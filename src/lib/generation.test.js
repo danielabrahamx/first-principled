@@ -45,6 +45,17 @@ test("generateTree starts a session for the word and runs the init turn", async 
   assert.equal(seen.length, 1);
   assert.equal(seen[0].phase, "init");
   assert.equal(seen[0].word, "laptop");
+  assert.equal(seen[0].fastPath, true, "init always requests one-shot");
+});
+
+test("generateTree always requests the one-shot path", async () => {
+  const store = createSessionStore();
+  /** @type {any[]} */
+  const seen = [];
+  await generateTree(store, "photosynthesis", {
+    callAgent: agent({ ok: true, data: okTurn }, seen),
+  });
+  assert.equal(seen[0].fastPath, true);
 });
 
 test("generateTree rejects an empty word without touching the store", async () => {

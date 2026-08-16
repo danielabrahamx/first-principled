@@ -10,14 +10,13 @@ cognitive distance between the learner's mental model and reality.
 
 ## Frontier (resume here)
 
-v6 chrome is live at https://first-principled.netlify.app. Ticket 09
-classified prod init as serial-path failure, not `:free` unusable. Next:
-[Retune the one-shot Reality Map prompt](.scratch/first-principled-v6/issues/10-retune-the-one-shot-reality-map-prompt.md)
-(default `fastPath` true, no serial fallback). Then
-[Deploy a followable tree](.scratch/first-principled-v6/issues/11-deploy-a-followable-tree.md)
+v6 chrome is live at https://first-principled.netlify.app. Ticket 10
+defaulted init to one-shot with no serial fallback. Next:
+[Deploy a followable tree](.scratch/first-principled-v6/issues/11-deploy-a-followable-tree.md),
+[Danny scores followability](.scratch/first-principled-v6/issues/12-danny-scores-followability.md),
 and
-[Danny scores followability](.scratch/first-principled-v6/issues/12-danny-scores-followability.md).
-Map: `.scratch/first-principled-v6/map.md`.
+[One-shot gold maps pass the quality gate](.scratch/first-principled-v6/issues/13-one-shot-gold-maps-pass-the-quality-gate.md)
+in parallel. Map: `.scratch/first-principled-v6/map.md`.
 
 ## Language
 

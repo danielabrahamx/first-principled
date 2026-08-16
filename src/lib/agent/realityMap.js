@@ -99,9 +99,10 @@ import { observationProblems, dropUnknownValues } from "../mmg/observation.js";
  *   inside the fail-honest contract's 3000-5000 band (ticket 09 section 3;
  *   a lower cap truncates JSON or burns the budget on reasoning).
  * @property {string} [conceptLabel] - display name used in error messages.
- * @property {boolean} [fastPath] - try the whole map in ONE call first
- *   (the ?fast=1 staging spike 2026-08-14), falling back to the serial
- *   per-layer path when the one-shot map fails the gates. Default false.
+ * @property {boolean} [fastPath] - try the whole map in ONE call. When
+ *   that attempt fails with kind "invalid" or "error", return that result;
+ *   do not fall through to serial. Default false for direct callers; init
+ *   defaults this on via the orchestrator.
  */
 
 /**
@@ -701,13 +702,14 @@ const MAX_LAYER_ATTEMPTS = 3;
 const MAX_FOUNDATION_ATTEMPTS = 3;
 
 /* ---------------------------------------------------------------------------
- * One-shot fast path (staging spike 2026-08-14): the whole map in one call.
- * Same content contract as the serial path (observation records, combines,
- * typed edges, contiguous chain, STE, fail-honest) but one reply instead of
- * one call per layer. The final validator gates (contiguity + deriveCheck)
- * are the SAME gates the serial path ends with, so a map that passes here is
- * structurally as valid as a serial map. Any failure - unparseable, wrong
- * shape, or failing the gates - falls back to the serial path.
+ * One-shot path: the whole map in one call. Same content contract as the
+ * serial path (observation records, combines, typed edges, contiguous
+ * chain, STE, fail-honest) but one reply instead of one call per layer.
+ * The final validator gates (contiguity + deriveCheck) are the SAME gates
+ * the serial path ends with, so a map that passes here is structurally as
+ * valid as a serial map. Unparseable replies, wrong shape, failed gates,
+ * and transport errors are terminal for this attempt - serial is not a
+ * fallback. Serial remains a separate path when fastPath is not set.
  * ------------------------------------------------------------------------- */
 
 /**
@@ -825,9 +827,8 @@ function normalizeOneShot(concept, unpacked) {
  * one-shot path must satisfy this, because the serial path only stops when
  * the model reports the concept is reached (done), while a one-shot map can
  * pass the structural gates and still stop one layer short of the crown.
- * A map that never names the concept is treated as failed and falls back to
- * the serial path. A concept with no checkable letters (empty after
- * normalization) is vacuously reached.
+ * A map that never names the concept is treated as failed. A concept with no
+ * checkable letters (empty after normalization) is vacuously reached.
  *
  * @param {string} concept
  * @param {any} map
@@ -857,10 +858,10 @@ function conceptReached(concept, map) {
 }
 
 /**
- * The one-shot attempt. Returns a terminal result (ok or refused) - the
- * caller falls back to the serial path on every failure except refusal.
- * The map must pass the structural gates AND reach the concept as a node
- * (the serial path's done condition); otherwise it is invalid.
+ * The one-shot attempt. Returns a terminal result. The caller returns
+ * invalid and error as-is; it does not fall through to serial. The map
+ * must pass the structural gates AND reach the concept as a node (the
+ * serial path's done condition); otherwise it is invalid.
  *
  * @param {{ concept: string; transport: CallLLM; thinking: boolean; maxTokens: number; maxLayers: number }} input
  * @returns {Promise<{ ok: true; map: any } | { ok: false; kind: "refused"; reason: string } | { ok: false; kind: "invalid" | "error"; reason: string }>}
@@ -918,8 +919,8 @@ async function generateOneShotMap({ concept, transport, thinking, maxTokens, max
  * impossible rather than merely validated against. The contiguity validator
  * and deriveCheck gate every layer and the final map as the backstop; the
  * repair loop fixes flagged layers up to twice each. With options.fastPath
- * the whole map is tried in one call first, falling back to this serial
- * path when the one-shot map fails the gates.
+ * the whole map is tried in one call. A one-shot invalid or error result
+ * is returned as-is; serial is not a fallback.
  *
  * @param {{ concept: string; callLLM?: CallLLM }} input
  * @param {GenerateOptions} [options]
@@ -957,12 +958,10 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
   /** Whether any repair attempt was used across any phase. */
   let repaired = false;
 
-  /* One-shot fast path (staging spike 2026-08-14): try the whole map in one
-   * call when the client asks for it (?fast=1). Any failure except a refusal
-   * falls back to the serial path below; a refusal is terminal - gibberish
-   * is refused once, not twice. The one-shot map passes through the SAME
-   * final gates (contiguity + deriveCheck) as the serial path, so a map that
-   * lands here is structurally as valid as a serial map. */
+  /* One-shot path: try the whole map in one call when asked. Refusal,
+   * invalid, and error are all terminal - serial is not a fallback. A
+   * map that lands here still passes the SAME final gates (contiguity +
+   * deriveCheck) as the serial path. */
   if (options.fastPath === true) {
     const fast = await generateOneShotMap({
       concept: trimmed,
@@ -995,6 +994,16 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
         generationPath: "oneshot",
       };
     }
+    return {
+      ok: false,
+      map: null,
+      kind: fast.kind,
+      reason: fast.reason,
+      errors: [],
+      latencyMs: Date.now() - totalStarted,
+      retried: false,
+      generationPath: "oneshot",
+    };
   }
 
   /**

@@ -6,7 +6,7 @@
 
 **Blocked by:** none
 
-**Related:** [OpenRouter Nemotron can serve the Reality Map contract](01-openrouter-nemotron-map-contract.md), [Reality Map quality eval](07-reality-map-quality-eval.md), [Deploy the tree-only explorer](08-deploy-the-tree-only-explorer.md), [Retune the one-shot Reality Map prompt](10-retune-the-one-shot-reality-map-prompt.md)
+**Related:** [OpenRouter Nemotron can serve the Reality Map contract](01-openrouter-nemotron-map-contract.md), [Reality Map quality eval](07-reality-map-quality-eval.md), [Deploy the tree-only explorer](08-deploy-the-tree-only-explorer.md), [Init uses one-shot with no serial fallback](10-init-uses-one-shot-with-no-serial-fallback.md)
 
 ## Question
 
@@ -16,7 +16,7 @@ photosynthesis passed the gate; laptop had no choices; battery failed
 contiguity). Ticket 08 prod init failed (`bit` 1 node / 1 layer;
 `recursion` and `photosynthesis` `invalid_model_output` at 116-190s).
 What failure mode is each of those, and which lever should
-[Retune the one-shot Reality Map prompt](10-retune-the-one-shot-reality-map-prompt.md)
+[Init uses one-shot with no serial fallback](10-init-uses-one-shot-with-no-serial-fallback.md)
 turn: one-shot prompt, transport/parse, or declare `:free` unusable?
 
 ## What

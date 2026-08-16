@@ -25,14 +25,14 @@ measured, not hoped. Provider for this effort: OpenRouter
 - Rabbit hole means invitation: inspect a node, then go study. Not a nested
   generated Tree. Nested generation is out of scope.
 - Salvage: `src/lib/agent/` (reality map, observations) and `src/lib/mmg/`
-  stay. Prompt retune is
-  [Retune the one-shot Reality Map prompt](issues/10-retune-the-one-shot-reality-map-prompt.md),
-  blocked on
-  [Why prod init fails on Nemotron free](issues/09-why-prod-init-fails-on-nemotron-free.md).
-  Do not rebuild the generator unless that research says the one-shot
-  prompt cannot work. Do not touch uncommitted v2 engine-thread files
-  (`src/lib/agent/gaps.js`, `confidence.js`, parked `eval/concepts.js`
-  and tutor scorers). This effort owns `eval/map-quality`.
+  stay. Prod-init lever landed in
+  [Init uses one-shot with no serial fallback](issues/10-init-uses-one-shot-with-no-serial-fallback.md).
+  One-shot laptop/battery quality is
+  [One-shot gold maps pass the quality gate](issues/13-one-shot-gold-maps-pass-the-quality-gate.md).
+  Do not rebuild the generator. Do not touch uncommitted v2 engine-thread
+  files (`src/lib/agent/gaps.js`, `confidence.js`, parked
+  `eval/concepts.js` and tutor scorers). This effort owns
+  `eval/map-quality`.
 - Provider: OpenRouter, OpenAI-compatible. Env remains `LLM_API_KEY`,
   `LLM_MODEL`, `LLM_BASE_URL`. Key lives only in `.env` (gitignored) and
   later as a Netlify secret. Never paste keys into chat, tickets, or
@@ -88,6 +88,7 @@ measured, not hoped. Provider for this effort: OpenRouter
 - Reality Map quality is `eval/map-quality`: structural gate, gold overlap, Danny rubric. Live Nemotron `:free` baseline recorded; recursion and photosynthesis pass the gate with low gold overlap; battery fails contiguity; laptop returned no choices. [Reality Map quality eval](issues/07-reality-map-quality-eval.md)
 - Tree-only explorer is live at https://first-principled.netlify.app (deploy `6a821d5637d95139bd35956f`). Netlify `LLM_*` rotated to OpenRouter Nemotron `:free`. Chrome smoke 12/12. Live init is flaky: bit returned 1 node; recursion and photosynthesis returned `invalid_model_output`. [Deploy the tree-only explorer](issues/08-deploy-the-tree-only-explorer.md)
 - Prod init fails because it still runs serial per-layer generation; `invalid_model_output` is layer-repair exhaustion, not empty choices, and photosynthesis local vs prod is one-shot vs serial path drift. Ticket 10 lever is default `fastPath` true with no serial fallback. [Why prod init fails on Nemotron free](issues/09-why-prod-init-fails-on-nemotron-free.md)
+- Init without a client flag uses one-shot; a failed one-shot does not fall through to serial. Stay on `:free`. Local live photosynthesis hit a `:free` 429. [Init uses one-shot with no serial fallback](issues/10-init-uses-one-shot-with-no-serial-fallback.md)
 
 ## Not yet specified
 
@@ -96,9 +97,7 @@ measured, not hoped. Provider for this effort: OpenRouter
 - Grow motion on a branching trunk.
 - Layer-band visual: background stripes vs labels on the hang.
 - Paid OpenRouter slug, only if
-  [Why prod init fails on Nemotron free](issues/09-why-prod-init-fails-on-nemotron-free.md)
-  or
-  [Retune the one-shot Reality Map prompt](issues/10-retune-the-one-shot-reality-map-prompt.md)
+  [One-shot gold maps pass the quality gate](issues/13-one-shot-gold-maps-pass-the-quality-gate.md)
   proves `:free` unusable.
 
 ## Out of scope
@@ -126,7 +125,8 @@ measured, not hoped. Provider for this effort: OpenRouter
 02 -> 07 Reality Map quality eval
 02 + 04 + 05 + 06 + 07 -> 08 deploy the tree-only explorer
 08 -> 09 why prod init fails on Nemotron free
-09 -> 10 retune the one-shot Reality Map prompt
+09 -> 10 init uses one-shot with no serial fallback
 10 -> 11 deploy a followable tree
 10 -> 12 Danny scores followability
+10 -> 13 one-shot gold maps pass the quality gate
 ```

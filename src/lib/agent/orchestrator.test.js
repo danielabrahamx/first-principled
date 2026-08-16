@@ -141,6 +141,24 @@ const OPENING_TURN = JSON.stringify({
 
 const INIT_REQUEST = { word: "laptop", history: [], phase: "init" };
 
+/** One-shot laptop reply: the fixture plus a crown node named "laptop". */
+const ONE_SHOT_LAPTOP = JSON.stringify({
+  isValidConcept: true,
+  layers: laptopRealityMap.layers,
+  nodes: laptopRealityMap.nodes.map((node) =>
+    node.id === "n-app" ? { ...node, label: "laptop" } : node
+  ),
+  edges: laptopRealityMap.edges,
+});
+
+/** A one-shot reply that fails the gates: a node with no observation record. */
+const ONE_SHOT_BAD = JSON.stringify({
+  isValidConcept: true,
+  layers: [{ id: "l0", name: "optics", nodes: ["n-lens"] }],
+  nodes: [{ id: "n-lens", label: "lens", layer: "l0", description: "A piece of glass." }],
+  edges: [],
+});
+
 /** @type {string} */
 const TRANSFER_QUESTION = JSON.stringify({
   question: "Your friend's laptop stops working mid-day. Where would you start looking and why?",
@@ -215,30 +233,45 @@ test("grade prompts carry the JSON mode contract and the question and answer", (
  * init
  * ------------------------------------------------------------------------- */
 
-test("init generates the map (per-layer bottom-up) with no opening probe", async () => {
-  const { callLLM, requests } = scriptedTransport([...PER_LAYER_MAP_SCRIPT]);
+test("init without a client fastPath flag uses one-shot", async () => {
+  const { callLLM, requests } = scriptedTransport([ONE_SHOT_LAPTOP]);
   const result = await handleRequest(clone(INIT_REQUEST), { callLLM });
 
   assert.equal(result.status, 200);
-  assert.deepEqual(Object.keys(result.body).sort(), [
-    "diff",
-    "failedAttempts",
-    "generationPath",
-    "learnerMap",
-    "phase",
-    "realityMap",
-  ]);
-  assert.equal(result.body.generationPath, "serial");
-  assertRealityMapEqual(result.body.realityMap, laptopRealityMap);
+  assert.equal(result.body.generationPath, "oneshot");
   assert.equal(result.body.phase, "active");
   assert.equal(result.body.reply, undefined, "no tutor question on init");
   assert.deepEqual(result.body.learnerMap, { nodes: [], edges: [] });
-  assert.deepEqual(result.body.diff, { added: [], flipped: [], updated: [] });
-  assert.deepEqual(result.body.failedAttempts, {});
-  assert.equal(requests.length, laptopRealityMap.layers.length, "foundation + one call per layer, no opening turn");
+  assert.equal(requests.length, 1, "one call, not one per layer");
+  assert.match(requests[0].messages[0].content, /complete Reality Map in ONE reply/);
+  assert.match(requests[0].messages[1].content, /Word or phrase: laptop/);
+  assert.equal(result.body.realityMap.layers.length, laptopRealityMap.layers.length);
+  assert.ok(
+    result.body.realityMap.nodes.some(
+      /** @param {any} node */ (node) => node.label === "laptop"
+    )
+  );
+});
+
+test("init with fastPath false still uses the serial per-layer path", async () => {
+  const { callLLM, requests } = scriptedTransport([...PER_LAYER_MAP_SCRIPT]);
+  const result = await handleRequest({ ...clone(INIT_REQUEST), fastPath: false }, { callLLM });
+
+  assert.equal(result.status, 200);
+  assert.equal(result.body.generationPath, "serial");
+  assertRealityMapEqual(result.body.realityMap, laptopRealityMap);
+  assert.equal(result.body.phase, "active");
+  assert.equal(requests.length, laptopRealityMap.layers.length, "foundation + one call per layer");
   assert.match(requests[0].messages[1].content, /Word or phrase: laptop/);
   assert.match(requests[1].messages[1].content, /Build layer l1/);
-  assert.match(requests[laptopRealityMap.layers.length - 1].messages[1].content, /Build layer l5/);
+});
+
+test("a failed one-shot init does not fall through to serial", async () => {
+  const { callLLM, requests } = scriptedTransport([ONE_SHOT_BAD, ...PER_LAYER_MAP_SCRIPT]);
+  const result = await handleRequest(clone(INIT_REQUEST), { callLLM });
+  assert.equal(result.status, 502);
+  assert.equal(result.body.error.code, "invalid_model_output");
+  assert.equal(requests.length, 1, "serial must not run after a failed one-shot");
 });
 
 test("init refuses a non-teachable word gracefully, staying on phase init", async () => {
@@ -280,10 +313,11 @@ test("a transport failure on init maps to a structured upstream error, never the
 });
 
 test("unparseable model output maps to invalid_model_output", async () => {
-  const { callLLM } = scriptedTransport([GARBAGE, GARBAGE, GARBAGE]);
+  const { callLLM, requests } = scriptedTransport([GARBAGE]);
   const result = await handleRequest(clone(INIT_REQUEST), { callLLM });
   assert.equal(result.status, 502);
   assert.equal(result.body.error.code, "invalid_model_output");
+  assert.equal(requests.length, 1, "one-shot does not retry via serial");
 });
 
 test("a missing API key maps to a stable config error", async () => {
@@ -489,8 +523,8 @@ test("an unparseable grade after the repair attempt maps to a structured error",
  * ------------------------------------------------------------------------- */
 
 test("two identical requests with identical upstream results give identical responses", async () => {
-  const first = scriptedTransport([...PER_LAYER_MAP_SCRIPT]);
-  const second = scriptedTransport([...PER_LAYER_MAP_SCRIPT]);
+  const first = scriptedTransport([ONE_SHOT_LAPTOP]);
+  const second = scriptedTransport([ONE_SHOT_LAPTOP]);
   const resultA = await handleRequest(clone(INIT_REQUEST), { callLLM: first.callLLM });
   const resultB = await handleRequest(clone(INIT_REQUEST), { callLLM: second.callLLM });
   assert.deepEqual(resultA, resultB);

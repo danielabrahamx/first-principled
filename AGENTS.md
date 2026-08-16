@@ -10,11 +10,13 @@ Netlify, OpenRouter-backed, no database.
 **Map (only):** `.scratch/first-principled-v6/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
-**Resume:** v6 chrome shipped. Ticket 09: prod init is serial, not a
-dead `:free` slug. Frontier:
-[Retune the one-shot Reality Map prompt](.scratch/first-principled-v6/issues/10-retune-the-one-shot-reality-map-prompt.md)
-(apply the named `fastPath` default; no serial fallback). Then deploy
-and Danny scoring. Map: `.scratch/first-principled-v6/map.md`.
+**Resume:** v6 chrome shipped. Ticket 10: init is one-shot with no serial
+fallback. Frontier:
+[Deploy a followable tree](.scratch/first-principled-v6/issues/11-deploy-a-followable-tree.md),
+[Danny scores followability](.scratch/first-principled-v6/issues/12-danny-scores-followability.md),
+and
+[One-shot gold maps pass the quality gate](.scratch/first-principled-v6/issues/13-one-shot-gold-maps-pass-the-quality-gate.md)
+in parallel. Map: `.scratch/first-principled-v6/map.md`.
 
 ## Golden rules
 

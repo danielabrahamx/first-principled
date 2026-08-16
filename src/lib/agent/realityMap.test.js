@@ -1199,26 +1199,44 @@ test("the one-shot fast path returns a valid map in a single call", async () => 
   assert.equal(deriveCheck(result.map).ok, true);
 });
 
-test("the one-shot fast path falls back to the serial path when the map fails the gates", async () => {
+test("the one-shot path does not fall through to serial when the map fails the gates", async () => {
   const { callLLM, requests } = stubTransport([ONE_SHOT_BAD, ...HAPPY_SCRIPT]);
   const result = await generateRealityMap(
     { concept: "laptop", callLLM },
     { fastPath: true }
   );
-  assert.equal(result.ok, true);
-  assert.equal(result.generationPath, "serial");
-  assert.ok(requests.length > 1, "the serial path re-ran after the one-shot failed");
+  assert.equal(result.ok, false);
+  assert.equal(result.kind, "invalid");
+  assert.equal(result.generationPath, "oneshot");
+  assert.equal(requests.length, 1, "serial must not run after a failed one-shot");
 });
 
-test("the one-shot fast path falls back when the map never reaches the concept", async () => {
+test("the one-shot path does not fall through when the map never reaches the concept", async () => {
   const { callLLM, requests } = stubTransport([ONE_SHOT_NO_CROWN, ...HAPPY_SCRIPT]);
   const result = await generateRealityMap(
     { concept: "microscope", callLLM },
     { fastPath: true }
   );
-  assert.equal(result.ok, true);
-  assert.equal(result.generationPath, "serial", "a crown-less one-shot map must not ship");
-  assert.ok(requests.length > 1, "the serial path re-ran after the crown check failed");
+  assert.equal(result.ok, false);
+  assert.equal(result.kind, "invalid");
+  assert.equal(result.generationPath, "oneshot");
+  assert.equal(requests.length, 1, "serial must not run after a crown-less one-shot");
+});
+
+test("the one-shot path does not fall through to serial on a transport error", async () => {
+  let calls = 0;
+  const callLLM = async () => {
+    calls += 1;
+    throw new Error("provider down");
+  };
+  const result = await generateRealityMap(
+    { concept: "laptop", callLLM },
+    { fastPath: true }
+  );
+  assert.equal(result.ok, false);
+  assert.equal(result.kind, "error");
+  assert.equal(result.generationPath, "oneshot");
+  assert.equal(calls, 1);
 });
 
 test("without fastPath the one-shot prompt is never sent", async () => {

@@ -4,19 +4,19 @@
 
 **Status:** ready-for-agent
 
-**Blocked by:** [Retune the one-shot Reality Map prompt](10-retune-the-one-shot-reality-map-prompt.md)
+**Blocked by:** [Init uses one-shot with no serial fallback](10-init-uses-one-shot-with-no-serial-fallback.md)
 
 **Related:** [Deploy the tree-only explorer](08-deploy-the-tree-only-explorer.md), [Danny scores followability](12-danny-scores-followability.md)
 
 ## Question
 
-Ticket 10 made local live maps pass the quality gate. What does shipping
-that generator to prod look like, such that a real word returns a
-followable tree rather than a 1-node stub or `invalid_model_output`?
+Ticket 10 defaulted init to one-shot with no serial fallback. What does
+shipping that path to prod look like, such that a real word returns a
+followable tree rather than a 1-node serial map or `invalid_model_output`?
 
 ## What
 
-1. Prod deploy of the retuned one-shot path. Reuse Netlify `LLM_*`
+1. Prod deploy of the one-shot-default init path. Reuse Netlify `LLM_*`
    already rotated in
    [Deploy the tree-only explorer](08-deploy-the-tree-only-explorer.md).
    Do not echo the key.
@@ -30,8 +30,8 @@ exact blocker; do not start a second prompt rewrite here.
 
 ## Acceptance criteria
 
-- [ ] Prod https://first-principled.netlify.app is running the retuned
-      generator (new deploy id)
+- [ ] Prod https://first-principled.netlify.app is running one-shot
+      default init (new deploy id)
 - [ ] A gold word produces a multi-layer tree via OpenRouter (or the
       ticket records the exact prod blocker)
 - [ ] Chrome still matches ticket 08 (How it works, no Tutor toggle)
