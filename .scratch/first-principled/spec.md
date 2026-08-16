@@ -258,7 +258,9 @@ recipe live in `research/13-ui-design-spec.md`.
   on laptop, recursion, photosynthesis, and battery. Harness:
   `eval/map-quality`, command `npm run eval:map-quality` (no key). Live
   path is `node --env-file=.env eval/map-quality/run.js --live`.
-  Followability is the written rubric in `eval/map-quality/rubric.md`.
+  Followability is the written rubric in `eval/map-quality/rubric.md`:
+  every line is 0 or 1, no skip; a gate fail is four 0s. Live maps for
+  that scoring persist with `--maps-dir` and a separate `--baseline`.
   Tutor-question scorers are not this bar.
 
 ## 11. Deployment

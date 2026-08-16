@@ -12,11 +12,12 @@ cognitive distance between the learner's mental model and reality.
 
 v6 chrome is live at https://first-principled.netlify.app. Ticket 11
 deployed one-shot init (`6a822d59151f1ef9bb8cd0e3`); gold-word prod
-smoke is blocked by OpenRouter `:free` 429. Next:
+smoke is blocked by OpenRouter `:free` 429.
 [Danny scores followability](.scratch/first-principled-v6/issues/12-danny-scores-followability.md)
-and
+is claimed: every rubric line is 0 or 1, no skip, gate fail is four 0s.
+Waiting on persisted live JSON after the cap resets. Do not invent scores.
 [One-shot gold maps pass the quality gate](.scratch/first-principled-v6/issues/13-one-shot-gold-maps-pass-the-quality-gate.md)
-in parallel. Map: `.scratch/first-principled-v6/map.md`.
+still waits on the cap for retune. Map: `.scratch/first-principled-v6/map.md`.
 
 ## Language
 
@@ -48,6 +49,11 @@ _Avoid_: cladogram branch, column
 The deepest observable layer a thing rests on. What the word box asks the
 learner to start from.
 _Avoid_: atomic facts, atomic principles
+
+**Followability**:
+Whether a generated Tree is worth walking. Danny scores it 0 or 1 on every
+rubric line. The automated gate is not this.
+_Avoid_: quality (as a vague stand-in), tutor-question score
 
 **Rabbit hole**:
 A node as an invitation to go understand that thing. Inspect, then study.

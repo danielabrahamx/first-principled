@@ -2,7 +2,7 @@
 
 **Type:** grilling
 
-**Status:** ready-for-agent
+**Status:** claimed (cursor, 2026-08-16)
 
 **Blocked by:** [Init uses one-shot with no serial fallback](10-init-uses-one-shot-with-no-serial-fallback.md)
 
@@ -18,11 +18,14 @@ worth following. How do the four gold live maps score on
 
 HITL. The agent does not stand in for Danny.
 
-1. Put the ticket 10 live maps in front of Danny (baseline file plus the
-   trees themselves). A map that failed the gate is not scored; the
-   rubric already says stop there.
+1. Replay one-shot after the `:free` cap resets. Persist full live maps
+   (layers, nodes, edges, observations) with `--maps-dir` and a new
+   `--baseline` so the ticket 07 file is not overwritten. Put those JSON
+   trees in front of Danny. Do not generate while the cap is 429.
 2. Grill through the rubric lines: followable foundations, no invented
    history, relationships are the point, would I open a rabbit hole.
+   Every line is 0 or 1. No skip. A gate fail is four 0s; still write
+   the row.
 3. Record 0/1 per line per concept in
    `.scratch/first-principled-v6/research/12-danny-followability.md`.
    No secrets.
@@ -31,14 +34,28 @@ Do not change the prompt in this ticket. If the scores fail the
 followability bar, that graduates a later retune; it is not this
 session's patch.
 
+## Settled (2026-08-16 grilling)
+
+- Score the four gold live maps, not gold fixtures.
+- Every rubric line is 0 or 1. No skip.
+- Gate fail is four 0s with a note naming the gate error.
+- Labels-only is not enough. Full JSON must be in front of Danny.
+- Replay command (after the cap resets; no prompt rewrite):
+
+```
+node --env-file=.env eval/map-quality/run.js --live --maps-dir .scratch/first-principled-v6/research/12-live-maps --baseline .scratch/first-principled-v6/research/12-live-gate.md
+```
+
 ## Acceptance criteria
 
-- [ ] Danny scored all gate-passing gold maps against the rubric
-- [ ] Scores file exists, one row per concept, no secrets
+- [ ] Full live maps persisted as JSON (layers, nodes, edges, observations)
+- [ ] Danny scored all four gold live maps against the rubric
+- [ ] Scores file exists, one row per concept, every line 0 or 1, no skip,
+      no secrets
 - [ ] The agent did not invent Danny's scores
 - [ ] No prompt or generator change in this ticket
 
 ## Docs rule
 
-Pointer from this ticket and the map's Decisions so far. Rubric file
-itself only changes if Danny names a missing line.
+Pointer from this ticket and the map's Decisions so far. Rubric recording
+rule changed this session (no skip; gate fail is four 0s). Not a new line.

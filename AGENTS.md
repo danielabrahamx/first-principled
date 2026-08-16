@@ -12,11 +12,10 @@ Netlify, OpenRouter-backed, no database.
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
 **Resume:** v6 chrome shipped. Ticket 11 deployed one-shot init
 (`6a822d59151f1ef9bb8cd0e3`); gold-word prod smoke is `:free` 429.
-Frontier:
 [Danny scores followability](.scratch/first-principled-v6/issues/12-danny-scores-followability.md)
-and
-[One-shot gold maps pass the quality gate](.scratch/first-principled-v6/issues/13-one-shot-gold-maps-pass-the-quality-gate.md)
-in parallel. Map: `.scratch/first-principled-v6/map.md`.
+is claimed: 0/1 on every rubric line, no skip; waiting on persisted live
+JSON after the cap resets. [One-shot gold maps pass the quality gate](.scratch/first-principled-v6/issues/13-one-shot-gold-maps-pass-the-quality-gate.md)
+still waits on the cap for retune. Map: `.scratch/first-principled-v6/map.md`.
 
 ## Golden rules
 

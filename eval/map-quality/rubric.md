@@ -4,8 +4,9 @@ Judge a generated Tree the same way every time. The automated gate in
 `eval/map-quality/gate.js` catches structural lies. This page is the
 followability bar Danny scores by hand on a live map.
 
-Score each concept 0 or 1 on every line. A map that fails the automated
-gate is not followable; stop there.
+Score each concept 0 or 1 on every line. No skip. A map that fails the
+automated gate is not followable: score 0 on every line and still write
+the row.
 
 ## Followable foundations
 
@@ -38,12 +39,19 @@ gate is not followable; stop there.
 
 ## How to record a judgement
 
-Write four bits plus a one-line note per concept, for example:
+Write four bits plus a one-line note per concept. Every line is 0 or 1.
+No skip. Gate fail is four 0s, for example:
 
 ```
-laptop: foundations 1, history 1, relationships 1, rabbit-hole 1
-note: I would follow electricity -> silicon -> transistor.
+laptop: foundations 0, history 0, relationships 0, rabbit-hole 0
+note: gate fail: LLM response had no choices.
+```
+
+```
+photosynthesis: foundations 1, history 1, relationships 1, rabbit-hole 1
+note: I would follow light and water to the photosystems node.
 ```
 
 Do not average these with the automated gate. The gate is pass/fail. This
-rubric is whether you would follow the Tree.
+rubric is whether you would follow the Tree. The bits are still written
+when the gate fails.

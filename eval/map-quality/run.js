@@ -7,12 +7,16 @@
  *   node --env-file=.env eval/map-quality/run.js --live
  *       Generate live Nemotron maps (one-shot, no serial fallback) and
  *       score them against gold. Writes the baseline file.
+ *   node --env-file=.env eval/map-quality/run.js --live --maps-dir DIR --baseline FILE
+ *       Same live run. Writes each concept's full map JSON under DIR so a
+ *       followability session can score every rubric line. Pass a new
+ *       --baseline so the ticket 07 file is not overwritten.
  *
  * Tutor-question scorers are not used. Parked `eval/run.js` is a different
  * harness.
  */
 
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { execSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,17 +24,28 @@ import { fileURLToPath } from "node:url";
 import { buildOneShotSystemPrompt } from "../../src/lib/agent/realityMap.js";
 import { parseModelJson } from "../../src/lib/agent/jsonParse.js";
 import { callChatCompletion, llmModel } from "../../src/lib/agent/llm.js";
+import { parseEvalArgs } from "./args.js";
 import { GOLD_MAPS } from "./gold.js";
 import { candidateFromOneShot, scoreMap } from "./gate.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const BASELINE_FILE = path.join(
+const DEFAULT_BASELINE = path.join(
   ROOT,
   ".scratch/first-principled-v6/research/07-map-quality-baseline.md"
 );
 
-const args = process.argv.slice(2);
-const wantLive = args.includes("--live");
+const parsedArgs = parseEvalArgs(process.argv.slice(2), {
+  baselineFile: DEFAULT_BASELINE,
+});
+const wantLive = parsedArgs.wantLive;
+const baselineFile = path.isAbsolute(parsedArgs.baselineFile)
+  ? parsedArgs.baselineFile
+  : path.join(ROOT, parsedArgs.baselineFile);
+const mapsDir = parsedArgs.mapsDir
+  ? path.isAbsolute(parsedArgs.mapsDir)
+    ? parsedArgs.mapsDir
+    : path.join(ROOT, parsedArgs.mapsDir)
+  : null;
 
 /**
  * @returns {{ rev: string; dirty: boolean }}
@@ -208,7 +223,7 @@ if (!wantLive) {
 
   const fp = fingerprint();
   const model = llmModel();
-  /** @type {{ concept: string; score: ReturnType<typeof scoreMap>; live: boolean; latencyMs: number; path: string; reason: string | null; llmCalls: number; labels: string }[]} */
+  /** @type {{ concept: string; score: ReturnType<typeof scoreMap>; live: boolean; latencyMs: number; path: string; reason: string | null; llmCalls: number; labels: string; map: any }}[] */
   const rows = [];
   let blocker = "";
 
@@ -239,6 +254,7 @@ if (!wantLive) {
       reason: generated.reason,
       llmCalls: generated.llmCalls,
       labels,
+      map: generated.map,
     };
     rows.push(row);
     console.log(formatRow(row));
@@ -307,7 +323,24 @@ if (!wantLive) {
     ``,
   ].join("\n");
 
-  writeFileSync(BASELINE_FILE, body);
-  console.log(`\nBaseline written: ${BASELINE_FILE}`);
+  writeFileSync(baselineFile, body);
+  console.log(`\nBaseline written: ${baselineFile}`);
+  if (mapsDir) {
+    mkdirSync(mapsDir, { recursive: true });
+    for (const row of rows) {
+      const payload = {
+        concept: row.concept,
+        ok: Boolean(row.map),
+        pass: row.score.pass,
+        reason: row.reason ? sanitize(row.reason) : null,
+        latencyMs: row.latencyMs,
+        generationPath: row.path,
+        map: row.map,
+      };
+      const dest = path.join(mapsDir, `${row.concept}.json`);
+      writeFileSync(dest, `${JSON.stringify(payload, null, 2)}\n`);
+      console.log(`Map written: ${dest}`);
+    }
+  }
   if (blocker) process.exitCode = 1;
 }

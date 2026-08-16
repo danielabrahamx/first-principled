@@ -49,6 +49,8 @@ Requirements: Node 18+, Netlify CLI (installed globally as
 - `npm run eval:map-quality` - Reality Map quality gate on the gold maps
   (no API key). Live Nemotron baseline:
   `node --env-file=.env eval/map-quality/run.js --live`.
+  Followability scoring persists full maps with `--maps-dir` and a
+  separate `--baseline` so the ticket 07 file is not overwritten.
 
 ## Deploy
 
