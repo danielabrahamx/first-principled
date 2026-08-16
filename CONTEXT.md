@@ -1,15 +1,16 @@
 # First-Principled - Context
 
-An AI tutor. The learner types a word or phrase; the agent builds a Reality
-Map from the model's knowledge. The Tree is the product surface: a
-first-principles dependence path of that map. Tutor is optional Q&A and
-must not steal the Tree's canvas. Learner Mental Model tracking remains in
-the engine and is parked from the UI. Mission: reduce the cognitive
-distance between the learner's mental model and reality.
+An AI tutor. The learner types a thing in reality; the agent builds a
+Reality Map from the model's knowledge. The Tree is the product surface: a
+first-principles dependence path of that map. This effort is Tree-only:
+Tutor is parked from the chrome. A rabbit hole is an invitation to go
+study a node, not a nested generated Tree. Learner Mental Model tracking
+remains in the engine and is parked from the UI. Mission: reduce the
+cognitive distance between the learner's mental model and reality.
 
 ## Frontier (resume here)
 
-v5 Destination shipped.
+v6 charted. Map: `.scratch/first-principled-v6/map.md`.
 
 ## Language
 
@@ -37,20 +38,31 @@ A named caption on the Tree (physics, digital logic). Pedagogical grouping,
 not a spatial branch.
 _Avoid_: cladogram branch, column
 
+**Foundation**:
+The deepest observable layer a thing rests on. What the word box asks the
+learner to start from.
+_Avoid_: atomic facts, atomic principles
+
+**Rabbit hole**:
+A node as an invitation to go study that thing. Inspect, then read. Not a
+nested generated Tree.
+_Avoid_: nested tree, generate from node, chat about the node
+
 **Tutor**:
-Optional Q&A over the Reality Map as a bottom sheet. Closed by default.
-Never a side rail; never steals Tree width.
+Parked from chrome this effort. The engine remains. Was optional Q&A as a
+bottom sheet.
 _Avoid_: Chat page, Ask, Chat (as a nav item), dock (as a side rail)
 
 **Learner Mental Model**:
 The learner's believed structure of the concept. The engine still tracks it;
-this effort does not show it as a tab or page.
+this effort does not show it as a tab, page, or node-panel chrome.
 _Avoid_: Map tab, learner map (as a nav label)
 
 Current architecture (v1):
 
-- Static frontend, one home surface: the Tree. Tutor is an optional bottom
-  sheet, closed by default.
+- Static frontend, one home surface: the Tree. v6 removes Tutor from the
+  chrome (toggle and bottom sheet). How it works lives in the header; the
+  empty Tree carries one sentence of framing.
 - One stateless serverless function on Netlify, POST /api/agent. State comes
   in with every request and goes out with the response. It stores nothing.
 - The Mental Model Graph has two sides: the Reality Map (canonical, from the
@@ -58,13 +70,11 @@ Current architecture (v1):
   (node states, confidence, evidence, updated each turn). Learner Mental
   Model tracking remains in the engine (`src/lib/agent/`, `src/lib/mmg/`)
   and is parked from the UI.
-- DeepSeek via OpenAI-compatible API. No DB, no auth, no framework.
+- OpenAI-compatible LLM via `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL`.
+  This effort lands OpenRouter. No DB, no auth, no framework.
 - `src/lib/agent/` holds the engine: reality map generation, the Socratic
-  turn loop (kept for later), and the LLM transport. The sheet forces every
-  turn to a briefing (`forceBrief`): the Tutor quotes the Reality Map and
-  does not open with a Socratic probe. The model still replies with
-  `{reply, learnerMap, probe}`; the UI does not show the learner map.
+  turn loop (kept, not shown), and the LLM transport.
 
 Source of truth: `.scratch/first-principled/spec.md` (v1 product),
-`.scratch/first-principled-v5/map.md` (current effort). Immutable mission:
+`.scratch/first-principled-v6/map.md` (current effort). Immutable mission:
 `docs/MISSION.md`.

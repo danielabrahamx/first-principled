@@ -7,10 +7,12 @@ knowledge, then a Socratic conversation refines the learner's Mental Model
 against it. v1 is a static web app plus one stateless serverless function on
 Netlify, DeepSeek-backed, no database.
 
-**Map (only):** `.scratch/first-principled-v5/map.md`
+**Map (only):** `.scratch/first-principled-v6/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
-**Resume:** v5 Destination shipped.
+**Resume:** v6 charted. Open frontier: OpenRouter Nemotron map contract
+(research, firing), Prototype how-it-works chrome, Hide Tutor from the
+chrome, Node panel is an invitation card.
 
 ## Golden rules
 
@@ -33,13 +35,13 @@ Netlify, DeepSeek-backed, no database.
 - Static frontend (`src/`) + one stateless serverless function
   (`netlify/functions/agent`), `POST /api/agent` per the spec turn contract.
 - Client holds session state in memory; the function stores nothing.
-- DeepSeek via OpenAI-compatible API. Env: `LLM_API_KEY`, `LLM_MODEL`,
-  `LLM_BASE_URL` (from `.env`, gitignored).
+- DeepSeek via OpenAI-compatible API until
+  [Land OpenRouter as the LLM transport](.scratch/first-principled-v6/issues/02-land-openrouter-transport.md).
+  Env: `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` (from `.env`, gitignored).
+  v6 destination provider: OpenRouter `nvidia/nemotron-3-ultra-550b-a55b:free`.
 - No DB, no auth, no agent framework (Mastra/LangGraph is v2).
-- Home is the Tree. Tutor is a closed-by-default bottom sheet. There is no
-  Chat page and no learner-map tab. Every sheet turn is a briefing: the
-  Tutor may quote the Reality Map because the learner asked. Init does not
-  open with a probe.
+- Home is the Tree. v6 parks Tutor from the chrome (engine stays). There
+  is no Chat page and no learner-map tab. How it works lives in the header.
 
 ## Agent skills
 
