@@ -10,8 +10,9 @@ Netlify, DeepSeek-backed, no database.
 **Map (only):** `.scratch/first-principled-v6/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
-**Resume:** v6 charted. Open frontier: OpenRouter Nemotron map contract
-(research, firing), Prototype how-it-works chrome, Hide Tutor from the
+**Resume:** v6 charted. Ticket 01 resolved (OpenRouter Nemotron `:free`
+serves one-shot maps; 240s timeout). Open frontier: Land OpenRouter as
+the LLM transport, Prototype how-it-works chrome, Hide Tutor from the
 chrome, Node panel is an invitation card.
 
 ## Golden rules

@@ -76,7 +76,6 @@ measured, not hoped. Provider for this effort: OpenRouter
 
 - Prompt / generator retune if live Nemotron maps are structurally valid
   but not followable.
-- One-shot vs serial generation path, once latency numbers exist.
 - Spine / layout retune if a live Nemotron tree still reads as a labeled
   list.
 - Grow motion on a branching trunk.
