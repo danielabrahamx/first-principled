@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** [Init uses one-shot with no serial fallback](10-init-uses-one-shot-with-no-serial-fallback.md)
 
@@ -30,12 +30,34 @@ exact blocker; do not start a second prompt rewrite here.
 
 ## Acceptance criteria
 
-- [ ] Prod https://first-principled.netlify.app is running one-shot
+- [x] Prod https://first-principled.netlify.app is running one-shot
       default init (new deploy id)
-- [ ] A gold word produces a multi-layer tree via OpenRouter (or the
+- [x] A gold word produces a multi-layer tree via OpenRouter (or the
       ticket records the exact prod blocker)
-- [ ] Chrome still matches ticket 08 (How it works, no Tutor toggle)
-- [ ] Key-leak grep clean
+- [x] Chrome still matches ticket 08 (How it works, no Tutor toggle)
+- [x] Key-leak grep clean
+
+## Answer
+
+Prod deploy via `& "$env:APPDATA\npm\netlify.cmd" deploy --prod`. Unique
+deploy id: `6a822d59151f1ef9bb8cd0e3`. Live:
+https://first-principled.netlify.app. Unique URL:
+https://6a822d59151f1ef9bb8cd0e3--first-principled.netlify.app.
+
+Netlify `LLM_*` reused from ticket 08. Chrome CDP smoke 12/12 against
+the unique URL (`11-live-smoke.mjs`): How it works and the foundations
+word box are live; Tutor toggle and sheet are absent.
+
+Exact prod blocker for a followable live tree: OpenRouter Nemotron
+`:free` HTTP 429 `free-models-per-day`. `photosynthesis` and `recursion`
+both returned `upstream_error` in 4.6s and 3.9s. Local status probe the
+same day confirmed HTTP 429. One-shot default is on this deploy; the
+gold-word tree did not land because the daily cap rejected the provider
+call. No prompt rewrite. Stay on `:free`. Record:
+[11-prod-smoke.md](../research/11-prod-smoke.md).
+
+Key-leak grep clean (`08-leak-check.mjs`): 0 hits in `src/`, `netlify/`,
+and tracked files.
 
 ## Docs rule
 

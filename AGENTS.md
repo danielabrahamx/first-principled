@@ -10,10 +10,10 @@ Netlify, OpenRouter-backed, no database.
 **Map (only):** `.scratch/first-principled-v6/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
-**Resume:** v6 chrome shipped. Ticket 10: init is one-shot with no serial
-fallback. Frontier:
-[Deploy a followable tree](.scratch/first-principled-v6/issues/11-deploy-a-followable-tree.md),
-[Danny scores followability](.scratch/first-principled-v6/issues/12-danny-scores-followability.md),
+**Resume:** v6 chrome shipped. Ticket 11 deployed one-shot init
+(`6a822d59151f1ef9bb8cd0e3`); gold-word prod smoke is `:free` 429.
+Frontier:
+[Danny scores followability](.scratch/first-principled-v6/issues/12-danny-scores-followability.md)
 and
 [One-shot gold maps pass the quality gate](.scratch/first-principled-v6/issues/13-one-shot-gold-maps-pass-the-quality-gate.md)
 in parallel. Map: `.scratch/first-principled-v6/map.md`.

@@ -89,6 +89,7 @@ measured, not hoped. Provider for this effort: OpenRouter
 - Tree-only explorer is live at https://first-principled.netlify.app (deploy `6a821d5637d95139bd35956f`). Netlify `LLM_*` rotated to OpenRouter Nemotron `:free`. Chrome smoke 12/12. Live init is flaky: bit returned 1 node; recursion and photosynthesis returned `invalid_model_output`. [Deploy the tree-only explorer](issues/08-deploy-the-tree-only-explorer.md)
 - Prod init fails because it still runs serial per-layer generation; `invalid_model_output` is layer-repair exhaustion, not empty choices, and photosynthesis local vs prod is one-shot vs serial path drift. Ticket 10 lever is default `fastPath` true with no serial fallback. [Why prod init fails on Nemotron free](issues/09-why-prod-init-fails-on-nemotron-free.md)
 - Init without a client flag uses one-shot; a failed one-shot does not fall through to serial. Stay on `:free`. Local live photosynthesis hit a `:free` 429. [Init uses one-shot with no serial fallback](issues/10-init-uses-one-shot-with-no-serial-fallback.md)
+- One-shot default is live on deploy `6a822d59151f1ef9bb8cd0e3`. Chrome 12/12. Gold-word prod init is blocked by OpenRouter `:free` HTTP 429 (`free-models-per-day`). [Deploy a followable tree](issues/11-deploy-a-followable-tree.md)
 
 ## Not yet specified
 
