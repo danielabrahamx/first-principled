@@ -6,9 +6,10 @@
  * Usage:
  *   node eval/run.js              run the stub session, print scores
  *   node eval/run.js --baseline   run and write research/07-eval-baseline.md
- *   node eval/run.js --live       run against the real API (needs LLM_API_KEY;
- *                                 billing is currently 402, so this exits
- *                                 with a pending note)
+ *   node eval/run.js --live       run against the real API (needs the live
+ *                                 provider key from `LLM_PROVIDER`; this
+ *                                 parked harness still exits with a pending
+ *                                 billing note)
  *   node eval/run.js --compare    print baseline vs current from the file
  *
  * The scripted session is written to dependency order (lowest layer first,

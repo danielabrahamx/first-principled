@@ -38,10 +38,10 @@ Founders building things, learning as they build, avoiding technical debt. v1: o
 ## 6. Architecture
 
 - Static frontend, minimal web UI, two pages: chat and map.
-- One stateless serverless function, POST /api/agent, on Netlify. It receives the full session state with every call, calls OpenRouter, returns the reply plus the updated learner map and diffs. It stores nothing.
+- One stateless serverless function, POST /api/agent, on Netlify. It receives the full session state with every call, calls the live LLM, returns the reply plus the updated learner map and diffs. It stores nothing.
 - No database, no auth, no agent framework.
 - Client holds session state in memory (`src/state/session.js`: word, reality map, learner map, history, failedAttempts, phase, gap closures, transfer result, metrics) and sends it with every request. Home is the Tree (`#` / `#map`); `#how` is the How it works page on the same chrome; `#chat` lands on home. Navigation keeps the session. Nothing is written to disk, localStorage, or any server.
-- OpenRouter via the OpenAI-compatible API. Provider, model, base URL are environment configuration. Default model: nvidia/nemotron-3-ultra-550b-a55b:free at https://openrouter.ai/api/v1.
+- OpenAI-compatible LLM via `LLM_PROVIDER=openrouter|deepseek`. Unset or `openrouter` uses `LLM_*`. `deepseek` uses `DEEPSEEK_*`. Default OpenRouter model: nvidia/nemotron-3-ultra-550b-a55b:free at https://openrouter.ai/api/v1. Prod stays OpenRouter.
 - No web grounding in v1. The reality map comes from the model's knowledge only.
 
 ## 7. Data model (Mental Model Graph)
@@ -127,7 +127,7 @@ Errors use a stable envelope - `{"error": {"code", "message"}}` - with status
 400 bad_request (malformed request), 413 too_large (body over 64KB),
 429 rate_limited (per-IP hourly cap hit), 403 captcha_required or
 captcha_failed (Turnstile token missing or rejected, only enforced when
-TURNSTILE_SECRET_KEY is set), 500 config_error (missing LLM_API_KEY) or
+TURNSTILE_SECRET_KEY is set), 500 config_error (missing live provider key) or
 internal, 502 upstream_error (provider failure) or invalid_model_output (the
 model could not produce valid output after the internal repair retry). Raw
 provider errors and the key never reach the client. Every request passes the
@@ -257,7 +257,8 @@ recipe live in `research/13-ui-design-spec.md`.
   deriveCheck, dependence edges, no skipped layer) plus gold-label overlap
   on laptop, recursion, photosynthesis, and battery. Harness:
   `eval/map-quality`, command `npm run eval:map-quality` (no key). Live
-  path is `node --env-file=.env eval/map-quality/run.js --live`.
+  path is `node --env-file=.env eval/map-quality/run.js --live` (follows
+  `LLM_PROVIDER`).
   Followability is the written rubric in `eval/map-quality/rubric.md`:
   every line is 0 or 1, no skip; a gate fail is four 0s. Live maps for
   that scoring persist with `--maps-dir` and a separate `--baseline`.
@@ -266,9 +267,11 @@ recipe live in `research/13-ui-design-spec.md`.
 ## 11. Deployment
 
 Netlify: static frontend plus one function. Live:
-https://first-principled.netlify.app. Environment: LLM_API_KEY, LLM_MODEL,
-LLM_BASE_URL, set as platform secrets with `netlify env:set` (from `.env`,
-gitignored). The key is a platform secret, never client-side; the published
+https://first-principled.netlify.app. Local switch is `LLM_PROVIDER` in
+`.env` (`openrouter` uses `LLM_*`, `deepseek` uses `DEEPSEEK_*`). Prod
+platform secrets stay OpenRouter `LLM_API_KEY`, `LLM_MODEL`,
+`LLM_BASE_URL`, set with `netlify env:set` (from `.env`, gitignored). Do
+not set Netlify `LLM_PROVIDER=deepseek`. The key is a platform secret, never client-side; the published
 `src/` bundle is verified key-free before release. Deploy is
 `netlify deploy --prod` (no build step; `netlify.toml` publishes `src/` and
 wires `/api/agent` to the function). Live URL recorded in README.

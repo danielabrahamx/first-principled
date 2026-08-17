@@ -5,7 +5,8 @@ the cognitive distance between the learner's mental model and reality. The
 learner types a word or phrase; the agent builds a Reality Map from the model's
 knowledge, then a Socratic conversation refines the learner's Mental Model
 against it. v1 is a static web app plus one stateless serverless function on
-Netlify, OpenRouter-backed, no database.
+Netlify, no database. Local LLM is `LLM_PROVIDER=openrouter|deepseek`.
+Prod stays OpenRouter.
 
 **Map (only):** `.scratch/first-principled-v7/map.md`
 **Spec:** `.scratch/first-principled/spec.md`

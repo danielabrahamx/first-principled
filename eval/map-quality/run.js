@@ -5,8 +5,8 @@
  *   node eval/map-quality/run.js
  *       Score the gold maps against themselves. No API key.
  *   node --env-file=.env eval/map-quality/run.js --live
- *       Generate live Nemotron maps (one-shot, no serial fallback) and
- *       score them against gold. Writes the baseline file.
+ *       Generate live maps via `LLM_PROVIDER` (one-shot, no serial
+ *       fallback) and score them against gold. Writes the baseline file.
  *   node --env-file=.env eval/map-quality/run.js --live --maps-dir DIR --baseline FILE
  *       Same live run. Writes each concept's full map JSON under DIR so a
  *       followability session can score every rubric line. Pass a new
