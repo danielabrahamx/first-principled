@@ -12,6 +12,8 @@ the row.
 
 - The bottom layer is something you could point at or measure, not a slogan.
 - You can walk from that layer to the crown without inventing a missing step.
+- One Foundation-to-crown walk is clearly identifiable, with a small
+  conceptual jump between each adjacent trunk node.
 - Layer names read as kinds of thing (physics, materials), not as a table of
   contents.
 
@@ -25,16 +27,17 @@ the row.
 ## Relationships are the point
 
 - Edges say what rests on what (`built-on`, `depends-on`, `abstraction-of`).
-- You can say, for a typical node, why it cannot exist without the node
-  below it.
+- Each edge can complete: "A rests on B because without B..."
+- Branches provide genuine support, never merely "related to."
+- The Tree has no duplicate abstractions hiding under different names.
 - Chronology is not the layout. A later discovery may sit lower if the
   thing physically rests on it.
 
 ## Would I open a rabbit hole from a node
 
 - At least one node makes you want to go read or look, not chat.
-- The node is a thing in reality, not a quiz prompt and not a nested
-  "build this next" control.
+- Node names are concrete search or study targets, not quiz prompts,
+  generic field headings, or nested "build this next" controls.
 - The invitation is inspect, then study.
 
 ## How to record a judgement

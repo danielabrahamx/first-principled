@@ -13,9 +13,8 @@ Netlify, OpenRouter-backed, no database.
 **Resume:** v6 chrome shipped; one-shot scoring parked. v7 is a three-stage
 Tree builder. Three stages stay in one background init job; raise poll
 deadline to 14 min. Open frontier:
-[LLM_PROVIDER is a one-var switch](.scratch/first-principled-v7/issues/03-llm-provider-is-a-one-var-switch.md),
-[Prototype the three stage prompts](.scratch/first-principled-v7/issues/04-prototype-the-three-stage-prompts.md)
-(claimed). Map: `.scratch/first-principled-v7/map.md`.
+[LLM_PROVIDER is a one-var switch](.scratch/first-principled-v7/issues/03-llm-provider-is-a-one-var-switch.md).
+Map: `.scratch/first-principled-v7/map.md`.
 
 ## Golden rules
 

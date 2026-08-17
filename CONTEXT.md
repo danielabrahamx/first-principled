@@ -16,10 +16,7 @@ a three-stage Tree builder. Map:
 background init job
 ([Can one background agent finish three serial LLM calls](.scratch/first-principled-v7/issues/01-can-one-background-agent-finish-three-serial-llm-calls.md)).
 Open frontier:
-[Vendor anti-slop](.scratch/first-principled-v7/issues/02-vendor-anti-slop.md),
-[LLM_PROVIDER is a one-var switch](.scratch/first-principled-v7/issues/03-llm-provider-is-a-one-var-switch.md),
-[Prototype the three stage prompts](.scratch/first-principled-v7/issues/04-prototype-the-three-stage-prompts.md)
-(claimed).
+[LLM_PROVIDER is a one-var switch](.scratch/first-principled-v7/issues/03-llm-provider-is-a-one-var-switch.md).
 
 ## Language
 
@@ -35,28 +32,46 @@ phylogenetic tree (as the product metaphor)
 The relation the Tree draws. Node A rests on node B when A cannot exist or
 be understood without B. Already present on the Reality Map as `built-on`,
 `depends-on`, and `abstraction-of` edges. Not discovery-date order.
-_Avoid_: chronology (as layout sort), ancestry, sibling branch
+_Avoid_: chronology (as layout sort), ancestry (as the Tree relation), sibling branch
 
 **Chronology**:
-A generation scaffold: the sequential time chain of what came before a
-thing. Used to think, not to lay out the Tree. The Tree still draws
-Dependence.
-_Avoid_: timeline (as the product surface), discovery-date order (as layout)
+A generation scaffold: a short, target-relative chain of capability
+regimes that made the target possible. Physical ancestry is the default
+spine; human discovery is not. Include a regime only if removing it
+would break a reasonably direct account of the target. The Tree still
+draws Dependence.
+_Avoid_: discovery history, invention list, universal ancestry, Tree trunk,
+timeline (as the product surface)
+
+**Regime**:
+A named period in which a new target-specific capability exists.
+Chronology is a chain of these, not of events, people, or calendar dates.
+_Avoid_: era, invention, event, historical period
 
 **Epiphany**:
-The shift that made a new period of understanding possible from the one
-before. History lives on these nodes, not on every card.
-_Avoid_: insight (as a slogan), aha, basis (as a required field on every node)
+The result that warrants a transition between two regimes. Observation
+records live only on Reality Map nodes explicitly marked `EPIPHANY`.
+Not a person's private insight, and not one famous discovery per arrow.
+_Avoid_: insight (as a slogan), aha, basis (as a required field on every node),
+hero-and-date per transition
 
 **Stage**:
 One LLM call with one job while building the Tree. Chronology, then
-epiphanies, then arrange. The learner never sees a stage, only the Tree.
+Epiphanies, then Arrange. Each runs once, with no repair Stage. The
+learner never sees a Stage, only the checked Tree.
 _Avoid_: another model, pipeline step, one-shot
 
 **Reality Map**:
-The canonical data for a concept: layers, nodes, edges, and observation
+The canonical learner-facing data for a concept: layers, role-marked
+nodes, Dependence edges, a declared trunk, and Epiphany observation
 records. What the Tree renders.
 _Avoid_: Reality tab, the map
+
+**Provenance**:
+The hidden diagnostic trace from final nodes and edges to Chronology and
+Epiphany inputs, including explicit discard reasons. It exists to expose
+Chronology capture or disregard and never appears as learner copy.
+_Avoid_: citation UI, learner evidence, raw Stage output
 
 **Layer**:
 A named caption on the Tree (physics, digital logic). Pedagogical grouping,
@@ -69,9 +84,12 @@ learner to start from.
 _Avoid_: atomic facts, atomic principles
 
 **Followability**:
-Whether a generated Tree is worth walking. Danny scores it 0 or 1 on every
-rubric line. The automated gate is not this.
-_Avoid_: quality (as a vague stand-in), tutor-question score
+Whether a generated Tree is worth walking. The product default is one
+walkable spine for a curious adult who opens rabbit holes. Danny scores
+it 0 or 1 on every rubric line and compares three-stage against one-shot
+on the four gold concepts. The automated gate is not this.
+_Avoid_: quality (as a vague stand-in), tutor-question score, kid-versus-engineer
+user types
 
 **Rabbit hole**:
 A node as an invitation to go understand that thing. Inspect, then study.
