@@ -19,10 +19,16 @@ mechanical gate match epiphany-only history?
 Do not re-research. Use ticket 01's orchestration recommendation and
 ticket 04's locked prompts. Stay on the ticket 03 provider switch.
 
+Settled by
+[Can one background agent finish three serial LLM calls](01-can-one-background-agent-finish-three-serial-llm-calls.md):
+one `POST /api/agent`; three serial `callChatCompletion` in that job;
+per-call abort stays 240000 ms; raise `src/api/agent.js` `deadlineMs` to
+840000; never throw after 202; no in-job LLM retries; do not
+client-chain.
+
 1. `generateRealityMap` runs three `callChatCompletion` stages in order.
-   Learner-facing init remains one `POST /api/agent` unless ticket 01
-   forbade one background job (then stop and graduate client-chaining;
-   do not invent it here).
+   Learner-facing init remains one `POST /api/agent`. Raise the client
+   poll deadline as above.
 2. Wire the locked prompts and JSON shapes. Mechanical gate:
    `validateRealityMap` / `deriveCheck` require `basis` on epiphany
    nodes only. Invitation card omits observation when `basis` is absent.

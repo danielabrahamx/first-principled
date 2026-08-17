@@ -71,6 +71,10 @@ words against this builder.
   photosynthesis, recursion. Same rubric, new builder.
 - Vendor anti-slop on this map as early hygiene.
 - Delete one-shot and serial. One path.
+- Three stages stay in one background init job. Raise client poll
+  `deadlineMs` to 14 min (840000). Do not raise the 240 s per-call abort.
+  Never throw after 202. No in-job LLM retries. Do not client-chain.
+  [Can one background agent finish three serial LLM calls](issues/01-can-one-background-agent-finish-three-serial-llm-calls.md)
 
 ## Not yet specified
 
@@ -80,9 +84,6 @@ words against this builder.
 - Layer-band visual.
 - Paid OpenRouter slug, only if `:free` cannot serve the three-stage
   builder.
-- Client-chained stages, only if
-  [Can one background agent finish three serial LLM calls](issues/01-can-one-background-agent-finish-three-serial-llm-calls.md)
-  forbids one background invocation.
 - Whether STE ever returns to generator prompts.
 
 ## Out of scope
@@ -100,6 +101,7 @@ words against this builder.
 - Accounts, auth, persistence, web grounding, agent frameworks.
 - Cross-concept linking.
 - Deleting the Tutor engine from `src/lib/agent/`.
+- Client-chained stages. One background init job is enough.
 
 ## Ticket sequence (dependency overview)
 

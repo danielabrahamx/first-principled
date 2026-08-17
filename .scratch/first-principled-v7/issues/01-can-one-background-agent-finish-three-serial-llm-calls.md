@@ -2,7 +2,7 @@
 
 **Type:** research
 
-**Status:** claimed (cursor, 2026-08-17)
+**Status:** resolved
 
 **Blocked by:** none
 
@@ -44,13 +44,23 @@ Findings go in
 `.scratch/first-principled-v7/research/01-three-stage-background-budget.md`.
 No `src/` changes in this ticket.
 
+## Answer
+
+**Keep three stages inside one init job.** Do not client-chain. The
+15 min background cap covers 3 x 240 s aborts (12 min). Ticket 05 must
+raise the client poll `deadlineMs` from 10 min to 14 min (840000) so
+that worst case still lands a blob, must never throw (retry is still
++1 min then +2 min on error), and must not add in-job LLM retries.
+Findings:
+[01-three-stage-background-budget.md](../research/01-three-stage-background-budget.md).
+
 ## Acceptance criteria
 
-- [ ] Findings file exists, every claim cited to a primary source or the
+- [x] Findings file exists, every claim cited to a primary source or the
       local function code
-- [ ] Recommendation is keep-one-job or forbid-one-job, with timeout and
+- [x] Recommendation is keep-one-job or forbid-one-job, with timeout and
       retry numbers ticket 05 can copy
-- [ ] No secrets in the findings file or git history
+- [x] No secrets in the findings file or git history
 
 ## Docs rule
 

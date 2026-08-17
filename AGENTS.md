@@ -11,12 +11,12 @@ Netlify, OpenRouter-backed, no database.
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
 **Resume:** v6 chrome shipped; one-shot scoring parked. v7 is a three-stage
-Tree builder (chronology, epiphanies, arrange) with a one-var provider
-switch. Open frontier:
-[Can one background agent finish three serial LLM calls](.scratch/first-principled-v7/issues/01-can-one-background-agent-finish-three-serial-llm-calls.md).
-Parked v6 leftovers:
-[Danny scores followability](.scratch/first-principled-v6/issues/12-danny-scores-followability.md),
-[One-shot gold maps pass the quality gate](.scratch/first-principled-v6/issues/13-one-shot-gold-maps-pass-the-quality-gate.md).
+Tree builder. Three stages stay in one background init job; raise poll
+deadline to 14 min. Open frontier:
+[Vendor anti-slop](.scratch/first-principled-v7/issues/02-vendor-anti-slop.md),
+[LLM_PROVIDER is a one-var switch](.scratch/first-principled-v7/issues/03-llm-provider-is-a-one-var-switch.md),
+[Prototype the three stage prompts](.scratch/first-principled-v7/issues/04-prototype-the-three-stage-prompts.md)
+(claimed). Map: `.scratch/first-principled-v7/map.md`.
 
 ## Golden rules
 

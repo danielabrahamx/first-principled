@@ -12,8 +12,14 @@ cognitive distance between the learner's mental model and reality.
 
 v6 chrome is live. One-shot scoring is parked. Current effort is v7:
 a three-stage Tree builder. Map:
-`.scratch/first-principled-v7/map.md`. Open frontier starts at
-[Can one background agent finish three serial LLM calls](.scratch/first-principled-v7/issues/01-can-one-background-agent-finish-three-serial-llm-calls.md).
+`.scratch/first-principled-v7/map.md`. Three stages stay in one
+background init job
+([Can one background agent finish three serial LLM calls](.scratch/first-principled-v7/issues/01-can-one-background-agent-finish-three-serial-llm-calls.md)).
+Open frontier:
+[Vendor anti-slop](.scratch/first-principled-v7/issues/02-vendor-anti-slop.md),
+[LLM_PROVIDER is a one-var switch](.scratch/first-principled-v7/issues/03-llm-provider-is-a-one-var-switch.md),
+[Prototype the three stage prompts](.scratch/first-principled-v7/issues/04-prototype-the-three-stage-prompts.md)
+(claimed).
 
 ## Language
 
