@@ -92,6 +92,7 @@ test("nodePanelView is an invitation card: description, observation, neighbors",
   assert.equal(panel.invitation, RABBIT_HOLE_INVITE);
   assert.match(panel.invitation, /rabbit hole/);
   assert.match(panel.invitation, /not a chat topic/);
+  assert.ok(panel.observation);
   // The crux (ticket 04): since ticket 03 the fixture carries the
   // structured observation record, rendered with marks - never a gap.
   assert.equal(panel.observation.present, true);
@@ -125,9 +126,7 @@ test("nodePanelView of any node still shows the reality description", () => {
   ]);
 });
 
-test("nodePanelView of a node without a basis renders the explicit gap", () => {
-  // Strip the record from one node - the observation card must render as
-  // the explicit gap, never blank.
+test("nodePanelView of a node without a basis omits observation", () => {
   const realityMap = structuredClone(laptopRealityMap);
   realityMap.nodes = realityMap.nodes.map((node) => {
     if (node.id === "n-os") {
@@ -137,8 +136,7 @@ test("nodePanelView of a node without a basis renders the explicit gap", () => {
     return node;
   });
   const panel = nodePanelView(historyState({ realityMap }), "n-os");
-  assert.equal(panel.observation.present, false);
-  assert.equal(panel.observation.keyObservation, null);
+  assert.equal(panel.observation, null);
 });
 
 test("nodePanelView lists what the node rests on from Reality Map edges", () => {

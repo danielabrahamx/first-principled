@@ -11,10 +11,10 @@ Prod stays OpenRouter.
 **Map (only):** `.scratch/first-principled-v7/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
-**Resume:** v6 chrome shipped; one-shot scoring parked. v7 is a three-stage
-Tree builder. Three stages stay in one background init job; raise poll
-deadline to 14 min. Open frontier:
-[The generator is three stages and nothing else](.scratch/first-principled-v7/issues/05-the-generator-is-three-stages-and-nothing-else.md).
+**Resume:** v6 chrome shipped; one-shot scoring parked. The v7 three-stage
+Tree builder is implemented in one background init job with a 14 min poll
+deadline. Open frontier:
+[Deploy the three-stage Tree](.scratch/first-principled-v7/issues/06-deploy-the-three-stage-tree.md).
 Map: `.scratch/first-principled-v7/map.md`.
 
 ## Golden rules

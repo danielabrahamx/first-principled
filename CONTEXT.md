@@ -15,8 +15,8 @@ a three-stage Tree builder. Map:
 `.scratch/first-principled-v7/map.md`. Three stages stay in one
 background init job
 ([Can one background agent finish three serial LLM calls](.scratch/first-principled-v7/issues/01-can-one-background-agent-finish-three-serial-llm-calls.md)).
-Open frontier:
-[The generator is three stages and nothing else](.scratch/first-principled-v7/issues/05-the-generator-is-three-stages-and-nothing-else.md).
+The three-stage generator is implemented. Open frontier:
+[Deploy the three-stage Tree](.scratch/first-principled-v7/issues/06-deploy-the-three-stage-tree.md).
 
 ## Language
 
@@ -113,6 +113,11 @@ Current architecture (v1):
   plus `#how`; the empty Tree holds the foundations sentence.
 - One stateless serverless function on Netlify, POST /api/agent. State comes
   in with every request and goes out with the response. It stores nothing.
+- Init runs Chronology, Epiphanies, and Arrange exactly once each in one
+  background job. The mechanical gate checks the role-marked Reality Map,
+  declared trunk, Dependence reasons, hidden provenance, and complete
+  use-or-drop accounting. Only the checked map crosses the learner-facing
+  boundary. There is no one-shot, per-layer, retry, repair, or fallback path.
 - The Mental Model Graph has two sides: the Reality Map (canonical, from the
   model's knowledge, contiguous layer chain) and the Learner Mental Model
   (node states, confidence, evidence, updated each turn). Learner Mental

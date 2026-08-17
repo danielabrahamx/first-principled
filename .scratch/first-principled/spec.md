@@ -89,7 +89,14 @@ Closeness score: fraction of known learner nodes matching reality, per session. 
 
 Phases:
 
-- Init: the learner types a word; the agent generates the Reality Map (first turn, `src/lib/agent/realityMap.js`). Generation runs in JSON mode with one repair retry (validation-gated), thinking off for latency; a non-teachable input (gibberish, empty phrase) is refused gracefully, not mapped.
+- Init: the learner types a word; `src/lib/agent/realityMap.js` runs exactly
+  three JSON-mode Stages in one background job: Chronology identifies
+  target-specific capability regimes, Epiphanies identifies warranted joints,
+  and Arrange builds the Dependence Tree. Each Stage runs once with no LLM
+  retry, repair, fallback, or fourth semantic call. A mechanical gate checks
+  the final map, roles, trunk, edge reasons, provenance, and complete
+  use-or-drop accounting. Only the checked map reaches the learner;
+  intermediate Stage outputs and provenance remain server-side.
 - Active: Socratic turns (engine: `src/lib/agent/socratic.js`). Opening rule: empty learner map means observation-first (what have you seen, used, or noticed about this thing); a populated map means gap-first (probe the biggest gaps in dependency order, lower layers before abstractions). Each turn: ask a question, update the learner map, choose the next gap. Explanation fallback: when the learner asks, or after two failed attempts on the same point. A failed attempt is an answer that leaves the point non-correct; asking a question is not a failure, and after the fallback the count restarts. If the learner has no model of a concept, the agent teaches observationally before questioning it. Briefing (ticket 16): when the learner asks for direct information to model a decision, the tutor delivers a direct, accurate, plain-language briefing built from the reality map instead of a question.
 - End: the orchestrator triggers it when every reality node is known, or the turn cap (24 learner messages) is reached. The agent asks a transfer question, a novel problem that requires the corrected model. The learner answers; the agent records pass or fail against the reality map. The comparison view unlocks.
 
@@ -106,12 +113,11 @@ Netlify function (`netlify/functions/agent/agent.mjs`) is a thin HTTP wrapper.
 All session state travels in the request and the response; the function stores
 nothing.
 
-- init: word required, no realityMap. The function generates the Reality Map
-  (realityMap.js), then runs the observation-first opening turn (socratic.js),
-  and returns phase "active" with the reality map in the response - the client
-  holds it from here on and sends it back with every request. A refused word
-  (gibberish, empty phrase) returns phase "init" with a refusal reply and no
-  reality map, so the client can ask again.
+- init: word required, no realityMap. The function runs Chronology,
+  Epiphanies, and Arrange serially in one background job, then returns phase
+  "active" with only the checked reality map in the response. The client holds
+  it from here on and sends it back with every request. The browser polls for
+  up to 14 minutes; each model call retains the 240 second abort.
 - active: the client sends the held reality map, learner map, failedAttempts
   and history; the function runs one Socratic turn and returns the updated
   learner map, the deterministic diff and the carried failedAttempts. When
@@ -129,7 +135,7 @@ Errors use a stable envelope - `{"error": {"code", "message"}}` - with status
 captcha_failed (Turnstile token missing or rejected, only enforced when
 TURNSTILE_SECRET_KEY is set), 500 config_error (missing live provider key) or
 internal, 502 upstream_error (provider failure) or invalid_model_output (the
-model could not produce valid output after the internal repair retry). Raw
+model could not produce valid output for a Stage or the mechanical gate). Raw
 provider errors and the key never reach the client. Every request passes the
 wrapper's gates in order - body cap, rate limit, Turnstile - before any LLM
 call (ticket 18).

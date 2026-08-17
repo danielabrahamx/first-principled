@@ -15,7 +15,7 @@
  * a Netlify Blobs store. So callAgent generates a per-call jobId, sends it in
  * the POST body, and when the POST returns 202 it polls the sibling status
  * endpoint (/api/agent-status?job=<id>, injectable) every ~2s until the job
- * record lands, the client deadline (default 10 minutes) is exceeded, or a
+ * record lands, the client deadline (default 14 minutes) is exceeded, or a
  * stable failure code collapses. A non-202 POST (local dev, stubbed fetch,
  * or a sync deploy) keeps the exact old parse-the-envelope behavior.
  *
@@ -34,6 +34,9 @@
  * @typedef {{ok: true; data: any} | {ok: false; code: string}} CallResult
  */
 
+/** Three serial 240 second calls plus polling overhead. */
+export const DEFAULT_AGENT_DEADLINE_MS = 840000;
+
 /**
  * The callAgent options.
  *
@@ -43,7 +46,7 @@
  * @property {string} [statusEndpoint] - the poll endpoint, defaults to
  *   "/api/agent-status".
  * @property {number} [pollIntervalMs] - poll spacing, default 2000.
- * @property {number} [deadlineMs] - poll deadline, default 600000.
+ * @property {number} [deadlineMs] - poll deadline, default 840000.
  * @property {string} [turnstileToken] - single-use Turnstile token (ticket
  *   18); included in the body only when present so unconfigured clients stay
  *   compatible with the gate-free server.
@@ -154,7 +157,7 @@ async function pollForJob(jobId, options) {
   const fetchImpl = options.fetchImpl ?? /** @type {typeof fetch} */ (globalThis.fetch);
   const statusEndpoint = options.statusEndpoint ?? "/api/agent-status";
   const pollIntervalMs = options.pollIntervalMs ?? 2000;
-  const deadlineMs = options.deadlineMs ?? 600000;
+  const deadlineMs = options.deadlineMs ?? DEFAULT_AGENT_DEADLINE_MS;
   const deadline = Date.now() + deadlineMs;
 
   for (;;) {

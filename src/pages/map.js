@@ -654,24 +654,26 @@ export function renderMapPage(root, store, options = {}) {
     heading.appendChild(el("p", "node-panel-invite", view.invitation));
     panelBody.appendChild(heading);
 
-    // The crux first (ticket 04): the observation that enabled the next
-    // stage, or the explicit gap when the record is missing or unknown.
-    const obsSection = el("section", "node-panel-section");
-    obsSection.appendChild(
-      el(
-        "h3",
-        "node-panel-h",
-        view.observation.present ? "The observation" : "Observation unknown"
-      )
-    );
-    obsSection.appendChild(buildObservationCard(view.observation));
-    const built = dependents(state.realityMap, nodeId);
-    if (built.length > 0) {
+    // History belongs only to EPIPHANY nodes. An honest UNKNOWN record still
+    // renders its gap, while DOMAIN and STRUCTURAL nodes omit this section.
+    if (view.observation) {
+      const obsSection = el("section", "node-panel-section");
       obsSection.appendChild(
-        el("p", "obs-made-possible", `Used to build: ${built.join(", ")}.`)
+        el(
+          "h3",
+          "node-panel-h",
+          view.observation.present ? "The observation" : "Observation unknown"
+        )
       );
+      obsSection.appendChild(buildObservationCard(view.observation));
+      const built = dependents(state.realityMap, nodeId);
+      if (built.length > 0) {
+        obsSection.appendChild(
+          el("p", "obs-made-possible", `Used to build: ${built.join(", ")}.`)
+        );
+      }
+      panelBody.appendChild(obsSection);
     }
-    panelBody.appendChild(obsSection);
 
     // The convergence stream (ticket 13): a convergence node combines
     // observations from several fields. The panel renders its crux record

@@ -75,13 +75,9 @@
  * A node of the reality map - a concept in the chain from first principles to
  * the thing itself.
  *
- * `basis` (ticket 06, principle 5) is the observation the abstraction
- * compresses - what a learner can point at. Since ticket 03 it is a
- * real-history OBSERVATION RECORD (ticket 02) on every node, foundation
- * included; the generator's deriveCheck enforces the record, and the schema
- * validator still accepts a legacy plain-string basis for maps that predate
- * ticket 03. The field stays OPTIONAL in the schema so maps without it
- * remain valid.
+ * `role` makes the three-stage generator's intent explicit. Only EPIPHANY
+ * nodes carry real-history observations. DOMAIN nodes teach the subject and
+ * STRUCTURAL nodes group the Tree.
  *
  * `combines` (ticket 13) is what makes a node a CONVERGENCE node: a real
  * discovery history is convergent - independent streams meet at a layer and
@@ -99,8 +95,10 @@
  * @property {string} label
  * @property {LayerId} layer
  * @property {string} description
+ * @property {"DOMAIN" | "EPIPHANY" | "STRUCTURAL"} [role] - explicit on
+ *   three-stage maps; optional so persisted control maps remain readable.
  * @property {string | ObservationRecord} [basis] - the observation this node
- *   compresses (ticket 06); an observation record since ticket 03.
+ *   compresses; legal only on EPIPHANY nodes in three-stage maps.
  * @property {Array<{ id: NodeId; observation: ObservationRecord }>} [combines] -
  *   the enabling observations from other fields this node's crux combines
  *   (ticket 13); present only on convergence nodes.
@@ -113,6 +111,8 @@
  * @property {NodeId} source
  * @property {NodeId} target
  * @property {EdgeType} type
+ * @property {string} [because] - explicit Dependence reason on three-stage
+ *   maps; optional for persisted control maps.
  */
 
 /**
@@ -124,6 +124,7 @@
  * @property {Layer[]} layers - ordered, contiguous
  * @property {RealityNode[]} nodes
  * @property {RealityEdge[]} edges
+ * @property {NodeId[]} [trunk] - Foundation-to-crown walk on three-stage maps.
  */
 
 /**

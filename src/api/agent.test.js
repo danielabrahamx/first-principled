@@ -1,7 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { callAgent } from "./agent.js";
+import { callAgent, DEFAULT_AGENT_DEADLINE_MS } from "./agent.js";
+
+test("background polling allows fourteen minutes for three serial calls", () => {
+  assert.equal(DEFAULT_AGENT_DEADLINE_MS, 840000);
+});
 
 /**
  * A fake Response-like object for the injected fetch, cast so it satisfies

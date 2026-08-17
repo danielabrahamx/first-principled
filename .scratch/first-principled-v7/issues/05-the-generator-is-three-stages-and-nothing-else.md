@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** [Can one background agent finish three serial LLM calls](01-can-one-background-agent-finish-three-serial-llm-calls.md), [LLM_PROVIDER is a one-var switch](03-llm-provider-is-a-one-var-switch.md), [Prototype the three stage prompts](04-prototype-the-three-stage-prompts.md)
 
@@ -65,20 +65,36 @@ files. anti-slop (that is
 
 ## Acceptance criteria
 
-- [ ] Init builds maps via three stages; one-shot and serial are gone
-- [ ] No LLM retry, repair, fallback, or fourth semantic call remains
-- [ ] Mechanical gate matches explicit epiphany-only history
-- [ ] Arrange output has checked trunk, edge reasons, and provenance
-- [ ] Every Stage input ID is used or carries a discard reason
-- [ ] Learner payload contains the checked map only
-- [ ] Invitation card omits observation when there is no basis
-- [ ] Prompts match the ticket 04 lock (no mission sentence, no layer
+- [x] Init builds maps via three stages; one-shot and serial are gone
+- [x] No LLM retry, repair, fallback, or fourth semantic call remains
+- [x] Mechanical gate matches explicit epiphany-only history
+- [x] Arrange output has checked trunk, edge reasons, and provenance
+- [x] Every Stage input ID is used or carries a discard reason
+- [x] Learner payload contains the checked map only
+- [x] Invitation card omits observation when there is no basis
+- [x] Prompts match the ticket 04 lock (no mission sentence, no layer
       count, no STE)
-- [ ] `npm test` and `npx tsc --noEmit` pass
-- [ ] Key-leak grep clean
+- [x] `npm test` and `npx tsc --noEmit` pass
+- [x] Key-leak grep clean
 
 ## Docs rule
 
 Pointer from this ticket and the map's Decisions so far. Spec generation
 section and CONTEXT.md architecture name the three stages in the same
 commit.
+
+## Resolution
+
+`src/lib/agent/realityMap.js` now runs the locked Chronology, Epiphanies,
+and Arrange prompts exactly once. `arrangeCheck` gates explicit roles,
+Epiphany-only history, one crown, connected acyclic structure, the
+Foundation-to-crown trunk, edge reasons, provenance, and complete
+use-or-drop accounting. The orchestrator returns only `map`; diagnostics
+remain on the server-side generation result for tests and the four-topic
+benchmark. The old one-shot, per-layer, retry, repair, fallback, and
+`fastPath` paths are deleted.
+
+The learner poll deadline is 840000 ms. Invitation cards omit the
+observation section when a node has no `basis`. The generation section in
+the spec and the architecture block in `CONTEXT.md` name the same three
+Stages.

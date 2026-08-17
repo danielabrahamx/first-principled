@@ -98,6 +98,7 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
 - [Vendor anti-slop](issues/02-vendor-anti-slop.md) - plugin vendored at `tools/oxlint/anti-slop`; `npm run lint` on Windows PowerShell.
 - [Prototype the three stage prompts](issues/04-prototype-the-three-stage-prompts.md) - Danny locked `research/04-stage-prompts/stage-prompts.md` as the ticket 05 input. Iterate after KEEP/KILL, not before.
 - [LLM_PROVIDER is a one-var switch](issues/03-llm-provider-is-a-one-var-switch.md) - `LLM_PROVIDER=openrouter|deepseek` selects the live triple in `llm.js`. OpenRouter headers and `reasoning` stay OpenRouter-only. Prod stays OpenRouter.
+- [The generator is three stages and nothing else](issues/05-the-generator-is-three-stages-and-nothing-else.md) - init now runs the locked Chronology, Epiphanies, and Arrange prompts exactly once, gates the role-marked Tree and hidden provenance mechanically, and returns only the checked map.
 
 ## Not yet specified
 

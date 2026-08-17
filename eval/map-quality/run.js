@@ -5,8 +5,8 @@
  *   node eval/map-quality/run.js
  *       Score the gold maps against themselves. No API key.
  *   node --env-file=.env eval/map-quality/run.js --live
- *       Generate live maps via `LLM_PROVIDER` (one-shot, no serial
- *       fallback) and score them against gold. Writes the baseline file.
+ *       Generate live maps via the three-stage `LLM_PROVIDER` path and score
+ *       them against the persisted one-shot gold controls.
  *   node --env-file=.env eval/map-quality/run.js --live --maps-dir DIR --baseline FILE
  *       Same live run. Writes each concept's full map JSON under DIR so a
  *       followability session can score every rubric line. Pass a new
@@ -21,12 +21,11 @@ import { execSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { buildOneShotSystemPrompt } from "../../src/lib/agent/realityMap.js";
-import { parseModelJson } from "../../src/lib/agent/jsonParse.js";
+import { generateRealityMap } from "../../src/lib/agent/realityMap.js";
 import { callChatCompletion, llmApiKey, llmApiKeyName, llmModel } from "../../src/lib/agent/llm.js";
 import { parseEvalArgs } from "./args.js";
 import { GOLD_MAPS } from "./gold.js";
-import { candidateFromOneShot, scoreMap } from "./gate.js";
+import { scoreMap } from "./gate.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const DEFAULT_BASELINE = path.join(
@@ -115,7 +114,7 @@ function formatRow(row) {
 }
 
 /**
- * Live one-shot against the landed transport. Serial per-layer is not scored.
+ * Live three-stage generation against the landed transport.
  *
  * @param {string} concept
  * @returns {Promise<{
@@ -128,50 +127,23 @@ function formatRow(row) {
  * }>}
  */
 async function generateLive(concept) {
-  const started = Date.now();
-  try {
-    const reply = await callChatCompletion({
-      messages: [
-        { role: "system", content: buildOneShotSystemPrompt(6) },
-        { role: "user", content: `Word or phrase: ${concept}` },
-      ],
-      jsonMode: true,
-      thinking: false,
-      maxTokens: 8192,
-    });
-    const parsed = parseModelJson(reply.content);
-    const map = candidateFromOneShot(concept, parsed);
-    if (!map) {
-      return {
-        ok: false,
-        map: null,
-        latencyMs: Date.now() - started,
-        generationPath: "oneshot",
-        reason: parsed && parsed.isValidConcept === false
-          ? sanitize(typeof parsed.reason === "string" ? parsed.reason : "model refused the concept")
-          : "one-shot reply was not valid JSON in the required shape",
-        llmCalls: 1,
-      };
-    }
-    return {
-      ok: true,
-      map,
-      latencyMs: Date.now() - started,
-      generationPath: "oneshot",
-      reason: null,
-      llmCalls: 1,
-    };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return {
-      ok: false,
-      map: null,
-      latencyMs: Date.now() - started,
-      generationPath: "oneshot",
-      reason: sanitize(message),
-      llmCalls: 0,
-    };
-  }
+  let llmCalls = 0;
+  const result = await generateRealityMap({
+    concept,
+    callLLM: async (request) => {
+      llmCalls += 1;
+      const reply = await callChatCompletion(request);
+      return { content: reply.content };
+    },
+  });
+  return {
+    ok: result.ok,
+    map: result.map,
+    latencyMs: result.latencyMs,
+    generationPath: "three-stage",
+    reason: result.reason ? sanitize(result.reason) : null,
+    llmCalls,
+  };
 }
 
 /**
@@ -295,7 +267,7 @@ if (!wantLive) {
     `Recorded by \`node --env-file=.env eval/map-quality/run.js --live\` on ${recorded}.`,
     `Engine fingerprint: git ${fp.rev}${fp.dirty ? " (working tree dirty)" : ""}.`,
     `Model: \`${sanitize(model)}\` (LLM-dependent).`,
-    `Generator: one-shot via \`buildOneShotSystemPrompt\` and the landed OpenRouter transport. Serial fallback is not scored.`,
+    `Generator: Chronology, Epiphanies, then Arrange through the landed provider transport. No retry or fallback is scored.`,
     ``,
     `This is a Reality Map quality bar, not a tutor-question eval. Deterministic`,
     `self-score of the gold maps is \`node eval/map-quality/run.js\` (no key).`,

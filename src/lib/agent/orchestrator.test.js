@@ -46,83 +46,6 @@ function scriptedTransport(contents, onCall) {
 }
 
 /** @type {string} */
-const ENVELOPED_MAP = JSON.stringify({
-  isValidConcept: true,
-  map: laptopRealityMap,
-});
-
-/** @type {string} */
-const FOUNDATION_REPLY = JSON.stringify({
-  isValidConcept: true,
-  foundation: {
-    layer: laptopRealityMap.layers[0],
-    nodes: laptopRealityMap.nodes.filter(
-      (node) => node.layer === laptopRealityMap.layers[0].id
-    ),
-  },
-});
-
-/**
- * The per-layer map-generation script (ticket 08): the foundation reply,
- * then one reply per layer rebuilding the fixture bottom-up. Each layer
- * reply carries the fixture layer, its nodes, and the fixture edges whose
- * higher endpoint sits in that layer, so the assembled map reproduces the
- * fixture (edge order excepted - an edge belongs to the reply of its higher
- * layer).
- *
- * @type {string[]}
- */
-const PER_LAYER_MAP_SCRIPT = (() => {
-  const layerIndex = new Map(
-    laptopRealityMap.layers.map((layer, i) => [layer.id, i])
-  );
-  const nodeLayer = new Map(
-    laptopRealityMap.nodes.map((node) => [node.id, layerIndex.get(node.layer)])
-  );
-  const script = [FOUNDATION_REPLY];
-  for (let k = 1; k < laptopRealityMap.layers.length; k++) {
-    const layer = laptopRealityMap.layers[k];
-    const nodes = laptopRealityMap.nodes.filter((node) => node.layer === layer.id);
-    const edges = laptopRealityMap.edges.filter((edge) => {
-      const s = nodeLayer.get(edge.source) ?? -1;
-      const t = nodeLayer.get(edge.target) ?? -1;
-      return Math.max(s, t) === k;
-    });
-    script.push(
-      JSON.stringify({
-        isValidConcept: true,
-        done: false,
-        layer,
-        nodes,
-        edges,
-        selfReview: { derivable: true, gaps: [] },
-      })
-    );
-  }
-  return script;
-})();
-
-/**
- * The per-layer assembled map differs from the fixture only in edge ORDER,
- * so compare the reality maps semantically: identical layers, nodes, and
- * edge set.
- *
- * @param {any} actual
- * @param {any} expected
- */
-function assertRealityMapEqual(actual, expected) {
-  /** @param {any} m */
-  const sortEdges = (m) =>
-    [...m.edges].sort((a, b) =>
-      `${a.source}|${a.target}|${a.type}`.localeCompare(`${b.source}|${b.target}|${b.type}`)
-    );
-  assert.deepEqual(actual.layers, expected.layers);
-  assert.deepEqual(actual.nodes, expected.nodes);
-  assert.deepEqual(sortEdges(actual), sortEdges(expected));
-  assert.equal(actual.concept, expected.concept);
-}
-
-/** @type {string} */
 const OPENING_TURN = JSON.stringify({
   reply: "What have you noticed about how what you type becomes letters on the screen?",
   learnerMap: {
@@ -141,23 +64,93 @@ const OPENING_TURN = JSON.stringify({
 
 const INIT_REQUEST = { word: "laptop", history: [], phase: "init" };
 
-/** One-shot laptop reply: the fixture plus a crown node named "laptop". */
-const ONE_SHOT_LAPTOP = JSON.stringify({
-  isValidConcept: true,
-  layers: laptopRealityMap.layers,
-  nodes: laptopRealityMap.nodes.map((node) =>
-    node.id === "n-app" ? { ...node, label: "laptop" } : node
-  ),
-  edges: laptopRealityMap.edges,
-});
-
-/** A one-shot reply that fails the gates: a node with no observation record. */
-const ONE_SHOT_BAD = JSON.stringify({
-  isValidConcept: true,
-  layers: [{ id: "l0", name: "optics", nodes: ["n-lens"] }],
-  nodes: [{ id: "n-lens", label: "lens", layer: "l0", description: "A piece of glass." }],
-  edges: [],
-});
+const THREE_STAGE_SCRIPT = [
+  JSON.stringify({
+    concept: "laptop",
+    chronology: [
+      {
+        id: "c1",
+        regime: "electronic switching",
+        new_capability: "controllable binary signals",
+        enabled_by_previous: [],
+        ancestry_kind: "TECHNICAL",
+        target_relevance: "A laptop needs controllable electronic state.",
+      },
+      {
+        id: "c2",
+        regime: "programmable computing",
+        new_capability: "general information processing",
+        enabled_by_previous: ["c1"],
+        ancestry_kind: "TECHNICAL",
+        target_relevance: "A laptop is a portable programmable computer.",
+      },
+    ],
+  }),
+  JSON.stringify({
+    concept: "laptop",
+    epiphanies: [
+      {
+        id: "e1",
+        from_regimes: ["c1"],
+        to_regimes: ["c2"],
+        result: "Stored programs control electronic switches.",
+        joint_kind: "ENGINEERED_RESULT",
+        history: {
+          certainty: "EXACT",
+          who: ["Manchester computer team"],
+          when: "1948",
+          observation: "A stored program ran on an electronic computer.",
+          uncertainty_note: "",
+        },
+        candidate_node: "stored program",
+      },
+    ],
+  }),
+  JSON.stringify({
+    map: {
+      concept: "laptop",
+      layers: [
+        { id: "l0", name: "Foundation", nodes: ["n-switch"] },
+        { id: "l1", name: "Portable computing", nodes: ["n-laptop"] },
+      ],
+      nodes: [
+        {
+          id: "n-switch",
+          label: "electronic switch",
+          layer: "l0",
+          description: "A controllable switch represents binary state.",
+          role: "DOMAIN",
+        },
+        {
+          id: "n-laptop",
+          label: "laptop",
+          layer: "l1",
+          description: "A portable computer runs stored programs.",
+          role: "EPIPHANY",
+        },
+      ],
+      edges: [
+        {
+          source: "n-laptop",
+          target: "n-switch",
+          type: "built-on",
+          because: "A laptop computes through controllable electronic switches.",
+        },
+      ],
+      trunk: ["n-switch", "n-laptop"],
+    },
+    provenance: {
+      nodes: [
+        { node_id: "n-switch", input_refs: ["c1"] },
+        { node_id: "n-laptop", input_refs: ["c2", "e1"] },
+      ],
+      edges: [
+        { source: "n-laptop", target: "n-switch", input_refs: ["c1", "c2", "e1"] },
+      ],
+      discarded_input_ids: [],
+    },
+  }),
+];
 
 /** @type {string} */
 const TRANSFER_QUESTION = JSON.stringify({
@@ -233,59 +226,32 @@ test("grade prompts carry the JSON mode contract and the question and answer", (
  * init
  * ------------------------------------------------------------------------- */
 
-test("init without a client fastPath flag uses one-shot", async () => {
-  const { callLLM, requests } = scriptedTransport([ONE_SHOT_LAPTOP]);
+test("init uses exactly the three-stage generator and strips diagnostics", async () => {
+  const { callLLM, requests } = scriptedTransport(THREE_STAGE_SCRIPT);
   const result = await handleRequest(clone(INIT_REQUEST), { callLLM });
 
   assert.equal(result.status, 200);
-  assert.equal(result.body.generationPath, "oneshot");
   assert.equal(result.body.phase, "active");
   assert.equal(result.body.reply, undefined, "no tutor question on init");
   assert.deepEqual(result.body.learnerMap, { nodes: [], edges: [] });
-  assert.equal(requests.length, 1, "one call, not one per layer");
-  assert.match(requests[0].messages[0].content, /complete Reality Map in ONE reply/);
-  assert.match(requests[0].messages[1].content, /Word or phrase: laptop/);
-  assert.equal(result.body.realityMap.layers.length, laptopRealityMap.layers.length);
-  assert.ok(
-    result.body.realityMap.nodes.some(
-      /** @param {any} node */ (node) => node.label === "laptop"
-    )
-  );
+  assert.equal(requests.length, 3);
+  assert.match(requests[0].messages[0].content, /capability regimes/);
+  assert.match(requests[1].messages[0].content, /A result is the joint/);
+  assert.match(requests[2].messages[0].content, /Dependence Tree/);
+  assert.equal(result.body.realityMap.nodes.at(-1).label, "laptop");
+  assert.equal("provenance" in result.body, false);
+  assert.equal("diagnostics" in result.body, false);
+  assert.equal("generationPath" in result.body, false);
 });
 
-test("init with fastPath false still uses the serial per-layer path", async () => {
-  const { callLLM, requests } = scriptedTransport([...PER_LAYER_MAP_SCRIPT]);
-  const result = await handleRequest({ ...clone(INIT_REQUEST), fastPath: false }, { callLLM });
-
-  assert.equal(result.status, 200);
-  assert.equal(result.body.generationPath, "serial");
-  assertRealityMapEqual(result.body.realityMap, laptopRealityMap);
-  assert.equal(result.body.phase, "active");
-  assert.equal(requests.length, laptopRealityMap.layers.length, "foundation + one call per layer");
-  assert.match(requests[0].messages[1].content, /Word or phrase: laptop/);
-  assert.match(requests[1].messages[1].content, /Build layer l1/);
-});
-
-test("a failed one-shot init does not fall through to serial", async () => {
-  const { callLLM, requests } = scriptedTransport([ONE_SHOT_BAD, ...PER_LAYER_MAP_SCRIPT]);
+test("a failed Chronology stage does not retry or continue", async () => {
+  const { callLLM, requests } = scriptedTransport([
+    JSON.stringify({ concept: "laptop", chronology: [] }),
+    ...THREE_STAGE_SCRIPT,
+  ]);
   const result = await handleRequest(clone(INIT_REQUEST), { callLLM });
   assert.equal(result.status, 502);
   assert.equal(result.body.error.code, "invalid_model_output");
-  assert.equal(requests.length, 1, "serial must not run after a failed one-shot");
-});
-
-test("init refuses a non-teachable word gracefully, staying on phase init", async () => {
-  const { callLLM, requests } = scriptedTransport([
-    JSON.stringify({ isValidConcept: false, reason: "that is not a real concept" }),
-  ]);
-  const result = await handleRequest(clone(INIT_REQUEST), { callLLM });
-
-  assert.equal(result.status, 200);
-  assert.equal(result.body.phase, "init");
-  assert.equal(result.body.reply, "that is not a real concept");
-  assert.deepEqual(result.body.learnerMap, { nodes: [], edges: [] });
-  assert.deepEqual(result.body.diff, { added: [], flipped: [], updated: [] });
-  assert.equal(result.body.realityMap, undefined, "no reality map on refusal");
   assert.equal(requests.length, 1);
 });
 
@@ -317,7 +283,7 @@ test("unparseable model output maps to invalid_model_output", async () => {
   const result = await handleRequest(clone(INIT_REQUEST), { callLLM });
   assert.equal(result.status, 502);
   assert.equal(result.body.error.code, "invalid_model_output");
-  assert.equal(requests.length, 1, "one-shot does not retry via serial");
+  assert.equal(requests.length, 1, "a failed stage is not retried");
 });
 
 test("a missing API key maps to a stable config error", async () => {
@@ -553,8 +519,8 @@ test("an unparseable grade after the repair attempt maps to a structured error",
  * ------------------------------------------------------------------------- */
 
 test("two identical requests with identical upstream results give identical responses", async () => {
-  const first = scriptedTransport([ONE_SHOT_LAPTOP]);
-  const second = scriptedTransport([ONE_SHOT_LAPTOP]);
+  const first = scriptedTransport(THREE_STAGE_SCRIPT);
+  const second = scriptedTransport(THREE_STAGE_SCRIPT);
   const resultA = await handleRequest(clone(INIT_REQUEST), { callLLM: first.callLLM });
   const resultB = await handleRequest(clone(INIT_REQUEST), { callLLM: second.callLLM });
   assert.deepEqual(resultA, resultB);

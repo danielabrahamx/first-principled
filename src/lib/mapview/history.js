@@ -62,7 +62,7 @@ export const RABBIT_HOLE_INVITE =
  *   nodeId: string;
  *   label: string;
  *   description: string;
- *   observation: ObservationView;
+ *   observation: ObservationView | null;
  *   invitation: string;
  *   restsOn: DependenceNeighbor[];
  *   restsOnIt: DependenceNeighbor[];
@@ -79,7 +79,7 @@ export function nodePanelView(state, nodeId) {
     nodeId,
     label,
     description: node ? node.description : "",
-    observation: observationOf(node),
+    observation: node && node.basis !== undefined ? observationOf(node) : null,
     invitation: RABBIT_HOLE_INVITE,
     restsOn,
     restsOnIt,
