@@ -2,7 +2,7 @@
 
 **Type:** grilling
 
-**Status:** claimed (cursor, 2026-08-16)
+**Status:** wontfix
 
 **Blocked by:** [Init uses one-shot with no serial fallback](10-init-uses-one-shot-with-no-serial-fallback.md)
 
@@ -68,3 +68,9 @@ DeepSeek maps as this ticket's bar.
 
 Pointer from this ticket and the map's Decisions so far. Rubric recording
 rule changed this session (no skip; gate fail is four 0s). Not a new line.
+
+## Answer
+
+wontfix 2026-08-17. One-shot scoring is parked. Followability on the
+three-stage builder is
+[Danny scores followability on the three-stage Tree](../../first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md).

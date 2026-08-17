@@ -10,17 +10,10 @@ cognitive distance between the learner's mental model and reality.
 
 ## Frontier (resume here)
 
-v6 chrome is live at https://first-principled.netlify.app. Ticket 11
-deployed one-shot init (`6a822d59151f1ef9bb8cd0e3`); gold-word prod
-smoke is blocked by OpenRouter `:free` 429.
-[Danny scores followability](.scratch/first-principled-v6/issues/12-danny-scores-followability.md)
-is claimed: every rubric line is 0 or 1, no skip, gate fail is four 0s.
-Nemotron live JSON still waiting on the cap. A DeepSeek `v4-flash` dry-run
-failed all four gold one-shots (thinking ate `maxTokens`, JSON truncated).
-Record: `.scratch/first-principled-v6/research/12-deepseek-gate.md`.
-Do not invent scores. Do not score DeepSeek as the ticket 12 bar.
-[One-shot gold maps pass the quality gate](.scratch/first-principled-v6/issues/13-one-shot-gold-maps-pass-the-quality-gate.md)
-still waits on the cap for retune. Map: `.scratch/first-principled-v6/map.md`.
+v6 chrome is live. One-shot scoring is parked. Current effort is v7:
+a three-stage Tree builder. Map:
+`.scratch/first-principled-v7/map.md`. Open frontier starts at
+[Can one background agent finish three serial LLM calls](.scratch/first-principled-v7/issues/01-can-one-background-agent-finish-three-serial-llm-calls.md).
 
 ## Language
 
@@ -37,6 +30,22 @@ The relation the Tree draws. Node A rests on node B when A cannot exist or
 be understood without B. Already present on the Reality Map as `built-on`,
 `depends-on`, and `abstraction-of` edges. Not discovery-date order.
 _Avoid_: chronology (as layout sort), ancestry, sibling branch
+
+**Chronology**:
+A generation scaffold: the sequential time chain of what came before a
+thing. Used to think, not to lay out the Tree. The Tree still draws
+Dependence.
+_Avoid_: timeline (as the product surface), discovery-date order (as layout)
+
+**Epiphany**:
+The shift that made a new period of understanding possible from the one
+before. History lives on these nodes, not on every card.
+_Avoid_: insight (as a slogan), aha, basis (as a required field on every node)
+
+**Stage**:
+One LLM call with one job while building the Tree. Chronology, then
+epiphanies, then arrange. The learner never sees a stage, only the Tree.
+_Avoid_: another model, pipeline step, one-shot
 
 **Reality Map**:
 The canonical data for a concept: layers, nodes, edges, and observation
@@ -92,5 +101,5 @@ Current architecture (v1):
   turn loop (kept, not shown), and the LLM transport.
 
 Source of truth: `.scratch/first-principled/spec.md` (v1 product),
-`.scratch/first-principled-v6/map.md` (current effort). Immutable mission:
+`.scratch/first-principled-v7/map.md` (current effort). Immutable mission:
 `docs/MISSION.md`.

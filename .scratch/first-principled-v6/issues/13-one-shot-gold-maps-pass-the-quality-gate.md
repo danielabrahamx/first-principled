@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** wontfix
 
 **Blocked by:** [Init uses one-shot with no serial fallback](10-init-uses-one-shot-with-no-serial-fallback.md)
 
@@ -49,3 +49,9 @@ path. Uncommitted v2 files.
 
 Pointer from this ticket and the map's Decisions so far. Spec section 10
 gains a line only if the quality bar itself changed.
+
+## Answer
+
+wontfix 2026-08-17. One-shot gold-gate retune is parked. Generation
+rebuild is
+[The generator is three stages and nothing else](../../first-principled-v7/issues/05-the-generator-is-three-stages-and-nothing-else.md).

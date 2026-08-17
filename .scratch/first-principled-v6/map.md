@@ -1,10 +1,13 @@
-# First-Principled v6 - Build Map (MAIN FRONTIER)
+# First-Principled v6 - Build Map (PARKED)
 
 **Effort:** Make the product a Tree-only explorer: hide Tutor, frame how it
 works, and measure whether generated trees are actually followable.
 **Planning source:** wayfinder grilling 2026-08-16 (Cursor). v5 shipped a
 dependence-path Tree with Tutor as a closed bottom sheet. Generation quality
 is still unmeasured; DeepSeek flash was the standing model.
+**Superseded 2026-08-17:** MAIN FRONTIER is
+[First-Principled v7](../first-principled-v7/map.md). Chrome and one-shot
+init stay. Remaining one-shot scoring is parked.
 
 ## Destination
 
@@ -95,6 +98,7 @@ measured, not hoped. Provider for this effort: OpenRouter
 - Prod init fails because it still runs serial per-layer generation; `invalid_model_output` is layer-repair exhaustion, not empty choices, and photosynthesis local vs prod is one-shot vs serial path drift. Ticket 10 lever is default `fastPath` true with no serial fallback. [Why prod init fails on Nemotron free](issues/09-why-prod-init-fails-on-nemotron-free.md)
 - Init without a client flag uses one-shot; a failed one-shot does not fall through to serial. Stay on `:free`. Local live photosynthesis hit a `:free` 429. [Init uses one-shot with no serial fallback](issues/10-init-uses-one-shot-with-no-serial-fallback.md)
 - One-shot default is live on deploy `6a822d59151f1ef9bb8cd0e3`. Chrome 12/12. Gold-word prod init is blocked by OpenRouter `:free` HTTP 429 (`free-models-per-day`). [Deploy a followable tree](issues/11-deploy-a-followable-tree.md)
+- Remaining one-shot scoring parked; generator rebuild is v7. [Danny scores followability](issues/12-danny-scores-followability.md), [One-shot gold maps pass the quality gate](issues/13-one-shot-gold-maps-pass-the-quality-gate.md)
 
 ## Not yet specified
 
@@ -118,6 +122,10 @@ measured, not hoped. Provider for this effort: OpenRouter
 - Cross-concept linking.
 - Deleting the Tutor engine from `src/lib/agent/`.
 - Discovery timeline (parked; not in this destination).
+- Remaining one-shot followability scoring and gold-gate retune, parked
+  2026-08-17 because v7 rebuilds generation:
+  [Danny scores followability](issues/12-danny-scores-followability.md),
+  [One-shot gold maps pass the quality gate](issues/13-one-shot-gold-maps-pass-the-quality-gate.md).
 
 ## Ticket sequence (dependency overview)
 

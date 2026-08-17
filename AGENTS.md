@@ -7,17 +7,16 @@ knowledge, then a Socratic conversation refines the learner's Mental Model
 against it. v1 is a static web app plus one stateless serverless function on
 Netlify, OpenRouter-backed, no database.
 
-**Map (only):** `.scratch/first-principled-v6/map.md`
+**Map (only):** `.scratch/first-principled-v7/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
-**Resume:** v6 chrome shipped. Ticket 11 deployed one-shot init
-(`6a822d59151f1ef9bb8cd0e3`); gold-word prod smoke is `:free` 429.
-[Danny scores followability](.scratch/first-principled-v6/issues/12-danny-scores-followability.md)
-is claimed: 0/1 on every rubric line, no skip; Nemotron live JSON still
-waiting on the cap. DeepSeek dry-run (all four FAIL, thinking truncated
-JSON) is [12-deepseek-gate.md](.scratch/first-principled-v6/research/12-deepseek-gate.md),
-not the ticket 12 bar. [One-shot gold maps pass the quality gate](.scratch/first-principled-v6/issues/13-one-shot-gold-maps-pass-the-quality-gate.md)
-still waits on the cap for retune. Map: `.scratch/first-principled-v6/map.md`.
+**Resume:** v6 chrome shipped; one-shot scoring parked. v7 is a three-stage
+Tree builder (chronology, epiphanies, arrange) with a one-var provider
+switch. Open frontier:
+[Can one background agent finish three serial LLM calls](.scratch/first-principled-v7/issues/01-can-one-background-agent-finish-three-serial-llm-calls.md).
+Parked v6 leftovers:
+[Danny scores followability](.scratch/first-principled-v6/issues/12-danny-scores-followability.md),
+[One-shot gold maps pass the quality gate](.scratch/first-principled-v6/issues/13-one-shot-gold-maps-pass-the-quality-gate.md).
 
 ## Golden rules
 
