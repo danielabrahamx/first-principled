@@ -38,9 +38,10 @@ can load the vendored TypeScript anti-slop plugin.
 1. `npm install` - installs the lockfile. Dev tools are the JSDoc type
    checker (`npm run typecheck`) and oxlint plus `@oxlint/plugins`
    (`npm run lint`). The runtime dependency is `@netlify/blobs`.
-2. Copy `.env.example` to `.env` and fill in `LLM_API_KEY`. `LLM_MODEL` and
-   `LLM_BASE_URL` are pre-filled for OpenRouter Nemotron `:free`. Point local
-   `.env` at those same values if it still names DeepSeek.
+2. Copy `.env.example` to `.env` and fill in `LLM_API_KEY`. Default
+   `LLM_PROVIDER` is openrouter (`LLM_*` for OpenRouter Nemotron `:free`).
+   For a local DeepSeek eval, set `LLM_PROVIDER=deepseek` and fill
+   `DEEPSEEK_*`. Prod stays OpenRouter; do not change Netlify secrets.
 3. `npm run dev` - serves `src/` at `http://localhost:8888` with the function
    available at `/api/agent`.
 

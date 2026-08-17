@@ -23,7 +23,7 @@ import { fileURLToPath } from "node:url";
 
 import { buildOneShotSystemPrompt } from "../../src/lib/agent/realityMap.js";
 import { parseModelJson } from "../../src/lib/agent/jsonParse.js";
-import { callChatCompletion, llmModel } from "../../src/lib/agent/llm.js";
+import { callChatCompletion, llmApiKey, llmApiKeyName, llmModel } from "../../src/lib/agent/llm.js";
 import { parseEvalArgs } from "./args.js";
 import { GOLD_MAPS } from "./gold.js";
 import { candidateFromOneShot, scoreMap } from "./gate.js";
@@ -214,9 +214,9 @@ if (!wantLive) {
     process.exitCode = 1;
   }
 } else {
-  if (!process.env.LLM_API_KEY) {
+  if (!llmApiKey()) {
     console.error(
-      "Live eval needs LLM_API_KEY. Run: node --env-file=.env eval/map-quality/run.js --live"
+      `Live eval needs ${llmApiKeyName()}. Run: node --env-file=.env eval/map-quality/run.js --live`
     );
     process.exit(1);
   }

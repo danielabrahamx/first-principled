@@ -1,7 +1,13 @@
 /**
- * Minimal OpenAI-compatible chat completion transport for OpenRouter.
+ * Minimal OpenAI-compatible chat completion transport.
  *
- * Per the v6 ticket 01 findings:
+ * `LLM_PROVIDER=openrouter|deepseek` selects one env triple. Default
+ * (unset or anything other than deepseek) is OpenRouter via `LLM_*`.
+ * DeepSeek uses `DEEPSEEK_*` and must not inherit OpenRouter referer /
+ * title / `reasoning` fields (v6: DeepSeek ignores `thinking: false`
+ * mapped to OpenRouter `reasoning`).
+ *
+ * Per the v6 ticket 01 findings (OpenRouter path):
  * - Base URL https://openrouter.ai/api/v1, Bearer auth via LLM_API_KEY.
  * - Model id from LLM_MODEL (nvidia/nemotron-3-ultra-550b-a55b:free).
  * - JSON mode is best-effort (response_format json_object only; no server-side
@@ -17,6 +23,10 @@
 const DEFAULT_TIMEOUT_MS = 240000;
 const OPENROUTER_REFERER = "https://first-principled.netlify.app";
 const OPENROUTER_TITLE = "first-principled";
+const OPENROUTER_DEFAULT_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
+const OPENROUTER_DEFAULT_BASE = "https://openrouter.ai/api/v1";
+const DEEPSEEK_DEFAULT_MODEL = "deepseek-v4-flash";
+const DEEPSEEK_DEFAULT_BASE = "https://api.deepseek.com/v1";
 
 /**
  * @typedef {object} ChatMessage
@@ -29,9 +39,10 @@ const OPENROUTER_TITLE = "first-principled";
  * @property {ChatMessage[]} messages
  * @property {boolean} [jsonMode] - request response_format json_object (the
  *   prompt must then mention "json" and show an example - see realityMap.js).
- * @property {boolean} [thinking] - maps to OpenRouter `reasoning`. false sends
+ * @property {boolean} [thinking] - OpenRouter only. false sends
  *   `{ effort: "none" }` (required for JSON maps). true sends
- *   `{ enabled: true }`. Omit to leave the provider default.
+ *   `{ enabled: true }`. Omit to leave the provider default. Ignored on
+ *   DeepSeek so that path never sends an OpenRouter `reasoning` payload.
  * @property {number} [maxTokens] - headroom matters: a low cap truncates JSON.
  *   Default 4096.
  * @property {number} [timeoutMs] - abort the fetch after this long. Default
@@ -46,22 +57,62 @@ const OPENROUTER_TITLE = "first-principled";
  */
 
 /**
- * The configured base URL. Environment override, defaults to the documented
- * OpenAI-compatible endpoint.
+ * The live provider. `deepseek` is the only non-default; everything else
+ * (unset, empty, `openrouter`, typos) is OpenRouter so prod stays put.
+ *
+ * @returns {"openrouter" | "deepseek"}
+ */
+export function llmProvider() {
+  const raw = String(process.env.LLM_PROVIDER || "")
+    .trim()
+    .toLowerCase();
+  return raw === "deepseek" ? "deepseek" : "openrouter";
+}
+
+/**
+ * The configured base URL for the live provider.
  *
  * @returns {string}
  */
 export function llmBaseUrl() {
-  return process.env.LLM_BASE_URL || "https://openrouter.ai/api/v1";
+  if (llmProvider() === "deepseek") {
+    return process.env.DEEPSEEK_BASE_URL || DEEPSEEK_DEFAULT_BASE;
+  }
+  return process.env.LLM_BASE_URL || OPENROUTER_DEFAULT_BASE;
 }
 
 /**
- * The configured model id.
+ * The configured model id for the live provider.
  *
  * @returns {string}
  */
 export function llmModel() {
-  return process.env.LLM_MODEL || "nvidia/nemotron-3-ultra-550b-a55b:free";
+  if (llmProvider() === "deepseek") {
+    return process.env.DEEPSEEK_MODEL || DEEPSEEK_DEFAULT_MODEL;
+  }
+  return process.env.LLM_MODEL || OPENROUTER_DEFAULT_MODEL;
+}
+
+/**
+ * The live provider's API key, or empty when unset.
+ *
+ * @returns {string}
+ */
+export function llmApiKey() {
+  const key =
+    llmProvider() === "deepseek"
+      ? process.env.DEEPSEEK_API_KEY
+      : process.env.LLM_API_KEY;
+  return key || "";
+}
+
+/**
+ * Env var name of the live provider's API key.
+ *
+ * @returns {"LLM_API_KEY" | "DEEPSEEK_API_KEY"}
+ */
+export function llmApiKeyName() {
+  return llmProvider() === "deepseek" ? "DEEPSEEK_API_KEY" : "LLM_API_KEY";
 }
 
 /**
@@ -73,10 +124,11 @@ export function llmModel() {
  *   returns an error status (message includes the provider error text).
  */
 export async function callChatCompletion(options) {
-  const apiKey = process.env.LLM_API_KEY;
+  const provider = llmProvider();
+  const apiKey = llmApiKey();
   if (!apiKey) {
     throw new Error(
-      "LLM_API_KEY is not set. Put it in .env (gitignored) or set the platform secret."
+      `${llmApiKeyName()} is not set. Put it in .env (gitignored) or set the platform secret.`
     );
   }
 
@@ -89,10 +141,22 @@ export async function callChatCompletion(options) {
   if (options.jsonMode) {
     payload.response_format = { type: "json_object" };
   }
-  if (options.thinking === false) {
-    payload.reasoning = { effort: "none" };
-  } else if (options.thinking === true) {
-    payload.reasoning = { enabled: true };
+  if (provider === "openrouter") {
+    if (options.thinking === false) {
+      payload.reasoning = { effort: "none" };
+    } else if (options.thinking === true) {
+      payload.reasoning = { enabled: true };
+    }
+  }
+
+  /** @type {Record<string, string>} */
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${apiKey}`,
+  };
+  if (provider === "openrouter") {
+    headers["HTTP-Referer"] = OPENROUTER_REFERER;
+    headers["X-OpenRouter-Title"] = OPENROUTER_TITLE;
   }
 
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
@@ -103,12 +167,7 @@ export async function callChatCompletion(options) {
   try {
     response = await fetch(`${llmBaseUrl()}/chat/completions`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-        "HTTP-Referer": OPENROUTER_REFERER,
-        "X-OpenRouter-Title": OPENROUTER_TITLE,
-      },
+      headers,
       body: JSON.stringify(payload),
       signal: controller.signal,
     });

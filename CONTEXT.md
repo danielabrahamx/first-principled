@@ -16,7 +16,7 @@ a three-stage Tree builder. Map:
 background init job
 ([Can one background agent finish three serial LLM calls](.scratch/first-principled-v7/issues/01-can-one-background-agent-finish-three-serial-llm-calls.md)).
 Open frontier:
-[LLM_PROVIDER is a one-var switch](.scratch/first-principled-v7/issues/03-llm-provider-is-a-one-var-switch.md).
+[The generator is three stages and nothing else](.scratch/first-principled-v7/issues/05-the-generator-is-three-stages-and-nothing-else.md).
 
 ## Language
 
@@ -118,8 +118,9 @@ Current architecture (v1):
   (node states, confidence, evidence, updated each turn). Learner Mental
   Model tracking remains in the engine (`src/lib/agent/`, `src/lib/mmg/`)
   and is parked from the UI.
-- OpenRouter via the OpenAI-compatible API (`LLM_API_KEY`, `LLM_MODEL`,
-  `LLM_BASE_URL`). Default: `nvidia/nemotron-3-ultra-550b-a55b:free`.
+- OpenAI-compatible LLM via `LLM_PROVIDER=openrouter|deepseek` (default
+  openrouter uses `LLM_*`; deepseek uses `DEEPSEEK_*`). Default OpenRouter
+  model: `nvidia/nemotron-3-ultra-550b-a55b:free`. Prod stays OpenRouter.
   No DB, no auth, no framework.
 - `src/lib/agent/` holds the engine: reality map generation, the Socratic
   turn loop (kept, not shown), and the LLM transport.

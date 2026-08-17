@@ -13,7 +13,7 @@
  * identical responses for identical upstream results.
  *
  * Errors are a stable envelope, never raw upstream text: 400 bad_request
- * (malformed request), 500 config_error (missing LLM_API_KEY) or internal,
+ * (malformed request), 500 config_error (missing live provider key) or internal,
  * 502 upstream_error (provider failure) or invalid_model_output (the model
  * could not produce valid output after the internal repair retry).
  */
@@ -21,7 +21,7 @@
 import { generateRealityMap } from "./realityMap.js";
 import { generateSocraticTurn } from "./socratic.js";
 import { parseModelJson } from "./jsonParse.js";
-import { callChatCompletion } from "./llm.js";
+import { callChatCompletion, llmApiKey, llmApiKeyName } from "./llm.js";
 import { validateLearnerMap, validateRealityMap } from "../mmg/validator.js";
 
 /**
@@ -625,11 +625,11 @@ export async function handleRequest(request, options = {}) {
       const result = await callChatCompletion(llmRequest);
       return { content: result.content };
     });
-  if (!options.callLLM && !process.env.LLM_API_KEY) {
+  if (!options.callLLM && !llmApiKey()) {
     return errorResult(
       500,
       "config_error",
-      "The server is not configured with an LLM key (LLM_API_KEY)."
+      `The server is not configured with an LLM key (${llmApiKeyName()}).`
     );
   }
 

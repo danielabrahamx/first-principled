@@ -13,7 +13,7 @@ Netlify, OpenRouter-backed, no database.
 **Resume:** v6 chrome shipped; one-shot scoring parked. v7 is a three-stage
 Tree builder. Three stages stay in one background init job; raise poll
 deadline to 14 min. Open frontier:
-[LLM_PROVIDER is a one-var switch](.scratch/first-principled-v7/issues/03-llm-provider-is-a-one-var-switch.md).
+[The generator is three stages and nothing else](.scratch/first-principled-v7/issues/05-the-generator-is-three-stages-and-nothing-else.md).
 Map: `.scratch/first-principled-v7/map.md`.
 
 ## Golden rules
@@ -36,10 +36,10 @@ Map: `.scratch/first-principled-v7/map.md`.
 - Static frontend (`src/`) + one stateless serverless function
   (`netlify/functions/agent`), `POST /api/agent` per the spec turn contract.
 - Client holds session state in memory; the function stores nothing.
-- OpenRouter via the OpenAI-compatible API.
-  Env: `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` (from `.env`, gitignored).
-  Default model: `nvidia/nemotron-3-ultra-550b-a55b:free` at
-  `https://openrouter.ai/api/v1`.
+- OpenAI-compatible LLM via `LLM_PROVIDER=openrouter|deepseek` (default
+  openrouter uses `LLM_*`; deepseek uses `DEEPSEEK_*`). Default OpenRouter
+  model: `nvidia/nemotron-3-ultra-550b-a55b:free` at
+  `https://openrouter.ai/api/v1`. Prod stays OpenRouter.
 - No DB, no auth, no agent framework (Mastra/LangGraph is v2).
 - Home is the Tree. v6 parks Tutor from the chrome (engine stays). There
   is no Chat page and no learner-map tab. How it works lives in the header.

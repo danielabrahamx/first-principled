@@ -97,6 +97,7 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
   [Can one background agent finish three serial LLM calls](issues/01-can-one-background-agent-finish-three-serial-llm-calls.md)
 - [Vendor anti-slop](issues/02-vendor-anti-slop.md) - plugin vendored at `tools/oxlint/anti-slop`; `npm run lint` on Windows PowerShell.
 - [Prototype the three stage prompts](issues/04-prototype-the-three-stage-prompts.md) - Danny locked `research/04-stage-prompts/stage-prompts.md` as the ticket 05 input. Iterate after KEEP/KILL, not before.
+- [LLM_PROVIDER is a one-var switch](issues/03-llm-provider-is-a-one-var-switch.md) - `LLM_PROVIDER=openrouter|deepseek` selects the live triple in `llm.js`. OpenRouter headers and `reasoning` stay OpenRouter-only. Prod stays OpenRouter.
 
 ## Not yet specified
 

@@ -322,17 +322,47 @@ test("unparseable model output maps to invalid_model_output", async () => {
 
 test("a missing API key maps to a stable config error", async () => {
   const original = process.env.LLM_API_KEY;
+  const originalProvider = process.env.LLM_PROVIDER;
   delete process.env.LLM_API_KEY;
+  delete process.env.LLM_PROVIDER;
   try {
     const result = await handleRequest(clone(INIT_REQUEST));
     assert.equal(result.status, 500);
     assert.equal(result.body.error.code, "config_error");
+    assert.match(result.body.error.message, /LLM_API_KEY/);
   } finally {
     if (original === undefined) {
       delete process.env.LLM_API_KEY;
     } else {
       process.env.LLM_API_KEY = original;
     }
+    if (originalProvider === undefined) {
+      delete process.env.LLM_PROVIDER;
+    } else {
+      process.env.LLM_PROVIDER = originalProvider;
+    }
+  }
+});
+
+test("deepseek provider requires DEEPSEEK_API_KEY not LLM_API_KEY", async () => {
+  const originalKey = process.env.LLM_API_KEY;
+  const originalProvider = process.env.LLM_PROVIDER;
+  const originalDeepseek = process.env.DEEPSEEK_API_KEY;
+  process.env.LLM_API_KEY = "openrouter-key";
+  process.env.LLM_PROVIDER = "deepseek";
+  delete process.env.DEEPSEEK_API_KEY;
+  try {
+    const result = await handleRequest(clone(INIT_REQUEST));
+    assert.equal(result.status, 500);
+    assert.equal(result.body.error.code, "config_error");
+    assert.match(result.body.error.message, /DEEPSEEK_API_KEY/);
+  } finally {
+    if (originalKey === undefined) delete process.env.LLM_API_KEY;
+    else process.env.LLM_API_KEY = originalKey;
+    if (originalProvider === undefined) delete process.env.LLM_PROVIDER;
+    else process.env.LLM_PROVIDER = originalProvider;
+    if (originalDeepseek === undefined) delete process.env.DEEPSEEK_API_KEY;
+    else process.env.DEEPSEEK_API_KEY = originalDeepseek;
   }
 });
 

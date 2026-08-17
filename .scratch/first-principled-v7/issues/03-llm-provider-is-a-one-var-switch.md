@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** none
 
@@ -33,15 +33,22 @@ record
 **Out of this ticket.** Prompt rewrite. Generator rebuild. Prod deploy.
 Pointing prod at DeepSeek.
 
+## Answer
+
+`LLM_PROVIDER` in `src/lib/agent/llm.js`. Unset or `openrouter` uses
+`LLM_*`. `deepseek` uses `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL`,
+`DEEPSEEK_BASE_URL`. OpenRouter referer, title, and `reasoning` payload
+are OpenRouter-only. Prod stays OpenRouter; Netlify secrets unchanged.
+
 ## Acceptance criteria
 
-- [ ] `LLM_PROVIDER=deepseek` makes `callChatCompletion` hit the
+- [x] `LLM_PROVIDER=deepseek` makes `callChatCompletion` hit the
       DeepSeek triple; unset or `openrouter` hits `LLM_*`
-- [ ] OpenRouter headers and reasoning payload are not sent on the
+- [x] OpenRouter headers and reasoning payload are not sent on the
       DeepSeek path
-- [ ] `.env.example` updated
-- [ ] `npm test` and `npx tsc --noEmit` pass
-- [ ] Key-leak grep clean
+- [x] `.env.example` updated
+- [x] `npm test` and `npx tsc --noEmit` pass
+- [x] Key-leak grep clean
 
 ## Docs rule
 
