@@ -15,7 +15,10 @@ deployed one-shot init (`6a822d59151f1ef9bb8cd0e3`); gold-word prod
 smoke is blocked by OpenRouter `:free` 429.
 [Danny scores followability](.scratch/first-principled-v6/issues/12-danny-scores-followability.md)
 is claimed: every rubric line is 0 or 1, no skip, gate fail is four 0s.
-Waiting on persisted live JSON after the cap resets. Do not invent scores.
+Nemotron live JSON still waiting on the cap. A DeepSeek `v4-flash` dry-run
+failed all four gold one-shots (thinking ate `maxTokens`, JSON truncated).
+Record: `.scratch/first-principled-v6/research/12-deepseek-gate.md`.
+Do not invent scores. Do not score DeepSeek as the ticket 12 bar.
 [One-shot gold maps pass the quality gate](.scratch/first-principled-v6/issues/13-one-shot-gold-maps-pass-the-quality-gate.md)
 still waits on the cap for retune. Map: `.scratch/first-principled-v6/map.md`.
 

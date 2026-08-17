@@ -37,7 +37,12 @@ measured, not hoped. Provider for this effort: OpenRouter
   `LLM_MODEL`, `LLM_BASE_URL`. Key lives only in `.env` (gitignored) and
   later as a Netlify secret. Never paste keys into chat, tickets, or
   research notes. `:free` is the standing pick; a paid slug is the fallback
-  if research proves free unusable.
+  if research proves free unusable. Local DeepSeek eval is optional
+  `DEEPSEEK_*` in `.env`; do not point prod at it. 2026-08-16 dry-run:
+  `deepseek-v4-flash` four-gold one-shots all FAIL because it ignores
+  OpenRouter `thinking: false` and truncates JSON. Record:
+  [12-deepseek-gate.md](research/12-deepseek-gate.md). Not the
+  [Danny scores followability](issues/12-danny-scores-followability.md) bar.
 - Known risk: Nemotron free P50 latency is ~18s and P90 e2e can exceed two
   minutes. Current call timeout is 45s. Serial per-layer generation may not
   survive. [OpenRouter Nemotron can serve the Reality Map contract](issues/01-openrouter-nemotron-map-contract.md)

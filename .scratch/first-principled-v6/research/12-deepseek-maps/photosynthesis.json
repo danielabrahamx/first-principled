@@ -1,0 +1,9 @@
+{
+  "concept": "photosynthesis",
+  "ok": false,
+  "pass": false,
+  "reason": "one-shot reply was not valid JSON in the required shape",
+  "latencyMs": 78072,
+  "generationPath": "oneshot",
+  "map": null
+}

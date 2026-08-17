@@ -13,8 +13,10 @@ Netlify, OpenRouter-backed, no database.
 **Resume:** v6 chrome shipped. Ticket 11 deployed one-shot init
 (`6a822d59151f1ef9bb8cd0e3`); gold-word prod smoke is `:free` 429.
 [Danny scores followability](.scratch/first-principled-v6/issues/12-danny-scores-followability.md)
-is claimed: 0/1 on every rubric line, no skip; waiting on persisted live
-JSON after the cap resets. [One-shot gold maps pass the quality gate](.scratch/first-principled-v6/issues/13-one-shot-gold-maps-pass-the-quality-gate.md)
+is claimed: 0/1 on every rubric line, no skip; Nemotron live JSON still
+waiting on the cap. DeepSeek dry-run (all four FAIL, thinking truncated
+JSON) is [12-deepseek-gate.md](.scratch/first-principled-v6/research/12-deepseek-gate.md),
+not the ticket 12 bar. [One-shot gold maps pass the quality gate](.scratch/first-principled-v6/issues/13-one-shot-gold-maps-pass-the-quality-gate.md)
 still waits on the cap for retune. Map: `.scratch/first-principled-v6/map.md`.
 
 ## Golden rules

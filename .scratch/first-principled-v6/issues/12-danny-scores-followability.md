@@ -46,6 +46,15 @@ session's patch.
 node --env-file=.env eval/map-quality/run.js --live --maps-dir .scratch/first-principled-v6/research/12-live-maps --baseline .scratch/first-principled-v6/research/12-live-gate.md
 ```
 
+## Dry-run (2026-08-16)
+
+OpenRouter `:free` was 429. Local `deepseek-v4-flash` four-gold live eval
+all FAIL. Shape inspect: the model starts the one-shot schema, then
+thinking eats `maxTokens` and content truncates. Record:
+[12-deepseek-gate.md](../research/12-deepseek-gate.md).
+Replay Nemotron into `12-live-maps` after the cap resets. Do not score
+DeepSeek maps as this ticket's bar.
+
 ## Acceptance criteria
 
 - [ ] Full live maps persisted as JSON (layers, nodes, edges, observations)
