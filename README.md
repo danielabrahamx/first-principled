@@ -32,10 +32,12 @@ mental model and reality.** See `docs/MISSION.md`.
 ## Run locally
 
 Requirements: Node 18+, Netlify CLI (installed globally as
-`$APPDATA/npm/netlify.cmd`).
+`$APPDATA/npm/netlify.cmd`). `npm run lint` needs Node 22.14+ so oxlint
+can load the vendored TypeScript anti-slop plugin.
 
-1. `npm install` - installs the lockfile; the only dependencies are the
-   dev-only type checker (typescript, @types/node) for `npm run typecheck`.
+1. `npm install` - installs the lockfile. Dev tools are the JSDoc type
+   checker (`npm run typecheck`) and oxlint plus `@oxlint/plugins`
+   (`npm run lint`). The runtime dependency is `@netlify/blobs`.
 2. Copy `.env.example` to `.env` and fill in `LLM_API_KEY`. `LLM_MODEL` and
    `LLM_BASE_URL` are pre-filled for OpenRouter Nemotron `:free`. Point local
    `.env` at those same values if it still names DeepSeek.
@@ -45,6 +47,7 @@ Requirements: Node 18+, Netlify CLI (installed globally as
 ## Checks
 
 - `npm test` - unit tests (built-in node:test runner).
+- `npm run lint` - vendored anti-slop via oxlint (`oxlint.config.js`).
 - `npm run typecheck` - JSDoc type checking over `src/` (tsc --noEmit).
 - `npm run eval:map-quality` - Reality Map quality gate on the gold maps
   (no API key). Live Nemotron baseline:

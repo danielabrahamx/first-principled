@@ -8,12 +8,13 @@ scoring is parked. The generator is the work.
 
 ## Destination
 
-A shipped Tree whose Reality Map is built by three stages (chronology,
-epiphanies, arrange), checked by the mechanical gate, with a one-var
-switch between OpenRouter and DeepSeek. The learner still types a thing
-and walks a dependence Tree. Mission stays in `docs/MISSION.md`; it does
-not ride on generator prompts. Danny scores followability on the gold
-words against this builder.
+A shipped, falsifiable three-stage candidate whose Reality Map is built
+by Chronology, Epiphanies, and Arrange, checked by the mechanical gate,
+with a one-var switch between OpenRouter and DeepSeek. The learner still
+types a thing and walks a Dependence Tree. Mission stays in
+`docs/MISSION.md`; it does not ride on generator prompts. Danny compares
+the candidate with one-shot on the four gold words and records KEEP or
+KILL. A killed funnel is replaced, not rescued with prompt machinery.
 
 ## Notes
 
@@ -22,11 +23,23 @@ words against this builder.
 - Domain: read `docs/MISSION.md` and `CONTEXT.md` before any ticket.
   Glossary adds Chronology, Epiphany, Stage. Tree still draws Dependence.
   Chronology is a scaffold, not the layout.
-- Stages: (1) chronology time chain, (2) epiphanies, (3) arrange into a
-  dependence Tree. Same model for every stage. Learner sees only the Tree.
+- Stages: (1) chronology as target-specific capability regimes, (2)
+  epiphanies as joints with observation records, (3) arrange into a
+  Dependence Tree. Physical ancestry is Chronology's default spine;
+  technical and conceptual ancestry are legal. Arrange may reorder,
+  drop, collapse, and promote. Same model for every stage. Learner sees
+  only the checked Tree.
   Check is mechanical (JSON, contiguity, honest UNKNOWN on epiphany
-  nodes). No fourth LLM critique. No layer-count in prompts. No STE
-  requirement. History only on epiphany nodes.
+  nodes, explicit roles, provenance, use-or-drop accounting). It cannot
+  prove semantic Dependence or Followability. No fourth LLM critique or
+  repair call. No layer-count in prompts. No STE requirement. History
+  only on `EPIPHANY` nodes.
+- Hidden diagnostics retain Chronology, Epiphanies, provenance, and
+  discarded IDs for the benchmark. None enters the learner payload.
+- Falsification: if Arrange copies Chronology or disregards it while
+  emitting the old table of contents, kill the funnel. The replacement
+  candidate is unordered prerequisites, evidence enrichment, then
+  Arrange. Do not graduate a prompt-retune or repair-loop rescue.
 - One path. Delete one-shot and serial. No fallback chain.
 - Provider: `LLM_PROVIDER=openrouter|deepseek` fills key, URL, and model.
   Prod stays OpenRouter. Do not point prod at DeepSeek. Key lives only in
@@ -37,7 +50,8 @@ words against this builder.
   `eval/map-quality`. Rebuild `generateRealityMap`. Do not touch
   uncommitted v2 engine-thread files (`src/lib/agent/gaps.js`,
   `confidence.js`, parked `eval/concepts.js` and tutor scorers).
-- v6 leftovers parked, not scored:
+- v6 quality-gate work remains parked. Its persisted one-shot maps are
+  comparison controls for the v7 falsification test:
   [Danny scores followability](../first-principled-v6/issues/12-danny-scores-followability.md),
   [One-shot gold maps pass the quality gate](../first-principled-v6/issues/13-one-shot-gold-maps-pass-the-quality-gate.md).
 - Skills: grilling + domain-modeling on HITL, including
@@ -57,29 +71,37 @@ words against this builder.
 
 - Destination: shipped three-stage Tree builder, execution map, not a spec
   handoff.
-- Chronology is a generation scaffold. The Tree still draws Dependence.
+- [Prompt architecture verdict](research/04-stage-prompts/round-1-verdict.md):
+  Chronology is a short chain of target-specific capability regimes,
+  with physical ancestry as its default spine. The Tree still draws
+  Dependence.
 - Mission sentence: strip from generator prompts only. `docs/MISSION.md`
   stays.
 - v6 one-shot scoring is parked. Do not finish it as this effort's bar.
 - Three LLM stages: chronology, epiphanies, arrange. Learner sees the
   final Tree only. ~a minute of serial latency is acceptable.
-- Check is mechanical only. No extra LLM critique call.
-- History (observation records) lives on epiphany nodes only.
+- Check is mechanical only. No extra LLM critique, retry, or repair call.
+- History lives only on nodes explicitly marked `EPIPHANY`. Arrange may
+  reorder, drop, collapse, and promote while hidden provenance accounts
+  for every used and discarded input.
 - `LLM_PROVIDER=openrouter|deepseek`. Same model for every stage. Prod
   stays OpenRouter. No in-app picker.
-- Followability bar unchanged: Danny 0/1 on laptop, battery,
-  photosynthesis, recursion. Same rubric, new builder.
+- Followability is one walkable spine for a curious adult who opens
+  rabbit holes. Danny compares three-stage with one-shot, 0/1 on laptop,
+  battery, photosynthesis, and recursion, then records KEEP or KILL.
 - Vendor anti-slop on this map as early hygiene.
 - Delete one-shot and serial. One path.
 - Three stages stay in one background init job. Raise client poll
   `deadlineMs` to 14 min (840000). Do not raise the 240 s per-call abort.
   Never throw after 202. No in-job LLM retries. Do not client-chain.
   [Can one background agent finish three serial LLM calls](issues/01-can-one-background-agent-finish-three-serial-llm-calls.md)
+- [Vendor anti-slop](issues/02-vendor-anti-slop.md) — plugin vendored at `tools/oxlint/anti-slop`; `npm run lint` on Windows PowerShell.
 
 ## Not yet specified
 
-- Spine / layout retune if a live three-stage tree still reads as a
-  labeled list.
+- Spine / layout retune only if the generation architecture first passes
+  and the remaining defect is demonstrably visual. Do not use layout work
+  to rescue Chronology capture or disregard.
 - Grow motion on a branching trunk.
 - Layer-band visual.
 - Paid OpenRouter slug, only if `:free` cannot serve the three-stage
@@ -97,7 +119,8 @@ words against this builder.
 - In-app provider picker. Per-stage models.
 - Extra LLM check stage.
 - Rewriting `docs/MISSION.md`.
-- Finishing v6 one-shot scoring as the bar for this effort.
+- Reviving the parked v6 quality-gate effort. Persisted v6 maps are used
+  only as the one-shot comparison control for ticket 07.
 - Accounts, auth, persistence, web grounding, agent frameworks.
 - Cross-concept linking.
 - Deleting the Tutor engine from `src/lib/agent/`.

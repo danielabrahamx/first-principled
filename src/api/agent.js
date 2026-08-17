@@ -64,10 +64,10 @@ export async function callAgent(body, options = {}) {
   const payload = {
     ...body,
     jobId,
-    ...(options.turnstileToken
-      ? { turnstileToken: options.turnstileToken }
-      : {}),
   };
+  if (options.turnstileToken) {
+    payload.turnstileToken = options.turnstileToken;
+  }
 
   /** @type {Response} */
   let response;

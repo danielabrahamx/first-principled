@@ -8,13 +8,16 @@
     "dev": "netlify dev",
     "build": "node -e \"console.log('static site, nothing to build')\"",
     "test": "node --test",
+    "lint": "node --experimental-strip-types --disable-warning=ExperimentalWarning node_modules/oxlint/bin/oxlint -c oxlint.config.js",
     "typecheck": "tsc --noEmit",
     "eval": "node eval/run.js",
     "eval:map-quality": "node eval/map-quality/run.js",
     "prototype:how-it-works": "node .scratch/first-principled-v6/research/03-how-it-works-prototype/serve.mjs"
   },
   "devDependencies": {
+    "@oxlint/plugins": "1.78.0",
     "@types/node": "^22.0.0",
+    "oxlint": "1.78.0",
     "typescript": "^5.6.0"
   },
   "engines": {

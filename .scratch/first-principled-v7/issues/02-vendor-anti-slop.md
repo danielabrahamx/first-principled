@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** none
 
@@ -35,14 +35,49 @@ AFK. Vendor, do not npm-depend on a moving copy as the source of truth.
 **Out of this ticket.** Prompt rewrite. Provider switch. Generator
 rebuild. Prod deploy.
 
+## Answer
+
+Vendored [anti-slop](https://github.com/dmmulroy/anti-slop) at
+`tools/oxlint/anti-slop/` from commit
+`446268e5d15baa968eaec669ff65358d36ae6259`, plus LICENSE. Installed
+`oxlint@1.78.0` and `@oxlint/plugins@1.78.0` (devDependencies, matched
+to upstream). Config is `oxlint.config.js` (Node 22.14 cannot load a
+`.ts` oxlint config or the `.ts` plugin without type-stripping).
+
+`npm run lint` runs oxlint with `--experimental-strip-types` and
+`-c oxlint.config.js`. Default unicorn/typescript/oxc plugins are
+empty so this is anti-slop only, not a full linter rewrite.
+
+Enabled as error: `no-conditional-empty-object-spread`,
+`no-module-mocking`, `no-reflect-apply`, `no-reflect-get`,
+`no-shape-in-symbol-names`.
+
+Off, one line each:
+
+- `no-chained-type-assertions` - TypeScript assertion syntax; this tree is JSDoc JS.
+- `no-known-value-widening` - needs TS type annotations.
+- `no-object-parameters` - flags the TS `object` type, not JSDoc `@typedef`.
+- `no-unknown-parameters` - TS `unknown` on params.
+- `no-unknown-returns` - TS `unknown` returns.
+- `no-unknown-type-aliases` - TS aliases that hide `unknown`.
+- `no-unsafe-dictionary-type` - TS index/Record types.
+- `no-widen-then-assert` - TS widen-then-assert.
+- `require-safety-comment-for-type-assertion` - TS assertions.
+- `no-runtime-typeof` - JSDoc JS decodes untrusted LLM JSON with typeof; enabling it would rewrite `realityMap.js`.
+
+One cheap existing hit fixed: `src/api/agent.js` stopped using a
+conditional empty-object spread for `turnstileToken`. No warn-old
+baseline. Plugin tests were not vendored so `node --test` does not
+run them. `npm test` 378 pass; `npx tsc --noEmit` clean.
+
 ## Acceptance criteria
 
-- [ ] Plugin vendored, oxlint config present, npm script runs on Windows
+- [x] Plugin vendored, oxlint config present, npm script runs on Windows
       PowerShell
-- [ ] Rules that do not fit JSDoc JS are explicitly off, with a one-line
+- [x] Rules that do not fit JSDoc JS are explicitly off, with a one-line
       reason each
-- [ ] `npm test` and `npx tsc --noEmit` still pass
-- [ ] No secrets
+- [x] `npm test` and `npx tsc --noEmit` still pass
+- [x] No secrets
 
 ## Docs rule
 
