@@ -4,6 +4,8 @@ Pasted 2026-08-18 by Danny for
 [Lock the thinking architecture from the council](../issues/09-lock-the-thinking-architecture-from-the-council.md).
 Live DeepSeek numbers stay in [08-mixed-thinking.md](08-mixed-thinking.md).
 This file is the council essay. The ticket holds the lock.
+[Ship JSON Schema on Epiphanies](../issues/10-ship-json-schema-on-epiphanies.md)
+later shipped Option A.
 
 ## Bottleneck
 

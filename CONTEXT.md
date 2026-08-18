@@ -17,11 +17,12 @@ background init job
 ([Can one background agent finish three serial LLM calls](.scratch/first-principled-v7/issues/01-can-one-background-agent-finish-three-serial-llm-calls.md)).
 The three-stage generator is live on prod
 ([Deploy the three-stage Tree](.scratch/first-principled-v7/issues/06-deploy-the-three-stage-tree.md)).
-Open frontier:
-[Ship JSON Schema on Epiphanies](.scratch/first-principled-v7/issues/10-ship-json-schema-on-epiphanies.md)
-(AFK: thinking off, JSON Schema on the joints call).
+JSON Schema on Epiphanies is shipped
+([Ship JSON Schema on Epiphanies](.scratch/first-principled-v7/issues/10-ship-json-schema-on-epiphanies.md)).
+Prod is OpenRouter paid Nemotron
+`nvidia/nemotron-3-ultra-550b-a55b`. Open frontier:
 [Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md)
-waits on that ship.
+(HITL).
 [Lock the thinking architecture from the council](.scratch/first-principled-v7/issues/09-lock-the-thinking-architecture-from-the-council.md)
 locked Option A.
 

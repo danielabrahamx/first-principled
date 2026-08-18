@@ -73,7 +73,9 @@ from the environment, and the published `src/` bundle must never contain it.
 Deploy: `netlify deploy --prod` publishes `src/` plus
 `netlify/functions/` per `netlify.toml` (no build step). New env values
 require a redeploy to take effect. v6 rotated `LLM_*` to OpenRouter
-Nemotron `:free` (deploy `6a821d5637d95139bd35956f`).
+Nemotron `:free` (deploy `6a821d5637d95139bd35956f`). Current prod is
+OpenRouter paid Nemotron `nvidia/nemotron-3-ultra-550b-a55b` with JSON
+Schema on Epiphanies (deploy `6a8429c0f3fea97f620a6800`).
 
 ## Stack (v1)
 

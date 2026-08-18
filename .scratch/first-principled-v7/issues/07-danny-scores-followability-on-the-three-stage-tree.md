@@ -17,9 +17,11 @@ it?
 
 ## What
 
-Do not start until
+Blockers are resolved.
 [Ship JSON Schema on Epiphanies](10-ship-json-schema-on-epiphanies.md)
-is resolved. Scoring a builder that cannot emit valid joints is wasted.
+is shipped. Score the live OpenRouter paid Nemotron three-stage builder
+(`nvidia/nemotron-3-ultra-550b-a55b`). Do not score DeepSeek as this
+ticket's bar.
 
 HITL. The agent does not stand in for Danny. The comparison, not JSON
 validity, decides whether the architecture survives. Rubric still says
@@ -28,8 +30,8 @@ Chronology is not the layout.
 1. Persist one diagnostic bundle for each three-stage run: Chronology,
    Epiphanies, checked map, provenance, and discarded inputs. Persist the
    learner-facing map separately to prove no intermediate leakage. If
-   `:free` is 429, wait or record the blocker; do not score DeepSeek as
-   this ticket's bar.
+   OpenRouter returns 402 or 429, wait or record the blocker; do not
+   switch provider to complete the score.
 2. Use the persisted v6 one-shot maps as the control. This does not revive
    the parked v6 quality-gate ticket; it supplies the comparison required
    to falsify this architecture.

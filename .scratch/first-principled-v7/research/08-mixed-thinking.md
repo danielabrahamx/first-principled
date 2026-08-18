@@ -7,7 +7,7 @@ The timings and failure mode below remain the record. The leftover
 suggestion to read JSON out of hidden thinking is dead:
 [Lock the thinking architecture from the council](../issues/09-lock-the-thinking-architecture-from-the-council.md)
 locked Option A (thinking off, JSON Schema on Epiphanies) and forbids
-parsing `reasoning_content` as the JSON contract. Next:
+parsing `reasoning_content` as the JSON contract. Shipped:
 [Ship JSON Schema on Epiphanies](../issues/10-ship-json-schema-on-epiphanies.md).
 
 Chronology thinking off, Epiphanies thinking on, Arrange thinking off.

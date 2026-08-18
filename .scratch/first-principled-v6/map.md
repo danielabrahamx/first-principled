@@ -7,7 +7,8 @@ dependence-path Tree with Tutor as a closed bottom sheet. Generation quality
 is still unmeasured; DeepSeek flash was the standing model.
 **Superseded 2026-08-17:** MAIN FRONTIER is
 [First-Principled v7](../first-principled-v7/map.md). Chrome and one-shot
-init stay. Remaining one-shot scoring is parked.
+init stay. Remaining one-shot scoring is parked. v7 later set prod
+`LLM_MODEL` to paid Nemotron.
 
 ## Destination
 

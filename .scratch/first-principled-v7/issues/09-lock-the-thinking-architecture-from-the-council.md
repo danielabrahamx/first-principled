@@ -58,10 +58,11 @@ Raising Netlify timeouts. A fourth LLM call. Per-stage models. Parsing
 `reasoning_content` as the JSON contract.
 
 The tradeoff is owned: schema-valid joints at thinking-off speed, not
-the deeper joints in the hidden thinking dump. Execution is
-[Ship JSON Schema on Epiphanies](10-ship-json-schema-on-epiphanies.md).
+the deeper joints in the hidden thinking dump. Execution was
+[Ship JSON Schema on Epiphanies](10-ship-json-schema-on-epiphanies.md)
+(resolved).
 [Danny scores followability on the three-stage Tree](07-danny-scores-followability-on-the-three-stage-tree.md)
-waits on that ship. Record:
+is unblocked. Record:
 [09-thinking-architecture-council.md](../research/09-thinking-architecture-council.md).
 
 ## Acceptance criteria

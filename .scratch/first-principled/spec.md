@@ -277,7 +277,8 @@ https://first-principled.netlify.app. Local switch is `LLM_PROVIDER` in
 `.env` (`openrouter` uses `LLM_*`, `deepseek` uses `DEEPSEEK_*`). Prod
 platform secrets stay OpenRouter `LLM_API_KEY`, `LLM_MODEL`,
 `LLM_BASE_URL`, set with `netlify env:set` (from `.env`, gitignored). Do
-not set Netlify `LLM_PROVIDER=deepseek`. The key is a platform secret, never client-side; the published
+not set Netlify `LLM_PROVIDER=deepseek`. Current prod `LLM_MODEL` is
+`nvidia/nemotron-3-ultra-550b-a55b`. The key is a platform secret, never client-side; the published
 `src/` bundle is verified key-free before release. Deploy is
 `netlify deploy --prod` (no build step; `netlify.toml` publishes `src/` and
 wires `/api/agent` to the function). Live URL recorded in README.

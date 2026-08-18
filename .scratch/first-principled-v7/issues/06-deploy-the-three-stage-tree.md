@@ -49,7 +49,9 @@ Prod deploy id `6a83a3dd6082d925b8c3d127` at
 https://first-principled.netlify.app (unique URL
 https://6a83a3dd6082d925b8c3d127--first-principled.netlify.app). Prod
 `LLM_*` stay OpenRouter Nemotron `:free`. `LLM_PROVIDER` is unset, not
-`deepseek`. Chrome smoke 12/12 against the unique URL.
+`deepseek`. Chrome smoke 12/12 against the unique URL. Later superseded
+by [Ship JSON Schema on Epiphanies](10-ship-json-schema-on-epiphanies.md):
+prod `LLM_MODEL` is paid Nemotron.
 
 Live `photosynthesis` and `recursion` init hit the three-stage path and
 returned `invalid_model_output` in ~17s after the mechanical gate

@@ -37,8 +37,10 @@ Arrange mechanical gate rejected. Not HTTP 429 `free-models-per-day`.
 The learner envelope stayed the generic `invalid_model_output` string.
 No intermediate keys (`provenance`, `chronology`, `epiphanies`,
 `discarded_input_ids`, `prompts`, `diagnostics`) appeared in the
-learner-facing body. Stay on `:free`. Do not retune prompts in this
-ticket.
+learner-facing body. This ticket stayed on `:free` and did not retune
+prompts. Later superseded by
+[Ship JSON Schema on Epiphanies](../issues/10-ship-json-schema-on-epiphanies.md):
+prod is paid Nemotron.
 
 ## Diagnostic capture
 
