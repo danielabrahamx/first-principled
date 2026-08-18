@@ -57,6 +57,63 @@ const JOINT_KINDS = new Set([
 const CERTAINTIES = new Set(["EXACT", "APPROXIMATE", "UNKNOWN"]);
 const NODE_ROLES = new Set(["DOMAIN", "EPIPHANY", "STRUCTURAL"]);
 
+/**
+ * Canonicalize a model enum to the contract token. Case and separators
+ * are mechanical, not a new fact.
+ *
+ * @param {unknown} value
+ * @param {Set<string>} allowed
+ * @returns {unknown}
+ */
+function canonicalEnum(value, allowed) {
+  if (typeof value !== "string") return value;
+  const token = value.trim().toUpperCase().replace(/[\s-]+/g, "_");
+  return allowed.has(token) ? token : value;
+}
+
+/**
+ * @param {any} value
+ * @returns {any}
+ */
+function normalizeChronology(value) {
+  if (!isRecord(value) || !Array.isArray(value.chronology)) return value;
+  return {
+    ...value,
+    chronology: value.chronology.map((item) => {
+      if (!isRecord(item)) return item;
+      return {
+        ...item,
+        ancestry_kind: canonicalEnum(item.ancestry_kind, ANCESTRY_KINDS),
+      };
+    }),
+  };
+}
+
+/**
+ * @param {any} value
+ * @returns {any}
+ */
+function normalizeEpiphanies(value) {
+  if (!isRecord(value) || !Array.isArray(value.epiphanies)) return value;
+  return {
+    ...value,
+    epiphanies: value.epiphanies.map((item) => {
+      if (!isRecord(item)) return item;
+      const history = isRecord(item.history)
+        ? {
+            ...item.history,
+            certainty: canonicalEnum(item.history.certainty, CERTAINTIES),
+          }
+        : item.history;
+      return {
+        ...item,
+        joint_kind: canonicalEnum(item.joint_kind, JOINT_KINDS),
+        history,
+      };
+    }),
+  };
+}
+
 /** Locked ticket 04 Stage 1 system prompt. */
 export function buildChronologySystemPrompt() {
   return `Identify a short ordered chain of target-specific capability regimes that
@@ -264,15 +321,17 @@ export function normalizeArrangement(arrangement, epiphanyById) {
   const nodes = Array.isArray(arrangement.map.nodes)
     ? arrangement.map.nodes.map((node) => {
         if (!isRecord(node)) return node;
-        if (node.role !== "EPIPHANY") {
+        const role = canonicalEnum(node.role, NODE_ROLES);
+        if (role !== "EPIPHANY") {
           const { basis: _basis, combines: _combines, ...withoutHistory } = node;
-          return withoutHistory;
+          return { ...withoutHistory, role };
         }
         const epiphanyId = (nodeRefs.get(node.id) ?? []).find((id) => epiphanyById.has(id));
         const epiphany = epiphanyId ? epiphanyById.get(epiphanyId) : null;
-        if (!epiphany) return node;
+        if (!epiphany) return { ...node, role };
         return {
           ...node,
+          role,
           basis: observationFromHistory(epiphany.history),
         };
       })
@@ -291,7 +350,9 @@ export function normalizeArrangement(arrangement, epiphanyById) {
  * @returns {any}
  */
 function observationFromHistory(history) {
-  const certainty = CERTAINTIES.has(history?.certainty) ? history.certainty : "UNKNOWN";
+  const certaintyToken = canonicalEnum(history?.certainty, CERTAINTIES);
+  const certainty =
+    typeof certaintyToken === "string" && CERTAINTIES.has(certaintyToken) ? certaintyToken : "UNKNOWN";
   const mark = certainty;
   const field = (/** @type {unknown} */ value) => ({
     value: typeof value === "string" ? value : "",
@@ -557,7 +618,7 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
   };
 
   try {
-    const chronology = await request(prompts.chronology, { concept: trimmed });
+    const chronology = normalizeChronology(await request(prompts.chronology, { concept: trimmed }));
     const chronologyErrors = chronologyProblems(chronology, trimmed);
     if (chronologyErrors.length > 0) {
       return failure("invalid", "The Chronology stage failed its contract.", chronologyErrors, Date.now() - started);
@@ -565,7 +626,7 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
     const chronologyItems = /** @type {any} */ (chronology).chronology;
     const chronologyIds = new Set(chronologyItems.map((/** @type {any} */ item) => item.id));
 
-    const epiphanies = await request(prompts.epiphanies, chronology);
+    const epiphanies = normalizeEpiphanies(await request(prompts.epiphanies, chronology));
     const epiphanyErrors = epiphaniesProblems(epiphanies, trimmed, chronologyIds);
     if (epiphanyErrors.length > 0) {
       return failure("invalid", "The Epiphanies stage failed its contract.", epiphanyErrors, Date.now() - started);

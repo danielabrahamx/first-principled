@@ -146,6 +146,27 @@ test("Chronology contract requires ordered c ids and backward-only references", 
   assert.match(chronologyProblems(bad, "battery").join(" "), /non-earlier/);
 });
 
+test("generator accepts lowercase stage enums as the same contract tokens", async () => {
+  const chronology = structuredClone(CHRONOLOGY);
+  chronology.chronology[0].ancestry_kind = "physical";
+  chronology.chronology[1].ancestry_kind = "conceptual";
+  const epiphanies = structuredClone(EPIPHANIES);
+  epiphanies.epiphanies[0].joint_kind = "experimental result";
+  epiphanies.epiphanies[0].history.certainty = "exact";
+  const arrangement = structuredClone(ARRANGEMENT);
+  arrangement.map.nodes[0].role = "domain";
+  arrangement.map.nodes[1].role = "epiphany";
+  const { callLLM, requests } = scriptedTransport([chronology, epiphanies, arrangement]);
+  const result = await generateRealityMap({ concept: "battery", callLLM });
+  assert.equal(result.ok, true, result.errors.join(" | "));
+  assert.equal(requests.length, 3);
+  assert.ok(result.diagnostics);
+  assert.ok(result.map);
+  assert.equal(result.diagnostics.chronology.chronology[1].ancestry_kind, "CONCEPTUAL");
+  assert.equal(result.map.nodes[0].role, "DOMAIN");
+  assert.equal(result.map.nodes[1].role, "EPIPHANY");
+});
+
 test("Epiphanies contract enforces honest history and Stage 1 references", () => {
   const ids = new Set(["c1", "c2"]);
   assert.deepEqual(epiphaniesProblems(EPIPHANIES, "battery", ids), []);

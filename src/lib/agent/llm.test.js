@@ -203,6 +203,27 @@ test("reads OpenRouter message.reasoning when reasoning_content is absent", asyn
   });
 });
 
+test("empty content falls back to reasoning_content so DeepSeek JSON still parses", async () => {
+  await withEnv({ ...BOTH_TRIPLES, LLM_PROVIDER: "deepseek" }, async () => {
+    mock.method(globalThis, "fetch", async () =>
+      fakeResponse(
+        200,
+        completionBody("", { reasoning_content: 'thoughts then {"ok":true}' })
+      )
+    );
+    try {
+      const result = await callChatCompletion({
+        messages: [{ role: "user", content: "hi" }],
+        jsonMode: true,
+      });
+      assert.equal(result.content, 'thoughts then {"ok":true}');
+      assert.equal(result.reasoningContent, 'thoughts then {"ok":true}');
+    } finally {
+      mock.restoreAll();
+    }
+  });
+});
+
 test("DeepSeek path uses the DeepSeek triple and omits OpenRouter headers and reasoning", async () => {
   await withEnv({ ...BOTH_TRIPLES, LLM_PROVIDER: "deepseek" }, async () => {
     /** @type {any} */

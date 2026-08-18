@@ -198,14 +198,22 @@ export async function callChatCompletion(options) {
   if (!choice || !choice.message) {
     throw new Error("LLM response had no choices");
   }
+  const reasoningContent =
+    typeof choice.message.reasoning_content === "string"
+      ? choice.message.reasoning_content
+      : typeof choice.message.reasoning === "string"
+        ? choice.message.reasoning
+        : null;
+  let content = typeof choice.message.content === "string" ? choice.message.content : "";
+  // DeepSeek v4 often writes the JSON into reasoning_content and leaves
+  // message.content empty. Use that channel as the parse source only when
+  // content is blank. Do not treat reasoning as learner copy.
+  if (!content.trim() && reasoningContent) {
+    content = reasoningContent;
+  }
   return {
-    content: typeof choice.message.content === "string" ? choice.message.content : "",
-    reasoningContent:
-      typeof choice.message.reasoning_content === "string"
-        ? choice.message.reasoning_content
-        : typeof choice.message.reasoning === "string"
-          ? choice.message.reasoning
-          : null,
+    content,
+    reasoningContent,
     usage: body.usage || null,
   };
 }
