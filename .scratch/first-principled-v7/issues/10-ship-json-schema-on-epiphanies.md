@@ -1,6 +1,6 @@
 # 10 - Ship JSON Schema on Epiphanies
 
-**Type:** task
+**Type:** task (AFK)
 
 **Status:** ready-for-agent
 
@@ -15,6 +15,9 @@ decoding return joints that pass the existing field checklist, so
 Arrange can run?
 
 ## What
+
+AFK. Do not grill. Do not wait for Danny. Do not take
+[Danny scores followability on the three-stage Tree](07-danny-scores-followability-on-the-three-stage-tree.md).
 
 Do not re-research. Locked by
 [Lock the thinking architecture from the council](09-lock-the-thinking-architecture-from-the-council.md):
@@ -55,6 +58,11 @@ extend it to non-empty prose.
    `research/10-json-schema-epiphanies.md`. No secrets.
 5. Deploy to prod. Prod stays OpenRouter. Do not set Netlify
    `LLM_PROVIDER=deepseek`.
+
+If the live `battery` probe still fails `epiphaniesProblems`, record
+that in `research/10-json-schema-epiphanies.md` and stop. Do not
+resolve this ticket. Do not switch to Option B, exemplars, timeouts,
+or a fourth call.
 
 **Out of this ticket.** Followability KEEP/KILL (that is
 [Danny scores followability on the three-stage Tree](07-danny-scores-followability-on-the-three-stage-tree.md)).

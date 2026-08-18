@@ -15,7 +15,8 @@ Prod stays OpenRouter.
 Tree builder is live on prod in one background init job with a 14 min
 poll deadline. Thinking architecture is Option A (thinking off, JSON
 Schema on Epiphanies). Open frontier:
-[Ship JSON Schema on Epiphanies](.scratch/first-principled-v7/issues/10-ship-json-schema-on-epiphanies.md).
+[Ship JSON Schema on Epiphanies](.scratch/first-principled-v7/issues/10-ship-json-schema-on-epiphanies.md)
+(AFK).
 [Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md)
 waits on that ship. Map: `.scratch/first-principled-v7/map.md`.
 

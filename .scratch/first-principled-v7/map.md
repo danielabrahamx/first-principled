@@ -20,6 +20,10 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
 
 - **This map carries execution.** Tickets are the rewrite, not a spec to
   hand off. One session, one ticket (research excepted).
+  [Ship JSON Schema on Epiphanies](issues/10-ship-json-schema-on-epiphanies.md)
+  is AFK. After it, stop:
+  [Danny scores followability on the three-stage Tree](issues/07-danny-scores-followability-on-the-three-stage-tree.md)
+  is HITL.
 - Domain: read `docs/MISSION.md` and `CONTEXT.md` before any ticket.
   Glossary adds Chronology, Epiphany, Stage. Tree still draws Dependence.
   Chronology is a scaffold, not the layout.
