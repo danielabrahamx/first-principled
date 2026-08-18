@@ -8,7 +8,8 @@
  * that is `reasoning: { effort: "none" }`. On DeepSeek that is
  * `thinking: { type: "disabled" }` (thinking is on by default at effort
  * `high`; the OpenRouter `reasoning` field is ignored and burns the
- * `max_tokens` budget into `reasoning_content`).
+ * `max_tokens` budget into `reasoning_content`). Mixed thinking
+ * (`thinkingByStage`) exists but DeepSeek Epiphanies-on failed to parse.
  *
  * Per the v6 ticket 01 findings (OpenRouter path):
  * - Base URL https://openrouter.ai/api/v1, Bearer auth via LLM_API_KEY.

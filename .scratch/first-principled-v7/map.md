@@ -46,8 +46,9 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
   `.env` (gitignored) and Netlify secrets. Never paste keys into chat,
   tickets, or research notes. JSON maps send `thinking: false`. OpenRouter
   maps that to `reasoning: { effort: "none" }`. DeepSeek maps that to
-  `thinking: { type: "disabled" }`. Do not send OpenRouter `reasoning` on
-  the DeepSeek path.
+  `thinking: { type: "disabled" }`. `thinkingByStage` can turn one stage
+  on; DeepSeek Epiphanies-on was tried and failed. Do not send OpenRouter
+  `reasoning` on the DeepSeek path.
 - Salvage: Tree chrome, invitation card, background `POST /api/agent` plus
   status poll, `src/lib/agent/llm.js`, `src/lib/mmg/` validator, 
   `eval/map-quality`. Rebuild `generateRealityMap`. Do not touch
@@ -103,6 +104,7 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
 - [LLM_PROVIDER is a one-var switch](issues/03-llm-provider-is-a-one-var-switch.md) - `LLM_PROVIDER=openrouter|deepseek` selects the live triple in `llm.js`. OpenRouter headers and `reasoning` stay OpenRouter-only. DeepSeek JSON maps send `thinking: { type: "disabled" }`. Prod stays OpenRouter. Record: [06-thinking-off.md](research/06-thinking-off.md).
 - [The generator is three stages and nothing else](issues/05-the-generator-is-three-stages-and-nothing-else.md) - init now runs the locked Chronology, Epiphanies, and Arrange prompts exactly once, gates the role-marked Tree and hidden provenance mechanically, and returns only the checked map.
 - [Deploy the three-stage Tree](issues/06-deploy-the-three-stage-tree.md) - prod deploy `6a83a3dd6082d925b8c3d127` is OpenRouter `:free`. Chrome 12/12. Live gold words returned `invalid_model_output` with no learner leaks. Diagnostics stay capturable off `/api/agent`.
+- [DeepSeek thinks only on Epiphanies](issues/08-deepseek-thinks-only-on-epiphanies.md) - mixed thinking does not get a DeepSeek Tree. Chronology off is fine (~5 s). Epiphanies on spent 75 s, wrote 34k chars of hidden thinking, and left 784 chars of content that was not an `epiphanies` array. Default stays thinking off. Per-stage override remains. Record: [08-mixed-thinking.md](research/08-mixed-thinking.md).
 
 ## Not yet specified
 
@@ -114,10 +116,9 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
 - Paid OpenRouter slug, only if `:free` cannot serve the three-stage
   builder.
 - Whether STE ever returns to generator prompts.
-- DeepSeek thinking off vs Stage contract quality: thinking off is ~1 s
-  for tiny JSON and ~16 s for two live stages, but Epiphanies then misses
-  `c*` ids, `history`, and legal `joint_kind`. Parked for a later session.
-  Record: [06-thinking-off.md](research/06-thinking-off.md).
+- Whether DeepSeek JSON in `reasoning_content` should be used when
+  `content` is short but not empty. Mixed thinking left 784 chars of
+  unparseable content beside 34k of hidden thinking.
 
 ## Out of scope
 
@@ -147,4 +148,5 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
 01 + 03 + 04 -> 05 the generator is three stages and nothing else
 05 -> 06 deploy the three-stage Tree
 06 -> 07 Danny scores followability on the three-stage Tree
+03 -> 08 DeepSeek thinks only on Epiphanies
 ```

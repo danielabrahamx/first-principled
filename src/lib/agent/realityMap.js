@@ -5,6 +5,10 @@
  * identify the warranted joints between those regimes. Arrange turns both
  * inputs into the learner-facing Dependence Tree. Each stage runs exactly
  * once. Code performs only mechanical validation and normalization.
+ * OpenRouter keeps thinking off on every stage. DeepSeek defaults to
+ * thinking off too: turning Epiphanies on dumped the reply into
+ * `reasoning_content` and failed to parse. Callers can still pass
+ * `thinkingByStage` to try a mixed pattern.
  */
 
 import { callChatCompletion } from "./llm.js";
@@ -581,10 +585,24 @@ function recordInputRefs(refs, validInputs, used, errors) {
 }
 
 /**
+ * Thinking flag for one generation stage. Default is off. Explicit
+ * `thinking` or `thinkingByStage` wins.
+ *
+ * @param {"chronology" | "epiphanies" | "arrange"} stage
+ * @param {{ thinking?: boolean; thinkingByStage?: Partial<Record<"chronology" | "epiphanies" | "arrange", boolean>> }} [options]
+ * @returns {boolean}
+ */
+export function stageThinking(stage, options = {}) {
+  const override = options.thinkingByStage?.[stage];
+  if (typeof override === "boolean") return override;
+  return options.thinking === true;
+}
+
+/**
  * Generate one map through exactly three serial model calls.
  *
  * @param {{ concept: string; callLLM?: CallLLM }} input
- * @param {{ thinking?: boolean; maxTokens?: number }} [options]
+ * @param {{ thinking?: boolean; thinkingByStage?: Partial<Record<"chronology" | "epiphanies" | "arrange", boolean>>; maxTokens?: number }} [options]
  * @returns {Promise<MapResult>}
  */
 export async function generateRealityMap({ concept, callLLM }, options = {}) {
@@ -604,21 +622,24 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
     epiphanies: buildEpiphaniesSystemPrompt(),
     arrange: buildArrangeSystemPrompt(),
   };
-  const request = async (/** @type {string} */ system, /** @type {any} */ payload) => {
+  const request = async (
+    /** @type {"chronology" | "epiphanies" | "arrange"} */ stage,
+    /** @type {any} */ payload
+  ) => {
     const response = await transport({
       messages: [
-        { role: "system", content: system },
+        { role: "system", content: prompts[stage] },
         { role: "user", content: JSON.stringify(payload) },
       ],
       jsonMode: true,
-      thinking: options.thinking === true,
+      thinking: stageThinking(stage, options),
       maxTokens: options.maxTokens ?? 8192,
     });
     return parseModelJson(response.content);
   };
 
   try {
-    const chronology = normalizeChronology(await request(prompts.chronology, { concept: trimmed }));
+    const chronology = normalizeChronology(await request("chronology", { concept: trimmed }));
     const chronologyErrors = chronologyProblems(chronology, trimmed);
     if (chronologyErrors.length > 0) {
       return failure("invalid", "The Chronology stage failed its contract.", chronologyErrors, Date.now() - started);
@@ -626,7 +647,7 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
     const chronologyItems = /** @type {any} */ (chronology).chronology;
     const chronologyIds = new Set(chronologyItems.map((/** @type {any} */ item) => item.id));
 
-    const epiphanies = normalizeEpiphanies(await request(prompts.epiphanies, chronology));
+    const epiphanies = normalizeEpiphanies(await request("epiphanies", chronology));
     const epiphanyErrors = epiphaniesProblems(epiphanies, trimmed, chronologyIds);
     if (epiphanyErrors.length > 0) {
       return failure("invalid", "The Epiphanies stage failed its contract.", epiphanyErrors, Date.now() - started);
@@ -637,7 +658,7 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
       epiphanyItems.map((/** @type {any} */ item) => [item.id, item])
     );
 
-    const rawArrangement = await request(prompts.arrange, {
+    const rawArrangement = await request("arrange", {
       concept: trimmed,
       chronology: chronologyItems,
       epiphanies: epiphanyItems,

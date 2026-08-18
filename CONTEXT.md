@@ -130,7 +130,9 @@ Current architecture (v1):
   model: `nvidia/nemotron-3-ultra-550b-a55b:free`. Prod stays OpenRouter.
   JSON maps send `thinking: false`: OpenRouter
   `reasoning: { effort: "none" }`, DeepSeek
-  `thinking: { type: "disabled" }`. No DB, no auth, no framework.
+  `thinking: { type: "disabled" }`. A per-stage override exists;
+  DeepSeek Epiphanies-on was tried and failed to parse. No DB, no auth,
+  no framework.
 - `src/lib/agent/` holds the engine: reality map generation, the Socratic
   turn loop (kept, not shown), and the LLM transport.
 

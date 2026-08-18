@@ -11,6 +11,7 @@ import {
   epiphaniesProblems,
   generateRealityMap,
   normalizeArrangement,
+  stageThinking,
   steProblems,
 } from "./realityMap.js";
 import { laptopRealityMap } from "../mmg/fixtures.js";
@@ -124,6 +125,39 @@ function scriptedTransport(values) {
     },
   };
 }
+
+test("maps default to thinking off; thinkingByStage can turn one stage on", () => {
+  assert.equal(stageThinking("chronology", {}), false);
+  assert.equal(stageThinking("epiphanies", {}), false);
+  assert.equal(stageThinking("arrange", {}), false);
+  assert.equal(stageThinking("epiphanies", { thinking: false }), false);
+  assert.equal(stageThinking("chronology", { thinking: true }), true);
+  assert.equal(stageThinking("epiphanies", { thinkingByStage: { epiphanies: true } }), true);
+  assert.equal(stageThinking("arrange", { thinkingByStage: { arrange: true } }), true);
+});
+
+test("thinkingByStage can send thinking off, on, off", async () => {
+  const { callLLM, requests } = scriptedTransport([CHRONOLOGY, EPIPHANIES, ARRANGEMENT]);
+  const result = await generateRealityMap(
+    { concept: "battery", callLLM },
+    { thinkingByStage: { chronology: false, epiphanies: true, arrange: false } }
+  );
+  assert.equal(result.ok, true);
+  assert.deepEqual(
+    requests.map((request) => request.thinking),
+    [false, true, false]
+  );
+});
+
+test("generator default sends thinking off on every stage", async () => {
+  const { callLLM, requests } = scriptedTransport([CHRONOLOGY, EPIPHANIES, ARRANGEMENT]);
+  const result = await generateRealityMap({ concept: "battery", callLLM });
+  assert.equal(result.ok, true);
+  assert.deepEqual(
+    requests.map((request) => request.thinking),
+    [false, false, false]
+  );
+});
 
 test("locked stage prompts contain no mission, layer count, or STE copy", () => {
   const prompts = [
