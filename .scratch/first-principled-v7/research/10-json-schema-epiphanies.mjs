@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { callChatCompletion, llmProvider } from "../../../src/lib/agent/llm.js";
+import { callChatCompletion, llmModel, llmProvider } from "../../../src/lib/agent/llm.js";
 import {
   epiphaniesProblems,
   generateRealityMap,
@@ -32,12 +32,15 @@ function loadEnv(path) {
 }
 
 loadEnv(resolve(".env"));
-process.env.LLM_PROVIDER = "deepseek";
+process.env.LLM_PROVIDER = "openrouter";
 
-if (!process.env.DEEPSEEK_API_KEY) {
-  console.log("MISSING=DEEPSEEK_API_KEY");
+if (!process.env.LLM_API_KEY) {
+  console.log("MISSING=LLM_API_KEY");
   process.exit(1);
 }
+
+console.log("PROVIDER=" + llmProvider());
+console.log("MODEL=" + llmModel());
 
 const NAMES = ["chronology", "epiphanies", "arrange"];
 let callIndex = 0;
@@ -93,6 +96,7 @@ try {
   });
 
   console.log("PROVIDER=" + llmProvider());
+  console.log("MODEL=" + llmModel());
   console.log("TOTAL_MS=" + (Date.now() - started));
   console.log("ARRANGE_RAN=" + arrangeRan);
   console.log("OK=" + result.ok);
@@ -101,6 +105,7 @@ try {
   console.log("ERRORS=" + (result.errors || []).join(" | "));
 } catch (error) {
   console.log("PROVIDER=" + llmProvider());
+  console.log("MODEL=" + llmModel());
   console.log("TOTAL_MS=" + (Date.now() - started));
   console.log("ARRANGE_RAN=" + arrangeRan);
   console.log("THREW=" + (error && error.message ? error.message : String(error)));

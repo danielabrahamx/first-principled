@@ -100,10 +100,10 @@ function completionBody(content, message = {}) {
   };
 }
 
-test("defaults to OpenRouter Nemotron :free", async () => {
+test("defaults to OpenRouter Nemotron", async () => {
   await withEnv({}, () => {
     assert.equal(llmProvider(), "openrouter");
-    assert.equal(llmModel(), "nvidia/nemotron-3-ultra-550b-a55b:free");
+    assert.equal(llmModel(), "nvidia/nemotron-3-ultra-550b-a55b");
     assert.equal(llmBaseUrl(), "https://openrouter.ai/api/v1");
     assert.equal(llmApiKeyName(), "LLM_API_KEY");
   });

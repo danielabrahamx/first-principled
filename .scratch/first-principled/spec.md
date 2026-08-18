@@ -41,7 +41,7 @@ Founders building things, learning as they build, avoiding technical debt. v1: o
 - One stateless serverless function, POST /api/agent, on Netlify. It receives the full session state with every call, calls the live LLM, returns the reply plus the updated learner map and diffs. It stores nothing.
 - No database, no auth, no agent framework.
 - Client holds session state in memory (`src/state/session.js`: word, reality map, learner map, history, failedAttempts, phase, gap closures, transfer result, metrics) and sends it with every request. Home is the Tree (`#` / `#map`); `#how` is the How it works page on the same chrome; `#chat` lands on home. Navigation keeps the session. Nothing is written to disk, localStorage, or any server.
-- OpenAI-compatible LLM via `LLM_PROVIDER=openrouter|deepseek`. Unset or `openrouter` uses `LLM_*`. `deepseek` uses `DEEPSEEK_*`. Default OpenRouter model: nvidia/nemotron-3-ultra-550b-a55b:free at https://openrouter.ai/api/v1. Prod stays OpenRouter.
+- OpenAI-compatible LLM via `LLM_PROVIDER=openrouter|deepseek`. Unset or `openrouter` uses `LLM_*`. `deepseek` uses `DEEPSEEK_*`. Default OpenRouter model: nvidia/nemotron-3-ultra-550b-a55b at https://openrouter.ai/api/v1. Prod stays OpenRouter.
 - No web grounding in v1. The reality map comes from the model's knowledge only.
 
 ## 7. Data model (Mental Model Graph)

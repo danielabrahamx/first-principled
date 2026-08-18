@@ -67,7 +67,9 @@ const NODE_ROLES = new Set(["DOMAIN", "EPIPHANY", "STRUCTURAL"]);
 
 /**
  * JSON Schema for constrained Stage 2 decoding. Regime references are
- * restricted to the ids returned by the accepted Chronology call.
+ * restricted to the ids returned by the accepted Chronology call. The
+ * shape is the OpenRouter strict subset: no `const`, `pattern`, or
+ * `allOf`/`if`/`then`. Certainty rules stay in `epiphaniesProblems`.
  *
  * @param {string} concept
  * @param {Set<string>} chronologyIds
@@ -85,24 +87,24 @@ export function buildEpiphaniesJsonSchema(concept, chronologyIds) {
       type: "object",
       additionalProperties: false,
       properties: {
-        concept: { type: "string", const: concept },
+        concept: { type: "string", enum: [concept] },
         epiphanies: {
           type: "array",
           items: {
             type: "object",
             additionalProperties: false,
             properties: {
-              id: { type: "string", pattern: "^e[1-9][0-9]*$" },
+              id: { type: "string" },
               from_regimes: { type: "array", items: regimeId },
               to_regimes: { type: "array", items: regimeId },
-              result: { type: "string", minLength: 1 },
+              result: { type: "string" },
               joint_kind: { type: "string", enum: [...JOINT_KINDS] },
               history: {
                 type: "object",
                 additionalProperties: false,
                 properties: {
                   certainty: { type: "string", enum: [...CERTAINTIES] },
-                  who: { type: "array", items: { type: "string", minLength: 1 } },
+                  who: { type: "array", items: { type: "string" } },
                   when: { type: ["string", "null"] },
                   observation: { type: ["string", "null"] },
                   uncertainty_note: { type: "string" },
@@ -113,38 +115,6 @@ export function buildEpiphaniesJsonSchema(concept, chronologyIds) {
                   "when",
                   "observation",
                   "uncertainty_note",
-                ],
-                allOf: [
-                  {
-                    if: { properties: { certainty: { const: "EXACT" } } },
-                    then: {
-                      properties: {
-                        who: { minItems: 1 },
-                        when: { type: "string", minLength: 1 },
-                        observation: { type: "string", minLength: 1 },
-                      },
-                    },
-                  },
-                  {
-                    if: { properties: { certainty: { const: "APPROXIMATE" } } },
-                    then: {
-                      properties: {
-                        observation: { type: "string", minLength: 1 },
-                        uncertainty_note: { minLength: 1 },
-                      },
-                    },
-                  },
-                  {
-                    if: { properties: { certainty: { const: "UNKNOWN" } } },
-                    then: {
-                      properties: {
-                        who: { maxItems: 0 },
-                        when: { type: "null" },
-                        observation: { type: "null" },
-                        uncertainty_note: { minLength: 1 },
-                      },
-                    },
-                  },
                 ],
               },
               candidate_node: { type: ["string", "null"] },

@@ -132,16 +132,15 @@ Current architecture (v1):
   and is parked from the UI.
 - OpenAI-compatible LLM via `LLM_PROVIDER=openrouter|deepseek` (default
   openrouter uses `LLM_*`; deepseek uses `DEEPSEEK_*`). Default OpenRouter
-  model: `nvidia/nemotron-3-ultra-550b-a55b:free`. Prod stays OpenRouter.
+  model: `nvidia/nemotron-3-ultra-550b-a55b`. Prod stays OpenRouter.
   JSON maps send `thinking: false`: OpenRouter
   `reasoning: { effort: "none" }`, DeepSeek
   `thinking: { type: "disabled" }`. A per-stage override exists as an
   unused seam; DeepSeek Epiphanies-on was tried and failed to parse.
   Do not parse `reasoning_content` as the JSON contract. Epiphanies
-  under thinking-off `json_object` still fails the joints field
-  checklist. The locked fix is JSON Schema on that call
+  sends JSON Schema
   ([Ship JSON Schema on Epiphanies](.scratch/first-principled-v7/issues/10-ship-json-schema-on-epiphanies.md)).
-  No DB, no auth, no framework.
+  The `:free` slug cannot constrain that call. No DB, no auth, no framework.
 - `src/lib/agent/` holds the engine: reality map generation, the Socratic
   turn loop (kept, not shown), and the LLM transport.
 

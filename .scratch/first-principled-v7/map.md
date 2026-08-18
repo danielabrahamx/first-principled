@@ -21,7 +21,7 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
 - **This map carries execution.** Tickets are the rewrite, not a spec to
   hand off. One session, one ticket (research excepted).
   [Ship JSON Schema on Epiphanies](issues/10-ship-json-schema-on-epiphanies.md)
-  is AFK. After it, stop:
+  is resolved. Next:
   [Danny scores followability on the three-stage Tree](issues/07-danny-scores-followability-on-the-three-stage-tree.md)
   is HITL.
 - Domain: read `docs/MISSION.md` and `CONTEXT.md` before any ticket.
@@ -51,8 +51,9 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
   tickets, or research notes. JSON maps send `thinking: false`. OpenRouter
   maps that to `reasoning: { effort: "none" }`. DeepSeek maps that to
   `thinking: { type: "disabled" }`. `thinkingByStage` can turn one stage
-  on; DeepSeek Epiphanies-on was tried and failed. Next ship is JSON
-  Schema on Epiphanies, thinking still off. Do not raise host timeouts
+  on; DeepSeek Epiphanies-on was tried and failed. Epiphanies sends JSON
+  Schema, thinking still off. OpenRouter prod uses paid Nemotron because
+  `:free` cannot constrain that call. Do not raise host timeouts
   to fix joints. Do not parse `reasoning_content` as the JSON contract.
   Do not send OpenRouter `reasoning` on the DeepSeek path.
 - Salvage: Tree chrome, invitation card, background `POST /api/agent` plus
@@ -66,9 +67,7 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
   [One-shot gold maps pass the quality gate](../first-principled-v6/issues/13-one-shot-gold-maps-pass-the-quality-gate.md).
 - Skills: grilling + domain-modeling on HITL, including
   [Danny scores followability on the three-stage Tree](issues/07-danny-scores-followability-on-the-three-stage-tree.md)
-  (blocked until
-  [Ship JSON Schema on Epiphanies](issues/10-ship-json-schema-on-epiphanies.md)
-  lands; do not score in a schema-ship session)
+  (HITL; schema ship has landed, do not score in a schema-ship session)
   and
   [Lock the thinking architecture from the council](issues/09-lock-the-thinking-architecture-from-the-council.md)
   (resolved: Option A; council essay in
@@ -119,6 +118,7 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
 - [Deploy the three-stage Tree](issues/06-deploy-the-three-stage-tree.md) - prod deploy `6a83a3dd6082d925b8c3d127` is OpenRouter `:free`. Chrome 12/12. Live gold words returned `invalid_model_output` with no learner leaks. Diagnostics stay capturable off `/api/agent`.
 - [DeepSeek thinks only on Epiphanies](issues/08-deepseek-thinks-only-on-epiphanies.md) - mixed thinking does not get a DeepSeek Tree. Chronology off is fine (~5 s). Epiphanies on spent 75 s, wrote 34k chars of hidden thinking, and left 784 chars of content that was not an `epiphanies` array. Default stays thinking off. Per-stage override remains. Record: [08-mixed-thinking.md](research/08-mixed-thinking.md).
 - [Lock the thinking architecture from the council](issues/09-lock-the-thinking-architecture-from-the-council.md) - Option A: thinking off, JSON Schema on Epiphanies. Rejected B (thinking-on two-region emit) and C (few-shot exemplars). Netlify timeout is not the fix. Record: [09-thinking-architecture-council.md](research/09-thinking-architecture-council.md).
+- [Ship JSON Schema on Epiphanies](issues/10-ship-json-schema-on-epiphanies.md) - thinking-off JSON Schema on Epiphanies returns joints that pass the field checklist so Arrange can run, on OpenRouter paid Nemotron. DeepSeek rejects `json_schema`. `:free` cannot constrain. Schema is the strict subset; certainty rules stay in `epiphaniesProblems`. Record: [10-json-schema-epiphanies.md](research/10-json-schema-epiphanies.md).
 
 ## Not yet specified
 
@@ -127,8 +127,6 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
   to rescue Chronology capture or disregard.
 - Grow motion on a branching trunk.
 - Layer-band visual.
-- Paid OpenRouter slug, only if `:free` cannot serve the three-stage
-  builder.
 - Whether STE ever returns to generator prompts.
 - Exemplars on Epiphanies only if schema-valid joints are consistently
   shallow after

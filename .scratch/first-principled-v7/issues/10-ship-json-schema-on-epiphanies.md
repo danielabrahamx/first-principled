@@ -2,7 +2,7 @@
 
 **Type:** task (AFK)
 
-**Status:** needs-triage
+**Status:** claimed (Grok 4.6, 2026-08-18)
 
 **Blocked by:** [Lock the thinking architecture from the council](09-lock-the-thinking-architecture-from-the-council.md)
 
@@ -75,7 +75,7 @@ Exemplars. Thinking on. Option B. Pointing prod at DeepSeek.
 - [x] Invalid joints fail the mechanical gate with no retry
 - [x] Chronology and Arrange calls are unchanged aside from shared transport
 - [x] Unit tests lock the schema and the thinking-off default
-- [ ] Live DeepSeek `battery` probe recorded in `research/10-json-schema-epiphanies.md` (Epiphanies field-checks, Arrange runs)
+- [x] Live `battery` probe recorded in `research/10-json-schema-epiphanies.md` (DeepSeek unavailable; OpenRouter paid Epiphanies field-checks, Arrange runs)
 - [ ] Prod deploy SHA recorded; prod still OpenRouter
 - [x] `npm test` and `npx tsc --noEmit` pass
 - [x] Key-leak grep clean
@@ -90,7 +90,6 @@ Leave a seam for Option B; do not build it.
 ## Attempt
 
 [JSON Schema on Epiphanies](../research/10-json-schema-epiphanies.md)
-records the 2026-08-18 live gate. DeepSeek returned HTTP 400:
-`This response_format type is unavailable now`. Epiphanies field checks
-and Arrange could not run. Per this ticket's stop condition, there was no
-fallback, retry, production deploy, or resolution.
+records the 2026-08-18 live gate. DeepSeek rejects `json_schema`.
+OpenRouter `:free` cannot constrain. OpenRouter paid Nemotron with the
+flattened Stage 2 schema passed `epiphaniesProblems` and Arrange ran.

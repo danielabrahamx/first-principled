@@ -214,9 +214,10 @@ test("Epiphanies schema locks the Stage 2 fields and live Chronology ids", () =>
   const responseFormat = buildEpiphaniesJsonSchema("battery", new Set(["c1", "c2"]));
   assert.equal(responseFormat.name, "epiphanies");
   assert.equal(responseFormat.strict, true);
-  assert.equal(responseFormat.schema.properties.concept.const, "battery");
+  assert.deepEqual(responseFormat.schema.properties.concept.enum, ["battery"]);
   const item = responseFormat.schema.properties.epiphanies.items;
   assert.equal(item.additionalProperties, false);
+  assert.equal(item.properties.history.allOf, undefined);
   assert.deepEqual(item.required, [
     "id",
     "from_regimes",

@@ -14,11 +14,9 @@ Prod stays OpenRouter.
 **Resume:** v6 chrome shipped; one-shot scoring parked. The v7 three-stage
 Tree builder is live on prod in one background init job with a 14 min
 poll deadline. Thinking architecture is Option A (thinking off, JSON
-Schema on Epiphanies). Open frontier:
-[Ship JSON Schema on Epiphanies](.scratch/first-principled-v7/issues/10-ship-json-schema-on-epiphanies.md)
-(AFK).
-[Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md)
-waits on that ship. Map: `.scratch/first-principled-v7/map.md`.
+Schema on Epiphanies, OpenRouter paid Nemotron). Open frontier:
+[Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md).
+Map: `.scratch/first-principled-v7/map.md`.
 
 ## Golden rules
 
@@ -42,13 +40,12 @@ waits on that ship. Map: `.scratch/first-principled-v7/map.md`.
 - Client holds session state in memory; the function stores nothing.
 - OpenAI-compatible LLM via `LLM_PROVIDER=openrouter|deepseek` (default
   openrouter uses `LLM_*`; deepseek uses `DEEPSEEK_*`). Default OpenRouter
-  model: `nvidia/nemotron-3-ultra-550b-a55b:free` at
+  model: `nvidia/nemotron-3-ultra-550b-a55b` at
   `https://openrouter.ai/api/v1`. Prod stays OpenRouter. JSON maps send
   `thinking: false` (OpenRouter `reasoning` effort none; DeepSeek
-  `thinking` type disabled). Epiphanies still needs JSON Schema; that
-  is [Ship JSON Schema on Epiphanies](.scratch/first-principled-v7/issues/10-ship-json-schema-on-epiphanies.md).
-  Do not take [Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md)
-  until that ship lands.
+  `thinking` type disabled). Epiphanies sends JSON Schema. The next
+  HITL ticket is
+  [Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md).
 - No DB, no auth, no agent framework (Mastra/LangGraph is v2).
 - Home is the Tree. v6 parks Tutor from the chrome (engine stays). There
   is no Chat page and no learner-map tab. How it works lives in the header.
