@@ -1,0 +1,89 @@
+{
+  "concept": "battery",
+  "ok": true,
+  "reason": null,
+  "chronology": {
+    "concept": "battery",
+    "chronology": [
+      {
+        "id": "c1",
+        "regime": "separated charge",
+        "new_capability": "stored electrical potential",
+        "enabled_by_previous": [],
+        "ancestry_kind": "PHYSICAL",
+        "target_relevance": "A battery needs charge separation."
+      },
+      {
+        "id": "c2",
+        "regime": "controlled redox reaction",
+        "new_capability": "sustained electron flow",
+        "enabled_by_previous": [
+          "c1"
+        ],
+        "ancestry_kind": "PHYSICAL",
+        "target_relevance": "A battery converts chemical potential into current."
+      }
+    ]
+  },
+  "epiphanies": {
+    "concept": "battery",
+    "epiphanies": [
+      {
+        "id": "e1",
+        "from_regimes": [
+          "c1"
+        ],
+        "to_regimes": [
+          "c2"
+        ],
+        "result": "Two metals and an electrolyte sustain a circuit.",
+        "joint_kind": "EXPERIMENTAL_RESULT",
+        "history": {
+          "certainty": "EXACT",
+          "who": [
+            "Alessandro Volta"
+          ],
+          "when": "1800",
+          "observation": "Alternating metal discs separated by brine produced continuous current.",
+          "uncertainty_note": ""
+        },
+        "candidate_node": "voltaic pile"
+      }
+    ]
+  },
+  "provenance": {
+    "nodes": [
+      {
+        "node_id": "n-charge",
+        "input_refs": [
+          "c1"
+        ]
+      },
+      {
+        "node_id": "n-battery",
+        "input_refs": [
+          "c2",
+          "e1"
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "n-battery",
+        "target": "n-charge",
+        "input_refs": [
+          "c1",
+          "c2",
+          "e1"
+        ]
+      }
+    ],
+    "discarded_input_ids": []
+  },
+  "discardedInputIds": [],
+  "prompts": {
+    "chronology": true,
+    "epiphanies": true,
+    "arrange": true
+  }
+}

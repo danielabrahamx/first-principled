@@ -12,9 +12,9 @@ Prod stays OpenRouter.
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
 **Resume:** v6 chrome shipped; one-shot scoring parked. The v7 three-stage
-Tree builder is implemented in one background init job with a 14 min poll
-deadline. Open frontier:
-[Deploy the three-stage Tree](.scratch/first-principled-v7/issues/06-deploy-the-three-stage-tree.md).
+Tree builder is live on prod in one background init job with a 14 min
+poll deadline. Open frontier:
+[Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md).
 Map: `.scratch/first-principled-v7/map.md`.
 
 ## Golden rules

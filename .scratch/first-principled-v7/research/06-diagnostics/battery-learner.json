@@ -1,0 +1,67 @@
+{
+  "concept": "battery",
+  "ok": true,
+  "map": {
+    "concept": "battery",
+    "layers": [
+      {
+        "id": "l0",
+        "name": "Foundation",
+        "nodes": [
+          "n-charge"
+        ]
+      },
+      {
+        "id": "l1",
+        "name": "Stored current",
+        "nodes": [
+          "n-battery"
+        ]
+      }
+    ],
+    "nodes": [
+      {
+        "id": "n-charge",
+        "label": "charge separation",
+        "layer": "l0",
+        "description": "Separated charges create electrical potential.",
+        "role": "DOMAIN"
+      },
+      {
+        "id": "n-battery",
+        "label": "battery",
+        "layer": "l1",
+        "description": "A controlled reaction sustains current through a circuit.",
+        "role": "EPIPHANY",
+        "basis": {
+          "discoverer": {
+            "value": "Alessandro Volta",
+            "mark": "EXACT"
+          },
+          "date": {
+            "value": "1800",
+            "mark": "EXACT"
+          },
+          "keyObservation": {
+            "value": "Alternating metal discs separated by brine produced continuous current.",
+            "mark": "EXACT"
+          },
+          "confidence": "high",
+          "note": ""
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "n-battery",
+        "target": "n-charge",
+        "type": "depends-on",
+        "because": "A battery needs separated charge to drive electron flow."
+      }
+    ],
+    "trunk": [
+      "n-charge",
+      "n-battery"
+    ]
+  }
+}

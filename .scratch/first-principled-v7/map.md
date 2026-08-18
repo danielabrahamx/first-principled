@@ -99,6 +99,7 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
 - [Prototype the three stage prompts](issues/04-prototype-the-three-stage-prompts.md) - Danny locked `research/04-stage-prompts/stage-prompts.md` as the ticket 05 input. Iterate after KEEP/KILL, not before.
 - [LLM_PROVIDER is a one-var switch](issues/03-llm-provider-is-a-one-var-switch.md) - `LLM_PROVIDER=openrouter|deepseek` selects the live triple in `llm.js`. OpenRouter headers and `reasoning` stay OpenRouter-only. Prod stays OpenRouter.
 - [The generator is three stages and nothing else](issues/05-the-generator-is-three-stages-and-nothing-else.md) - init now runs the locked Chronology, Epiphanies, and Arrange prompts exactly once, gates the role-marked Tree and hidden provenance mechanically, and returns only the checked map.
+- [Deploy the three-stage Tree](issues/06-deploy-the-three-stage-tree.md) - prod deploy `6a83a3dd6082d925b8c3d127` is OpenRouter `:free`. Chrome 12/12. Live gold words returned `invalid_model_output` with no learner leaks. Diagnostics stay capturable off `/api/agent`.
 
 ## Not yet specified
 

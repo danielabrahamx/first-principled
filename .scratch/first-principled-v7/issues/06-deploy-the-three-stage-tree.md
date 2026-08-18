@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** [The generator is three stages and nothing else](05-the-generator-is-three-stages-and-nothing-else.md)
 
@@ -29,16 +29,34 @@ Paid slug. DeepSeek in prod.
 
 ## Acceptance criteria
 
-- [ ] Prod deploy SHA recorded
-- [ ] Prod still OpenRouter
-- [ ] Init on prod is the three-stage path (or the exact `:free` 429
+- [x] Prod deploy SHA recorded
+- [x] Prod still OpenRouter
+- [x] Init on prod is the three-stage path (or the exact `:free` 429
       blocker is recorded)
-- [ ] Learner-facing responses contain no intermediate or provenance data
-- [ ] Four-topic diagnostic bundles can be captured without exposing them
+- [x] Learner-facing responses contain no intermediate or provenance data
+- [x] Four-topic diagnostic bundles can be captured without exposing them
       to the learner
-- [ ] Key-leak grep clean
+- [x] Key-leak grep clean
 
 ## Docs rule
 
 Pointer from this ticket and the map's Decisions so far. AGENTS.md
 Resume and CONTEXT.md Frontier name the deploy in the same commit.
+
+## Resolution
+
+Prod deploy id `6a83a3dd6082d925b8c3d127` at
+https://first-principled.netlify.app (unique URL
+https://6a83a3dd6082d925b8c3d127--first-principled.netlify.app). Prod
+`LLM_*` stay OpenRouter Nemotron `:free`. `LLM_PROVIDER` is unset, not
+`deepseek`. Chrome smoke 12/12 against the unique URL.
+
+Live `photosynthesis` and `recursion` init hit the three-stage path and
+returned `invalid_model_output` in ~17s after the mechanical gate
+rejected the model output. Not HTTP 429. Learner-facing bodies leaked
+no chronology, epiphanies, provenance, discarded IDs, or prompts.
+`06-capture-diagnostics.mjs` splits a learner map from a diagnostic
+bundle so ticket 07 can persist the four gold words without exposing
+them on `/api/agent`. Record:
+[06-prod-smoke.md](../research/06-prod-smoke.md). No prompt rewrite. No
+slug switch.

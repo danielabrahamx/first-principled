@@ -15,8 +15,10 @@ a three-stage Tree builder. Map:
 `.scratch/first-principled-v7/map.md`. Three stages stay in one
 background init job
 ([Can one background agent finish three serial LLM calls](.scratch/first-principled-v7/issues/01-can-one-background-agent-finish-three-serial-llm-calls.md)).
-The three-stage generator is implemented. Open frontier:
-[Deploy the three-stage Tree](.scratch/first-principled-v7/issues/06-deploy-the-three-stage-tree.md).
+The three-stage generator is live on prod
+([Deploy the three-stage Tree](.scratch/first-principled-v7/issues/06-deploy-the-three-stage-tree.md)).
+Open frontier:
+[Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md).
 
 ## Language
 
