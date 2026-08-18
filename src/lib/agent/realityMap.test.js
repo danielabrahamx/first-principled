@@ -5,6 +5,7 @@ import {
   arrangeCheck,
   buildArrangeSystemPrompt,
   buildChronologySystemPrompt,
+  buildEpiphaniesJsonSchema,
   buildEpiphaniesSystemPrompt,
   chronologyProblems,
   deriveCheck,
@@ -209,6 +210,41 @@ test("Epiphanies contract enforces honest history and Stage 1 references", () =>
   assert.match(epiphaniesProblems(bad, "battery", ids).join(" "), /UNKNOWN requires/);
 });
 
+test("Epiphanies schema locks the Stage 2 fields and live Chronology ids", () => {
+  const responseFormat = buildEpiphaniesJsonSchema("battery", new Set(["c1", "c2"]));
+  assert.equal(responseFormat.name, "epiphanies");
+  assert.equal(responseFormat.strict, true);
+  assert.equal(responseFormat.schema.properties.concept.const, "battery");
+  const item = responseFormat.schema.properties.epiphanies.items;
+  assert.equal(item.additionalProperties, false);
+  assert.deepEqual(item.required, [
+    "id",
+    "from_regimes",
+    "to_regimes",
+    "result",
+    "joint_kind",
+    "history",
+    "candidate_node",
+  ]);
+  assert.deepEqual(item.properties.from_regimes.items.enum, ["c1", "c2"]);
+  assert.deepEqual(item.properties.to_regimes.items.enum, ["c1", "c2"]);
+  assert.deepEqual(item.properties.joint_kind.enum, [
+    "OBSERVATION",
+    "EXPERIMENTAL_RESULT",
+    "ENGINEERED_RESULT",
+    "FORMALIZATION",
+    "PROOF",
+    "GRADUAL_SYNTHESIS",
+    "NO_SINGLE_JOINT",
+  ]);
+  assert.deepEqual(item.properties.history.properties.certainty.enum, [
+    "EXACT",
+    "APPROXIMATE",
+    "UNKNOWN",
+  ]);
+  assert.deepEqual(item.properties.history.properties.observation.type, ["string", "null"]);
+});
+
 test("Arrange normalization rebuilds EPIPHANY basis from cited Stage 2 history", () => {
   const normalized = normalizeArrangement(
     structuredClone(ARRANGEMENT),
@@ -252,8 +288,14 @@ test("generator makes exactly three serial calls and keeps diagnostics off the m
   assert.equal(result.ok, true);
   assert.equal(requests.length, 3);
   assert.match(requests[0].messages[0].content, /capability regimes/);
+  assert.equal(requests[0].jsonSchema, undefined);
   assert.deepEqual(JSON.parse(requests[1].messages[1].content), CHRONOLOGY);
+  assert.deepEqual(
+    requests[1].jsonSchema.schema.properties.epiphanies.items.properties.from_regimes.items.enum,
+    ["c1", "c2"]
+  );
   assert.equal(JSON.parse(requests[2].messages[1].content).epiphanies[0].id, "e1");
+  assert.equal(requests[2].jsonSchema, undefined);
   assert.equal(result.retried, false);
   assert.ok(result.diagnostics);
   assert.ok(result.map);
@@ -268,6 +310,18 @@ test("a failed stage is terminal with no retry or later call", async () => {
   assert.equal(result.ok, false);
   assert.equal(result.kind, "invalid");
   assert.equal(requests.length, 1);
+  assert.equal(result.retried, false);
+});
+
+test("invalid Epiphanies are terminal with no retry or Arrange call", async () => {
+  const badEpiphanies = structuredClone(EPIPHANIES);
+  badEpiphanies.epiphanies[0].from_regimes = ["regime-name"];
+  const { callLLM, requests } = scriptedTransport([CHRONOLOGY, badEpiphanies, ARRANGEMENT]);
+  const result = await generateRealityMap({ concept: "battery", callLLM });
+  assert.equal(result.ok, false);
+  assert.equal(result.kind, "invalid");
+  assert.match(result.errors.join(" "), /unknown id/);
+  assert.equal(requests.length, 2);
   assert.equal(result.retried, false);
 });
 

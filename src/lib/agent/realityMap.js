@@ -19,12 +19,16 @@ import { observationProblems, dropUnknownValues } from "../mmg/observation.js";
 /** @typedef {import("../mmg/types.js").RealityMap} RealityMap */
 
 /**
- * @typedef {(request: {
- *   messages: import("./llm.js").ChatMessage[],
- *   jsonMode: boolean,
- *   thinking: boolean,
- *   maxTokens: number,
- * }) => Promise<{ content: string }>} CallLLM
+ * @typedef {object} CallLLMRequest
+ * @property {import("./llm.js").ChatMessage[]} messages
+ * @property {boolean} jsonMode
+ * @property {{ name: string; strict?: boolean; schema: Record<string, any> }} [jsonSchema]
+ * @property {boolean} thinking
+ * @property {number} maxTokens
+ */
+
+/**
+ * @typedef {(request: CallLLMRequest) => Promise<{ content: string }>} CallLLM
  */
 
 /**
@@ -60,6 +64,107 @@ const JOINT_KINDS = new Set([
 ]);
 const CERTAINTIES = new Set(["EXACT", "APPROXIMATE", "UNKNOWN"]);
 const NODE_ROLES = new Set(["DOMAIN", "EPIPHANY", "STRUCTURAL"]);
+
+/**
+ * JSON Schema for constrained Stage 2 decoding. Regime references are
+ * restricted to the ids returned by the accepted Chronology call.
+ *
+ * @param {string} concept
+ * @param {Set<string>} chronologyIds
+ * @returns {{ name: string; strict: true; schema: Record<string, any> }}
+ */
+export function buildEpiphaniesJsonSchema(concept, chronologyIds) {
+  const regimeId = {
+    type: "string",
+    enum: [...chronologyIds],
+  };
+  return {
+    name: "epiphanies",
+    strict: true,
+    schema: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        concept: { type: "string", const: concept },
+        epiphanies: {
+          type: "array",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              id: { type: "string", pattern: "^e[1-9][0-9]*$" },
+              from_regimes: { type: "array", items: regimeId },
+              to_regimes: { type: "array", items: regimeId },
+              result: { type: "string", minLength: 1 },
+              joint_kind: { type: "string", enum: [...JOINT_KINDS] },
+              history: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  certainty: { type: "string", enum: [...CERTAINTIES] },
+                  who: { type: "array", items: { type: "string", minLength: 1 } },
+                  when: { type: ["string", "null"] },
+                  observation: { type: ["string", "null"] },
+                  uncertainty_note: { type: "string" },
+                },
+                required: [
+                  "certainty",
+                  "who",
+                  "when",
+                  "observation",
+                  "uncertainty_note",
+                ],
+                allOf: [
+                  {
+                    if: { properties: { certainty: { const: "EXACT" } } },
+                    then: {
+                      properties: {
+                        who: { minItems: 1 },
+                        when: { type: "string", minLength: 1 },
+                        observation: { type: "string", minLength: 1 },
+                      },
+                    },
+                  },
+                  {
+                    if: { properties: { certainty: { const: "APPROXIMATE" } } },
+                    then: {
+                      properties: {
+                        observation: { type: "string", minLength: 1 },
+                        uncertainty_note: { minLength: 1 },
+                      },
+                    },
+                  },
+                  {
+                    if: { properties: { certainty: { const: "UNKNOWN" } } },
+                    then: {
+                      properties: {
+                        who: { maxItems: 0 },
+                        when: { type: "null" },
+                        observation: { type: "null" },
+                        uncertainty_note: { minLength: 1 },
+                      },
+                    },
+                  },
+                ],
+              },
+              candidate_node: { type: ["string", "null"] },
+            },
+            required: [
+              "id",
+              "from_regimes",
+              "to_regimes",
+              "result",
+              "joint_kind",
+              "history",
+              "candidate_node",
+            ],
+          },
+        },
+      },
+      required: ["concept", "epiphanies"],
+    },
+  };
+}
 
 /**
  * Canonicalize a model enum to the contract token. Case and separators
@@ -624,9 +729,11 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
   };
   const request = async (
     /** @type {"chronology" | "epiphanies" | "arrange"} */ stage,
-    /** @type {any} */ payload
+    /** @type {any} */ payload,
+    /** @type {{ name: string; strict: true; schema: Record<string, any> } | undefined} */ jsonSchema = undefined
   ) => {
-    const response = await transport({
+    /** @type {CallLLMRequest} */
+    const transportRequest = {
       messages: [
         { role: "system", content: prompts[stage] },
         { role: "user", content: JSON.stringify(payload) },
@@ -634,7 +741,9 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
       jsonMode: true,
       thinking: stageThinking(stage, options),
       maxTokens: options.maxTokens ?? 8192,
-    });
+    };
+    if (jsonSchema) transportRequest.jsonSchema = jsonSchema;
+    const response = await transport(transportRequest);
     return parseModelJson(response.content);
   };
 
@@ -647,7 +756,13 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
     const chronologyItems = /** @type {any} */ (chronology).chronology;
     const chronologyIds = new Set(chronologyItems.map((/** @type {any} */ item) => item.id));
 
-    const epiphanies = normalizeEpiphanies(await request("epiphanies", chronology));
+    const epiphanies = normalizeEpiphanies(
+      await request(
+        "epiphanies",
+        chronology,
+        buildEpiphaniesJsonSchema(trimmed, chronologyIds)
+      )
+    );
     const epiphanyErrors = epiphaniesProblems(epiphanies, trimmed, chronologyIds);
     if (epiphanyErrors.length > 0) {
       return failure("invalid", "The Epiphanies stage failed its contract.", epiphanyErrors, Date.now() - started);

@@ -2,7 +2,7 @@
 
 **Type:** task (AFK)
 
-**Status:** ready-for-agent
+**Status:** needs-triage
 
 **Blocked by:** [Lock the thinking architecture from the council](09-lock-the-thinking-architecture-from-the-council.md)
 
@@ -70,19 +70,27 @@ Exemplars. Thinking on. Option B. Pointing prod at DeepSeek.
 
 ## Acceptance criteria
 
-- [ ] Epiphanies call sends JSON Schema for the locked Stage 2 contract
-- [ ] Thinking stays off on every stage by default
-- [ ] Invalid joints fail the mechanical gate with no retry
-- [ ] Chronology and Arrange calls are unchanged aside from shared transport
-- [ ] Unit tests lock the schema and the thinking-off default
+- [x] Epiphanies call sends JSON Schema for the locked Stage 2 contract
+- [x] Thinking stays off on every stage by default
+- [x] Invalid joints fail the mechanical gate with no retry
+- [x] Chronology and Arrange calls are unchanged aside from shared transport
+- [x] Unit tests lock the schema and the thinking-off default
 - [ ] Live DeepSeek `battery` probe recorded in `research/10-json-schema-epiphanies.md` (Epiphanies field-checks, Arrange runs)
 - [ ] Prod deploy SHA recorded; prod still OpenRouter
-- [ ] `npm test` and `npx tsc --noEmit` pass
-- [ ] Key-leak grep clean
-- [ ] Ticket 07 is not claimed or scored in this session
+- [x] `npm test` and `npx tsc --noEmit` pass
+- [x] Key-leak grep clean
+- [x] Ticket 07 is not claimed or scored in this session
 
 ## Docs rule
 
 Pointer from this ticket and the map. Schema lives in code next to
 `JOINT_KINDS` and `epiphaniesProblems`. Do not restate the council essay.
 Leave a seam for Option B; do not build it.
+
+## Attempt
+
+[JSON Schema on Epiphanies](../research/10-json-schema-epiphanies.md)
+records the 2026-08-18 live gate. DeepSeek returned HTTP 400:
+`This response_format type is unavailable now`. Epiphanies field checks
+and Arrange could not run. Per this ticket's stop condition, there was no
+fallback, retry, production deploy, or resolution.

@@ -14,8 +14,9 @@
  * Per the v6 ticket 01 findings (OpenRouter path):
  * - Base URL https://openrouter.ai/api/v1, Bearer auth via LLM_API_KEY.
  * - Model id from LLM_MODEL (nvidia/nemotron-3-ultra-550b-a55b:free).
- * - JSON mode is best-effort (response_format json_object only; no server-side
- *   schema enforcement), so callers must parse defensively - see jsonParse.js.
+ * - JSON object mode is best-effort. Callers may instead supply a JSON Schema
+ *   for constrained decoding. Both paths still parse defensively - see
+ *   jsonParse.js.
  * - Reasoning arrives in `message.reasoning` (and possibly
  *   `reasoning_details`), not DeepSeek `reasoning_content`. Callers that pass
  *   `thinking: false` send OpenRouter `reasoning: { effort: "none" }`.
@@ -43,6 +44,8 @@ const DEEPSEEK_DEFAULT_BASE = "https://api.deepseek.com/v1";
  * @property {ChatMessage[]} messages
  * @property {boolean} [jsonMode] - request response_format json_object (the
  *   prompt must then mention "json" and show an example - see realityMap.js).
+ * @property {{ name: string; strict?: boolean; schema: Record<string, any> }} [jsonSchema]
+ *   - request response_format json_schema. Takes precedence over jsonMode.
  * @property {boolean} [thinking] - false turns thinking off for JSON maps.
  *   OpenRouter: `reasoning: { effort: "none" }`. DeepSeek:
  *   `thinking: { type: "disabled" }`. true turns it on. Omit to leave the
@@ -142,7 +145,12 @@ export async function callChatCompletion(options) {
     messages: options.messages,
     max_tokens: options.maxTokens ?? 4096,
   };
-  if (options.jsonMode) {
+  if (options.jsonSchema) {
+    payload.response_format = {
+      type: "json_schema",
+      json_schema: options.jsonSchema,
+    };
+  } else if (options.jsonMode) {
     payload.response_format = { type: "json_object" };
   }
   if (provider === "openrouter") {

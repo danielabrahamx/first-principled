@@ -161,6 +161,45 @@ test("sends OpenRouter attribution headers and no DeepSeek thinking field", asyn
   });
 });
 
+test("JSON Schema response format takes precedence over JSON object mode", async () => {
+  await withEnv({ ...BOTH_TRIPLES, LLM_PROVIDER: "deepseek" }, async () => {
+    /** @type {any} */
+    let payload;
+    mock.method(
+      globalThis,
+      "fetch",
+      async (/** @type {string | URL} */ _url, /** @type {RequestInit | undefined} */ init) => {
+        payload = JSON.parse(/** @type {string} */ (init && init.body));
+        return fakeResponse(200, completionBody('{"concept":"battery","epiphanies":[]}'));
+      }
+    );
+    const jsonSchema = {
+      name: "epiphanies",
+      strict: true,
+      schema: {
+        type: "object",
+        properties: { concept: { const: "battery" } },
+        required: ["concept"],
+      },
+    };
+    try {
+      await callChatCompletion({
+        messages: [{ role: "user", content: "reply with json" }],
+        jsonMode: true,
+        jsonSchema,
+        thinking: false,
+      });
+      assert.deepEqual(payload.response_format, {
+        type: "json_schema",
+        json_schema: jsonSchema,
+      });
+      assert.deepEqual(payload.thinking, { type: "disabled" });
+    } finally {
+      mock.restoreAll();
+    }
+  });
+});
+
 test("thinking true maps to OpenRouter reasoning enabled", async () => {
   await withEnv({ LLM_API_KEY: "test-key" }, async () => {
     /** @type {any} */
