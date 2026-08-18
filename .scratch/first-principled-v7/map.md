@@ -61,6 +61,10 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
 - Skills: grilling + domain-modeling on HITL, including
   [Danny scores followability on the three-stage Tree](issues/07-danny-scores-followability-on-the-three-stage-tree.md)
   and
+  [Lock the thinking architecture from the council](issues/09-lock-the-thinking-architecture-from-the-council.md)
+  (Danny pastes the council reply; do not take ticket 07 in that session;
+  do not raise Netlify timeouts as the first fix);
+  and
   [Prototype the three stage prompts](issues/04-prototype-the-three-stage-prompts.md);
   `/research` on
   [Can one background agent finish three serial LLM calls](issues/01-can-one-background-agent-finish-three-serial-llm-calls.md).
@@ -116,9 +120,6 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
 - Paid OpenRouter slug, only if `:free` cannot serve the three-stage
   builder.
 - Whether STE ever returns to generator prompts.
-- Whether DeepSeek JSON in `reasoning_content` should be used when
-  `content` is short but not empty. Mixed thinking left 784 chars of
-  unparseable content beside 34k of hidden thinking.
 
 ## Out of scope
 
@@ -149,4 +150,5 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
 05 -> 06 deploy the three-stage Tree
 06 -> 07 Danny scores followability on the three-stage Tree
 03 -> 08 DeepSeek thinks only on Epiphanies
+08 -> 09 lock the thinking architecture from the council
 ```
