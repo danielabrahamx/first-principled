@@ -47,8 +47,10 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
   tickets, or research notes. JSON maps send `thinking: false`. OpenRouter
   maps that to `reasoning: { effort: "none" }`. DeepSeek maps that to
   `thinking: { type: "disabled" }`. `thinkingByStage` can turn one stage
-  on; DeepSeek Epiphanies-on was tried and failed. Do not send OpenRouter
-  `reasoning` on the DeepSeek path.
+  on; DeepSeek Epiphanies-on was tried and failed. Next ship is JSON
+  Schema on Epiphanies, thinking still off. Do not raise host timeouts
+  to fix joints. Do not parse `reasoning_content` as the JSON contract.
+  Do not send OpenRouter `reasoning` on the DeepSeek path.
 - Salvage: Tree chrome, invitation card, background `POST /api/agent` plus
   status poll, `src/lib/agent/llm.js`, `src/lib/mmg/` validator, 
   `eval/map-quality`. Rebuild `generateRealityMap`. Do not touch
@@ -60,10 +62,13 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
   [One-shot gold maps pass the quality gate](../first-principled-v6/issues/13-one-shot-gold-maps-pass-the-quality-gate.md).
 - Skills: grilling + domain-modeling on HITL, including
   [Danny scores followability on the three-stage Tree](issues/07-danny-scores-followability-on-the-three-stage-tree.md)
+  (blocked until
+  [Ship JSON Schema on Epiphanies](issues/10-ship-json-schema-on-epiphanies.md)
+  lands; do not score in a schema-ship session)
   and
   [Lock the thinking architecture from the council](issues/09-lock-the-thinking-architecture-from-the-council.md)
-  (Danny pastes the council reply; do not take ticket 07 in that session;
-  do not raise Netlify timeouts as the first fix);
+  (resolved: Option A; council essay in
+  [09-thinking-architecture-council.md](research/09-thinking-architecture-council.md));
   and
   [Prototype the three stage prompts](issues/04-prototype-the-three-stage-prompts.md);
   `/research` on
@@ -109,6 +114,7 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
 - [The generator is three stages and nothing else](issues/05-the-generator-is-three-stages-and-nothing-else.md) - init now runs the locked Chronology, Epiphanies, and Arrange prompts exactly once, gates the role-marked Tree and hidden provenance mechanically, and returns only the checked map.
 - [Deploy the three-stage Tree](issues/06-deploy-the-three-stage-tree.md) - prod deploy `6a83a3dd6082d925b8c3d127` is OpenRouter `:free`. Chrome 12/12. Live gold words returned `invalid_model_output` with no learner leaks. Diagnostics stay capturable off `/api/agent`.
 - [DeepSeek thinks only on Epiphanies](issues/08-deepseek-thinks-only-on-epiphanies.md) - mixed thinking does not get a DeepSeek Tree. Chronology off is fine (~5 s). Epiphanies on spent 75 s, wrote 34k chars of hidden thinking, and left 784 chars of content that was not an `epiphanies` array. Default stays thinking off. Per-stage override remains. Record: [08-mixed-thinking.md](research/08-mixed-thinking.md).
+- [Lock the thinking architecture from the council](issues/09-lock-the-thinking-architecture-from-the-council.md) - Option A: thinking off, JSON Schema on Epiphanies. Rejected B (thinking-on two-region emit) and C (few-shot exemplars). Netlify timeout is not the fix. Record: [09-thinking-architecture-council.md](research/09-thinking-architecture-council.md).
 
 ## Not yet specified
 
@@ -120,6 +126,9 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
 - Paid OpenRouter slug, only if `:free` cannot serve the three-stage
   builder.
 - Whether STE ever returns to generator prompts.
+- Exemplars on Epiphanies only if schema-valid joints are consistently
+  shallow after
+  [Ship JSON Schema on Epiphanies](issues/10-ship-json-schema-on-epiphanies.md).
 
 ## Out of scope
 
@@ -138,6 +147,13 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
 - Cross-concept linking.
 - Deleting the Tutor engine from `src/lib/agent/`.
 - Client-chained stages. One background init job is enough.
+- Raising host timeouts to fix joints. The 14 min poll is not the
+  bottleneck.
+- Parsing `reasoning_content` as the JSON contract.
+- Option B (thinking on plus a two-region emit) until a provider ships
+  thinking and structured outputs in the same call. Leave `thinkingByStage`
+  as a seam; do not build it now.
+- Few-shot exemplars as the first joints fix (Option C). Schema first.
 
 ## Ticket sequence (dependency overview)
 
@@ -148,7 +164,8 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
 04 prototype the three stage prompts
 01 + 03 + 04 -> 05 the generator is three stages and nothing else
 05 -> 06 deploy the three-stage Tree
-06 -> 07 Danny scores followability on the three-stage Tree
 03 -> 08 DeepSeek thinks only on Epiphanies
 08 -> 09 lock the thinking architecture from the council
+09 -> 10 ship JSON Schema on Epiphanies
+06 + 10 -> 07 Danny scores followability on the three-stage Tree
 ```

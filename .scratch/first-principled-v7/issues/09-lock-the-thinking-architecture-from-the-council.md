@@ -2,11 +2,11 @@
 
 **Type:** grilling
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** [DeepSeek thinks only on Epiphanies](08-deepseek-thinks-only-on-epiphanies.md)
 
-**Related:** [Danny scores followability on the three-stage Tree](07-danny-scores-followability-on-the-three-stage-tree.md)
+**Related:** [Danny scores followability on the three-stage Tree](07-danny-scores-followability-on-the-three-stage-tree.md), [Ship JSON Schema on Epiphanies](10-ship-json-schema-on-epiphanies.md)
 
 ## Question
 
@@ -45,14 +45,33 @@ Facts already locked by
 **Out of this ticket.** Deploy. Prod DeepSeek. Followability KEEP/KILL.
 Prompt rewrite without a locked architecture.
 
+## Answer
+
+Option A. Thinking off on every stage. JSON Schema on the Epiphanies
+call, matching the existing Stage 2 field checklist. Chronology and
+Arrange stay as they are. If a provider ignores `json_schema`, keep
+`json_object`, fail the mechanical gate, and do not retry.
+
+Rejected: Option B (thinking on plus a two-region emit; DeepSeek
+refuses `response_format` with thinking). Option C (few-shot exemplars).
+Raising Netlify timeouts. A fourth LLM call. Per-stage models. Parsing
+`reasoning_content` as the JSON contract.
+
+The tradeoff is owned: schema-valid joints at thinking-off speed, not
+the deeper joints in the hidden thinking dump. Execution is
+[Ship JSON Schema on Epiphanies](10-ship-json-schema-on-epiphanies.md).
+[Danny scores followability on the three-stage Tree](07-danny-scores-followability-on-the-three-stage-tree.md)
+waits on that ship. Record:
+[09-thinking-architecture-council.md](../research/09-thinking-architecture-council.md).
+
 ## Acceptance criteria
 
-- [ ] Council reply stored in `research/09-thinking-architecture-council.md`
-- [ ] One next architecture locked, with the rejected options named
-- [ ] Netlify-timeout-as-fix is accepted or killed in writing
-- [ ] Ticket 07 is not claimed or scored in this session
-- [ ] No secrets
-- [ ] Map Decisions so far points at the lock
+- [x] Council reply stored in `research/09-thinking-architecture-council.md`
+- [x] One next architecture locked, with the rejected options named
+- [x] Netlify-timeout-as-fix is accepted or killed in writing
+- [x] Ticket 07 is not claimed or scored in this session
+- [x] No secrets
+- [x] Map Decisions so far points at the lock
 
 ## Docs rule
 

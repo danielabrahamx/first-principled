@@ -4,9 +4,9 @@
 
 **Status:** ready-for-agent
 
-**Blocked by:** [Deploy the three-stage Tree](06-deploy-the-three-stage-tree.md)
+**Blocked by:** [Deploy the three-stage Tree](06-deploy-the-three-stage-tree.md), [Ship JSON Schema on Epiphanies](10-ship-json-schema-on-epiphanies.md)
 
-**Related:** [The generator is three stages and nothing else](05-the-generator-is-three-stages-and-nothing-else.md)
+**Related:** [The generator is three stages and nothing else](05-the-generator-is-three-stages-and-nothing-else.md), [Lock the thinking architecture from the council](09-lock-the-thinking-architecture-from-the-council.md)
 
 ## Question
 

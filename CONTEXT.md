@@ -18,9 +18,12 @@ background init job
 The three-stage generator is live on prod
 ([Deploy the three-stage Tree](.scratch/first-principled-v7/issues/06-deploy-the-three-stage-tree.md)).
 Open frontier:
-[Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md).
-Waiting for Danny's council paste:
-[Lock the thinking architecture from the council](.scratch/first-principled-v7/issues/09-lock-the-thinking-architecture-from-the-council.md).
+[Ship JSON Schema on Epiphanies](.scratch/first-principled-v7/issues/10-ship-json-schema-on-epiphanies.md)
+(thinking off, JSON Schema on the joints call).
+[Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md)
+waits on that ship.
+[Lock the thinking architecture from the council](.scratch/first-principled-v7/issues/09-lock-the-thinking-architecture-from-the-council.md)
+locked Option A.
 
 ## Language
 
