@@ -224,6 +224,31 @@ test("empty content falls back to reasoning_content so DeepSeek JSON still parse
   });
 });
 
+test("DeepSeek thinking true sends thinking enabled, never OpenRouter reasoning", async () => {
+  await withEnv({ ...BOTH_TRIPLES, LLM_PROVIDER: "deepseek" }, async () => {
+    /** @type {any} */
+    let payload;
+    mock.method(
+      globalThis,
+      "fetch",
+      async (/** @type {string | URL} */ _url, /** @type {RequestInit | undefined} */ init) => {
+        payload = JSON.parse(/** @type {string} */ (init && init.body));
+        return fakeResponse(200, completionBody("hello"));
+      }
+    );
+    try {
+      await callChatCompletion({
+        messages: [{ role: "user", content: "hi" }],
+        thinking: true,
+      });
+      assert.deepEqual(payload.thinking, { type: "enabled" });
+      assert.equal(payload.reasoning, undefined);
+    } finally {
+      mock.restoreAll();
+    }
+  });
+});
+
 test("DeepSeek path uses the DeepSeek triple and omits OpenRouter headers and reasoning", async () => {
   await withEnv({ ...BOTH_TRIPLES, LLM_PROVIDER: "deepseek" }, async () => {
     /** @type {any} */
@@ -250,7 +275,7 @@ test("DeepSeek path uses the DeepSeek triple and omits OpenRouter headers and re
       const payload = JSON.parse(captured.init.body);
       assert.equal(payload.model, "deepseek-model");
       assert.equal(payload.reasoning, undefined);
-      assert.equal(payload.thinking, undefined);
+      assert.deepEqual(payload.thinking, { type: "disabled" });
       assert.deepEqual(payload.response_format, { type: "json_object" });
     } finally {
       mock.restoreAll();

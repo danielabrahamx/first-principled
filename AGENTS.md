@@ -40,7 +40,9 @@ Map: `.scratch/first-principled-v7/map.md`.
 - OpenAI-compatible LLM via `LLM_PROVIDER=openrouter|deepseek` (default
   openrouter uses `LLM_*`; deepseek uses `DEEPSEEK_*`). Default OpenRouter
   model: `nvidia/nemotron-3-ultra-550b-a55b:free` at
-  `https://openrouter.ai/api/v1`. Prod stays OpenRouter.
+  `https://openrouter.ai/api/v1`. Prod stays OpenRouter. JSON maps send
+  `thinking: false` (OpenRouter `reasoning` effort none; DeepSeek
+  `thinking` type disabled).
 - No DB, no auth, no agent framework (Mastra/LangGraph is v2).
 - Home is the Tree. v6 parks Tutor from the chrome (engine stays). There
   is no Chat page and no learner-map tab. How it works lives in the header.

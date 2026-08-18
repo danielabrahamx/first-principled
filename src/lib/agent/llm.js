@@ -4,8 +4,11 @@
  * `LLM_PROVIDER=openrouter|deepseek` selects one env triple. Default
  * (unset or anything other than deepseek) is OpenRouter via `LLM_*`.
  * DeepSeek uses `DEEPSEEK_*` and must not inherit OpenRouter referer /
- * title / `reasoning` fields (v6: DeepSeek ignores `thinking: false`
- * mapped to OpenRouter `reasoning`).
+ * title / `reasoning` fields. Maps pass `thinking: false`. On OpenRouter
+ * that is `reasoning: { effort: "none" }`. On DeepSeek that is
+ * `thinking: { type: "disabled" }` (thinking is on by default at effort
+ * `high`; the OpenRouter `reasoning` field is ignored and burns the
+ * `max_tokens` budget into `reasoning_content`).
  *
  * Per the v6 ticket 01 findings (OpenRouter path):
  * - Base URL https://openrouter.ai/api/v1, Bearer auth via LLM_API_KEY.
@@ -39,10 +42,10 @@ const DEEPSEEK_DEFAULT_BASE = "https://api.deepseek.com/v1";
  * @property {ChatMessage[]} messages
  * @property {boolean} [jsonMode] - request response_format json_object (the
  *   prompt must then mention "json" and show an example - see realityMap.js).
- * @property {boolean} [thinking] - OpenRouter only. false sends
- *   `{ effort: "none" }` (required for JSON maps). true sends
- *   `{ enabled: true }`. Omit to leave the provider default. Ignored on
- *   DeepSeek so that path never sends an OpenRouter `reasoning` payload.
+ * @property {boolean} [thinking] - false turns thinking off for JSON maps.
+ *   OpenRouter: `reasoning: { effort: "none" }`. DeepSeek:
+ *   `thinking: { type: "disabled" }`. true turns it on. Omit to leave the
+ *   provider default (DeepSeek default is thinking on, effort high).
  * @property {number} [maxTokens] - headroom matters: a low cap truncates JSON.
  *   Default 4096.
  * @property {number} [timeoutMs] - abort the fetch after this long. Default
@@ -147,6 +150,10 @@ export async function callChatCompletion(options) {
     } else if (options.thinking === true) {
       payload.reasoning = { enabled: true };
     }
+  } else if (options.thinking === false) {
+    payload.thinking = { type: "disabled" };
+  } else if (options.thinking === true) {
+    payload.thinking = { type: "enabled" };
   }
 
   /** @type {Record<string, string>} */

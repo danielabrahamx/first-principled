@@ -128,7 +128,9 @@ Current architecture (v1):
 - OpenAI-compatible LLM via `LLM_PROVIDER=openrouter|deepseek` (default
   openrouter uses `LLM_*`; deepseek uses `DEEPSEEK_*`). Default OpenRouter
   model: `nvidia/nemotron-3-ultra-550b-a55b:free`. Prod stays OpenRouter.
-  No DB, no auth, no framework.
+  JSON maps send `thinking: false`: OpenRouter
+  `reasoning: { effort: "none" }`, DeepSeek
+  `thinking: { type: "disabled" }`. No DB, no auth, no framework.
 - `src/lib/agent/` holds the engine: reality map generation, the Socratic
   turn loop (kept, not shown), and the LLM transport.
 
