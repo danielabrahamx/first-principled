@@ -2,7 +2,7 @@
 
 **Type:** task (AFK)
 
-**Status:** claimed (Grok 4.6, 2026-08-18)
+**Status:** resolved
 
 **Blocked by:** [Lock the thinking architecture from the council](09-lock-the-thinking-architecture-from-the-council.md)
 
@@ -76,7 +76,7 @@ Exemplars. Thinking on. Option B. Pointing prod at DeepSeek.
 - [x] Chronology and Arrange calls are unchanged aside from shared transport
 - [x] Unit tests lock the schema and the thinking-off default
 - [x] Live `battery` probe recorded in `research/10-json-schema-epiphanies.md` (DeepSeek unavailable; OpenRouter paid Epiphanies field-checks, Arrange runs)
-- [ ] Prod deploy SHA recorded; prod still OpenRouter
+- [x] Prod deploy SHA recorded; prod still OpenRouter (`6a8429c0f3fea97f620a6800`)
 - [x] `npm test` and `npx tsc --noEmit` pass
 - [x] Key-leak grep clean
 - [x] Ticket 07 is not claimed or scored in this session

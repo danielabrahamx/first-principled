@@ -37,4 +37,4 @@ no prompt rewrite, no fourth call.
 ## Ship
 
 Prod stays OpenRouter. Default slug is paid Nemotron. Do not set Netlify
-`LLM_PROVIDER=deepseek`.
+`LLM_PROVIDER=deepseek`. Prod deploy `6a8429c0f3fea97f620a6800`.
