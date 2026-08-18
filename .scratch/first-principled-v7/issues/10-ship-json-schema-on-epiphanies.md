@@ -30,6 +30,16 @@ the council's shorthand field names. `joint_kind` enum is `JOINT_KINDS`.
 the Epiphanies schema may enum those live ids. Chronology and Arrange
 keep today's `json_object` path.
 
+Current transport in `src/lib/agent/llm.js` hardcodes
+`response_format: { type: "json_object" }` when `jsonMode` is true.
+That is the path that already parsed Epiphanies and still failed
+`epiphaniesProblems` (`TECHNICAL`, missing `history`, regime names
+instead of Chronology ids). `json_object` plus the client checklist is
+not the ship. Extend `callChatCompletion` (and the `CallLLM` typedef in
+`realityMap.js`) so the Epiphanies call can send a JSON Schema.
+Leave the empty-`content` copy from `reasoning_content` as-is. Do not
+extend it to non-empty prose.
+
 1. Send `response_format` JSON Schema on the Epiphanies call. Keep
    `thinking: false`. Leave `thinkingByStage` as the unused seam for
    Option B.
@@ -39,8 +49,10 @@ keep today's `json_object` path.
 3. No prompt rewrite. No exemplars. No fourth LLM call. No per-stage
    model. Do not raise host timeouts or the 240 s abort.
 4. Unit tests cover the schema shape and thinking-off default. Live
-   DeepSeek probe on `battery`: Epiphanies passes `epiphaniesProblems`,
-   Arrange runs. Record timings. No secrets.
+   DeepSeek probe on `battery`, thinking off on every stage, following
+   `research/08-mixed-thinking.mjs`. Epiphanies must pass
+   `epiphaniesProblems` and Arrange must run. Record in
+   `research/10-json-schema-epiphanies.md`. No secrets.
 5. Deploy to prod. Prod stays OpenRouter. Do not set Netlify
    `LLM_PROVIDER=deepseek`.
 
@@ -55,7 +67,7 @@ Exemplars. Thinking on. Option B. Pointing prod at DeepSeek.
 - [ ] Invalid joints fail the mechanical gate with no retry
 - [ ] Chronology and Arrange calls are unchanged aside from shared transport
 - [ ] Unit tests lock the schema and the thinking-off default
-- [ ] Live DeepSeek `battery` probe recorded (Epiphanies field-checks, Arrange runs)
+- [ ] Live DeepSeek `battery` probe recorded in `research/10-json-schema-epiphanies.md` (Epiphanies field-checks, Arrange runs)
 - [ ] Prod deploy SHA recorded; prod still OpenRouter
 - [ ] `npm test` and `npx tsc --noEmit` pass
 - [ ] Key-leak grep clean

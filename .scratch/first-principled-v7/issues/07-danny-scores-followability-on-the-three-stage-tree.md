@@ -17,6 +17,10 @@ it?
 
 ## What
 
+Do not start until
+[Ship JSON Schema on Epiphanies](10-ship-json-schema-on-epiphanies.md)
+is resolved. Scoring a builder that cannot emit valid joints is wasted.
+
 HITL. The agent does not stand in for Danny. The comparison, not JSON
 validity, decides whether the architecture survives. Rubric still says
 Chronology is not the layout.

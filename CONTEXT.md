@@ -135,9 +135,13 @@ Current architecture (v1):
   model: `nvidia/nemotron-3-ultra-550b-a55b:free`. Prod stays OpenRouter.
   JSON maps send `thinking: false`: OpenRouter
   `reasoning: { effort: "none" }`, DeepSeek
-  `thinking: { type: "disabled" }`. A per-stage override exists;
-  DeepSeek Epiphanies-on was tried and failed to parse. No DB, no auth,
-  no framework.
+  `thinking: { type: "disabled" }`. A per-stage override exists as an
+  unused seam; DeepSeek Epiphanies-on was tried and failed to parse.
+  Do not parse `reasoning_content` as the JSON contract. Epiphanies
+  under thinking-off `json_object` still fails the joints field
+  checklist. The locked fix is JSON Schema on that call
+  ([Ship JSON Schema on Epiphanies](.scratch/first-principled-v7/issues/10-ship-json-schema-on-epiphanies.md)).
+  No DB, no auth, no framework.
 - `src/lib/agent/` holds the engine: reality map generation, the Socratic
   turn loop (kept, not shown), and the LLM transport.
 
