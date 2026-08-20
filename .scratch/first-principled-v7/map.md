@@ -22,8 +22,9 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
   hand off. One session, one ticket (research excepted).
   [Ship JSON Schema on Epiphanies](issues/10-ship-json-schema-on-epiphanies.md)
   is resolved. Next:
-  [Danny scores followability on the three-stage Tree](issues/07-danny-scores-followability-on-the-three-stage-tree.md)
-  is HITL.
+  [11 - Deterministic Arrange over a shuffled inventory](issues/11-deterministic-arrange-over-a-shuffled-inventory.md)
+  (falsification verdict 2026-08-20, research 11-14; 07's KEEP/KILL walk
+  is superseded - the funnel was killed by its own rule before a walk).
 - Domain: read `docs/MISSION.md` and `CONTEXT.md` before any ticket.
   Glossary adds Chronology, Epiphany, Stage. Tree still draws Dependence.
   Chronology is a scaffold, not the layout.
@@ -119,6 +120,12 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
 - [DeepSeek thinks only on Epiphanies](issues/08-deepseek-thinks-only-on-epiphanies.md) - mixed thinking does not get a DeepSeek Tree. Chronology off is fine (~5 s). Epiphanies on spent 75 s, wrote 34k chars of hidden thinking, and left 784 chars of content that was not an `epiphanies` array. Default stays thinking off. Per-stage override remains. Record: [08-mixed-thinking.md](research/08-mixed-thinking.md).
 - [Lock the thinking architecture from the council](issues/09-lock-the-thinking-architecture-from-the-council.md) - Option A: thinking off, JSON Schema on Epiphanies. Rejected B (thinking-on two-region emit) and C (few-shot exemplars). Netlify timeout is not the fix. Record: [09-thinking-architecture-council.md](research/09-thinking-architecture-council.md).
 - [Ship JSON Schema on Epiphanies](issues/10-ship-json-schema-on-epiphanies.md) - thinking-off JSON Schema on Epiphanies returns joints that pass the field checklist so Arrange can run, on OpenRouter paid Nemotron. DeepSeek rejects `json_schema`. `:free` cannot constrain. Schema is the strict subset; certainty rules stay in `epiphaniesProblems`. Prod deploy `6a8429c0f3fea97f620a6800`. Record: [10-json-schema-epiphanies.md](research/10-json-schema-epiphanies.md).
+- [Danny scores followability on the three-stage Tree](issues/07-danny-scores-followability-on-the-three-stage-tree.md) - 2026-08-18 capture on paid Nemotron: all four gold words failed the mechanical gate (laptop / battery / recursion Arrange schema; photosynthesis Epiphanies UNKNOWN contract). Arrange diagnoses are three `CHRONOLOGY_CAPTURE` and one `CHRONOLOGY_DISREGARD`. Learner maps are empty. Gate-fail rows are four 0s. KEEP/KILL not recorded. Do not recapture. Record: [07-danny-followability.md](research/07-danny-followability.md).
+- [FALSIFICATION 2026-08-20] The funnel is falsified by its own rule (map:47): Arrange preserved Chronology as a flat list on 3/4 gold words and disregarded it on the fourth. KILL recorded; no prompt retune, no repair loop. Research agents (11 forensics, 12 provider matrix, 13 prior art) converged: the model must never emit the global arrangement. Replacement candidate graduates as [11 - Deterministic Arrange over a shuffled inventory](issues/11-deterministic-arrange-over-a-shuffled-inventory.md) - stage 3 emits an edge-set over a shuffled inventory, code arranges (topo sort, cycle-break, longest-path layering). Synthesis: [14-synthesis.md](research/14-synthesis.md).
+
+## Open frontier
+
+- [11 - Deterministic Arrange over a shuffled inventory](issues/11-deterministic-arrange-over-a-shuffled-inventory.md) - replacement candidate after falsification: stage 3 emits an edge-set over a shuffled inventory, code arranges deterministically; six free tests first, then one live Epiphanies probe, then the four gold words (2026-08-20).
 
 ## Not yet specified
 
