@@ -161,7 +161,7 @@ test("sends OpenRouter attribution headers and no DeepSeek thinking field", asyn
   });
 });
 
-test("JSON Schema response format takes precedence over JSON object mode", async () => {
+test("DeepSeek downgrades JSON Schema to JSON object mode (ticket 11)", async () => {
   await withEnv({ ...BOTH_TRIPLES, LLM_PROVIDER: "deepseek" }, async () => {
     /** @type {any} */
     let payload;
@@ -189,10 +189,7 @@ test("JSON Schema response format takes precedence over JSON object mode", async
         jsonSchema,
         thinking: false,
       });
-      assert.deepEqual(payload.response_format, {
-        type: "json_schema",
-        json_schema: jsonSchema,
-      });
+      assert.deepEqual(payload.response_format, { type: "json_object" });
       assert.deepEqual(payload.thinking, { type: "disabled" });
     } finally {
       mock.restoreAll();

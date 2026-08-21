@@ -146,12 +146,16 @@ export async function callChatCompletion(options) {
     messages: options.messages,
     max_tokens: options.maxTokens ?? 4096,
   };
-  if (options.jsonSchema) {
+  if (options.jsonSchema && provider !== "deepseek") {
     payload.response_format = {
       type: "json_schema",
       json_schema: options.jsonSchema,
     };
   } else if (options.jsonMode) {
+    // DeepSeek rejects response_format json_schema (ticket 10, HTTP 400
+    // "This response_format type is unavailable now"). Downgrade to
+    // json_object there: the mechanical gate (arrange.js, realityMap.js)
+    // validates the shape defensively. OpenRouter keeps the strict schema.
     payload.response_format = { type: "json_object" };
   }
   if (provider === "openrouter") {
