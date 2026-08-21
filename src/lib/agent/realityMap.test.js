@@ -11,10 +11,10 @@ import {
   deriveCheck,
   epiphaniesProblems,
   generateRealityMap,
-  normalizeArrangement,
   stageThinking,
   steProblems,
 } from "./realityMap.js";
+import { deterministicArrange } from "./arrange.js";
 import { laptopRealityMap } from "../mmg/fixtures.js";
 
 const CHRONOLOGY = {
@@ -57,59 +57,46 @@ const EPIPHANIES = {
       },
       candidate_node: "voltaic pile",
     },
+    {
+      id: "e2",
+      from_regimes: ["c2"],
+      to_regimes: ["c2"],
+      result: "A stable cell delivers steady current for a long time.",
+      joint_kind: "ENGINEERED_RESULT",
+      history: {
+        certainty: "EXACT",
+        who: ["John Frederic Daniell"],
+        when: "1836",
+        observation: "Copper and zinc cells with a porous barrier kept current steady.",
+        uncertainty_note: "",
+      },
+      candidate_node: "Daniell cell",
+    },
   ],
 };
 
-const ARRANGEMENT = {
-  map: {
-    concept: "battery",
-    layers: [
-      { id: "l0", name: "Foundation", nodes: ["n-charge"] },
-      { id: "l1", name: "Stored current", nodes: ["n-battery"] },
-    ],
-    nodes: [
-      {
-        id: "n-charge",
-        label: "charge separation",
-        layer: "l0",
-        description: "Separated charges create electrical potential.",
-        role: "DOMAIN",
-      },
-      {
-        id: "n-battery",
-        label: "battery",
-        layer: "l1",
-        description: "A controlled reaction sustains current through a circuit.",
-        role: "EPIPHANY",
-        basis: {
-          discoverer: { value: "invented", mark: "EXACT" },
-          date: { value: "invented", mark: "EXACT" },
-          keyObservation: { value: "invented", mark: "EXACT" },
-          confidence: "high",
-          note: "",
-        },
-      },
-    ],
-    edges: [
-      {
-        source: "n-battery",
-        target: "n-charge",
-        type: "depends-on",
-        because: "A battery needs separated charge to drive electron flow.",
-      },
-    ],
-    trunk: ["n-charge", "n-battery"],
-  },
-  provenance: {
-    nodes: [
-      { node_id: "n-charge", input_refs: ["c1"] },
-      { node_id: "n-battery", input_refs: ["c2", "e1"] },
-    ],
-    edges: [
-      { source: "n-battery", target: "n-charge", input_refs: ["c1", "c2", "e1"] },
-    ],
-    discarded_input_ids: [],
-  },
+const EDGE_SET = {
+  concept: "battery",
+  edges: [
+    {
+      from: "e1",
+      to: "c1",
+      because: "The voltaic pile needs separated charge to sustain a circuit.",
+      evidence_ids: ["e1"],
+    },
+    {
+      from: "c2",
+      to: "c1",
+      because: "A controlled redox reaction needs separated charge to drive electron flow.",
+      evidence_ids: [],
+    },
+    {
+      from: "e2",
+      to: "c2",
+      because: "The Daniell cell rests on a controlled redox reaction.",
+      evidence_ids: ["e2"],
+    },
+  ],
 };
 
 /** @param {any[]} values */
@@ -138,7 +125,7 @@ test("maps default to thinking off; thinkingByStage can turn one stage on", () =
 });
 
 test("thinkingByStage can send thinking off, on, off", async () => {
-  const { callLLM, requests } = scriptedTransport([CHRONOLOGY, EPIPHANIES, ARRANGEMENT]);
+  const { callLLM, requests } = scriptedTransport([CHRONOLOGY, EPIPHANIES, EDGE_SET]);
   const result = await generateRealityMap(
     { concept: "battery", callLLM },
     { thinkingByStage: { chronology: false, epiphanies: true, arrange: false } }
@@ -151,7 +138,7 @@ test("thinkingByStage can send thinking off, on, off", async () => {
 });
 
 test("generator default sends thinking off on every stage", async () => {
-  const { callLLM, requests } = scriptedTransport([CHRONOLOGY, EPIPHANIES, ARRANGEMENT]);
+  const { callLLM, requests } = scriptedTransport([CHRONOLOGY, EPIPHANIES, EDGE_SET]);
   const result = await generateRealityMap({ concept: "battery", callLLM });
   assert.equal(result.ok, true);
   assert.deepEqual(
@@ -168,10 +155,23 @@ test("locked stage prompts contain no mission, layer count, or STE copy", () => 
   ];
   assert.match(prompts[0], /target-specific capability regimes/);
   assert.match(prompts[1], /A result is the joint/);
-  assert.match(prompts[2], /one followable\nDependence Tree/);
+  assert.match(prompts[2], /one followable Dependence Tree/);
   for (const prompt of prompts) {
     assert.doesNotMatch(prompt, /cognitive distance|around \d+ layers|simplified technical English/i);
   }
+});
+
+test("prompt texts lock the honesty and edge-set contracts (ticket 11)", () => {
+  const epiphanies = buildEpiphaniesSystemPrompt();
+  assert.match(epiphanies, /Set certainty to EXACT only when/);
+  assert.match(epiphanies, /Set certainty\s+to UNKNOWN when/);
+  assert.match(epiphanies, /leave who,\s*when, and observation empty/);
+  const arrange = buildArrangeSystemPrompt();
+  assert.match(arrange, /the order of the inventory is meaningless|it was shuffled/i);
+  assert.match(arrange, /edge-set|edges only|edges/i);
+  assert.match(arrange, /layers/);
+  assert.match(arrange, /trunk/);
+  assert.match(arrange, /do not emit a timeline/i);
 });
 
 test("Chronology contract requires ordered c ids and backward-only references", () => {
@@ -188,18 +188,21 @@ test("generator accepts lowercase stage enums as the same contract tokens", asyn
   const epiphanies = structuredClone(EPIPHANIES);
   epiphanies.epiphanies[0].joint_kind = "experimental result";
   epiphanies.epiphanies[0].history.certainty = "exact";
-  const arrangement = structuredClone(ARRANGEMENT);
-  arrangement.map.nodes[0].role = "domain";
-  arrangement.map.nodes[1].role = "epiphany";
-  const { callLLM, requests } = scriptedTransport([chronology, epiphanies, arrangement]);
+  const { callLLM, requests } = scriptedTransport([chronology, epiphanies, EDGE_SET]);
   const result = await generateRealityMap({ concept: "battery", callLLM });
   assert.equal(result.ok, true, result.errors.join(" | "));
   assert.equal(requests.length, 3);
   assert.ok(result.diagnostics);
   assert.ok(result.map);
   assert.equal(result.diagnostics.chronology.chronology[1].ancestry_kind, "CONCEPTUAL");
-  assert.equal(result.map.nodes[0].role, "DOMAIN");
-  assert.equal(result.map.nodes[1].role, "EPIPHANY");
+  assert.equal(
+    result.map?.nodes.find((/** @type {any} */ node) => node.id === "c1")?.role,
+    "DOMAIN"
+  );
+  assert.equal(
+    result.map?.nodes.find((/** @type {any} */ node) => node.id === "e1")?.role,
+    "EPIPHANY"
+  );
 });
 
 test("Epiphanies contract enforces honest history and Stage 1 references", () => {
@@ -246,26 +249,17 @@ test("Epiphanies schema locks the Stage 2 fields and live Chronology ids", () =>
   assert.deepEqual(item.properties.history.properties.observation.type, ["string", "null"]);
 });
 
-test("Arrange normalization rebuilds EPIPHANY basis from cited Stage 2 history", () => {
-  const normalized = normalizeArrangement(
-    structuredClone(ARRANGEMENT),
-    new Map([["e1", EPIPHANIES.epiphanies[0]]])
-  );
-  const crown = normalized.map.nodes.find((/** @type {any} */ node) => node.id === "n-battery");
-  assert.equal(crown.basis.discoverer.value, "Alessandro Volta");
-  assert.equal(crown.basis.date.value, "1800");
-  assert.doesNotMatch(JSON.stringify(crown.basis), /invented/);
-});
-
 test("Arrange gate checks trunk, reasons, roles, provenance, and use-or-drop accounting", () => {
-  const normalized = normalizeArrangement(
-    structuredClone(ARRANGEMENT),
-    new Map([["e1", EPIPHANIES.epiphanies[0]]])
-  );
+  const normalized = deterministicArrange({
+    concept: "battery",
+    chronologyItems: CHRONOLOGY.chronology,
+    epiphanyItems: EPIPHANIES.epiphanies,
+    edges: EDGE_SET.edges,
+  });
   const inputs = {
     concept: "battery",
     chronologyIds: new Set(["c1", "c2"]),
-    epiphanyIds: new Set(["e1"]),
+    epiphanyIds: new Set(["e1", "e2"]),
   };
   assert.deepEqual(arrangeCheck(normalized, inputs), { ok: true, errors: [] });
 
@@ -275,16 +269,19 @@ test("Arrange gate checks trunk, reasons, roles, provenance, and use-or-drop acc
 
   const unaccounted = structuredClone(normalized);
   unaccounted.provenance.nodes[1].input_refs = ["e1"];
-  unaccounted.provenance.edges[0].input_refs = ["c1", "e1"];
+  unaccounted.provenance.edges[1].input_refs = ["c1"];
   assert.match(arrangeCheck(unaccounted, inputs).errors.join(" "), /input "c2" is neither/);
 
   const badCombine = structuredClone(normalized);
-  badCombine.map.nodes[1].combines = [{ id: "missing", observation: {} }];
+  const epiphanyNode = /** @type {any} */ (
+    badCombine.map.nodes.find((/** @type {any} */ node) => node.id === "e1")
+  );
+  epiphanyNode.combines = [{ id: "missing", observation: {} }];
   assert.match(arrangeCheck(badCombine, inputs).errors.join(" "), /invalid combines reference/);
 });
 
 test("generator makes exactly three serial calls and keeps diagnostics off the map", async () => {
-  const { callLLM, requests } = scriptedTransport([CHRONOLOGY, EPIPHANIES, ARRANGEMENT]);
+  const { callLLM, requests } = scriptedTransport([CHRONOLOGY, EPIPHANIES, EDGE_SET]);
   const result = await generateRealityMap({ concept: "battery", callLLM });
   assert.equal(result.ok, true);
   assert.equal(requests.length, 3);
@@ -295,8 +292,24 @@ test("generator makes exactly three serial calls and keeps diagnostics off the m
     requests[1].jsonSchema.schema.properties.epiphanies.items.properties.from_regimes.items.enum,
     ["c1", "c2"]
   );
-  assert.equal(JSON.parse(requests[2].messages[1].content).epiphanies[0].id, "e1");
-  assert.equal(requests[2].jsonSchema, undefined);
+  const arrangePayload = JSON.parse(requests[2].messages[1].content);
+  assert.equal(arrangePayload.concept, "battery");
+  const inventoryItems = /** @type {any[]} */ (arrangePayload.inventory);
+  assert.deepEqual(
+    inventoryItems.map((/** @type {any} */ item) => item.id).sort(),
+    ["c1", "c2", "e1", "e2"]
+  );
+  assert.deepEqual(
+    inventoryItems.map((/** @type {any} */ item) => item.kind).sort(),
+    ["joint", "joint", "regime", "regime"]
+  );
+  assert.equal(requests[2].jsonSchema.name, "arrange");
+  assert.deepEqual(requests[2].jsonSchema.schema.properties.edges.items.required, [
+    "from",
+    "to",
+    "because",
+    "evidence_ids",
+  ]);
   assert.equal(result.retried, false);
   assert.ok(result.diagnostics);
   assert.ok(result.map);
@@ -306,7 +319,7 @@ test("generator makes exactly three serial calls and keeps diagnostics off the m
 
 test("a failed stage is terminal with no retry or later call", async () => {
   const badChronology = { concept: "battery", chronology: [] };
-  const { callLLM, requests } = scriptedTransport([badChronology, EPIPHANIES, ARRANGEMENT]);
+  const { callLLM, requests } = scriptedTransport([badChronology, EPIPHANIES, EDGE_SET]);
   const result = await generateRealityMap({ concept: "battery", callLLM });
   assert.equal(result.ok, false);
   assert.equal(result.kind, "invalid");
@@ -317,7 +330,7 @@ test("a failed stage is terminal with no retry or later call", async () => {
 test("invalid Epiphanies are terminal with no retry or Arrange call", async () => {
   const badEpiphanies = structuredClone(EPIPHANIES);
   badEpiphanies.epiphanies[0].from_regimes = ["regime-name"];
-  const { callLLM, requests } = scriptedTransport([CHRONOLOGY, badEpiphanies, ARRANGEMENT]);
+  const { callLLM, requests } = scriptedTransport([CHRONOLOGY, badEpiphanies, EDGE_SET]);
   const result = await generateRealityMap({ concept: "battery", callLLM });
   assert.equal(result.ok, false);
   assert.equal(result.kind, "invalid");

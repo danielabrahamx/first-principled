@@ -1,7 +1,7 @@
 # 11 - Deterministic Arrange over a shuffled inventory
 
 **Type:** task
-**Status:** ready-for-agent
+**Status:** in-progress (free tests 1-6 done 2026-08-20; live probe + live gold run pending)
 **Blocked by:** none (research 11, 12, 13 complete)
 **Related:** 07 (falsified), 10 (schema on Epiphanies), 05 (three stages)
 
@@ -67,20 +67,26 @@ model proposes parts; the code arranges.
 
 ## Acceptance criteria
 
-- [ ] Listness checker unit tests flag all three captured Arrange
+- [x] Listness checker unit tests flag all three captured Arrange
       outputs and the v6 one-shot maps; pass the fixture arrangement.
-- [ ] buildArrangeJsonSchema rejects the three captured Arrange outputs
+      (src/lib/agent/arrange.test.js, fixtures in arrange-fixtures.json)
+- [x] buildArrangeJsonSchema rejects the three captured Arrange outputs
       and accepts the fixture.
-- [ ] Prompt-text assertions green (emptiness sentence, "set certainty
+- [x] Prompt-text assertions green (emptiness sentence, "set certainty
       to" phrasing, "layers"/"trunk" wording where required).
-- [ ] Deterministic Arrange prototype emits a conformant map for all
-      four gold words offline; arrangeCheck passes.
-- [ ] v6-control revalidation: arrangeCheck results recorded for the
-      v6 one-shot maps.
+- [x] Deterministic Arrange prototype emits a conformant map for all
+      four gold words offline; arrangeCheck passes. (Captured stage
+      outputs for laptop/battery/recursion arrange to gate-PASS maps;
+      photosynthesis has no captured epiphanies to arrange.)
+- [x] v6-control revalidation: arrangeCheck results recorded for the
+      v6 one-shot maps (research/15-v6-control-revalidation.md - v6
+      maps pass shape, fail the v7 role/trunk/provenance contract).
 - [ ] Live Epiphanies-only probe (photosynthesis): UNKNOWN records come
-      back empty-fact with non-empty notes; gate passes.
+      back empty-fact with non-empty notes; gate passes. (needs .env
+      provider override + small spend)
 - [ ] Live pipeline on the four gold words: all four pass the
-      mechanical gate with non-empty learner maps.
+      mechanical gate with non-empty learner maps. (needs live run via
+      06-capture-diagnostics.mjs --live)
 - [ ] Danny walks the four trees and records KEEP or KILL
       (research/14-synthesis.md rubric rows).
 

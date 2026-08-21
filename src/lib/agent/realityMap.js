@@ -14,7 +14,15 @@
 import { callChatCompletion } from "./llm.js";
 import { parseModelJson } from "./jsonParse.js";
 import { validateRealityMap } from "../mmg/validator.js";
-import { observationProblems, dropUnknownValues } from "../mmg/observation.js";
+import { observationProblems } from "../mmg/observation.js";
+import {
+  buildArrangeJsonSchema,
+  deterministicArrange,
+  edgeSetProblems,
+  listnessProblems,
+  normalizeConnect,
+  shuffleInventory,
+} from "./arrange.js";
 
 /** @typedef {import("../mmg/types.js").RealityMap} RealityMap */
 
@@ -225,8 +233,13 @@ established; a person's private insight is not the joint.
 Return JSON only with concept and epiphanies. Each item has id, from_regimes,
 to_regimes, result, joint_kind, history, and candidate_node. Name the result
 first. Then record who, when, and the observation, proof, formalization, or
-engineered result that established it. Use UNKNOWN or NO_SINGLE_JOINT when
-history does not support a precise event.
+engineered result that established it.
+
+Set certainty to EXACT only when who, when, and the observation are all known.
+Set certainty to APPROXIMATE when the record is roughly known. Set certainty
+to UNKNOWN when history does not support a precise record; then leave who,
+when, and observation empty and write the reason in uncertainty_note. Use
+UNKNOWN or NO_SINGLE_JOINT when history does not support a precise event.
 
 Do not arrange a Tree, rewrite the Chronology, or force one item for every
 transition. Do not force one hero or date, confuse first observation with
@@ -234,33 +247,27 @@ accepted explanation, apply laboratory language to mathematics, add famous
 names for decoration, or invent facts to avoid UNKNOWN.`;
 }
 
-/** Locked ticket 04 Stage 3 system prompt. */
+/** Locked ticket 04 Stage 3 system prompt (ticket 11: edge-set contract). */
 export function buildArrangeSystemPrompt() {
-  return `Arrange the supplied capability regimes and joints into one followable
-Dependence Tree for a curious adult who opens rabbit holes.
+  return `The inventory lists the capability regimes and the results that connect them.
+The order of the inventory is meaningless: it was shuffled. Choose the edges
+that form one followable Dependence Tree for a curious adult who opens rabbit
+holes.
 
-The crown is the requested target. Make one clear walk from an observable
-Foundation to the crown, with small conceptual jumps and concrete node names.
-Branches must provide genuine support. Every edge means the source cannot
-exist or be understood without the target. Its because text must complete:
-"The source rests on the target because without the target..."
+Return JSON only with concept and edges. Each edge has from, to, because, and
+evidence_ids. from is the item that rests on to. to is the item that must
+exist or be understood first. The because text must complete: "The from item
+rests on the to item because without the to item..." Keep because to one
+line. evidence_ids lists the epiphany ids whose records justify the edge; it
+may be empty. Reference items only by their ids. Every inventory item appears
+in the tree; you choose the edges only.
 
-You may reorder, drop, collapse, rename, and promote inputs. Chronology is not
-a spanning chain. Calendar order is never evidence for an edge. Preserve an
-observation record only when its node has role EPIPHANY. Mark grouping-only
-nodes STRUCTURAL. Mark other nodes DOMAIN.
-
-Return JSON only with map and provenance. Cite chronology or epiphany IDs for
-every DOMAIN or EPIPHANY node and every edge. List every unused input ID with
-a short reason. Provenance is diagnostic, not learner-facing.
-
-Do not emit a timeline, preserve every input, regenerate a generic domain
-table of contents, use "related to", "came before", or "helped lead to" as
-Dependence, place an observation record on an ordinary node, add biographies
-as prerequisites, use "physics", "chemistry", "biology", or "computer
-science" as nodes unless that abstraction is itself a useful rabbit hole, add
-disconnected branches, generate nested Trees, or copy the Stage 1 or Stage 2
-payload into map.`;
+You do not emit nodes, layers, trunk, or crown: the code computes them from
+your edges. Do not emit a timeline, do not copy the inventory order, do not
+connect an item only to its neighbor in the list, do not use "related to",
+"came before", or "helped lead to" as Dependence, and do not add physics,
+chemistry, biology, or computer science as items unless that abstraction is
+itself a useful rabbit hole.`;
 }
 
 /**
@@ -376,77 +383,6 @@ function historyProblems(value) {
     }
   }
   return errors;
-}
-
-/**
- * Normalize an Arrange map without adding historical facts. EPIPHANY basis
- * records are rebuilt from the Stage 2 item cited by node provenance.
- *
- * @param {any} arrangement
- * @param {Map<string, any>} epiphanyById
- * @returns {any}
- */
-export function normalizeArrangement(arrangement, epiphanyById) {
-  if (!isRecord(arrangement) || !isRecord(arrangement.map) || !isRecord(arrangement.provenance)) {
-    return arrangement;
-  }
-  const nodeRefs = new Map(
-    Array.isArray(arrangement.provenance.nodes)
-      ? arrangement.provenance.nodes
-          .filter(isRecord)
-          .map((entry) => [entry.node_id, Array.isArray(entry.input_refs) ? entry.input_refs : []])
-      : []
-  );
-  const nodes = Array.isArray(arrangement.map.nodes)
-    ? arrangement.map.nodes.map((node) => {
-        if (!isRecord(node)) return node;
-        const role = canonicalEnum(node.role, NODE_ROLES);
-        if (role !== "EPIPHANY") {
-          const { basis: _basis, combines: _combines, ...withoutHistory } = node;
-          return { ...withoutHistory, role };
-        }
-        const epiphanyId = (nodeRefs.get(node.id) ?? []).find((id) => epiphanyById.has(id));
-        const epiphany = epiphanyId ? epiphanyById.get(epiphanyId) : null;
-        if (!epiphany) return { ...node, role };
-        return {
-          ...node,
-          role,
-          basis: observationFromHistory(epiphany.history),
-        };
-      })
-    : arrangement.map.nodes;
-  return {
-    ...arrangement,
-    map: {
-      ...arrangement.map,
-      nodes,
-    },
-  };
-}
-
-/**
- * @param {any} history
- * @returns {any}
- */
-function observationFromHistory(history) {
-  const certaintyToken = canonicalEnum(history?.certainty, CERTAINTIES);
-  const certainty =
-    typeof certaintyToken === "string" && CERTAINTIES.has(certaintyToken) ? certaintyToken : "UNKNOWN";
-  const mark = certainty;
-  const field = (/** @type {unknown} */ value) => ({
-    value: typeof value === "string" ? value : "",
-    mark:
-      certainty === "APPROXIMATE" && (value === null || value === "")
-        ? "UNKNOWN"
-        : mark,
-  });
-  return dropUnknownValues({
-    discoverer: field(Array.isArray(history?.who) ? history.who.join(", ") : ""),
-    date: field(history?.when),
-    keyObservation: field(history?.observation),
-    confidence: certainty === "EXACT" ? "high" : certainty === "APPROXIMATE" ? "medium" : "low",
-    note: typeof history?.uncertainty_note === "string" ? history.uncertainty_note : "",
-  });
 }
 
 /**
@@ -739,24 +675,60 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
     }
     const epiphanyItems = /** @type {any} */ (epiphanies).epiphanies;
     const epiphanyIds = new Set(epiphanyItems.map((/** @type {any} */ item) => item.id));
-    const epiphanyById = new Map(
-      epiphanyItems.map((/** @type {any} */ item) => [item.id, item])
-    );
 
-    const rawArrangement = await request("arrange", {
+    const inventoryIds = new Set([...chronologyIds, ...epiphanyIds]);
+    const rawEdges = await request(
+      "arrange",
+      {
+        concept: trimmed,
+        inventory: shuffleInventory([
+          ...chronologyItems.map((/** @type {any} */ item) => ({
+            kind: "regime",
+            id: item.id,
+            name: item.regime,
+            capability: item.new_capability,
+            enabled_by: item.enabled_by_previous,
+          })),
+          ...epiphanyItems.map((/** @type {any} */ item) => ({
+            kind: "joint",
+            id: item.id,
+            result: item.result,
+            from: item.from_regimes,
+            to: item.to_regimes,
+            joint_kind: item.joint_kind,
+            history: {
+              certainty: item.history?.certainty,
+              who: item.history?.who,
+              when: item.history?.when,
+              observation: item.history?.observation,
+            },
+            candidate_node: item.candidate_node,
+          })),
+        ]),
+      },
+      buildArrangeJsonSchema(trimmed, inventoryIds, epiphanyIds)
+    );
+    const connect = normalizeConnect(rawEdges);
+    const connectErrors = edgeSetProblems(connect, trimmed, inventoryIds, epiphanyIds);
+    if (connectErrors.length > 0) {
+      return failure("invalid", "The Arrange stage failed its contract.", connectErrors, Date.now() - started);
+    }
+    const arrangement = deterministicArrange({
       concept: trimmed,
-      chronology: chronologyItems,
-      epiphanies: epiphanyItems,
+      chronologyItems,
+      epiphanyItems,
+      edges: connect.edges,
     });
-    const arrangement = normalizeArrangement(rawArrangement, epiphanyById);
     const gate = arrangeCheck(arrangement, { concept: trimmed, chronologyIds, epiphanyIds });
     if (!gate.ok) {
       return failure("invalid", "The Arrange stage failed the mechanical gate.", gate.errors, Date.now() - started);
     }
+    const listness = listnessProblems(arrangement.map);
+    if (listness.length > 0) {
+      return failure("invalid", "The Arrange stage produced a timeline copy.", listness, Date.now() - started);
+    }
 
-    const discardedInputIds = arrangement.provenance.discarded_input_ids.map(
-      (/** @type {any} */ entry) => entry.id
-    );
+    const discardedInputIds = /** @type {string[]} */ ([]);
     return {
       ok: true,
       map: /** @type {RealityMap} */ (arrangement.map),

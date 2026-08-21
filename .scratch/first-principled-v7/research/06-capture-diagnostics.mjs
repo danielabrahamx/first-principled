@@ -10,7 +10,16 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "../../..");
-const outDir = path.join(here, "06-diagnostics");
+const outDirFlag = process.argv.indexOf("--out-dir");
+const outDirArg =
+  outDirFlag !== -1 && process.argv[outDirFlag + 1] && !process.argv[outDirFlag + 1].startsWith("--")
+    ? process.argv[outDirFlag + 1]
+    : null;
+const outDir = outDirArg
+  ? path.isAbsolute(outDirArg)
+    ? outDirArg
+    : path.resolve(root, outDirArg)
+  : path.join(here, "06-diagnostics");
 const GOLD = ["laptop", "battery", "photosynthesis", "recursion"];
 const FORBIDDEN = [
   "provenance",
@@ -23,8 +32,10 @@ const FORBIDDEN = [
 ];
 
 const realityMapUrl = pathToFileURL(path.join(root, "src/lib/agent/realityMap.js")).href;
+const jsonParseUrl = pathToFileURL(path.join(root, "src/lib/agent/jsonParse.js")).href;
 const llmUrl = pathToFileURL(path.join(root, "src/lib/agent/llm.js")).href;
 const { generateRealityMap } = await import(realityMapUrl);
+const { parseModelJson } = await import(jsonParseUrl);
 
 const wantLive = process.argv.includes("--live");
 const wantFixture = process.argv.includes("--fixture") || !wantLive;
@@ -45,10 +56,21 @@ function leakKeys(value, found = []) {
 
 /**
  * @param {string} concept
- * @param {{ ok: boolean; map: any; diagnostics: any; reason?: string | null }} result
+ * @param {{
+ *   ok: boolean;
+ *   map: any;
+ *   diagnostics: any;
+ *   reason?: string | null;
+ *   kind?: string | null;
+ *   errors?: string[];
+ *   latencyMs?: number | null;
+ *   stages?: Record<string, any>;
+ * }} result
  */
 function writeSplit(concept, result) {
   fs.mkdirSync(outDir, { recursive: true });
+  const stages = result.stages ?? {};
+  const arrange = stages.arrange && typeof stages.arrange === "object" ? stages.arrange : null;
   const learner = {
     concept,
     ok: result.ok,
@@ -58,17 +80,27 @@ function writeSplit(concept, result) {
     concept,
     ok: result.ok,
     reason: result.reason ?? null,
-    chronology: result.diagnostics?.chronology ?? null,
-    epiphanies: result.diagnostics?.epiphanies ?? null,
-    provenance: result.diagnostics?.provenance ?? null,
+    kind: result.kind ?? null,
+    latencyMs: result.latencyMs ?? null,
+    errors: Array.isArray(result.errors) ? result.errors : [],
+    chronology: result.diagnostics?.chronology ?? stages.chronology ?? null,
+    epiphanies: result.diagnostics?.epiphanies ?? stages.epiphanies ?? null,
+    provenance:
+      result.diagnostics?.provenance ??
+      (arrange && arrange.provenance ? arrange.provenance : null),
     discardedInputIds: result.diagnostics?.discardedInputIds ?? [],
+    arrange: result.ok ? null : arrange,
     prompts: result.diagnostics?.prompts
       ? {
           chronology: Boolean(result.diagnostics.prompts.chronology),
           epiphanies: Boolean(result.diagnostics.prompts.epiphanies),
           arrange: Boolean(result.diagnostics.prompts.arrange),
         }
-      : null,
+      : {
+          chronology: Boolean(stages.chronology),
+          epiphanies: Boolean(stages.epiphanies),
+          arrange: Boolean(stages.arrange),
+        },
   };
   const learnerPath = path.join(outDir, `${concept}-learner.json`);
   const diagPath = path.join(outDir, `${concept}-diagnostics.json`);
@@ -81,6 +113,7 @@ function writeSplit(concept, result) {
   console.log(`LEARNER_LEAKS=${leaks.length ? leaks.join(",") : "none"}`);
   console.log(`HAS_CHRONOLOGY=${Boolean(diagnostics.chronology)}`);
   console.log(`HAS_PROVENANCE=${Boolean(diagnostics.provenance)}`);
+  console.log(`ERROR_COUNT=${diagnostics.errors.length}`);
   console.log(`HAS_PROMPTS=${Boolean(diagnostics.prompts)}`);
   if (leaks.length) {
     throw new Error(`${concept} learner file leaked ${leaks.join(",")}`);
@@ -127,56 +160,45 @@ if (wantFixture) {
         },
         candidate_node: "voltaic pile",
       },
+      {
+        id: "e2",
+        from_regimes: ["c2"],
+        to_regimes: ["c2"],
+        result: "A stable cell delivers steady current for a long time.",
+        joint_kind: "ENGINEERED_RESULT",
+        history: {
+          certainty: "EXACT",
+          who: ["John Frederic Daniell"],
+          when: "1836",
+          observation: "Copper and zinc cells with a porous barrier kept current steady.",
+          uncertainty_note: "",
+        },
+        candidate_node: "Daniell cell",
+      },
     ],
   };
   const arrangement = {
-    map: {
-      concept: "battery",
-      layers: [
-        { id: "l0", name: "Foundation", nodes: ["n-charge"] },
-        { id: "l1", name: "Stored current", nodes: ["n-battery"] },
-      ],
-      nodes: [
-        {
-          id: "n-charge",
-          label: "charge separation",
-          layer: "l0",
-          description: "Separated charges create electrical potential.",
-          role: "DOMAIN",
-        },
-        {
-          id: "n-battery",
-          label: "battery",
-          layer: "l1",
-          description: "A controlled reaction sustains current through a circuit.",
-          role: "EPIPHANY",
-          basis: {
-            discoverer: { value: "invented", mark: "EXACT" },
-            date: { value: "invented", mark: "EXACT" },
-            keyObservation: { value: "invented", mark: "EXACT" },
-            confidence: "high",
-            note: "",
-          },
-        },
-      ],
-      edges: [
-        {
-          source: "n-battery",
-          target: "n-charge",
-          type: "depends-on",
-          because: "A battery needs separated charge to drive electron flow.",
-        },
-      ],
-      trunk: ["n-charge", "n-battery"],
-    },
-    provenance: {
-      nodes: [
-        { node_id: "n-charge", input_refs: ["c1"] },
-        { node_id: "n-battery", input_refs: ["c2", "e1"] },
-      ],
-      edges: [{ source: "n-battery", target: "n-charge", input_refs: ["c1", "c2", "e1"] }],
-      discarded_input_ids: [],
-    },
+    concept: "battery",
+    edges: [
+      {
+        from: "e1",
+        to: "c1",
+        because: "The voltaic pile needs separated charge to sustain a circuit.",
+        evidence_ids: ["e1"],
+      },
+      {
+        from: "c2",
+        to: "c1",
+        because: "A controlled redox reaction needs separated charge to drive electron flow.",
+        evidence_ids: [],
+      },
+      {
+        from: "e2",
+        to: "c2",
+        because: "The Daniell cell rests on a controlled redox reaction.",
+        evidence_ids: ["e2"],
+      },
+    ],
   };
   const queue = [chronology, epiphanies, arrangement].map((value) => JSON.stringify(value));
   const result = await generateRealityMap({
@@ -199,13 +221,26 @@ if (wantLive) {
   }
   console.log(`PROVIDER=${llmProvider()}`);
   console.log(`MODEL=${llmModel()}`);
-  const words = process.argv.slice(2).filter((arg) => !arg.startsWith("--"));
+  const words = process.argv.slice(2).filter((arg, index, args) => {
+    if (arg.startsWith("--")) return false;
+    if (args[index - 1] === "--out-dir") return false;
+    return true;
+  });
   const concepts = words.length > 0 ? words : GOLD;
+  const stageOrder = ["chronology", "epiphanies", "arrange"];
   for (const concept of concepts) {
+    /** @type {Record<string, any>} */
+    const stages = {};
+    let callIndex = 0;
     const result = await generateRealityMap({
       concept,
       callLLM: async (request) => {
+        const stage = stageOrder[callIndex] || `call-${callIndex + 1}`;
+        callIndex += 1;
         const reply = await callChatCompletion(request);
+        const parsed = parseModelJson(reply.content);
+        stages[stage] =
+          parsed ?? { parseError: true, contentChars: String(reply.content || "").length };
         return { content: reply.content };
       },
     });
@@ -214,6 +249,10 @@ if (wantLive) {
       map: result.map,
       diagnostics: result.diagnostics,
       reason: result.reason,
+      kind: result.kind,
+      errors: result.errors,
+      latencyMs: result.latencyMs,
+      stages,
     });
     if (!result.ok) {
       console.log(`LIVE_FAIL=${concept}`);

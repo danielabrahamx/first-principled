@@ -107,48 +107,21 @@ const THREE_STAGE_SCRIPT = [
     ],
   }),
   JSON.stringify({
-    map: {
-      concept: "laptop",
-      layers: [
-        { id: "l0", name: "Foundation", nodes: ["n-switch"] },
-        { id: "l1", name: "Portable computing", nodes: ["n-laptop"] },
-      ],
-      nodes: [
-        {
-          id: "n-switch",
-          label: "electronic switch",
-          layer: "l0",
-          description: "A controllable switch represents binary state.",
-          role: "DOMAIN",
-        },
-        {
-          id: "n-laptop",
-          label: "laptop",
-          layer: "l1",
-          description: "A portable computer runs stored programs.",
-          role: "EPIPHANY",
-        },
-      ],
-      edges: [
-        {
-          source: "n-laptop",
-          target: "n-switch",
-          type: "built-on",
-          because: "A laptop computes through controllable electronic switches.",
-        },
-      ],
-      trunk: ["n-switch", "n-laptop"],
-    },
-    provenance: {
-      nodes: [
-        { node_id: "n-switch", input_refs: ["c1"] },
-        { node_id: "n-laptop", input_refs: ["c2", "e1"] },
-      ],
-      edges: [
-        { source: "n-laptop", target: "n-switch", input_refs: ["c1", "c2", "e1"] },
-      ],
-      discarded_input_ids: [],
-    },
+    concept: "laptop",
+    edges: [
+      {
+        from: "e1",
+        to: "c1",
+        because: "Stored-program control rests on controllable electronic switching.",
+        evidence_ids: ["e1"],
+      },
+      {
+        from: "c2",
+        to: "c1",
+        because: "Programmable computing rests on controllable electronic switching.",
+        evidence_ids: [],
+      },
+    ],
   }),
 ];
 

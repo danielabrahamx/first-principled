@@ -125,7 +125,7 @@ KILL. A killed funnel is replaced, not rescued with prompt machinery.
 
 ## Open frontier
 
-- [11 - Deterministic Arrange over a shuffled inventory](issues/11-deterministic-arrange-over-a-shuffled-inventory.md) - replacement candidate after falsification: stage 3 emits an edge-set over a shuffled inventory, code arranges deterministically; six free tests first, then one live Epiphanies probe, then the four gold words (2026-08-20).
+- [11 - Deterministic Arrange over a shuffled inventory](issues/11-deterministic-arrange-over-a-shuffled-inventory.md) - replacement candidate after falsification: stage 3 emits an edge-set over a shuffled inventory, code arranges deterministically; six free tests first, then one live Epiphanies probe, then the four gold words (2026-08-20). Free work done 2026-08-20: listness checker, Arrange JSON Schema, prompt assertions, deterministic Arrange (gate-pass on captured gold-word stages), v6-control revalidation. Remaining: live probe + live gold run + Danny's walk.
 
 ## Not yet specified
 

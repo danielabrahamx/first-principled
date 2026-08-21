@@ -1,0 +1,1437 @@
+{
+  "capturedLaptop": {
+    "nodes": [
+      {
+        "id": "n1",
+        "label": "Semiconductor Transistor"
+      },
+      {
+        "id": "n2",
+        "label": "Monolithic Integrated Circuit"
+      },
+      {
+        "id": "n3",
+        "label": "Microprocessor (CPU on a Chip)"
+      },
+      {
+        "id": "n4",
+        "label": "DRAM Chip"
+      },
+      {
+        "id": "n5",
+        "label": "Liquid Crystal Display (LCD) Panel"
+      },
+      {
+        "id": "n6",
+        "label": "Lithium-Ion Rechargeable Battery"
+      },
+      {
+        "id": "n7",
+        "label": "2.5-inch Non-Volatile Storage (HDD/SSD)"
+      },
+      {
+        "id": "n8",
+        "label": "High-Density Multilayer PCB with Surface-Mount Technology"
+      },
+      {
+        "id": "n9",
+        "label": "Clamshell Hinge & Chassis System"
+      },
+      {
+        "id": "n10",
+        "label": "Portable Operating System with Power Management"
+      },
+      {
+        "id": "n11",
+        "label": "Laptop"
+      }
+    ],
+    "edges": [
+      {
+        "source": "n2",
+        "target": "n1"
+      },
+      {
+        "source": "n3",
+        "target": "n2"
+      },
+      {
+        "source": "n4",
+        "target": "n2"
+      },
+      {
+        "source": "n7",
+        "target": "n2"
+      },
+      {
+        "source": "n8",
+        "target": "n2"
+      },
+      {
+        "source": "n8",
+        "target": "n3"
+      },
+      {
+        "source": "n8",
+        "target": "n4"
+      },
+      {
+        "source": "n8",
+        "target": "n7"
+      },
+      {
+        "source": "n9",
+        "target": "n5"
+      },
+      {
+        "source": "n9",
+        "target": "n6"
+      },
+      {
+        "source": "n9",
+        "target": "n8"
+      },
+      {
+        "source": "n10",
+        "target": "n3"
+      },
+      {
+        "source": "n10",
+        "target": "n4"
+      },
+      {
+        "source": "n10",
+        "target": "n6"
+      },
+      {
+        "source": "n10",
+        "target": "n7"
+      },
+      {
+        "source": "n11",
+        "target": "n9"
+      },
+      {
+        "source": "n11",
+        "target": "n10"
+      }
+    ]
+  },
+  "capturedBattery": {
+    "nodes": [
+      {
+        "id": "n0",
+        "label": "Electrochemical potential"
+      },
+      {
+        "id": "n1",
+        "label": "Voltaic pile architecture"
+      },
+      {
+        "id": "n2",
+        "label": "Reversible electrode chemistry"
+      },
+      {
+        "id": "n3",
+        "label": "Paste electrode fabrication"
+      },
+      {
+        "id": "n4",
+        "label": "Separator membrane"
+      },
+      {
+        "id": "n5",
+        "label": "Sealed cell containment"
+      },
+      {
+        "id": "n6",
+        "label": "Intercalation host materials"
+      },
+      {
+        "id": "n7",
+        "label": "Lithium-ion battery"
+      }
+    ],
+    "edges": [
+      {
+        "source": "n1",
+        "target": "n0"
+      },
+      {
+        "source": "n2",
+        "target": "n0"
+      },
+      {
+        "source": "n3",
+        "target": "n1"
+      },
+      {
+        "source": "n4",
+        "target": "n1"
+      },
+      {
+        "source": "n4",
+        "target": "n3"
+      },
+      {
+        "source": "n5",
+        "target": "n3"
+      },
+      {
+        "source": "n5",
+        "target": "n4"
+      },
+      {
+        "source": "n6",
+        "target": "n2"
+      },
+      {
+        "source": "n7",
+        "target": "n6"
+      }
+    ]
+  },
+  "capturedRecursion": {
+    "nodes": [
+      {
+        "id": "n1",
+        "label": "Mathematical Induction Principle"
+      },
+      {
+        "id": "n2",
+        "label": "Primitive Recursive Function Schemas"
+      },
+      {
+        "id": "n3",
+        "label": "General Recursive Functions (μ-Recursion)"
+      },
+      {
+        "id": "n4",
+        "label": "Lambda Calculus & Fixed-Point Combinators"
+      },
+      {
+        "id": "n5",
+        "label": "Stored-Program Architecture with Hardware Stack"
+      },
+      {
+        "id": "n6",
+        "label": "High-Level Language Runtime for Recursion"
+      },
+      {
+        "id": "n7",
+        "label": "Recursion as a Unifying Computational Abstraction"
+      }
+    ],
+    "edges": [
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {}
+    ]
+  },
+  "v6Laptop": {
+    "layers": [
+      {
+        "id": "l0",
+        "name": "Physics",
+        "nodes": [
+          "n-physics-electricity",
+          "n-physics-thermodynamics"
+        ]
+      },
+      {
+        "id": "l1",
+        "name": "Materials",
+        "nodes": [
+          "n-silicon",
+          "n-copper",
+          "n-plastic",
+          "n-glass",
+          "n-lithium"
+        ]
+      },
+      {
+        "id": "l2",
+        "name": "Electronics",
+        "nodes": [
+          "n-transistor",
+          "n-battery",
+          "n-display",
+          "n-pcb"
+        ]
+      },
+      {
+        "id": "l3",
+        "name": "Logic Gates",
+        "nodes": [
+          "n-cmos-gate",
+          "n-memory-cell",
+          "n-clock"
+        ]
+      },
+      {
+        "id": "l4",
+        "name": "Architecture",
+        "nodes": [
+          "n-cpu",
+          "n-ram",
+          "n-storage",
+          "n-gpu",
+          "n-controller"
+        ]
+      },
+      {
+        "id": "l5",
+        "name": "System Software",
+        "nodes": [
+          "n-kernel",
+          "n-driver",
+          "n-shell"
+        ]
+      },
+      {
+        "id": "l6",
+        "name": "Applications",
+        "nodes": [
+          "n-browser",
+          "n-editor",
+          "n-terminal"
+        ]
+      },
+      {
+        "id": "l7",
+        "name": "Laptop",
+        "nodes": [
+          "n-laptop",
+          "n-clamshell-synthesis"
+        ]
+      }
+    ],
+    "nodes": [
+      {
+        "id": "n-physics-electricity",
+        "layer": "l0"
+      },
+      {
+        "id": "n-physics-thermodynamics",
+        "layer": "l0"
+      },
+      {
+        "id": "n-silicon",
+        "layer": "l1"
+      },
+      {
+        "id": "n-copper",
+        "layer": "l1"
+      },
+      {
+        "id": "n-plastic",
+        "layer": "l1"
+      },
+      {
+        "id": "n-glass",
+        "layer": "l1"
+      },
+      {
+        "id": "n-lithium",
+        "layer": "l1"
+      },
+      {
+        "id": "n-transistor",
+        "layer": "l2"
+      },
+      {
+        "id": "n-battery",
+        "layer": "l2"
+      },
+      {
+        "id": "n-display",
+        "layer": "l2"
+      },
+      {
+        "id": "n-pcb",
+        "layer": "l2"
+      },
+      {
+        "id": "n-cmos-gate",
+        "layer": "l3"
+      },
+      {
+        "id": "n-memory-cell",
+        "layer": "l3"
+      },
+      {
+        "id": "n-clock",
+        "layer": "l3"
+      },
+      {
+        "id": "n-cpu",
+        "layer": "l4"
+      },
+      {
+        "id": "n-ram",
+        "layer": "l4"
+      },
+      {
+        "id": "n-storage",
+        "layer": "l4"
+      },
+      {
+        "id": "n-gpu",
+        "layer": "l4"
+      },
+      {
+        "id": "n-controller",
+        "layer": "l4"
+      },
+      {
+        "id": "n-kernel",
+        "layer": "l5"
+      },
+      {
+        "id": "n-driver",
+        "layer": "l5"
+      },
+      {
+        "id": "n-shell",
+        "layer": "l5"
+      },
+      {
+        "id": "n-browser",
+        "layer": "l6"
+      },
+      {
+        "id": "n-editor",
+        "layer": "l6"
+      },
+      {
+        "id": "n-terminal",
+        "layer": "l6"
+      },
+      {
+        "id": "n-laptop",
+        "layer": "l7"
+      },
+      {
+        "id": "n-clamshell-synthesis",
+        "layer": "l7"
+      }
+    ],
+    "edges": [
+      {
+        "source": "n-silicon",
+        "target": "n-physics-electricity"
+      },
+      {
+        "source": "n-copper",
+        "target": "n-physics-electricity"
+      },
+      {
+        "source": "n-plastic",
+        "target": "n-physics-thermodynamics"
+      },
+      {
+        "source": "n-glass",
+        "target": "n-physics-electricity"
+      },
+      {
+        "source": "n-lithium",
+        "target": "n-physics-electricity"
+      },
+      {
+        "source": "n-transistor",
+        "target": "n-silicon"
+      },
+      {
+        "source": "n-battery",
+        "target": "n-lithium"
+      },
+      {
+        "source": "n-display",
+        "target": "n-glass"
+      },
+      {
+        "source": "n-pcb",
+        "target": "n-copper"
+      },
+      {
+        "source": "n-cmos-gate",
+        "target": "n-transistor"
+      },
+      {
+        "source": "n-memory-cell",
+        "target": "n-transistor"
+      },
+      {
+        "source": "n-clock",
+        "target": "n-transistor"
+      },
+      {
+        "source": "n-cpu",
+        "target": "n-cmos-gate"
+      },
+      {
+        "source": "n-ram",
+        "target": "n-memory-cell"
+      },
+      {
+        "source": "n-storage",
+        "target": "n-memory-cell"
+      },
+      {
+        "source": "n-gpu",
+        "target": "n-cmos-gate"
+      },
+      {
+        "source": "n-controller",
+        "target": "n-cmos-gate"
+      },
+      {
+        "source": "n-kernel",
+        "target": "n-cpu"
+      },
+      {
+        "source": "n-driver",
+        "target": "n-controller"
+      },
+      {
+        "source": "n-shell",
+        "target": "n-kernel"
+      },
+      {
+        "source": "n-browser",
+        "target": "n-shell"
+      },
+      {
+        "source": "n-editor",
+        "target": "n-shell"
+      },
+      {
+        "source": "n-terminal",
+        "target": "n-shell"
+      },
+      {
+        "source": "n-laptop",
+        "target": "n-display"
+      },
+      {
+        "source": "n-laptop",
+        "target": "n-battery"
+      },
+      {
+        "source": "n-laptop",
+        "target": "n-cpu"
+      },
+      {
+        "source": "n-laptop",
+        "target": "n-ram"
+      },
+      {
+        "source": "n-laptop",
+        "target": "n-storage"
+      },
+      {
+        "source": "n-laptop",
+        "target": "n-gpu"
+      },
+      {
+        "source": "n-laptop",
+        "target": "n-controller"
+      },
+      {
+        "source": "n-laptop",
+        "target": "n-kernel"
+      },
+      {
+        "source": "n-laptop",
+        "target": "n-driver"
+      },
+      {
+        "source": "n-laptop",
+        "target": "n-shell"
+      },
+      {
+        "source": "n-clamshell-synthesis",
+        "target": "n-display"
+      },
+      {
+        "source": "n-clamshell-synthesis",
+        "target": "n-battery"
+      },
+      {
+        "source": "n-clamshell-synthesis",
+        "target": "n-cpu"
+      },
+      {
+        "source": "n-clamshell-synthesis",
+        "target": "n-kernel"
+      }
+    ]
+  },
+  "v6Battery": {
+    "layers": [
+      {
+        "id": "l0",
+        "name": "electrochemistry",
+        "nodes": [
+          "n-0"
+        ]
+      },
+      {
+        "id": "l1",
+        "name": "galvanic cell",
+        "nodes": [
+          "n-1"
+        ]
+      },
+      {
+        "id": "l2",
+        "name": "voltaic pile",
+        "nodes": [
+          "n-2"
+        ]
+      },
+      {
+        "id": "l3",
+        "name": "wet cell",
+        "nodes": [
+          "n-3"
+        ]
+      },
+      {
+        "id": "l4",
+        "name": "dry cell",
+        "nodes": [
+          "n-4"
+        ]
+      },
+      {
+        "id": "l5",
+        "name": "modern battery",
+        "nodes": [
+          "n-5"
+        ]
+      }
+    ],
+    "nodes": [
+      {
+        "id": "n-0",
+        "layer": "l0"
+      },
+      {
+        "id": "n-1",
+        "layer": "l1"
+      },
+      {
+        "id": "n-2",
+        "layer": "l2"
+      },
+      {
+        "id": "n-3",
+        "layer": "l3"
+      },
+      {
+        "id": "n-4",
+        "layer": "l4"
+      },
+      {
+        "id": "n-5",
+        "layer": "l5"
+      }
+    ],
+    "edges": [
+      {
+        "source": "n-1",
+        "target": "n-0"
+      },
+      {
+        "source": "n-2",
+        "target": "n-1"
+      },
+      {
+        "source": "n-3",
+        "target": "n-2"
+      },
+      {
+        "source": "n-4",
+        "target": "n-3"
+      },
+      {
+        "source": "n-5",
+        "target": "n-4"
+      }
+    ]
+  },
+  "stagesLaptop": {
+    "chronology": {
+      "concept": "laptop",
+      "chronology": [
+        {
+          "id": "c1",
+          "regime": "semiconductor transistor",
+          "new_capability": "solid-state switching and amplification at microwatt power levels",
+          "enabled_by_previous": [],
+          "ancestry_kind": "physical",
+          "target_relevance": "provides the fundamental logic element for all digital computation in a laptop"
+        },
+        {
+          "id": "c2",
+          "regime": "monolithic integrated circuit",
+          "new_capability": "thousands of interconnected transistors fabricated on a single silicon die",
+          "enabled_by_previous": [
+            "c1"
+          ],
+          "ancestry_kind": "physical",
+          "target_relevance": "enables the complex processor and memory chips that fit inside a laptop chassis"
+        },
+        {
+          "id": "c3",
+          "regime": "microprocessor",
+          "new_capability": "complete central processing unit on a single integrated circuit",
+          "enabled_by_previous": [
+            "c2"
+          ],
+          "ancestry_kind": "physical",
+          "target_relevance": "supplies the programmable compute core that runs laptop software"
+        },
+        {
+          "id": "c4",
+          "regime": "dynamic random-access memory (DRAM) chip",
+          "new_capability": "high-density, low-cost volatile memory with random access",
+          "enabled_by_previous": [
+            "c2"
+          ],
+          "ancestry_kind": "physical",
+          "target_relevance": "provides the main working memory for running programs on a laptop"
+        },
+        {
+          "id": "c5",
+          "regime": "liquid crystal display (LCD) panel",
+          "new_capability": "flat, low-power, non-emissive visual output surface",
+          "enabled_by_previous": [],
+          "ancestry_kind": "physical",
+          "target_relevance": "makes the thin, hinged laptop screen physically possible"
+        },
+        {
+          "id": "c6",
+          "regime": "lithium-ion rechargeable battery",
+          "new_capability": "high energy-density portable power source with hundreds of charge cycles",
+          "enabled_by_previous": [],
+          "ancestry_kind": "physical",
+          "target_relevance": "enables untethered operation for hours, defining the laptop form factor"
+        },
+        {
+          "id": "c7",
+          "regime": "magnetic hard disk drive (HDD) / solid-state drive (SSD)",
+          "new_capability": "non-volatile, high-capacity data storage in a 2.5-inch form factor",
+          "enabled_by_previous": [
+            "c2"
+          ],
+          "ancestry_kind": "physical",
+          "target_relevance": "stores the operating system, applications, and user data inside the laptop"
+        },
+        {
+          "id": "c8",
+          "regime": "printed circuit board (PCB) with surface-mount technology",
+          "new_capability": "dense, reliable interconnection of ICs, connectors, and passives in a thin multilayer stack",
+          "enabled_by_previous": [
+            "c2",
+            "c3",
+            "c4",
+            "c7"
+          ],
+          "ancestry_kind": "physical",
+          "target_relevance": "integrates all laptop subsystems into the compact motherboard and daughterboards"
+        },
+        {
+          "id": "c9",
+          "regime": "clamshell mechanical hinge and chassis system",
+          "new_capability": "durable, repeatable 180-degree rotation joining display and keyboard halves while routing cables",
+          "enabled_by_previous": [
+            "c5",
+            "c6",
+            "c8"
+          ],
+          "ancestry_kind": "physical",
+          "target_relevance": "defines the laptop's signature foldable form factor and protects internal components"
+        },
+        {
+          "id": "c10",
+          "regime": "portable operating system with power management",
+          "new_capability": "software that schedules tasks, manages memory, drives hardware, and aggressively reduces power draw",
+          "enabled_by_previous": [
+            "c3",
+            "c4",
+            "c6",
+            "c7"
+          ],
+          "ancestry_kind": "technical",
+          "target_relevance": "makes the hardware usable as a battery-powered, general-purpose personal computer"
+        }
+      ]
+    },
+    "epiphanies": {
+      "concept": "laptop",
+      "epiphanies": [
+        {
+          "id": "e1",
+          "from_regimes": [],
+          "to_regimes": [
+            "c1"
+          ],
+          "result": "semiconductor transistor",
+          "joint_kind": "ENGINEERED_RESULT",
+          "history": {
+            "certainty": "EXACT",
+            "who": [
+              "John Bardeen",
+              "Walter Brattain",
+              "William Shockley"
+            ],
+            "when": "December 1947 (point-contact); June 1948 (junction patent filed)",
+            "observation": "Amplification of electrical signals in a germanium crystal with two closely spaced gold point contacts (point-contact transistor); subsequent theory and demonstration of the bipolar junction transistor.",
+            "uncertainty_note": ""
+          },
+          "candidate_node": "c1"
+        },
+        {
+          "id": "e2",
+          "from_regimes": [
+            "c1"
+          ],
+          "to_regimes": [
+            "c2"
+          ],
+          "result": "monolithic integrated circuit",
+          "joint_kind": "ENGINEERED_RESULT",
+          "history": {
+            "certainty": "EXACT",
+            "who": [
+              "Jack Kilby",
+              "Robert Noyce"
+            ],
+            "when": "1958-1959",
+            "observation": "Kilby (Texas Instruments) demonstrated a working phase-shift oscillator with all components fabricated in a single germanium bar (Sept 1958); Noyce (Fairchild) conceived the planar process and metal interconnection on silicon, filing the key patent (1959).",
+            "uncertainty_note": "Independent, near-simultaneous invention; Kilby built the first working prototype, Noyce's planar process became the manufacturing standard."
+          },
+          "candidate_node": "c2"
+        },
+        {
+          "id": "e3",
+          "from_regimes": [
+            "c2"
+          ],
+          "to_regimes": [
+            "c3"
+          ],
+          "result": "microprocessor",
+          "joint_kind": "ENGINEERED_RESULT",
+          "history": {
+            "certainty": "EXACT",
+            "who": [
+              "Federico Faggin",
+              "Marcian Hoff",
+              "Stanley Mazor",
+              "Masatoshi Shima"
+            ],
+            "when": "1971 (Intel 4004)",
+            "observation": "Integration of a complete 4-bit central processing unit (arithmetic, logic, control, registers) onto a single silicon die (Intel 4004), designed for a calculator but programmable for general use.",
+            "uncertainty_note": ""
+          },
+          "candidate_node": "c3"
+        },
+        {
+          "id": "e4",
+          "from_regimes": [
+            "c2"
+          ],
+          "to_regimes": [
+            "c4"
+          ],
+          "result": "dynamic random-access memory (DRAM) chip",
+          "joint_kind": "ENGINEERED_RESULT",
+          "history": {
+            "certainty": "EXACT",
+            "who": [
+              "Robert Dennard"
+            ],
+            "when": "1966 (invention/patent); 1970 (Intel 1103 commercial release)",
+            "observation": "Invention of the single-transistor memory cell (1T1C) using a MOSFET as a switch and a capacitor to store charge, enabling high-density random-access memory on a standard logic process.",
+            "uncertainty_note": ""
+          },
+          "candidate_node": "c4"
+        },
+        {
+          "id": "e5",
+          "from_regimes": [],
+          "to_regimes": [
+            "c5"
+          ],
+          "result": "liquid crystal display (LCD) panel",
+          "joint_kind": "ENGINEERED_RESULT",
+          "history": {
+            "certainty": "EXACT",
+            "who": [
+              "George Heilmeier",
+              "Lucien Zanoni",
+              "Louis Barton",
+              "RCA team"
+            ],
+            "when": "1968 (dynamic scattering mode prototype); 1970s (twisted nematic / field-effect development)",
+            "observation": "Demonstration of electrically controlled light modulation in liquid crystals (dynamic scattering mode) at RCA, proving flat-panel display feasibility; later twisted nematic (TN) mode enabled low-voltage, multiplexed operation essential for portables.",
+            "uncertainty_note": "Transition from laboratory effect to laptop-suitable TN-LCD involved many contributors (e.g., Schadt, Helfrich, Merck, Sharp, Hosiden) through the 1970s-80s."
+          },
+          "candidate_node": "c5"
+        },
+        {
+          "id": "e6",
+          "from_regimes": [],
+          "to_regimes": [
+            "c6"
+          ],
+          "result": "lithium-ion rechargeable battery",
+          "joint_kind": "ENGINEERED_RESULT",
+          "history": {
+            "certainty": "EXACT",
+            "who": [
+              "Stanley Whittingham",
+              "John Goodenough",
+              "Akira Yoshino",
+              "Sony Energytec / Asahi Kasei team"
+            ],
+            "when": "1976 (Whittingham TiS2 cathode); 1980 (Goodenough LCO cathode); 1985 (Yoshino carbon anode + LCO); 1991 (Sony commercial launch)",
+            "observation": "Stepwise development: Whittingham (Exxon) demonstrated Li+ intercalation into TiS2; Goodenough (Oxford) identified high-voltage LiCoO2 cathode; Yoshino (Asahi Kasei) paired it with a petroleum-coke carbon anode, enabling a safe, high-energy-density cell; Sony engineered the first commercial product.",
+            "uncertainty_note": "No single 'aha' moment; a chain of materials discoveries and engineering integration over 15 years."
+          },
+          "candidate_node": "c6"
+        },
+        {
+          "id": "e7",
+          "from_regimes": [
+            "c2"
+          ],
+          "to_regimes": [
+            "c7"
+          ],
+          "result": "magnetic hard disk drive (HDD) / solid-state drive (SSD)",
+          "joint_kind": "ENGINEERED_RESULT",
+          "history": {
+            "certainty": "EXACT",
+            "who": [
+              "IBM San Jose team (Reynold Johnson, William Goddard, John Lynott) for HDD",
+              "Fujio Masuoka (Toshiba) for flash memory/SSD"
+            ],
+            "when": "1956 (IBM 350 RAMAC - first HDD); 1980 (Seagate ST-506 - first 5.25\" HDD); 1984 (Toshiba 3.5\" HDD); 1987 (Masuoka NOR flash); 1988 (Masuoka NAND flash); 1991 (SanDisk first commercial SSD)",
+            "observation": "HDD: IBM invented rotating magnetic disk storage (RAMAC); form factor shrank from 24\" to 14\", 8\", 5.25\", 3.5\", 2.5\" (PrairieTek 1988) for laptops. SSD: Masuoka invented floating-gate flash memory (NOR then NAND) at Toshiba; SanDisk commercialized first solid-state drives.",
+            "uncertainty_note": "Two distinct storage lineages (magnetic HDD, semiconductor flash SSD) converged on the same 2.5-inch laptop bay; HDD arrived in laptops first (late 1980s), SSD later (2000s)."
+          },
+          "candidate_node": "c7"
+        },
+        {
+          "id": "e8",
+          "from_regimes": [
+            "c2",
+            "c3",
+            "c4",
+            "c7"
+          ],
+          "to_regimes": [
+            "c8"
+          ],
+          "result": "printed circuit board (PCB) with surface-mount technology",
+          "joint_kind": "ENGINEERED_RESULT",
+          "history": {
+            "certainty": "EXACT",
+            "who": [
+              "IBM (early planar multilayer boards)",
+              "Japanese consortium (Hitachi, Fujitsu, Matsushita) and US firms (AT&T, DEC) for SMT standardization"
+            ],
+            "when": "1960s (multilayer PCB); early 1980s (SMT production ramp)",
+            "observation": "Evolution from through-hole to surface-mount: IBM developed multilayer etched-circuit boards for System/360; 1970s-80s industry-wide push (JEDEC, EIAJ standards) for chip carriers (SOIC, PLCC, QFP) and reflow soldering enabled the dense, thin motherboards laptops require.",
+            "uncertainty_note": "Gradual manufacturing evolution, not a single invention event."
+          },
+          "candidate_node": "c8"
+        },
+        {
+          "id": "e9",
+          "from_regimes": [
+            "c5",
+            "c6",
+            "c8"
+          ],
+          "to_regimes": [
+            "c9"
+          ],
+          "result": "clamshell mechanical hinge and chassis system",
+          "joint_kind": "ENGINEERED_RESULT",
+          "history": {
+            "certainty": "EXACT",
+            "who": [
+              "William Moggridge (GRiD Compass design)",
+              "Grid Systems Corp. engineering team",
+              "Toshiba, NEC, Compaq, IBM, Apple industrial design/engineering teams"
+            ],
+            "when": "1982 (GRiD Compass 1101 - first clamshell); 1985-1989 (Toshiba T1100, NEC UltraLite, Compaq LTE, Macintosh Portable - mass-market refinement)",
+            "observation": "GRiD Compass 1101 (designed by Moggridge, engineered by Grid Systems) introduced the die-cast magnesium clamshell with a flat electroluminescent display hinged over a full keyboard, establishing the form factor. Subsequent vendors (Toshiba, NEC, Compaq, Apple) refined hinge torque, cable routing (flex circuits), latch mechanisms, and structural rigidity for mass production.",
+            "uncertainty_note": "GRiD defined the architecture; the supply-chain engineering that made it reliable and cheap was a distributed, multi-vendor effort over years."
+          },
+          "candidate_node": "c9"
+        },
+        {
+          "id": "e10",
+          "from_regimes": [
+            "c3",
+            "c4",
+            "c6",
+            "c7"
+          ],
+          "to_regimes": [
+            "c10"
+          ],
+          "result": "portable operating system with power management",
+          "joint_kind": "ENGINEERED_RESULT",
+          "history": {
+            "certainty": "EXACT",
+            "who": [
+              "Microsoft (Windows 3.1/95 APM/ACPI)",
+              "Intel/Microsoft/Toshiba (APM spec)",
+              "Intel/Microsoft/Hewlett-Packard/Phoenix (ACPI spec)",
+              "Apple (System 7/Power Manager)",
+              "Linus Torvalds / kernel community (APM/ACPI Linux support)"
+            ],
+            "when": "1992 (APM 1.0); 1995 (Windows 95 + APM); 1996 (ACPI 1.0); 1999 (Windows 98 ACPI); 2000s (ACPI widespread in Linux/macOS/Windows)",
+            "observation": "Hardware-software co-evolution: APM (BIOS-driven) gave OS coarse control; ACPI moved power management into the OS kernel with standardized hardware registers (AML bytecode). Windows 95 was the first mass-market OS to treat laptop power states (suspend/resume, disk spin-down, CPU throttling) as first-class duties.",
+            "uncertainty_note": "No single release; a standards-and-implementation cascade across firmware, silicon, and OS vendors over a decade."
+          },
+          "candidate_node": "c10"
+        }
+      ]
+    }
+  },
+  "stagesBattery": {
+    "chronology": {
+      "concept": "battery",
+      "chronology": [
+        {
+          "id": "c1",
+          "regime": "electrochemical potential",
+          "new_capability": "sustained voltage difference between dissimilar conductors in electrolyte",
+          "enabled_by_previous": [],
+          "ancestry_kind": "conceptual",
+          "target_relevance": "provides the fundamental voltage source that every battery exploits"
+        },
+        {
+          "id": "c2",
+          "regime": "voltaic pile architecture",
+          "new_capability": "stackable cells producing additive voltage at usable current",
+          "enabled_by_previous": [
+            "c1"
+          ],
+          "ancestry_kind": "technical",
+          "target_relevance": "establishes the series-cell topology used in all multi-cell batteries"
+        },
+        {
+          "id": "c3",
+          "regime": "reversible electrode chemistry",
+          "new_capability": "electrodes that can be restored by passing reverse current",
+          "enabled_by_previous": [
+            "c1"
+          ],
+          "ancestry_kind": "conceptual",
+          "target_relevance": "enables secondary (rechargeable) batteries distinct from primary cells"
+        },
+        {
+          "id": "c4",
+          "regime": "paste electrode fabrication",
+          "new_capability": "mechanically robust electrodes formed from active material mixed with binder",
+          "enabled_by_previous": [
+            "c2"
+          ],
+          "ancestry_kind": "technical",
+          "target_relevance": "allows mass-producible, durable electrodes for practical cells"
+        },
+        {
+          "id": "c5",
+          "regime": "separator membrane",
+          "new_capability": "ionic conduction with electronic insulation between electrodes",
+          "enabled_by_previous": [
+            "c2",
+            "c4"
+          ],
+          "ancestry_kind": "technical",
+          "target_relevance": "prevents internal short circuits while permitting ion transport"
+        },
+        {
+          "id": "c6",
+          "regime": "sealed cell containment",
+          "new_capability": "hermetic enclosure preventing electrolyte loss and contamination",
+          "enabled_by_previous": [
+            "c4",
+            "c5"
+          ],
+          "ancestry_kind": "technical",
+          "target_relevance": "enables maintenance-free, portable batteries in any orientation"
+        },
+        {
+          "id": "c7",
+          "regime": "intercalation host materials",
+          "new_capability": "reversible insertion of guest ions into crystal lattice without structural collapse",
+          "enabled_by_previous": [
+            "c3"
+          ],
+          "ancestry_kind": "conceptual",
+          "target_relevance": "provides high-energy, long-cycle-life chemistry for modern lithium-ion batteries"
+        }
+      ]
+    },
+    "epiphanies": {
+      "concept": "battery",
+      "epiphanies": [
+        {
+          "id": "e1",
+          "from_regimes": [
+            "c1"
+          ],
+          "to_regimes": [
+            "c2"
+          ],
+          "result": "voltaic pile architecture",
+          "joint_kind": "ENGINEERED_RESULT",
+          "history": {
+            "certainty": "EXACT",
+            "who": [
+              "Alessandro Volta"
+            ],
+            "when": "1800",
+            "observation": "Stacking alternating discs of zinc and copper separated by brine-soaked cardboard produced additive voltage proportional to the number of cell pairs, demonstrating the first practical multi-cell battery.",
+            "uncertainty_note": "Volta's 1800 letter to the Royal Society described the pile and its additive voltage; the exact date of first construction is not recorded but the publication is definitive."
+          },
+          "candidate_node": "c2"
+        },
+        {
+          "id": "e2",
+          "from_regimes": [
+            "c1"
+          ],
+          "to_regimes": [
+            "c3"
+          ],
+          "result": "reversible electrode chemistry",
+          "joint_kind": "OBSERVATION",
+          "history": {
+            "certainty": "EXACT",
+            "who": [
+              "Gaston Planté"
+            ],
+            "when": "1859",
+            "observation": "Planté constructed a lead-acid cell with lead electrodes in sulfuric acid that could be repeatedly charged and discharged by passing reverse current, establishing the first secondary battery.",
+            "uncertainty_note": "Planté's 1859 publication documents the reversible lead-acid cell; earlier observations of polarization effects existed but did not yield a practical rechargeable system."
+          },
+          "candidate_node": "c3"
+        },
+        {
+          "id": "e3",
+          "from_regimes": [
+            "c2"
+          ],
+          "to_regimes": [
+            "c4"
+          ],
+          "result": "paste electrode fabrication",
+          "joint_kind": "ENGINEERED_RESULT",
+          "history": {
+            "certainty": "EXACT",
+            "who": [
+              "Camille Alphonse Faure"
+            ],
+            "when": "1881",
+            "observation": "Faure patented coating lead plates with a paste of lead oxides and sulfuric acid, then forming them electrochemically, dramatically increasing capacity and enabling mass production of lead-acid batteries.",
+            "uncertainty_note": "Faure's 1881 French patent (No. 142,571) is the definitive record; similar paste concepts were explored by others but Faure's was the first practical, commercialized version."
+          },
+          "candidate_node": "c4"
+        },
+        {
+          "id": "e4",
+          "from_regimes": [
+            "c2",
+            "c4"
+          ],
+          "to_regimes": [
+            "c5"
+          ],
+          "result": "separator membrane",
+          "joint_kind": "ENGINEERED_RESULT",
+          "history": {
+            "certainty": "APPROXIMATE",
+            "who": [
+              "Multiple inventors"
+            ],
+            "when": "1880s-1890s",
+            "observation": "Porous separators (wood, rubber, cellulose) were introduced between positive and negative plates in lead-acid cells to prevent shorting from active material shedding while allowing ion flow; no single inventor or date dominates.",
+            "uncertainty_note": "Separators evolved incrementally; early cells used simple spacing, then porous wood (1880s), then rubber and treated cellulose (1890s). The transition lacks a single joint event."
+          },
+          "candidate_node": "c5"
+        },
+        {
+          "id": "e5",
+          "from_regimes": [
+            "c4",
+            "c5"
+          ],
+          "to_regimes": [
+            "c6"
+          ],
+          "result": "sealed cell containment",
+          "joint_kind": "ENGINEERED_RESULT",
+          "history": {
+            "certainty": "APPROXIMATE",
+            "who": [
+              "Multiple developers"
+            ],
+            "when": "1960s-1970s",
+            "observation": "Valve-regulated lead-acid (VRLA) and sealed nickel-cadmium cells emerged using recombinant chemistry and pressure vents, enabling maintenance-free operation in any orientation; key commercial products appeared in the 1970s (e.g., Gates Energy Products VRLA).",
+            "uncertainty_note": "Sealed cells developed across multiple chemistries and companies; the transition is a convergence of recombinant chemistry, separator improvements, and case sealing technology rather than one event."
+          },
+          "candidate_node": "c6"
+        },
+        {
+          "id": "e6",
+          "from_regimes": [
+            "c3"
+          ],
+          "to_regimes": [
+            "c7"
+          ],
+          "result": "intercalation host materials",
+          "joint_kind": "OBSERVATION",
+          "history": {
+            "certainty": "EXACT",
+            "who": [
+              "M. Stanley Whittingham"
+            ],
+            "when": "1976",
+            "observation": "Whittingham demonstrated reversible lithium intercalation into titanium disulfide (TiS₂) at room temperature, establishing the first intercalation cathode for a lithium battery and the concept of 'topotactic' insertion without structural collapse.",
+            "uncertainty_note": "Whittingham's 1976 paper (Exxon) is the definitive first report of a functioning intercalation cathode; earlier work on graphite intercalation compounds existed but not as battery electrodes."
+          },
+          "candidate_node": "c7"
+        }
+      ]
+    }
+  },
+  "stagesRecursion": {
+    "chronology": {
+      "concept": "recursion",
+      "chronology": [
+        {
+          "id": "c1",
+          "regime": "mathematical induction",
+          "new_capability": "proof by self-referential reduction to base cases",
+          "enabled_by_previous": [],
+          "ancestry_kind": "conceptual",
+          "target_relevance": "provides the logical template for terminating self-reference"
+        },
+        {
+          "id": "c2",
+          "regime": "primitive recursive function theory",
+          "new_capability": "formal definition of functions via composition and primitive recursion schemas",
+          "enabled_by_previous": [
+            "c1"
+          ],
+          "ancestry_kind": "conceptual",
+          "target_relevance": "establishes the first rigorous class of computable self-referential definitions"
+        },
+        {
+          "id": "c3",
+          "regime": "general recursive functions / μ-recursion",
+          "new_capability": "unbounded search (minimization) enabling partial recursive functions and universal computation",
+          "enabled_by_previous": [
+            "c2"
+          ],
+          "ancestry_kind": "conceptual",
+          "target_relevance": "completes the formal equivalence class capturing all effective self-referential computation"
+        },
+        {
+          "id": "c4",
+          "regime": "lambda calculus / combinatory logic",
+          "new_capability": "anonymous self-application and fixed-point combinators (Y-combinator) for anonymous recursion",
+          "enabled_by_previous": [
+            "c3"
+          ],
+          "ancestry_kind": "conceptual",
+          "target_relevance": "provides the syntax and mechanism for recursion without named self-reference"
+        },
+        {
+          "id": "c5",
+          "regime": "stored-program computer architecture",
+          "new_capability": "hardware subroutine call/return stack enabling runtime recursive invocation",
+          "enabled_by_previous": [
+            "c3"
+          ],
+          "ancestry_kind": "technical",
+          "target_relevance": "supplies the physical execution model for recursive algorithms"
+        },
+        {
+          "id": "c6",
+          "regime": "high-level language runtime support",
+          "new_capability": "automatic stack frame management, tail-call optimization, and lexical closures for recursive procedures",
+          "enabled_by_previous": [
+            "c4",
+            "c5"
+          ],
+          "ancestry_kind": "technical",
+          "target_relevance": "makes recursion a practical, expressive programming abstraction"
+        }
+      ]
+    },
+    "epiphanies": {
+      "concept": "recursion",
+      "epiphanies": [
+        {
+          "id": "e1",
+          "from_regimes": [],
+          "to_regimes": [
+            "c1"
+          ],
+          "result": "Mathematical induction formalized as a proof principle for natural numbers",
+          "joint_kind": "FORMALIZATION",
+          "history": {
+            "certainty": "APPROXIMATE",
+            "who": [
+              "Blaise Pascal",
+              "Pierre de Fermat",
+              "Jakob Bernoulli",
+              "Augustus De Morgan"
+            ],
+            "when": "1654 (Pascal/Fermat correspondence); 1713 (Bernoulli, Ars Conjectandi); 1838 (De Morgan coined 'mathematical induction')",
+            "observation": "Pascal and Fermat used recursive reasoning for probability problems; Bernoulli applied 'inductive' arguments to sums of powers; De Morgan explicitly formulated and named the principle: proving P(0) and P(n) -> P(n+1) establishes P(n) for all n.",
+            "uncertainty_note": "No single moment of invention; the principle evolved from implicit recursive arguments in ancient mathematics (Euclid, al-Karaji) to explicit meta-logical schema in the 17th-19th centuries."
+          },
+          "candidate_node": "c1"
+        },
+        {
+          "id": "e2",
+          "from_regimes": [
+            "c1"
+          ],
+          "to_regimes": [
+            "c2"
+          ],
+          "result": "Primitive recursive function schemas (composition and primitive recursion) as a formal class of total computable functions",
+          "joint_kind": "FORMALIZATION",
+          "history": {
+            "certainty": "EXACT",
+            "who": [
+              "Kurt Gödel",
+              "Stephen Kleene",
+              "Rózsa Péter"
+            ],
+            "when": "1931 (Gödel, 'On Formally Undecidable Propositions', System P); 1934 (Gödel, Princeton lectures, attributed to Herbrand); 1935 (Péter, 'Konstruktion nichtrekursiver Funktionen'); 1936 (Kleene, 'General Recursive Functions of Natural Numbers')",
+            "observation": "Gödel 1931 defined 'rekursiv' functions via explicit schemas (initial functions, composition, primitive recursion) to arithmetize syntax in the incompleteness proof. Kleene 1936 and Péter 1935-36 developed the general theory, proving closure properties and identifying the class as strictly contained in the general recursive functions (e.g., Ackermann function, 1928, is computable but not primitive recursive).",
+            "uncertainty_note": "Gödel credited the schemas to Herbrand (1931 letter); Dedekind 1888 gave a recursive definition of addition/multiplication but not a general function class."
+          },
+          "candidate_node": "c2"
+        },
+        {
+          "id": "e3",
+          "from_regimes": [
+            "c2"
+          ],
+          "to_regimes": [
+            "c3"
+          ],
+          "result": "Minimization (μ-operator) added to primitive recursion yields the class of general (partial) recursive functions, capturing all effective computation",
+          "joint_kind": "FORMALIZATION",
+          "history": {
+            "certainty": "EXACT",
+            "who": [
+              "Kurt Gödel",
+              "Stephen Kleene",
+              "Alan Turing",
+              "Alonzo Church"
+            ],
+            "when": "1934 (Gödel lectures, Herbrand-Gödel definition); 1936 (Kleene, 'General Recursive Functions'; Church, 'An Unsolvable Problem of Elementary Number Theory'; Turing, 'On Computable Numbers')",
+            "observation": "Herbrand-Gödel 1934 defined general recursive functions by adding the unbounded search operator μ to primitive recursion. Kleene 1936 proved equivalence with λ-definability (Church) and Turing computability (Turing), establishing the Church-Turing thesis: this class = effectively calculable functions. The μ-operator enables partiality and universal computation.",
+            "uncertainty_note": "Gödel initially rejected λ-calculus as 'not sufficiently general'; convinced by equivalence proofs 1936."
+          },
+          "candidate_node": "c3"
+        },
+        {
+          "id": "e4",
+          "from_regimes": [
+            "c3"
+          ],
+          "to_regimes": [
+            "c4"
+          ],
+          "result": "Fixed-point combinators (Y-combinator) enable anonymous recursion in λ-calculus without named self-reference",
+          "joint_kind": "PROOF",
+          "history": {
+            "certainty": "EXACT",
+            "who": [
+              "Haskell Curry",
+              "Alan Turing"
+            ],
+            "when": "1929 (Curry, 'An Analysis of Logical Substitution', discovered fixed-point combinator); 1937 (Turing, 'The P Function in λ-K-Conversion', independent discovery of Θ combinator)",
+            "observation": "Curry 1929 constructed the paradoxical combinator Y = λf.(λx.f(xx))(λx.f(xx)) satisfying Y f = f (Y f), proving every λ-term has a fixed point. This internalizes recursion as a syntactic object: recursive definitions f = F(f) become f = Y F. Turing 1937 gave Θ = (λxy.y(xxy))(λxy.y(xxy)) with Θ f → f (Θ f). This decouples recursion from external naming (unlike μ-recursion's Gödel numbering).",
+            "uncertainty_note": "Schönfinkel 1924 had combinators S, K, I but not the fixed-point construction."
+          },
+          "candidate_node": "c4"
+        },
+        {
+          "id": "e5",
+          "from_regimes": [
+            "c3"
+          ],
+          "to_regimes": [
+            "c5"
+          ],
+          "result": "Stored-program architecture with hardware stack supports runtime recursive invocation via subroutine call/return",
+          "joint_kind": "ENGINEERED_RESULT",
+          "history": {
+            "certainty": "APPROXIMATE",
+            "who": [
+              "John von Neumann",
+              "Herman Goldstine",
+              "Arthur Burks",
+              "Maurice Wilkes",
+              "David Wheeler"
+            ],
+            "when": "1945 (von Neumann, 'First Draft of a Report on the EDVAC'); 1949 (Wilkes/Wheeler, EDSAC initial orders with subroutine linkage); 1952 (ACM 'Subroutines' symposium)",
+            "observation": "von Neumann 1945 EDVAC report specified stored-program architecture with addressable memory for both instructions and data, enabling self-modifying code for subroutine return addresses. Wilkes/Wheeler 1949 EDSAC implemented 'Wheeler jump' (self-modifying link) for subroutines. Hardware stack (push/pop return addresses) emerged 1950s (e.g., Burroughs B5000 1961, DEC PDP-6 1963) making recursive calls efficient without self-modifying code.",
+            "uncertainty_note": "Recursive software routines existed on machines without hardware stacks (e.g., Manchester Mark 1, 1949) using software-managed stacks; hardware stack is an optimization, not a logical prerequisite."
+          },
+          "candidate_node": "c5"
+        },
+        {
+          "id": "e6",
+          "from_regimes": [
+            "c4",
+            "c5"
+          ],
+          "to_regimes": [
+            "c6"
+          ],
+          "result": "High-level language runtime implements automatic stack frames, lexical closures, and tail-call optimization for recursive procedures",
+          "joint_kind": "ENGINEERED_RESULT",
+          "history": {
+            "certainty": "APPROXIMATE",
+            "who": [
+              "John McCarthy",
+              "ALGOL 60 Committee (Backus, Naur, et al.)",
+              "Peter Landin",
+              "Guy Steele",
+              "Gerald Sussman"
+            ],
+            "when": "1958 (McCarthy, LISP 1, recursive functions + garbage collection); 1960 (ALGOL 60 Report, recursive procedures, stack discipline); 1964 (Landin, 'The Mechanical Evaluation of Expressions', SECD machine, closures); 1975 (Steele/Sussman, Scheme, mandated tail-call optimization, lexical scoping)",
+            "observation": "LISP 1958 first realized λ-calculus recursion mechanically (eval/apply, garbage-collected heap). ALGOL 60 1960 standardized recursive procedures with static nesting and dynamic stack frames (Dijkstra's display). Landin 1964 SECD machine formalized closure implementation for lexical scoping. Scheme 1975 made tail-call optimization a language guarantee, turning recursion into iteration asymptotically.",
+            "uncertainty_note": "FORTRAN I (1957) forbade recursion; PL/I (1964) allowed it optionally; C (1972) supported it but not tail-call optimization."
+          },
+          "candidate_node": "c6"
+        }
+      ]
+    }
+  }
+}
