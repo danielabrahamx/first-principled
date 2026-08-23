@@ -9,13 +9,16 @@ Netlify, no database. Local LLM is `LLM_PROVIDER=openrouter|deepseek`.
 Prod stays OpenRouter.
 
 **Map (only):** `.scratch/first-principled-v7/map.md`
+**Display map (parallel):** `.scratch/first-principled-v8/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
 **Resume:** v6 chrome shipped; one-shot scoring parked. The v7 three-stage
 Tree builder is live on prod in one background init job with a 14 min
 poll deadline. Thinking architecture is Option A (thinking off, JSON
 Schema on Epiphanies, OpenRouter paid Nemotron). Open frontier:
-[Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md).
+[Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md)
+(HITL; capture done, do not recapture; remaining KEEP or KILL). Record:
+`.scratch/first-principled-v7/research/07-danny-followability.md`.
 Map: `.scratch/first-principled-v7/map.md`.
 
 ## Golden rules

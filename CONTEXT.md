@@ -24,7 +24,12 @@ Prod is OpenRouter paid Nemotron
 [Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md)
 (HITL).
 [Lock the thinking architecture from the council](.scratch/first-principled-v7/issues/09-lock-the-thinking-architecture-from-the-council.md)
-locked Option A.
+locked Option A. Sibling display map (does not replace v7 KEEP/KILL):
+`.scratch/first-principled-v8/map.md` - etymology-style Dependence
+flowchart and stage-product wait-state. Open frontier there:
+[Can the poll carry stage snapshots](.scratch/first-principled-v8/issues/01-can-the-poll-carry-stage-snapshots.md),
+[Which way is up on the etymology-style Tree](.scratch/first-principled-v8/issues/02-which-way-is-up-on-the-etymology-style-tree.md),
+[How a Dependence DAG becomes that flowchart](.scratch/first-principled-v8/issues/03-how-a-dependence-dag-becomes-that-flowchart.md).
 
 ## Language
 
@@ -146,5 +151,6 @@ Current architecture (v1):
   turn loop (kept, not shown), and the LLM transport.
 
 Source of truth: `.scratch/first-principled/spec.md` (v1 product),
-`.scratch/first-principled-v7/map.md` (current effort). Immutable mission:
-`docs/MISSION.md`.
+`.scratch/first-principled-v7/map.md` (generator effort),
+`.scratch/first-principled-v8/map.md` (display and wait-state). Immutable
+mission: `docs/MISSION.md`.
