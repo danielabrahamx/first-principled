@@ -4,7 +4,7 @@
 
 **Status:** ready-for-agent
 
-**Blocked by:** [Which way is up on the etymology-style Tree](02-which-way-is-up-on-the-etymology-style-tree.md), [How a Dependence DAG becomes that flowchart](03-how-a-dependence-dag-becomes-that-flowchart.md)
+**Blocked by:** none (02 and 03 resolved)
 
 **Related:** [What each card on that flowchart holds](06-what-each-card-on-that-flowchart-holds.md)
 

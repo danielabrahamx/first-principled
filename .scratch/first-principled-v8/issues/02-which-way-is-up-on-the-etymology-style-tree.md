@@ -2,7 +2,7 @@
 
 **Type:** grilling
 
-**Status:** ready-for-human
+**Status:** resolved
 
 **Blocked by:** none
 
@@ -30,15 +30,23 @@ copied.
 Call the clash with `CONTEXT.md` Tree in the answer. Do not rename Tree
 in this ticket unless the direction lock forces a glossary sentence.
 
+## Answer
+
+The typed concept (the modern word / crown) sits at the **bottom**.
+Supporting knowledge sits at the **top**. An arrow from A down to B
+means B depends on A: the lower card rests on the cards above it. This
+inverts the old hanging-card Tree (crown at top). The glossary name
+stays Tree. `CONTEXT.md` Tree paragraph updated in this commit.
+
 ## Acceptance criteria
 
-- [ ] One vertical convention locked (top is either foundations/parts or
+- [x] One vertical convention locked (top is either foundations/parts or
       crown)
-- [ ] Arrow meaning stated in one sentence (what "A points to B" means
+- [x] Arrow meaning stated in one sentence (what "A points to B" means
       for Dependence)
-- [ ] The CONTEXT clash is acknowledged; glossary update is done here
+- [x] The CONTEXT clash is acknowledged; glossary update is done here
       only if the name or orientation is now the product rule
-- [ ] Map Decisions so far points at this lock
+- [x] Map Decisions so far points at this lock
 
 ## Docs rule
 

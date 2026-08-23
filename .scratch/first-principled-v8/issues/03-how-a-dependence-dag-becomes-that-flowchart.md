@@ -2,7 +2,7 @@
 
 **Type:** grilling
 
-**Status:** ready-for-human
+**Status:** resolved
 
 **Blocked by:** none
 
@@ -27,12 +27,20 @@ Dependence edges; this ticket only chooses how those edges are drawn.
 Kill a picture that is just Chronology regimes in date order with
 arrows.
 
+## Answer
+
+One downward spine is the trunk walk of Dependence, not Chronology
+order. Extra parents merge in from the side (fan-in), the way `ex` and
+`ducere` merge into `educere`. No second hanging column of cards.
+Fan-out and rabbit-hole invitations stay fog. Arrange still picks the
+edges; this ticket only picks how they are drawn.
+
 ## Acceptance criteria
 
-- [ ] Spine rule locked (what the vertical chain is)
-- [ ] Extra-parent rule locked (fan-in merge vs side column vs omitted)
-- [ ] Explicit: the picture draws Dependence, not Chronology order
-- [ ] Map Decisions so far points at this lock
+- [x] Spine rule locked (what the vertical chain is)
+- [x] Extra-parent rule locked (fan-in merge vs side column vs omitted)
+- [x] Explicit: the picture draws Dependence, not Chronology order
+- [x] Map Decisions so far points at this lock
 
 ## Docs rule
 

@@ -4,7 +4,7 @@
 
 **Status:** ready-for-human
 
-**Blocked by:** [How a Dependence DAG becomes that flowchart](03-how-a-dependence-dag-becomes-that-flowchart.md)
+**Blocked by:** none (03 resolved; run after or beside 04)
 
 **Related:** [Can the poll carry stage snapshots](01-can-the-poll-carry-stage-snapshots.md)
 

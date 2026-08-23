@@ -26,21 +26,20 @@ Prod is OpenRouter paid Nemotron
 [Lock the thinking architecture from the council](.scratch/first-principled-v7/issues/09-lock-the-thinking-architecture-from-the-council.md)
 locked Option A. Sibling display map (does not replace v7 KEEP/KILL):
 `.scratch/first-principled-v8/map.md` - etymology-style Dependence
-flowchart and stage-product wait-state. Poll snapshots are locked
-([Can the poll carry stage snapshots](.scratch/first-principled-v8/issues/01-can-the-poll-carry-stage-snapshots.md)).
-Open frontier there:
-[Which way is up on the etymology-style Tree](.scratch/first-principled-v8/issues/02-which-way-is-up-on-the-etymology-style-tree.md),
-[How a Dependence DAG becomes that flowchart](.scratch/first-principled-v8/issues/03-how-a-dependence-dag-becomes-that-flowchart.md).
+flowchart and stage-product wait-state. Poll snapshots, crown-at-bottom,
+and fan-in spine are locked. Open frontier there:
+[Prototype the etymology-style Dependence layout](.scratch/first-principled-v8/issues/04-prototype-the-etymology-style-dependence-layout.md).
 
 ## Language
 
 **Tree**:
-The product surface. A first-principles dependence path of one concept:
-crown at the top, foundations at the bottom, a continuous trunk with
-cards hanging off it. Extra parents branch to the other side. Layers are
-captions on the hang, capped to the card width, not table rows.
-_Avoid_: Map (as a page or tab name), Reality (as a tab name), Ask, cladogram,
-phylogenetic tree (as the product metaphor)
+The product surface. A first-principles dependence path of one concept.
+Supporting knowledge sits at the top; the typed concept (crown) sits at
+the bottom. The trunk is that downward spine. Extra parents merge in
+from the side. Layers are captions on the cards, capped to card width,
+not table rows.
+_Avoid_: hanging-card cladogram, Map (as a page or tab name), Reality (as a
+tab name), Ask, phylogenetic tree (as the product metaphor)
 
 **Dependence**:
 The relation the Tree draws. Node A rests on node B when A cannot exist or

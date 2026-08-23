@@ -58,6 +58,14 @@ the v1 stack.
   client already polls. Status stays `running` until terminal success
   or error. Never throw after 202. Details:
   [01-stage-snapshots-on-the-poll.md](research/01-stage-snapshots-on-the-poll.md).
+- Crown at the bottom: the typed concept sits at the bottom of the
+  flowchart; supporting knowledge sits above it. An arrow from A down
+  to B means B depends on A.
+  [Which way is up on the etymology-style Tree](issues/02-which-way-is-up-on-the-etymology-style-tree.md).
+- Spine plus fan-in: the vertical chain is the Dependence trunk walk,
+  not Chronology order. Extra parents merge in from the side. No second
+  hanging column.
+  [How a Dependence DAG becomes that flowchart](issues/03-how-a-dependence-dag-becomes-that-flowchart.md).
 
 ## Not yet specified
 
@@ -98,7 +106,7 @@ Further build tickets stay in fog until 04-06 close.
 
 ## Open frontier
 
-- [Which way is up on the etymology-style Tree](issues/02-which-way-is-up-on-the-etymology-style-tree.md)
-  (grilling)
-- [How a Dependence DAG becomes that flowchart](issues/03-how-a-dependence-dag-becomes-that-flowchart.md)
-  (grilling)
+- [Prototype the etymology-style Dependence layout](issues/04-prototype-the-etymology-style-dependence-layout.md)
+  (prototype; 02 and 03 locked)
+- [How stage products grow in place when Arrange reorders](issues/05-how-stage-products-grow-in-place-when-arrange-reorders.md)
+  (grilling; unblocked, wait for 04 unless run in parallel)
