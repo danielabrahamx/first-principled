@@ -30,9 +30,9 @@ the v1 stack.
   fourth LLM call. Generator stays Chronology, Epiphanies, Arrange in
   one background init job.
 - Wait-state: grow in place on this flowchart. No Chat page, no separate
-  thinking pane, no token SSE unless
+  thinking pane, no token SSE.
   [Can the poll carry stage snapshots](issues/01-can-the-poll-carry-stage-snapshots.md)
-  proves snapshots impossible.
+  locked keep-snapshots.
 - Skills: grilling + domain-modeling on HITL; `/research` on ticket 01;
   `/prototype` on ticket 04. anti-slop, tsc, netlify-build discipline.
 - Style: single dashes, no emojis. Windows/PowerShell-tested.
@@ -52,7 +52,7 @@ the v1 stack.
   word forms.
 - Grow in place on that surface.
 - Transport intent: existing background poll plus mid-job snapshots.
-  SSE/token streaming is out unless research forbids snapshots.
+  SSE/token streaming is out.
 - Keep-snapshots: the background init job can `setJSON` learner-safe
   Chronology then Epiphanies records on the same `agent-jobs` key the
   client already polls. Status stays `running` until terminal success
@@ -70,7 +70,8 @@ the v1 stack.
   fails the mechanical gate.
 - Mobile layout of long chains and dense fan-in.
 - How How-it-works copy describes this surface.
-- Exact snapshot payload (ids, text, edges) after ticket 01.
+- Field-level snapshot payload inside the locked poll shape
+  (`running` + `stage` + learner-safe `snapshot`).
 
 ## Out of scope
 
@@ -97,8 +98,6 @@ Further build tickets stay in fog until 04-06 close.
 
 ## Open frontier
 
-- [Can the poll carry stage snapshots](issues/01-can-the-poll-carry-stage-snapshots.md)
-  (research; resolved: keep-snapshots)
 - [Which way is up on the etymology-style Tree](issues/02-which-way-is-up-on-the-etymology-style-tree.md)
   (grilling)
 - [How a Dependence DAG becomes that flowchart](issues/03-how-a-dependence-dag-becomes-that-flowchart.md)
