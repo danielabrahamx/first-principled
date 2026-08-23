@@ -53,6 +53,11 @@ the v1 stack.
 - Grow in place on that surface.
 - Transport intent: existing background poll plus mid-job snapshots.
   SSE/token streaming is out unless research forbids snapshots.
+- Keep-snapshots: the background init job can `setJSON` learner-safe
+  Chronology then Epiphanies records on the same `agent-jobs` key the
+  client already polls. Status stays `running` until terminal success
+  or error. Never throw after 202. Details:
+  [01-stage-snapshots-on-the-poll.md](research/01-stage-snapshots-on-the-poll.md).
 
 ## Not yet specified
 
@@ -93,7 +98,7 @@ Further build tickets stay in fog until 04-06 close.
 ## Open frontier
 
 - [Can the poll carry stage snapshots](issues/01-can-the-poll-carry-stage-snapshots.md)
-  (research; in flight)
+  (research; resolved: keep-snapshots)
 - [Which way is up on the etymology-style Tree](issues/02-which-way-is-up-on-the-etymology-style-tree.md)
   (grilling)
 - [How a Dependence DAG becomes that flowchart](issues/03-how-a-dependence-dag-becomes-that-flowchart.md)

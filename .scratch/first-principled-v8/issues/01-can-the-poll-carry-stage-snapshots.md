@@ -2,7 +2,7 @@
 
 **Type:** research
 
-**Status:** claimed (research-subagent, 2026-08-23)
+**Status:** resolved
 
 **Blocked by:** none
 
@@ -41,15 +41,26 @@ AFK research against primary sources and this repo. Do not change
 Findings go in
 `.scratch/first-principled-v8/research/01-stage-snapshots-on-the-poll.md`.
 
+## Answer
+
+**Keep-snapshots.** Mid-flight `setJSON` on `agent-jobs` / `job:<id>` is
+a supported Blobs overwrite while the background invocation is still
+running. Keep `status: "running"` (plus `stage` and a learner-safe
+`snapshot`) until the existing terminal success or error write. Never
+throw after the 202 (retry is still +1 min then +2 min and re-runs the
+whole job). Teach `agent-status` to forward `running` records; today it
+strips them. Findings:
+[01-stage-snapshots-on-the-poll.md](../research/01-stage-snapshots-on-the-poll.md).
+
 ## Acceptance criteria
 
-- [ ] Findings file exists; every platform claim cites official Netlify
+- [x] Findings file exists; every platform claim cites official Netlify
       docs or this repo's function code
-- [ ] Recommendation is keep-snapshots or forbid-snapshots, with the
+- [x] Recommendation is keep-snapshots or forbid-snapshots, with the
       poll JSON shape and retry constraint a later task can copy
-- [ ] Learner-safe vs hidden fields are named
-- [ ] No secrets in the findings file
-- [ ] Ticket status resolved and a line on the map's Decisions so far
+- [x] Learner-safe vs hidden fields are named
+- [x] No secrets in the findings file
+- [x] Ticket status resolved and a line on the map's Decisions so far
 
 ## Docs rule
 
