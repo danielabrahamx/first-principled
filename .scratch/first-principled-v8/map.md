@@ -33,8 +33,14 @@ the v1 stack.
   thinking pane, no token SSE.
   [Can the poll carry stage snapshots](issues/01-can-the-poll-carry-stage-snapshots.md)
   locked keep-snapshots.
-- Skills: grilling + domain-modeling on HITL; `/research` on ticket 01;
-  `/prototype` on ticket 04. anti-slop, tsc, netlify-build discipline.
+- Skills: grilling + domain-modeling on HITL; `/research` on ticket 01
+  (resolved); `/prototype` on ticket 04. anti-slop, tsc, netlify-build
+  discipline.
+- **Next session:** claim
+  [Prototype the etymology-style Dependence layout](issues/04-prototype-the-etymology-style-dependence-layout.md).
+  Throwaway HTML only. Obey crown-at-bottom and spine-plus-fan-in.
+  Battery gold map preferred. Danny keep / tweak / kill. Do not wire
+  the generator or poll. Do not start ticket 05 in that session.
 - Style: single dashes, no emojis. Windows/PowerShell-tested.
 
 ## Decisions so far
@@ -107,6 +113,6 @@ Further build tickets stay in fog until 04-06 close.
 ## Open frontier
 
 - [Prototype the etymology-style Dependence layout](issues/04-prototype-the-etymology-style-dependence-layout.md)
-  (prototype; 02 and 03 locked)
+  (prototype; next session)
 - [How stage products grow in place when Arrange reorders](issues/05-how-stage-products-grow-in-place-when-arrange-reorders.md)
-  (grilling; unblocked, wait for 04 unless run in parallel)
+  (grilling; unblocked but parked until 04 closes)

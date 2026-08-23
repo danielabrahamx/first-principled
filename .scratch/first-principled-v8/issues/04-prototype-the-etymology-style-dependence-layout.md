@@ -29,6 +29,20 @@ Dependence, not etymology.
 Danny reacts: keep, tweak, or kill the chrome direction. Do not wire
 the generator or the poll.
 
+## Next session
+
+Claim this ticket first. Invoke `/prototype` (UI branch). Locks to
+obey:
+
+- Crown (typed concept) at the **bottom**; supports above.
+- Arrow A down to B means B depends on A.
+- One Dependence trunk spine; extra parents fan in from the side.
+- Not Chronology order. Not word etymology.
+
+Reference image:
+`.scratch/first-principled-v8/research/etymonline-education-reference.png`.
+Park ticket 05 until this verdict lands.
+
 ## Acceptance criteria
 
 - [ ] A runnable throwaway HTML prototype exists and is linked from this

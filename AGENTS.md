@@ -15,11 +15,13 @@ Prod stays OpenRouter.
 **Resume:** v6 chrome shipped; one-shot scoring parked. The v7 three-stage
 Tree builder is live on prod in one background init job with a 14 min
 poll deadline. Thinking architecture is Option A (thinking off, JSON
-Schema on Epiphanies, OpenRouter paid Nemotron). Open frontier:
+Schema on Epiphanies, OpenRouter paid Nemotron). v7 open frontier:
 [Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md)
 (HITL; capture done, do not recapture; remaining KEEP or KILL). Record:
 `.scratch/first-principled-v7/research/07-danny-followability.md`.
-Map: `.scratch/first-principled-v7/map.md`.
+v8 next session: throwaway HTML prototype, do not ship chrome.
+[Prototype the etymology-style Dependence layout](.scratch/first-principled-v8/issues/04-prototype-the-etymology-style-dependence-layout.md).
+Do not start ticket 05 in that session.
 
 ## Golden rules
 

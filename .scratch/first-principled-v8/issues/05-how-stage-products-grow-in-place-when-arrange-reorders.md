@@ -4,7 +4,9 @@
 
 **Status:** ready-for-human
 
-**Blocked by:** none (03 resolved; run after or beside 04)
+**Blocked by:** parked until
+[Prototype the etymology-style Dependence layout](04-prototype-the-etymology-style-dependence-layout.md)
+closes (03 is resolved; do not take this in the prototype session)
 
 **Related:** [Can the poll carry stage snapshots](01-can-the-poll-carry-stage-snapshots.md)
 
