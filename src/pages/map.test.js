@@ -31,25 +31,20 @@ test("the Tree header has no Tutor toggle and no page tabs", () => {
 test("layer overlays do not steal clicks from cards above them", () => {
   const css = readFileSync(path.join(here, "..", "styles.css"), "utf8");
   assert.match(css, /\.tree-layer\s*\{[^}]*pointer-events:\s*none/s);
-  assert.match(css, /\.tree-branch-card\s*\{[^}]*pointer-events:\s*auto/s);
+  assert.match(css, /\.tree-chapel-card\s*\{[^}]*pointer-events:\s*auto/s);
   assert.match(css, /\.tree-svg\s*\{[^}]*pointer-events:\s*none/s);
 });
 
-test("layer captions wrap inside the card width instead of nowrap", () => {
-  const css = readFileSync(path.join(here, "..", "styles.css"), "utf8");
+test("Chapel cards carry title, tag, and gloss", () => {
   const source = readFileSync(path.join(here, "map.js"), "utf8");
-  assert.match(css, /\.tree-branch-label\s*\{[^}]*white-space:\s*normal/s);
-  assert.match(css, /\.tree-branch-label\s*\{[^}]*-webkit-line-clamp:\s*2/s);
-  assert.match(source, /label\.style\.width/);
+  assert.match(source, /tree-chapel-title/);
+  assert.match(source, /tree-chapel-tag/);
+  assert.match(source, /tree-chapel-gloss/);
+  assert.match(source, /tree-chapel-because/);
+  assert.doesNotMatch(source, /tree-branch-label/);
 });
 
-test("tree cards lock the layout height so edges are not covered", () => {
-  const source = readFileSync(path.join(here, "map.js"), "utf8");
-  assert.match(source, /root\.style\.height/);
-  assert.match(source, /node\.style\.height/);
-});
-
-test("Tutor is parked from chrome; the briefing engine stays", () => {
+test("How it works chrome stays in the header", () => {
   const css = readFileSync(path.join(here, "..", "styles.css"), "utf8");
   const source = readFileSync(path.join(here, "map.js"), "utf8");
   const orchestrator = readFileSync(

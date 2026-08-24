@@ -37,9 +37,9 @@ the v1 stack.
   (resolved); `/prototype` on ticket 04 (resolved; KEEP Chapel).
   anti-slop, tsc, netlify-build discipline.
 - **Next session:** claim
-  [Ship the Chapel Dependence flowchart](issues/10-ship-the-chapel-dependence-flowchart.md)
-  (AFK). Ticket 09 closed 2026-08-24. Do not ship the throwaway
-  prototype. One ticket per session.
+  [Grow stage products in place on the Chapel flowchart](issues/11-grow-stage-products-in-place-on-the-chapel-flowchart.md)
+  (AFK). Ticket 10 shipped Chapel on the finished Tree. Do not ship the
+  throwaway prototype. One ticket per session.
 - Style: single dashes, no emojis. Windows/PowerShell-tested.
 
 ## Decisions so far
@@ -94,6 +94,11 @@ the v1 stack.
   snapshot. Snapshot writes never throw after 202. Terminal shapes
   unchanged. No SSE, no fourth status.
   [Poll forwards running stage snapshots](issues/09-poll-forwards-running-stage-snapshots.md).
+- Finished Tree home is Chapel geometry: crown at the bottom, spine plus
+  side fan-in, cards `label` / layer name / `description`, `because` on
+  shafts, hover on labeled arrows only (UNKNOWN: no hover). Instant
+  appear. Mobile stacks extra parents. Wait-state snapshots stay ticket 11.
+  [Ship the Chapel Dependence flowchart](issues/10-ship-the-chapel-dependence-flowchart.md).
 
 ## Not yet specified
 
@@ -136,5 +141,5 @@ into 10.
 
 ## Open frontier
 
-- [Ship the Chapel Dependence flowchart](issues/10-ship-the-chapel-dependence-flowchart.md)
+- [Grow stage products in place on the Chapel flowchart](issues/11-grow-stage-products-in-place-on-the-chapel-flowchart.md)
   (AFK; unblocked)

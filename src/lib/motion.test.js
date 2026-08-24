@@ -1,11 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import {
-  treeLayout,
-  spinePaths,
-  TREE_CARD_HEIGHT,
-} from "./mapview/tree.js";
+import { treeLayout, spinePaths } from "./mapview/tree.js";
 import { laptopRealityMap } from "./mmg/fixtures.js";
 import {
   GROW_TRUNK_END,
@@ -64,17 +60,17 @@ test("layerReveal buds layers deepest-first after the trunk", () => {
   assert.equal(layerReveal(1, 0, 0), 1, "no layers renders fully");
 });
 
-test("sapPulsePaths: one trunk pulse rising from the foundation", () => {
+test("sapPulsePaths: one trunk pulse down the spine from the foundation", () => {
   const layout = treeLayout(laptopRealityMap, { width: 375 });
   const paths = sapPulsePaths(layout);
   assert.ok(paths.length >= 1);
   assert.equal(paths[0].id, "trunk");
   const electricity = layout.cardById.get("n-electricity");
   assert.ok(electricity);
-  const trunkTop = layout.root.y + layout.root.height;
+  const crown = layout.root;
   assert.equal(
     paths[0].d,
-    `M ${layout.trunk} ${electricity.y + TREE_CARD_HEIGHT} V ${trunkTop}`
+    `M ${layout.trunk} ${electricity.y} V ${crown.y + crown.height}`
   );
 });
 
@@ -83,10 +79,10 @@ test("sapPulsePaths: empty tree emits no pulses", () => {
   assert.deepEqual(sapPulsePaths(layout), []);
 });
 
-test("elbowLayerIndexes aligns with spinePaths past the trunk", () => {
+test("elbowLayerIndexes aligns with spinePaths", () => {
   const layout = treeLayout(laptopRealityMap, { width: 375 });
   const paths = spinePaths(layout);
   const elbows = elbowLayerIndexes(layout);
-  assert.equal(elbows.length, paths.length - 1);
+  assert.equal(elbows.length, paths.length);
   assert.ok(elbows.every((i) => i >= 0 && i < layout.branches.length));
 });

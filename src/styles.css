@@ -1107,6 +1107,103 @@ body {
   border-color: var(--accent);
 }
 
+.tree-chapel-card {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 16px 18px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(30, 34, 40, 0.07);
+  pointer-events: auto;
+}
+
+.tree-chapel-card.is-crown {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+  text-align: center;
+}
+
+.tree-chapel-title {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.tree-chapel-card.is-crown .tree-chapel-title {
+  color: #fff;
+}
+
+.tree-chapel-tag {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.tree-chapel-card.is-crown .tree-chapel-tag {
+  background: #2a3038;
+  color: #c4baf2;
+}
+
+.tree-chapel-gloss {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-muted);
+}
+
+.tree-chapel-card.is-crown .tree-chapel-gloss {
+  color: #b9c0cc;
+}
+
+.tree-chapel-because {
+  position: absolute;
+  margin: 0;
+  max-width: 200px;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--ink-muted);
+  text-align: center;
+  pointer-events: none;
+}
+
+.tree-chapel-arrow-hit {
+  position: absolute;
+  width: 96px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: help;
+  pointer-events: auto;
+}
+
+.tree-arrow-hover-line,
+.tree-arrow-hover-note {
+  margin: 0.25rem 0 0;
+  font-size: 13px;
+}
+
+.tree-arrow-hover-note {
+  color: var(--ink-muted);
+}
+
+@media (max-width: 479px) {
+  .tree-chapel-card {
+    max-width: 100%;
+  }
+}
+
 .tree-branch-card {
   position: absolute;
   width: 280px;

@@ -1,17 +1,16 @@
 /**
- * Dependence-path Tree (v5 ticket 03): viewmodel plus pure geometry.
+ * Chapel Dependence flowchart (v8 ticket 10): viewmodel plus pure geometry.
  *
  * The Tree is a first-principles dependence path of one Reality Map. Crown
- * (the concept) at the top, foundations at the bottom. Y follows existing
+ * (the typed concept) at the bottom, supporting knowledge above. Y follows
  * `built-on` / `depends-on` / `abstraction-of` edges, not observation dates.
- * Dates stay on hover. Cards hang off a continuous trunk (they never sit
- * on it). Extra parents of a convergence occupy the opposite side or a
- * further column. Layers are captions on the hang, capped to the card
- * width so they never cross the trunk, not table rows.
+ * Cards sit on the spine (not a hanging cladogram). Extra parents merge in
+ * from the side. DOMAIN and STRUCTURAL nodes are cards (`label`, layer name,
+ * `description`). EPIPHANY nodes are not cards; their `because` sits on the
+ * downward shaft, and hover carries discoverer/date/note when not UNKNOWN.
  *
  * `treeLayout` takes the Reality Map and a viewport width so 320/375 never
- * page-overflow. `spinePaths` is the SVG stroke list (trunk first). One-shot
- * grow in motion.js still rides `.tree-layer` wrappers, deepest band first.
+ * page-overflow. `spinePaths` is the SVG stroke list (downward arrows).
  *
  * Pure and DOM-free so node:test covers ranks, y-order, and fit.
  */
@@ -20,23 +19,24 @@
 
 export const LAYOUT_EDGE_TYPES = ["built-on", "depends-on", "abstraction-of"];
 
-export const TREE_CARD_WIDTH = 280;
-export const TREE_CARD_HEIGHT = 64;
-export const TREE_CARD_GAP = 28;
-export const TREE_ROOT_WIDTH = 220;
-export const TREE_ROOT_HEIGHT = 74;
-export const TREE_ROOT_GAP = 36;
+export const TREE_CARD_WIDTH = 250;
+export const TREE_CARD_HEIGHT = 148;
+export const TREE_CARD_GAP = 72;
+export const TREE_ROOT_WIDTH = 250;
+export const TREE_ROOT_HEIGHT = 148;
+export const TREE_ROOT_GAP = 72;
 export const TREE_BAND_PAD = 10;
-export const TREE_COL_GAP = 32;
-export const TREE_HANG = 22;
+export const TREE_COL_GAP = 36;
+export const TREE_HANG = 0;
 export const TREE_STAGE_PAD = 16;
-/** Reserved height above a layer's first card so the caption cannot sit on it. */
-export const TREE_LABEL_SLOT = 32;
-/** Stage widths above this may draw convergence fans (chips always show). */
+/** Kept for callers; Chapel puts the layer name on the card, not a hang caption. */
+export const TREE_LABEL_SLOT = 0;
+/** Below this width, extra parents stack in one column instead of fanning out. */
 export const TREE_TWO_UP_MIN_WIDTH = 480;
+export const TREE_ARROW_GAP = 56;
 
 /**
- * Layout-only edges: source rests on target, so target sits lower.
+ * Layout-only edges: source rests on target, so target sits above (smaller Y).
  *
  * @param {RealityMap | null | undefined} map
  * @returns {Array<{ source: string; target: string; type: string }>}
@@ -147,8 +147,36 @@ export function realityTree(realityMap) {
 }
 
 /**
- * Highest-rank layout parent: the main trunk continues through this one.
+ * @param {any} node
+ */
+export function isCardNode(node) {
+  if (!node || typeof node !== "object") return false;
+  return node.role !== "EPIPHANY";
+}
+
+/**
+ * Hover copy for a labeled arrow. Discoverer and/or date when that field's
+ * mark is not UNKNOWN, plus note when nonempty. No hover when both
+ * discoverer and date are UNKNOWN. Never invent a name or year.
  *
+ * @param {any} basis
+ * @returns {{ discoverer: string; date: string; note: string } | null}
+ */
+export function arrowHoverFromBasis(basis) {
+  if (!basis || typeof basis !== "object") return null;
+  const show = (/** @type {any} */ field) => {
+    if (!field || typeof field !== "object") return "";
+    if (field.mark === "UNKNOWN") return "";
+    return typeof field.value === "string" ? field.value.trim() : "";
+  };
+  const discoverer = show(basis.discoverer);
+  const date = show(basis.date);
+  const note = typeof basis.note === "string" ? basis.note.trim() : "";
+  if (!discoverer && !date) return null;
+  return { discoverer, date, note };
+}
+
+/**
  * @param {string[]} parents
  * @param {Map<string, number>} ranks
  */
@@ -162,34 +190,135 @@ function mainParentOf(parents, ranks) {
 }
 
 /**
- * Absolute geometry: crown, trunk, full-width columns at convergence,
- * named layer bands. `options.width` is the viewport; the stage may be
- * wider when branches need more than one column.
+ * @param {Map<string, string[]>} parentsOf
+ * @param {string[]} ids
+ */
+function ranksFromParents(parentsOf, ids) {
+  /** @type {Map<string, number>} */
+  const ranks = new Map();
+  const visiting = new Set();
+  /** @param {string} id */
+  function rankOf(id) {
+    if (ranks.has(id)) return /** @type {number} */ (ranks.get(id));
+    if (visiting.has(id)) return 0;
+    visiting.add(id);
+    const deps = parentsOf.get(id) || [];
+    let rank = 0;
+    for (const dep of deps) rank = Math.max(rank, rankOf(dep) + 1);
+    visiting.delete(id);
+    ranks.set(id, rank);
+    return rank;
+  }
+  for (const id of ids) rankOf(id);
+  return ranks;
+}
+
+/**
+ * @param {string} id
+ * @param {Map<string, any>} byId
+ * @param {Array<{ source: string; target: string; because: string }>} edges
+ * @param {string} because
+ * @param {{ discoverer: string; date: string; note: string } | null} hover
+ * @param {number} depth
+ */
+function expandCardSupports(id, byId, edges, because, hover, depth) {
+  if (depth > 8) return [];
+  const node = byId.get(id);
+  if (!node) return [];
+  if (isCardNode(node)) {
+    return [{ target: id, because, hover }];
+  }
+  const nextHover = arrowHoverFromBasis(node.basis) || hover;
+  /** @type {Array<{ target: string; because: string; hover: { discoverer: string; date: string; note: string } | null }>} */
+  const out = [];
+  for (const edge of edges) {
+    if (edge.source !== id) continue;
+    const because2 = because || edge.because;
+    out.push(
+      ...expandCardSupports(edge.target, byId, edges, because2, nextHover, depth + 1)
+    );
+  }
+  return out;
+}
+
+/**
+ * @param {any} map
+ * @param {string} layerId
+ */
+function layerNameOf(map, layerId) {
+  const layers = map && Array.isArray(map.layers) ? map.layers : [];
+  const layer = layers.find((item) => item && item.id === layerId);
+  if (layer && typeof layer.name === "string") return layer.name;
+  return typeof layerId === "string" ? layerId : "";
+}
+
+/**
+ * Chapel geometry: crown at the bottom, foundations above, cards on the
+ * spine, extra parents fanning in. `options.width` is the viewport.
  *
  * @param {RealityMap | null | undefined} realityMap
  * @param {{ width?: number }} [options]
  */
 export function treeLayout(realityMap, options = {}) {
   const viewport = Math.max(320, Number(options.width) || 375);
+  const mobile = viewport < TREE_TWO_UP_MIN_WIDTH;
   const nodes = realityMap && Array.isArray(realityMap.nodes) ? realityMap.nodes : [];
-  const edges = layoutEdges(realityMap);
-  const ranks = dependenceRanks(realityMap);
+  const mapEdges = realityMap && Array.isArray(realityMap.edges) ? realityMap.edges : [];
+  const rawEdges = layoutEdges(realityMap).map((edge) => {
+    const full = mapEdges.find(
+      (item) => item && item.source === edge.source && item.target === edge.target
+    );
+    return {
+      source: edge.source,
+      target: edge.target,
+      type: edge.type,
+      because: full && typeof full.because === "string" ? full.because.trim() : "",
+    };
+  });
   const byId = new Map(nodes.map((node) => [node.id, node]));
+  const cardNodes = nodes.filter(isCardNode);
   const tree = realityTree(realityMap);
 
-  /** @type {Map<string, string[]>} */
-  const parentsOf = new Map(nodes.map((node) => [node.id, []]));
-  for (const edge of edges) {
-    if (!byId.has(edge.source) || !byId.has(edge.target)) continue;
-    const list = parentsOf.get(edge.source);
-    if (list) list.push(edge.target);
+  /** @type {Map<string, Array<{ target: string; because: string; hover: { discoverer: string; date: string; note: string } | null }>>} */
+  const supportsOf = new Map(cardNodes.map((node) => [node.id, []]));
+  for (const node of cardNodes) {
+    const seen = new Set();
+    /** @type {Array<{ target: string; because: string; hover: { discoverer: string; date: string; note: string } | null }>} */
+    const found = [];
+    for (const edge of rawEdges) {
+      if (edge.source !== node.id) continue;
+      const targetNode = byId.get(edge.target);
+      const hover =
+        targetNode && !isCardNode(targetNode) ? arrowHoverFromBasis(targetNode.basis) : null;
+      for (const support of expandCardSupports(
+        edge.target,
+        byId,
+        rawEdges,
+        edge.because,
+        hover,
+        0
+      )) {
+        if (seen.has(support.target) || support.target === node.id) continue;
+        seen.add(support.target);
+        found.push(support);
+      }
+    }
+    supportsOf.set(node.id, found);
   }
 
-  const maxRank = nodes.reduce((m, node) => Math.max(m, ranks.get(node.id) || 0), 0);
+  /** @type {Map<string, string[]>} */
+  const parentsOf = new Map(
+    cardNodes.map((node) => [node.id, (supportsOf.get(node.id) || []).map((item) => item.target)])
+  );
+  const ranks = ranksFromParents(
+    parentsOf,
+    cardNodes.map((node) => node.id)
+  );
+  const maxRank = cardNodes.reduce((m, node) => Math.max(m, ranks.get(node.id) || 0), 0);
 
-  /** @type {Map<number, typeof nodes>} */
+  /** @type {Map<number, typeof cardNodes>} */
   const byRank = new Map();
-  for (const node of nodes) {
+  for (const node of cardNodes) {
     const rank = ranks.get(node.id) || 0;
     const row = byRank.get(rank);
     if (row) row.push(node);
@@ -198,7 +327,6 @@ export function treeLayout(realityMap, options = {}) {
 
   /** @type {Map<string, number>} */
   const colOf = new Map();
-
   const crownIds = (byRank.get(maxRank) || []).map((node) => node.id).sort();
   crownIds.forEach((id, i) => colOf.set(id, i));
 
@@ -213,9 +341,13 @@ export function treeLayout(realityMap, options = {}) {
       if (parents.length === 0) continue;
       const main = mainParentOf(parents, ranks);
       if (main && !colOf.has(main)) colOf.set(main, col);
-      const extras = parents
-        .filter((parent) => parent !== main && !colOf.has(parent))
-        .sort();
+      if (mobile) {
+        for (const extra of parents.filter((parent) => parent !== main && !colOf.has(parent))) {
+          colOf.set(extra, 0);
+        }
+        continue;
+      }
+      const extras = parents.filter((parent) => parent !== main && !colOf.has(parent)).sort();
       let sign = -1;
       let slot = 1;
       for (const extra of extras) {
@@ -226,20 +358,10 @@ export function treeLayout(realityMap, options = {}) {
     }
   }
 
-  for (const node of nodes) {
+  for (const node of cardNodes) {
     if (!colOf.has(node.id)) colOf.set(node.id, 0);
   }
 
-  /* Collision resolution (Danny's laptop report 2026-08-15): the assignment
-   * above can give the SAME column to two nodes at the SAME rank - two main
-   * parents of col-0 children, or two first-extras both claiming col -1 -
-   * which renders their cards stacked on the exact same spot (Silicon
-   * stacked on Transistor). Fix it as a POST-PASS so the layout of every
-   * tree that has no collision stays pixel-identical (the mobile shrink-to-
-   * fit path is untouched): walk each rank, remember the columns already
-   * taken at that rank, and nudge any card onto a shared column to the
-   * nearest free column. Same column on DIFFERENT ranks is fine - the trunk
-   * is one column used by every rank. */
   const usedColsAtRank = new Map();
   for (let r = maxRank; r >= 0; r--) {
     const row = (byRank.get(r) || [])
@@ -251,7 +373,12 @@ export function treeLayout(realityMap, options = {}) {
       usedColsAtRank.set(r, used);
     }
     for (const node of row) {
-      let col = colOf.get(node.id) || 0;
+      let col = mobile ? 0 : colOf.get(node.id) || 0;
+      if (mobile) {
+        colOf.set(node.id, 0);
+        used.add(0);
+        continue;
+      }
       if (used.has(col)) {
         for (let dist = 1; ; dist++) {
           if (!used.has(col - dist)) {
@@ -271,92 +398,76 @@ export function treeLayout(realityMap, options = {}) {
 
   const cols = [...colOf.values()];
   const minCol = cols.length === 0 ? 0 : Math.min(...cols);
-  const maxCol = cols.length === 0 ? 0 : Math.max(...cols);
+  const maxColVal = cols.length === 0 ? 0 : Math.max(...cols);
   const leftCols = Math.max(0, -minCol);
+  const colCount = maxColVal - minCol + 1;
 
-  // Single-column trees shrink their cards so the whole tree fits the
-  // viewport with no horizontal scroll (mobile bar: no overflow at 375/320).
-  // Convergent trees keep full-width columns and let the stage scroll
-  // horizontally (Danny 2026-08-13).
-  /** @type {number} */
-  let cardWidth;
-  if (leftCols === 0) {
-    const trunkEstimate = Math.max(
-      TREE_ROOT_WIDTH / 2 + TREE_STAGE_PAD,
-      Math.min(viewport * 0.32, 280)
-    );
+  let cardWidth = Math.min(TREE_CARD_WIDTH, Math.max(160, viewport - TREE_STAGE_PAD * 2));
+  if (!mobile && colCount > 1) {
     cardWidth = Math.min(
       TREE_CARD_WIDTH,
-      viewport - TREE_STAGE_PAD * 2 - TREE_HANG,
-      viewport - trunkEstimate - TREE_HANG - TREE_STAGE_PAD
+      Math.max(
+        160,
+        Math.floor((viewport - TREE_STAGE_PAD * 2 - (colCount - 1) * TREE_COL_GAP) / colCount)
+      )
     );
-  } else {
-    cardWidth = Math.min(TREE_CARD_WIDTH, viewport - TREE_STAGE_PAD * 2 - TREE_HANG);
   }
-  const rootWidth = Math.min(TREE_ROOT_WIDTH, cardWidth);
   const colPitch = cardWidth + TREE_COL_GAP;
-
-  let trunk = Math.max(
-    TREE_ROOT_WIDTH / 2 + TREE_STAGE_PAD,
-    TREE_STAGE_PAD + (leftCols > 0 ? leftCols * colPitch + TREE_HANG : 0)
-  );
-  if (leftCols === 0) {
-    trunk = Math.max(trunk, Math.min(viewport * 0.32, 280));
-  }
+  let trunk = TREE_STAGE_PAD + leftCols * colPitch + cardWidth / 2;
+  if (leftCols === 0 && colCount <= 1) trunk = viewport / 2;
 
   /**
    * @param {number} col
    */
   function xForCol(col) {
-    if (col >= 0) return trunk + TREE_HANG + col * colPitch;
-    return trunk - TREE_HANG - cardWidth + (col + 1) * colPitch;
+    return trunk - cardWidth / 2 + col * colPitch;
   }
 
   const rightEdge =
-    nodes.length === 0
-      ? trunk + rootWidth / 2
+    cardNodes.length === 0
+      ? trunk + cardWidth / 2
       : Math.max(...[...colOf.values()].map((col) => xForCol(col) + cardWidth));
   const leftEdge =
-    nodes.length === 0 ? 0 : Math.min(trunk - rootWidth / 2, ...[...colOf.values()].map((col) => xForCol(col)));
+    cardNodes.length === 0 ? 0 : Math.min(...[...colOf.values()].map((col) => xForCol(col)));
   const shift = leftEdge < TREE_STAGE_PAD ? TREE_STAGE_PAD - leftEdge : 0;
   const width = Math.max(viewport, rightEdge + shift + TREE_STAGE_PAD);
 
-  /** Rank where each layer's crown-nearest card sits (the caption row). */
-  /** @type {Map<string, number>} */
-  const layerStartRank = new Map();
-  for (const node of nodes) {
-    const rank = ranks.get(node.id) || 0;
-    const layer = typeof node.layer === "string" ? node.layer : "";
-    const prev = layerStartRank.get(layer);
-    if (prev === undefined || rank > prev) layerStartRank.set(layer, rank);
-  }
-  const ranksWithLabel = new Set(layerStartRank.values());
-
   /** @type {Map<number, number>} */
   const yOfRank = new Map();
-  let cursorY = TREE_ROOT_HEIGHT + TREE_ROOT_GAP;
-  for (let fromTop = 0; fromTop <= maxRank; fromTop++) {
-    const rank = maxRank - fromTop;
-    if (fromTop > 0) cursorY += TREE_CARD_GAP;
-    if (ranksWithLabel.has(rank)) cursorY += TREE_LABEL_SLOT;
+  /** @type {Map<string, number>} */
+  const stackOf = new Map();
+  let cursorY = TREE_STAGE_PAD;
+  for (let rank = 0; rank <= maxRank; rank++) {
+    const row = (byRank.get(rank) || []).slice().sort((a, b) => a.id.localeCompare(b.id));
+    if (rank > 0) cursorY += TREE_ARROW_GAP;
     yOfRank.set(rank, cursorY);
-    cursorY += TREE_CARD_HEIGHT;
+    if (mobile && row.length > 1) {
+      row.forEach((node, index) => stackOf.set(node.id, index));
+      cursorY += row.length * TREE_CARD_HEIGHT + Math.max(0, row.length - 1) * 16;
+    } else {
+      row.forEach((node) => stackOf.set(node.id, 0));
+      cursorY += TREE_CARD_HEIGHT;
+    }
   }
 
-  /** @type {Map<string, { id: string; label: string; layer: string; combines: number; rank: number; rib: boolean; x: number; y: number; cx: number; cy: number; width: number; height: number }>} */
+  /** @type {Map<string, any>} */
   const cardById = new Map();
-  for (const node of nodes) {
+  for (const node of cardNodes) {
     const rank = ranks.get(node.id) || 0;
     const col = colOf.get(node.id) || 0;
+    const stack = stackOf.get(node.id) || 0;
     const x = xForCol(col) + shift;
-    const y = yOfRank.get(rank) ?? TREE_ROOT_HEIGHT + TREE_ROOT_GAP;
+    const y = (yOfRank.get(rank) ?? TREE_STAGE_PAD) + stack * (TREE_CARD_HEIGHT + 16);
     cardById.set(node.id, {
       id: node.id,
       label: node.label,
+      tag: layerNameOf(realityMap, node.layer),
+      gloss: typeof node.description === "string" ? node.description : "",
       layer: node.layer,
       combines: combineLayerCount(node, byId),
       rank,
       rib: col !== 0,
+      crown: rank === maxRank,
       x,
       y,
       cx: x + cardWidth / 2,
@@ -367,15 +478,50 @@ export function treeLayout(realityMap, options = {}) {
   }
 
   trunk += shift;
-  const root = {
-    x: trunk - rootWidth / 2,
-    y: 0,
-    width: rootWidth,
-    height: TREE_ROOT_HEIGHT,
-    cx: trunk,
-  };
+  const crownCard = [...cardById.values()].find((card) => card.crown);
+  const root = crownCard
+    ? {
+        x: crownCard.x,
+        y: crownCard.y,
+        width: crownCard.width,
+        height: crownCard.height,
+        cx: crownCard.cx,
+      }
+    : {
+        x: trunk - cardWidth / 2,
+        y: 0,
+        width: cardWidth,
+        height: TREE_ROOT_HEIGHT,
+        cx: trunk,
+      };
 
   const cards = [...cardById.values()];
+
+  /** @type {Array<any>} */
+  const arrows = [];
+  for (const node of cardNodes) {
+    const child = cardById.get(node.id);
+    if (!child) continue;
+    const supports = supportsOf.get(node.id) || [];
+    const mergeY = child.y - 22;
+    for (const support of supports) {
+      const parent = cardById.get(support.target);
+      if (!parent) continue;
+      const d =
+        parent.cx === child.cx
+          ? `M ${parent.cx} ${parent.y + parent.height} V ${child.y}`
+          : `M ${parent.cx} ${parent.y + parent.height} V ${mergeY} H ${child.cx} V ${child.y}`;
+      arrows.push({
+        source: child.id,
+        target: parent.id,
+        because: support.because,
+        hover: support.hover,
+        d,
+        labelX: (parent.cx + child.cx) / 2,
+        labelY: (parent.y + parent.height + child.y) / 2,
+      });
+    }
+  }
 
   const branches = tree.branches.map((branch) => {
     const branchCards = branch.nodes
@@ -386,15 +532,15 @@ export function treeLayout(realityMap, options = {}) {
       .sort((a, b) => a.y - b.y);
     const first = branchCards[0];
     const last = branchCards[branchCards.length - 1];
-    const top = first ? first.y - TREE_BAND_PAD : TREE_ROOT_HEIGHT + TREE_ROOT_GAP;
+    const top = first ? first.y - TREE_BAND_PAD : TREE_STAGE_PAD;
     const bottom = last ? last.y + TREE_CARD_HEIGHT + TREE_BAND_PAD : top;
     return {
       id: branch.id,
       name: branch.name,
       cx: trunk,
       divergenceY: first ? first.y : top,
-      labelX: first ? first.x : trunk + TREE_HANG,
-      labelY: first ? first.y - TREE_LABEL_SLOT : top + 8,
+      labelX: first ? first.x : trunk,
+      labelY: first ? first.y : top,
       labelWidth: cardWidth,
       firstCardY: first ? first.y : top,
       bandY: top,
@@ -405,8 +551,8 @@ export function treeLayout(realityMap, options = {}) {
 
   const lastBottom =
     cards.length === 0
-      ? TREE_ROOT_HEIGHT + TREE_ROOT_GAP
-      : Math.max(...cards.map((card) => card.y + TREE_CARD_HEIGHT));
+      ? TREE_STAGE_PAD + TREE_ROOT_HEIGHT
+      : Math.max(...cards.map((card) => card.y + card.height));
 
   return {
     width,
@@ -417,59 +563,42 @@ export function treeLayout(realityMap, options = {}) {
     branches,
     cards,
     cardById,
-    edges,
+    edges: cardNodes.flatMap((node) =>
+      (parentsOf.get(node.id) || []).map((target) => ({
+        source: node.id,
+        target,
+        type: "depends-on",
+      }))
+    ),
+    arrows,
     parentsOf,
     maxRank,
   };
 }
 
 /**
- * SVG strokes: one continuous trunk, then a horizontal elbow into each card.
+ * SVG strokes: one downward arrow per rest-on, support above dependent.
  *
  * @param {ReturnType<typeof treeLayout>} layout
  * @returns {string[]}
  */
 export function spinePaths(layout) {
-  /** @type {string[]} */
-  const d = [];
-  const cards = layout.cards.slice().sort((a, b) => a.y - b.y || a.x - b.x);
-  if (cards.length === 0) return d;
-  const deepest = Math.max(...cards.map((card) => card.y + card.height));
-  d.push(`M ${layout.trunk} ${layout.root.y + layout.root.height} V ${deepest}`);
-  for (const card of cards) {
-    const attachX = card.cx >= layout.trunk ? card.x : card.x + card.width;
-    d.push(`M ${layout.trunk} ${card.cy} H ${attachX}`);
+  if (Array.isArray(layout.arrows) && layout.arrows.length > 0) {
+    return layout.arrows.map((arrow) => arrow.d);
   }
-  return d;
+  return [];
 }
 
-/** @deprecated use spinePaths - kept as the motion/render call name during the port */
+/** @deprecated use spinePaths */
 export const cladogramPaths = spinePaths;
 
 /**
- * Convergence fan-in strokes: one short diagonal per combined field into
- * the card bottom. Chips always show; fans are optional on a wide stage.
+ * Chapel draws fan-in as the extra-parent arrows in `spinePaths`.
  *
  * @param {ReturnType<typeof treeLayout>} layout
  * @returns {Array<{ id: string; d: string }>}
  */
 export function convergenceFanPaths(layout) {
-  /** @type {Array<{ id: string; d: string }>} */
-  const paths = [];
-  for (const card of layout.cards) {
-    const fields = card.combines;
-    if (typeof fields !== "number" || fields < 2) continue;
-    const cx = card.cx;
-    const bottom = card.y + TREE_CARD_HEIGHT;
-    const fanHalf = card.width / 2 - 18;
-    const segments = [];
-    for (let i = 0; i < fields; i++) {
-      const t = fields === 1 ? 0.5 : i / (fields - 1);
-      const x = cx - fanHalf + t * 2 * fanHalf;
-      const startY = bottom + 20 + (Math.abs(x - cx) / fanHalf) * 8;
-      segments.push(`M ${x} ${startY} L ${cx} ${bottom}`);
-    }
-    paths.push({ id: card.id, d: segments.join(" ") });
-  }
-  return paths;
+  void layout;
+  return [];
 }

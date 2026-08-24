@@ -120,13 +120,13 @@ export function sapPulsePaths(layout) {
     .sort((a, b) => a.y - b.y);
   if (onSpine.length === 0) return paths;
 
+  const first = onSpine[0];
   const last = onSpine[onSpine.length - 1];
-  if (!last) return paths;
-  const trunkTop = layout.root.y + layout.root.height;
+  if (!first || !last) return paths;
   const trunkX = layout.trunk ?? layout.root.cx;
   paths.push({
     id: "trunk",
-    d: `M ${trunkX} ${last.y + TREE_CARD_HEIGHT} V ${trunkTop}`,
+    d: `M ${trunkX} ${first.y} V ${last.y + last.height}`,
   });
 
   for (const card of layout.cards.filter((c) => c.rib)) {
@@ -153,10 +153,7 @@ export function elbowLayerIndexes(layout) {
   layout.branches.forEach((branch, branchIndex) => {
     for (const card of branch.cards) layerOf.set(card.id, branchIndex);
   });
-  return layout.cards
-    .slice()
-    .sort((a, b) => a.y - b.y || a.x - b.x)
-    .map((card) => layerOf.get(card.id) ?? 0);
+  return (layout.arrows || []).map((arrow) => layerOf.get(arrow.source) ?? 0);
 }
 
 /**

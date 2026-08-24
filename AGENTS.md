@@ -20,11 +20,12 @@ Schema on Epiphanies, OpenRouter paid Nemotron). v7 open frontier:
 (HITL; capture done, do not recapture; remaining KEEP or KILL). Record:
 `.scratch/first-principled-v7/research/07-danny-followability.md`.
 v8 card / arrow / hover contracts locked 2026-08-24. Poll snapshots
-locked 2026-08-24. Next:
-[Ship the Chapel Dependence flowchart](.scratch/first-principled-v8/issues/10-ship-the-chapel-dependence-flowchart.md)
-(AFK). Chapel KEEP, morph wait-state, display locks, and running
-snapshots are closed. Do not ship the throwaway prototype. One ticket
-per session.
+locked 2026-08-24. Chapel flowchart shipped on the finished Tree.
+Next:
+[Grow stage products in place on the Chapel flowchart](.scratch/first-principled-v8/issues/11-grow-stage-products-in-place-on-the-chapel-flowchart.md)
+(AFK). Chapel KEEP, morph wait-state, display locks, running
+snapshots, and finished Chapel chrome are closed. Do not ship the
+throwaway prototype. One ticket per session.
 
 ## Golden rules
 

@@ -28,9 +28,10 @@ locked Option A. Sibling display map (does not replace v7 KEEP/KILL):
 `.scratch/first-principled-v8/map.md` - etymology-style Dependence
 flowchart and stage-product wait-state. Poll snapshots, crown-at-bottom,
 fan-in spine, Chapel look, and morph wait-state are locked. Running
-stage snapshots are on the poll (2026-08-24). Next session (display
+stage snapshots are on the poll (2026-08-24). Chapel flowchart is
+shipped on the finished Tree (2026-08-24). Next session (display
 map only):
-[Ship the Chapel Dependence flowchart](.scratch/first-principled-v8/issues/10-ship-the-chapel-dependence-flowchart.md)
+[Grow stage products in place on the Chapel flowchart](.scratch/first-principled-v8/issues/11-grow-stage-products-in-place-on-the-chapel-flowchart.md)
 (AFK). Card, arrow, and hover contracts are locked.
 
 ## Language

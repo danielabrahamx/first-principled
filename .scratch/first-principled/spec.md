@@ -237,8 +237,9 @@ recipe live in `research/13-ui-design-spec.md`.
   stay unlabeled. Hover is on the labeled arrow (discoverer/date when not
   UNKNOWN), not a card dump. Click-to-inspect and rabbit-hole invitation
   stay parked until a later ticket. Do not implement hanging cards, crown
-  at the top, or layer-band grow as the product surface. Tickets 10-12
-  ship that chrome. Until they land, prod still shows the v6 hang. The
+  at the top, or layer-band grow as the product surface. Ticket 10 shipped
+  the Chapel flowchart on the finished Tree. Tickets 11-12 grow the
+  wait-state and deploy. Prod deploy of Chapel is ticket 12. The
   stage is at least the viewport and may grow for branches
   (the Tree scrolls; html/body do not overflow). No learner-state chrome
   (confidence, evidence, rotation trail, untested copy) and no control

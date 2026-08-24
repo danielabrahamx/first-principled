@@ -3,8 +3,8 @@
  * How it works. No Chat page, no learner-map tab, no Tutor toggle or bottom
  * sheet. Empty state when there is no Reality Map; skeleton while generating;
  * Tree when it lands. `#how` swaps the canvas for the short How it works
- * page without unmounting the word box. Clicking a tree card opens an
- * invitation card. Observation hovers stay on tree cards. The learner grid, comparison block, and
+ * page without unmounting the word box. The finished Tree is the Chapel
+ * flowchart (crown at the bottom, because on the shafts). The learner grid, comparison block, and
  * closeness chrome stay hidden (engine may still carry learnerMap).
  *
  * Tutor is parked from chrome. The Socratic engine, forceBrief, and dock
@@ -28,12 +28,7 @@ import {
   stateClass,
 } from "../lib/mapview/viewmodel.js";
 import { comparisonMetrics } from "../lib/mapview/comparison.js";
-import {
-  TREE_TWO_UP_MIN_WIDTH,
-  convergenceFanPaths,
-  spinePaths,
-  treeLayout,
-} from "../lib/mapview/tree.js";
+import { spinePaths, treeLayout } from "../lib/mapview/tree.js";
 import {
   columnCount,
   gridMetrics,
@@ -47,8 +42,6 @@ import {
   snapshotDiff,
 } from "../lib/mapview/history.js";
 import {
-  observationByNodeId,
-  observationOf,
   layerObservationStory,
   dependents,
   combinesOf,
@@ -60,7 +53,7 @@ import {
   runAgentTurn,
   errorMessage,
 } from "../lib/generation.js";
-import { budDelay, wireTreeMotion } from "../lib/motion.js";
+import { wireTreeMotion } from "../lib/motion.js";
 import {
   EMPTY_LINE,
   HOW_BACK,
@@ -951,6 +944,35 @@ export function renderMapPage(root, store, options = {}) {
   }
 
   /**
+   * Ticket 08: hover on a labeled arrow. Discoverer and/or date when not
+   * UNKNOWN, plus note when nonempty. Never the full observation record.
+   *
+   * @param {HTMLElement} source
+   * @param {{ discoverer: string; date: string; note: string }} hover
+   */
+  function showArrowHover(source, hover) {
+    popover.replaceChildren();
+    popover.appendChild(el("p", "history-popover-label", "On this rest-on"));
+    if (hover.discoverer) popover.appendChild(el("p", "tree-arrow-hover-line", hover.discoverer));
+    if (hover.date) popover.appendChild(el("p", "tree-arrow-hover-line", hover.date));
+    if (hover.note) popover.appendChild(el("p", "tree-arrow-hover-note", hover.note));
+    popover.hidden = false;
+    const box = source.getBoundingClientRect();
+    const popBox = popover.getBoundingClientRect();
+    let left = box.left;
+    let top = box.bottom + 8;
+    if (left + popBox.width > window.innerWidth - 8) {
+      left = Math.max(8, window.innerWidth - popBox.width - 8);
+    }
+    if (top + popBox.height > window.innerHeight - 8) {
+      top = Math.max(8, box.top - popBox.height - 8);
+    }
+    popover.style.left = `${left}px`;
+    popover.style.top = `${top}px`;
+    popoverSource = source;
+  }
+
+  /**
    * Wire a card's interactions: click opens the panel, hover shows the
    * rotation popover, keyboard opens on Enter/Space.
    *
@@ -1132,148 +1154,78 @@ export function renderMapPage(root, store, options = {}) {
     }
     const width = Math.round(treeScroll.clientWidth || main.clientWidth || 480);
     const layout = treeLayout(state.realityMap, { width });
-    const views = observationByNodeId(state.realityMap);
 
     treeStage.style.width = `${layout.width}px`;
     treeStage.style.height = `${layout.height}px`;
     treeSvg.setAttribute("viewBox", `0 0 ${layout.width} ${layout.height}`);
 
     treeLayer.replaceChildren();
-    const root = el("div", "tree-root-card");
-    root.style.left = `${layout.root.x}px`;
-    root.style.top = `${layout.root.y}px`;
-    root.style.width = `${layout.root.width}px`;
-    root.style.height = `${layout.root.height}px`;
-    root.append(
-      el("p", "tree-root-eyebrow", "THE CONCEPT"),
-      el("h2", "tree-root-word", (state.realityMap && state.realityMap.concept) || "the concept")
-    );
-    if (!reducedMotion) root.classList.add("tree-bud");
-    root.style.setProperty("--mt-delay", budDelay("root", "root"));
-    treeLayer.appendChild(root);
-
-    /** @type {HTMLElement[]} */
-    const layers = [];
-    layout.branches.forEach((branch) => {
-      const layer = el("div", "tree-layer");
-
-      const label = el("p", "tree-branch-label", branch.name);
-      label.style.left = `${branch.labelX ?? (branch.cards[0] ? branch.cards[0].x : 8)}px`;
-      label.style.top = `${branch.labelY}px`;
-      label.style.width = `${branch.labelWidth ?? layout.cardWidth}px`;
-      label.tabIndex = 0;
-      label.setAttribute("aria-label", `Layer ${branch.name}: ${branch.id}`);
-      label.addEventListener("mouseenter", () => {
-        if (popoverTimer !== null) clearTimeout(popoverTimer);
-        popoverTimer = /** @type {any} */ (setTimeout(() => showLayerObservations(label, branch.id), hoverDelay));
-      });
-      label.addEventListener("mouseleave", hidePopover);
-      label.addEventListener("focus", () => {
-        if (popoverTimer !== null) clearTimeout(popoverTimer);
-        popoverTimer = /** @type {any} */ (setTimeout(() => showLayerObservations(label, branch.id), hoverDelay));
-      });
-      label.addEventListener("blur", hidePopover);
-      if (!reducedMotion) label.classList.add("tree-bud");
-      label.style.setProperty("--mt-delay", budDelay(branch.id, "label"));
-      layer.appendChild(label);
-      for (const card of branch.cards) {
-        const view = views.get(card.id) ?? observationOf(undefined);
-        const node = el("div", card.rib ? "tree-branch-card tree-card-rib" : "tree-branch-card");
-        node.dataset.nodeId = card.id;
-        node.style.left = `${card.x}px`;
-        node.style.top = `${card.y}px`;
-        node.style.width = `${card.width}px`;
-        node.style.height = `${card.height}px`;
-        node.tabIndex = 0;
-        node.setAttribute("role", "button");
-        node.setAttribute(
-          "aria-label",
-          `${card.label}: ${view.present ? "observation recorded" : "observation unknown"}. Activate to open its panel.`
-        );
-        const labelSpan = el("span", "tree-branch-card-label", card.label);
-        const dot = el(
-          "i",
-          view.present ? "tree-obs-dot recorded" : "tree-obs-dot gap"
-        );
-        dot.setAttribute("aria-hidden", "true");
-        node.append(labelSpan, dot);
-        if (card.combines > 0) {
-          const chip = el(
-            "span",
-            "tree-converge-chip",
-            `combines ${card.combines} field${card.combines === 1 ? "" : "s"}`
-          );
-          chip.setAttribute("aria-hidden", "true");
-          node.append(chip);
-        }
-        node.addEventListener("click", () => {
-          hidePopover();
-          openPanel(card.id, node);
-        });
-        node.addEventListener("keydown", (event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            hidePopover();
-            openPanel(card.id, node);
-          }
-        });
-        node.addEventListener("mouseenter", () => {
-          if (popoverTimer !== null) clearTimeout(popoverTimer);
-          popoverTimer = /** @type {any} */ (setTimeout(() => {
-            showNodeObservation(
-              node,
-              card.label,
-              view,
-              dependents(state.realityMap, card.id)
-            );
-          }, hoverDelay));
-        });
-        node.addEventListener("mouseleave", hidePopover);
-        node.addEventListener("focus", () => {
-          if (popoverTimer !== null) clearTimeout(popoverTimer);
-          popoverTimer = /** @type {any} */ (setTimeout(() => {
-            showNodeObservation(
-              node,
-              card.label,
-              view,
-              dependents(state.realityMap, card.id)
-            );
-          }, hoverDelay));
-        });
-        node.addEventListener("blur", hidePopover);
-        if (!reducedMotion) node.classList.add("tree-bud");
-        node.style.setProperty("--mt-delay", budDelay(card.id, "card"));
-        layer.appendChild(node);
+    const layer = el("div", "tree-layer");
+    for (const card of layout.cards) {
+      const node = el("article", card.crown ? "tree-chapel-card is-crown" : "tree-chapel-card");
+      node.dataset.nodeId = card.id;
+      node.style.left = `${card.x}px`;
+      node.style.top = `${card.y}px`;
+      node.style.width = `${card.width}px`;
+      node.append(
+        el("h2", "tree-chapel-title", card.label),
+        el("span", "tree-chapel-tag", card.tag || ""),
+        el("p", "tree-chapel-gloss", card.gloss || "")
+      );
+      layer.appendChild(node);
+    }
+    for (const arrow of layout.arrows || []) {
+      if (arrow.because) {
+        const label = el("p", "tree-chapel-because", arrow.because);
+        label.style.left = `${arrow.labelX}px`;
+        label.style.top = `${arrow.labelY}px`;
+        layer.appendChild(label);
       }
-      treeLayer.appendChild(layer);
-      layers.push(layer);
-    });
+      if (arrow.because && arrow.hover) {
+        const hit = el("button", "tree-chapel-arrow-hit");
+        hit.type = "button";
+        hit.style.left = `${arrow.labelX - 48}px`;
+        hit.style.top = `${arrow.labelY - 18}px`;
+        hit.setAttribute("aria-label", arrow.because);
+        const hover = arrow.hover;
+        hit.addEventListener("mouseenter", () => {
+          if (popoverTimer !== null) clearTimeout(popoverTimer);
+          popoverTimer = /** @type {any} */ (
+            setTimeout(() => showArrowHover(hit, hover), hoverDelay)
+          );
+        });
+        hit.addEventListener("mouseleave", hidePopover);
+        hit.addEventListener("focus", () => showArrowHover(hit, hover));
+        hit.addEventListener("blur", hidePopover);
+        layer.appendChild(hit);
+      }
+    }
+    treeLayer.appendChild(layer);
 
     treeSvg.replaceChildren();
+    const defs = document.createElementNS(SVG_NS, "defs");
+    const marker = document.createElementNS(SVG_NS, "marker");
+    marker.setAttribute("id", "chapel-arrowhead");
+    marker.setAttribute("viewBox", "0 0 10 10");
+    marker.setAttribute("refX", "8");
+    marker.setAttribute("refY", "5");
+    marker.setAttribute("markerWidth", "8");
+    marker.setAttribute("markerHeight", "8");
+    marker.setAttribute("orient", "auto");
+    const tip = document.createElementNS(SVG_NS, "path");
+    tip.setAttribute("d", "M 0 0 L 10 5 L 0 10 z");
+    tip.setAttribute("fill", "#b8aee6");
+    marker.appendChild(tip);
+    defs.appendChild(marker);
+    treeSvg.appendChild(defs);
     for (const d of spinePaths(layout)) {
       const path = document.createElementNS(SVG_NS, "path");
       path.setAttribute("d", d);
       path.setAttribute("fill", "none");
-      path.setAttribute("stroke", "#B9B3E8");
-      path.setAttribute("stroke-width", "2");
+      path.setAttribute("stroke", "#b8aee6");
+      path.setAttribute("stroke-width", "1.8");
+      path.setAttribute("marker-end", "url(#chapel-arrowhead)");
       treeSvg.appendChild(path);
-    }
-
-    treeMotion = wireTreeMotion({ svg: treeSvg, layout, layers, reduced: reducedMotion });
-
-    if (width > TREE_TWO_UP_MIN_WIDTH) {
-      const fanGroup = document.createElementNS(SVG_NS, "g");
-      fanGroup.setAttribute("class", "tree-converge-fans");
-      for (const fan of convergenceFanPaths(layout)) {
-        const path = document.createElementNS(SVG_NS, "path");
-        path.setAttribute("d", fan.d);
-        path.setAttribute("fill", "none");
-        path.setAttribute("stroke", "#B9B3E8");
-        path.setAttribute("stroke-width", "1.5");
-        path.setAttribute("opacity", "0.55");
-        fanGroup.appendChild(path);
-      }
-      treeSvg.appendChild(fanGroup);
     }
   }
 

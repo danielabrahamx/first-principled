@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** [What each card on that flowchart holds](06-what-each-card-on-that-flowchart-holds.md),
 [Do Epiphanies sit on the arrows](07-do-epiphanies-sit-on-the-arrows.md),
@@ -27,14 +27,32 @@ into this ticket. Do not retune v7 prompts. Do not wire poll snapshots
 [Grow stage products in place on the Chapel flowchart](11-grow-stage-products-in-place-on-the-chapel-flowchart.md)).
 Smoke locally on a gold or captured map. No prod deploy in this ticket.
 
+## Answer
+
+The finished Tree home is Chapel geometry in `src/lib/mapview/tree.js`
+and `src/pages/map.js`, not a copy of the throwaway prototype folder.
+
+Crown (highest Dependence rank) sits at the bottom; foundations sit
+above. Spine cards sit on the trunk. Extra parents merge in from the
+side on a wide stage and stack in one column below 480px. Cards are
+DOMAIN and STRUCTURAL: `label`, layer name, `description`. EPIPHANY
+nodes are not cards. `because` labels the downward shaft; a missing
+`because` leaves it unlabeled. Hover is on the labeled shaft and shows
+discoverer and/or date when that mark is not UNKNOWN, plus note when
+nonempty. UNKNOWN discoverer and date: no hover. Instant appear (no
+grow / sap / arrow-draw). How-it-works stays in the header. Wait-state
+snapshots stay ticket 11. No prod deploy.
+
+AFK 2026-08-24 (Cursor). Windows `npm test`: 355 pass.
+
 ## Acceptance criteria
 
-- [ ] Finished Tree home is Chapel geometry, not hanging cards
-- [ ] Card and arrow contracts from 06-08 hold on a real map
-- [ ] Hover matches ticket 08 (including UNKNOWN: no hover)
-- [ ] How-it-works still in the header; no Chat page
-- [ ] Windows/PowerShell-tested
-- [ ] Map Decisions so far points at this ticket
+- [x] Finished Tree home is Chapel geometry, not hanging cards
+- [x] Card and arrow contracts from 06-08 hold on a real map
+- [x] Hover matches ticket 08 (including UNKNOWN: no hover)
+- [x] How-it-works still in the header; no Chat page
+- [x] Windows/PowerShell-tested
+- [x] Map Decisions so far points at this ticket
 
 ## Docs rule
 
