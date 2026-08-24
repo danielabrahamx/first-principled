@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "eval": "node eval/run.js",
     "eval:map-quality": "node eval/map-quality/run.js",
-    "prototype:how-it-works": "node .scratch/first-principled-v6/research/03-how-it-works-prototype/serve.mjs"
+    "prototype:how-it-works": "node .scratch/first-principled-v6/research/03-how-it-works-prototype/serve.mjs",
+    "prototype:etymology-layout": "node .scratch/first-principled-v8/research/04-etymology-layout-prototype/serve.mjs"
   },
   "devDependencies": {
     "@oxlint/plugins": "1.78.0",

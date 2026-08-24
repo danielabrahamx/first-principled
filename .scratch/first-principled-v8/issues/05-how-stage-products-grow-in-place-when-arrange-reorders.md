@@ -4,9 +4,7 @@
 
 **Status:** ready-for-human
 
-**Blocked by:** parked until
-[Prototype the etymology-style Dependence layout](04-prototype-the-etymology-style-dependence-layout.md)
-closes (03 is resolved; do not take this in the prototype session)
+**Blocked by:** none (04 resolved; 01 and 03 already resolved)
 
 **Related:** [Can the poll carry stage snapshots](01-can-the-poll-carry-stage-snapshots.md)
 
@@ -19,8 +17,10 @@ we morph, wait to draw until Arrange, or grow Chronology then replace?
 
 ## What
 
-HITL. Ticket 01 locked keep-snapshots. This ticket still waits on the
-flowchart spine (ticket 03).
+HITL. Ticket 01 locked keep-snapshots. Ticket 04 kept Chapel geometry
+(crown at bottom, fan-in, not hanging cards). Grow-in-place is on that
+surface. Ticket 07 may later put Epiphanies on arrows; this ticket still
+locks the three-stage morph rule.
 
 Working recommendation: after Chronology, draw regimes as a temporary
 spine in the locked orientation, clearly not the finished Tree. After

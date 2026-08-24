@@ -34,13 +34,13 @@ the v1 stack.
   [Can the poll carry stage snapshots](issues/01-can-the-poll-carry-stage-snapshots.md)
   locked keep-snapshots.
 - Skills: grilling + domain-modeling on HITL; `/research` on ticket 01
-  (resolved); `/prototype` on ticket 04. anti-slop, tsc, netlify-build
-  discipline.
+  (resolved); `/prototype` on ticket 04 (resolved; KEEP Chapel).
+  anti-slop, tsc, netlify-build discipline.
 - **Next session:** claim
-  [Prototype the etymology-style Dependence layout](issues/04-prototype-the-etymology-style-dependence-layout.md).
-  Throwaway HTML only. Obey crown-at-bottom and spine-plus-fan-in.
-  Battery gold map preferred. Danny keep / tweak / kill. Do not wire
-  the generator or poll. Do not start ticket 05 in that session.
+  [How stage products grow in place when Arrange reorders](issues/05-how-stage-products-grow-in-place-when-arrange-reorders.md).
+  HITL grilling. Chapel is the locked look. Do not ship the throwaway
+  prototype. Tickets 06-08 hold card, arrow-Epiphany, and hover follow-ups
+  from the prototype verdict; do not start them in the 05 session.
 - Style: single dashes, no emojis. Windows/PowerShell-tested.
 
 ## Decisions so far
@@ -72,11 +72,14 @@ the v1 stack.
   not Chronology order. Extra parents merge in from the side. No second
   hanging column.
   [How a Dependence DAG becomes that flowchart](issues/03-how-a-dependence-dag-becomes-that-flowchart.md).
+- Chapel KEEP: etymology-style Dependence flowchart in the live header
+  shell (Fraunces / amethyst), crown at bottom, fan-in then spine.
+  Throwaway prototype, do not copy into `src/` yet. Tweaks graduated.
+  [Prototype the etymology-style Dependence layout](issues/04-prototype-the-etymology-style-dependence-layout.md).
 
 ## Not yet specified
 
 - Whether the chrome still uses the glossary name Tree, or is renamed.
-- Rabbit-hole invitations and the node inspection sheet on this geometry.
 - Skeleton retirement vs keeping a cheap placeholder before the first
   snapshot.
 - Motion (arrow draw, card fade) versus instant appear.
@@ -86,6 +89,8 @@ the v1 stack.
 - How How-it-works copy describes this surface.
 - Field-level snapshot payload inside the locked poll shape
   (`running` + `stage` + learner-safe `snapshot`).
+- How many nodes / phases the chapel picture should show when gold is
+  thin and a live map is a practical cell. Not a v7 prompt retune.
 
 ## Out of scope
 
@@ -106,13 +111,19 @@ the v1 stack.
 02 + 03 -> 04 prototype the etymology-style Dependence layout
 01 + 03 -> 05 grilling grow-in-place when Arrange reorders
 04 -> 06 grilling what each card holds
+04 -> 07 grilling do Epiphanies sit on the arrows
+04 -> 08 grilling hover inventors and inspection
 ```
 
-Further build tickets stay in fog until 04-06 close.
+Further build tickets stay in fog until 05-08 close.
 
 ## Open frontier
 
-- [Prototype the etymology-style Dependence layout](issues/04-prototype-the-etymology-style-dependence-layout.md)
-  (prototype; next session)
 - [How stage products grow in place when Arrange reorders](issues/05-how-stage-products-grow-in-place-when-arrange-reorders.md)
-  (grilling; unblocked but parked until 04 closes)
+  (grilling; next session)
+- [What each card on that flowchart holds](issues/06-what-each-card-on-that-flowchart-holds.md)
+  (grilling)
+- [Do Epiphanies sit on the arrows](issues/07-do-epiphanies-sit-on-the-arrows.md)
+  (grilling)
+- [Hover inventors and inspection on the chapel flowchart](issues/08-hover-inventors-and-inspection-on-the-chapel-flowchart.md)
+  (grilling)

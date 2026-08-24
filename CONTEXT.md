@@ -27,11 +27,10 @@ Prod is OpenRouter paid Nemotron
 locked Option A. Sibling display map (does not replace v7 KEEP/KILL):
 `.scratch/first-principled-v8/map.md` - etymology-style Dependence
 flowchart and stage-product wait-state. Poll snapshots, crown-at-bottom,
-and fan-in spine are locked. Next session (display map only):
-[Prototype the etymology-style Dependence layout](.scratch/first-principled-v8/issues/04-prototype-the-etymology-style-dependence-layout.md)
-(throwaway HTML; keep / tweak / kill). Do not start
+fan-in spine, and Chapel look are locked. Next session (display map
+only):
 [How stage products grow in place when Arrange reorders](.scratch/first-principled-v8/issues/05-how-stage-products-grow-in-place-when-arrange-reorders.md)
-in that session.
+(HITL grilling). Do not start tickets 06-08 in that session.
 
 ## Language
 

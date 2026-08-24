@@ -19,9 +19,9 @@ Schema on Epiphanies, OpenRouter paid Nemotron). v7 open frontier:
 [Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md)
 (HITL; capture done, do not recapture; remaining KEEP or KILL). Record:
 `.scratch/first-principled-v7/research/07-danny-followability.md`.
-v8 next session: throwaway HTML prototype, do not ship chrome.
-[Prototype the etymology-style Dependence layout](.scratch/first-principled-v8/issues/04-prototype-the-etymology-style-dependence-layout.md).
-Do not start ticket 05 in that session.
+v8 next session: HITL grilling, do not ship chrome.
+[How stage products grow in place when Arrange reorders](.scratch/first-principled-v8/issues/05-how-stage-products-grow-in-place-when-arrange-reorders.md).
+Chapel KEEP is locked. Do not start tickets 06-08 in that session.
 
 ## Golden rules
 

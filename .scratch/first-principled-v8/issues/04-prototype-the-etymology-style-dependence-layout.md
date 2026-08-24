@@ -2,17 +2,26 @@
 
 **Type:** prototype
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Blocked by:** none (02 and 03 resolved)
 
-**Related:** [What each card on that flowchart holds](06-what-each-card-on-that-flowchart-holds.md)
+**Related:** [What each card on that flowchart holds](06-what-each-card-on-that-flowchart-holds.md),
+[Do Epiphanies sit on the arrows](07-do-epiphanies-sit-on-the-arrows.md),
+[Hover inventors and inspection on the chapel flowchart](08-hover-inventors-and-inspection-on-the-chapel-flowchart.md)
 
 ## Question
 
 Does an Etymonline-style flowchart, filled with Dependence nodes for one
 gold word (not the English word's etymology), read as the product
 surface Danny wants?
+
+## Prototype
+
+Throwaway HTML (not wired to the generator or poll):
+[04-etymology-layout-prototype](../research/04-etymology-layout-prototype/README.md).
+Run `npm run prototype:etymology-layout` and open http://127.0.0.1:4174/
+(`?variant=A|B|C`, `?map=gold|live`). Winner to steal from: **B Chapel**.
 
 ## What
 
@@ -29,27 +38,39 @@ Dependence, not etymology.
 Danny reacts: keep, tweak, or kill the chrome direction. Do not wire
 the generator or the poll.
 
-## Next session
+## Answer
 
-Claim this ticket first. Invoke `/prototype` (UI branch). Locks to
-obey:
+KEEP, with tweaks. Winning look is **B Chapel** (live header, Fraunces /
+amethyst cards, same crown-at-bottom fan-in geometry). A is a reference
+facsimile; C is spare parts only.
 
-- Crown (typed concept) at the **bottom**; supports above.
-- Arrow A down to B means B depends on A.
-- One Dependence trunk spine; extra parents fan in from the side.
-- Not Chronology order. Not word etymology.
+Tweaks that this ticket does not lock (graduated):
 
-Reference image:
-`.scratch/first-principled-v8/research/etymonline-education-reference.png`.
-Park ticket 05 until this verdict lands.
+- Epiphanies should read as transformational periods **on the arrows**.
+  Neither A nor B showed that.
+  [Do Epiphanies sit on the arrows](07-do-epiphanies-sit-on-the-arrows.md).
+- Hover is missing; inventor names are missing.
+  [Hover inventors and inspection on the chapel flowchart](08-hover-inventors-and-inspection-on-the-chapel-flowchart.md).
+- Card fields still open.
+  [What each card on that flowchart holds](06-what-each-card-on-that-flowchart-holds.md).
+
+The Nemotron slice was useful: gold battery is a thin chemistry chain
+(ions / electrodes / electrolyte / battery). The model slice was a
+practical cell (pile, paste, separator, sealed). Danny likes that
+practical cut and wants more phases than either sample showed. Smarter
+models may fill that; v8 does not retune v7 prompts. Capture only: do
+not treat the gold fixture as the product inventory.
+
+Do not ship this folder into `src/` as-is. Fold B when an
+implementation ticket says so. After wiring, smoke OpenRouter `:free`.
 
 ## Acceptance criteria
 
-- [ ] A runnable throwaway HTML prototype exists and is linked from this
+- [x] A runnable throwaway HTML prototype exists and is linked from this
       ticket
-- [ ] It obeys the 02/03 locks
-- [ ] Danny's keep / tweak / kill is recorded on this ticket
-- [ ] Map Decisions so far points at the verdict
+- [x] It obeys the 02/03 locks
+- [x] Danny's keep / tweak / kill is recorded on this ticket
+- [x] Map Decisions so far points at the verdict
 
 ## Docs rule
 
