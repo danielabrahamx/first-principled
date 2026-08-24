@@ -1159,6 +1159,48 @@ export function renderMapPage(root, store, options = {}) {
   document.addEventListener("keydown", onKeydown);
 
   /**
+   * Measure what each chapel card actually renders to at its laid-out width.
+   * Cards auto-size to their text, so the fixed-height layout guess is only
+   * a first pass; these measurements feed the second `treeLayout` call so
+   * rows never overlap. Measured off-screen, no paint.
+   *
+   * @param {ReturnType<typeof treeLayout>} layout
+   * @returns {Map<string, number>}
+   */
+  function measureChapelCards(layout) {
+    const probe = el("div", "tree-layer");
+    probe.style.position = "absolute";
+    probe.style.visibility = "hidden";
+    probe.style.left = "0";
+    probe.style.top = "0";
+    for (const card of layout.cards) {
+      const node = el("article", card.crown ? "tree-chapel-card is-crown" : "tree-chapel-card");
+      node.dataset.nodeId = card.id;
+      node.style.left = "0";
+      node.style.top = "0";
+      node.style.width = `${card.width}px`;
+      node.append(
+        el("h2", "tree-chapel-title", card.label),
+        el("span", "tree-chapel-tag", card.tag || ""),
+        el("p", "tree-chapel-gloss", card.gloss || "")
+      );
+      probe.appendChild(node);
+    }
+    treeStage.appendChild(probe);
+    /** @type {Map<string, number>} */
+    const heights = new Map();
+    for (const node of probe.children) {
+      const box = /** @type {HTMLElement} */ (node).getBoundingClientRect();
+      heights.set(
+        /** @type {HTMLElement} */ (node).dataset.nodeId || "",
+        Math.ceil(box.height) + 1
+      );
+    }
+    probe.remove();
+    return heights;
+  }
+
+  /**
    * Paint one chapel layout (cards, because labels, arrow hovers, SVG
    * strokes) onto the tree stage. Shared by the finished Tree
    * (`treeLayout`) and the wait-state grow surface (`growLayout`,
@@ -1258,7 +1300,8 @@ export function renderMapPage(root, store, options = {}) {
    */
   function renderTree(state) {
     const width = Math.round(treeScroll.clientWidth || main.clientWidth || 480);
-    paintChapel(treeLayout(state.realityMap, { width }));
+    const sketch = treeLayout(state.realityMap, { width });
+    paintChapel(treeLayout(state.realityMap, { width, heights: measureChapelCards(sketch) }));
   }
 
   /**

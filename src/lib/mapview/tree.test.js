@@ -310,3 +310,35 @@ test("UNKNOWN discoverer and date yield no hover chrome", () => {
     { discoverer: "Faraday", date: "", note: "contested year" }
   );
 });
+
+test("measured heights push later rows down so cards never overlap", () => {
+  const plain = treeLayout(/** @type {any} */ (chapelMap), { width: 800 });
+  const ions = plain.cardById.get("ions");
+  const cell = plain.cardById.get("cell");
+  assert.ok(ions && cell);
+  assert.ok(ions.y + ions.height <= cell.y, "default heights leave an arrow gap");
+
+  const heights = new Map([
+    ["ions", 420],
+    ["cell", 200],
+  ]);
+  const measured = treeLayout(/** @type {any} */ (chapelMap), { width: 800, heights });
+  const tallIons = measured.cardById.get("ions");
+  const tallCell = measured.cardById.get("cell");
+  assert.ok(tallIons && tallCell);
+  assert.equal(tallIons.height, 420);
+  assert.equal(tallCell.height, 200);
+  assert.ok(tallCell.y > cell.y, "the crown moves down to clear the tall foundation");
+  assert.ok(tallIons.y + tallIons.height <= tallCell.y, "no overlap with measured heights");
+  assert.ok(measured.height > plain.height, "stage grows to fit");
+  const shaft = measured.arrows.find((arrow) => arrow.source === "cell" && arrow.target === "ions");
+  assert.ok(shaft);
+  assert.ok(shaft.d.startsWith(`M ${tallIons.cx} ${tallIons.y + 420}`), "arrow leaves the real card edge");
+});
+
+test("unmeasured cards keep the default height", () => {
+  const heights = new Map([["ions", 300]]);
+  const layout = treeLayout(/** @type {any} */ (chapelMap), { width: 800, heights });
+  assert.equal(layout.cardById.get("ions")?.height, 300);
+  assert.equal(layout.cardById.get("cell")?.height, 148);
+});

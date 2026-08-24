@@ -255,14 +255,33 @@ function layerNameOf(map, layerId) {
 }
 
 /**
+ * Measured card height for a node: the caller's DOM measurement when it has
+ * one, otherwise the layout default. Cards auto-size to their text, so the
+ * painter measures real heights and feeds them back here; rows then advance
+ * by what the cards actually need instead of a fixed guess.
+ *
+ * @param {any} node
+ * @param {Map<string, number> | null | undefined} heights
+ */
+function heightOf(node, heights) {
+  if (heights) {
+    const measured = heights.get(node.id);
+    if (typeof measured === "number" && measured > 0) return measured;
+  }
+  return TREE_CARD_HEIGHT;
+}
+
+/**
  * Chapel geometry: crown at the bottom, foundations above, cards on the
  * spine, extra parents fanning in. `options.width` is the viewport.
+ * `options.heights` maps card id to measured pixel height (see `heightOf`).
  *
  * @param {RealityMap | null | undefined} realityMap
- * @param {{ width?: number }} [options]
+ * @param {{ width?: number; heights?: Map<string, number> }} [options]
  */
 export function treeLayout(realityMap, options = {}) {
   const viewport = Math.max(320, Number(options.width) || 375);
+  const heights = options.heights instanceof Map ? options.heights : null;
   const mobile = viewport < TREE_TWO_UP_MIN_WIDTH;
   const nodes = realityMap && Array.isArray(realityMap.nodes) ? realityMap.nodes : [];
   const mapEdges = realityMap && Array.isArray(realityMap.edges) ? realityMap.edges : [];
@@ -444,11 +463,15 @@ export function treeLayout(realityMap, options = {}) {
     if (rank > 0) cursorY += TREE_ARROW_GAP;
     yOfRank.set(rank, cursorY);
     if (mobile && row.length > 1) {
-      row.forEach((node, index) => stackOf.set(node.id, index));
-      cursorY += row.length * TREE_CARD_HEIGHT + Math.max(0, row.length - 1) * 16;
+      let offset = 0;
+      for (const node of row) {
+        stackOf.set(node.id, offset);
+        offset += heightOf(node, heights) + 16;
+      }
+      cursorY += offset - 16;
     } else {
       row.forEach((node) => stackOf.set(node.id, 0));
-      cursorY += TREE_CARD_HEIGHT;
+      cursorY += Math.max(...row.map((node) => heightOf(node, heights)), TREE_CARD_HEIGHT);
     }
   }
 
@@ -458,8 +481,9 @@ export function treeLayout(realityMap, options = {}) {
     const rank = ranks.get(node.id) || 0;
     const col = colOf.get(node.id) || 0;
     const stack = stackOf.get(node.id) || 0;
+    const height = heightOf(node, heights);
     const x = xForCol(col) + shift;
-    const y = (yOfRank.get(rank) ?? TREE_STAGE_PAD) + stack * (TREE_CARD_HEIGHT + 16);
+    const y = (yOfRank.get(rank) ?? TREE_STAGE_PAD) + stack;
     cardById.set(node.id, {
       id: node.id,
       label: node.label,
@@ -473,9 +497,9 @@ export function treeLayout(realityMap, options = {}) {
       x,
       y,
       cx: x + cardWidth / 2,
-      cy: y + TREE_CARD_HEIGHT / 2,
+      cy: y + height / 2,
       width: cardWidth,
-      height: TREE_CARD_HEIGHT,
+      height,
     });
   }
 
@@ -535,7 +559,7 @@ export function treeLayout(realityMap, options = {}) {
     const first = branchCards[0];
     const last = branchCards[branchCards.length - 1];
     const top = first ? first.y - TREE_BAND_PAD : TREE_STAGE_PAD;
-    const bottom = last ? last.y + TREE_CARD_HEIGHT + TREE_BAND_PAD : top;
+    const bottom = last ? last.y + last.height + TREE_BAND_PAD : top;
     return {
       id: branch.id,
       name: branch.name,
