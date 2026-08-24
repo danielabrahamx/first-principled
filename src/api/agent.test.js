@@ -181,6 +181,35 @@ test("a 202 polls through running until the success record lands", async () => {
   assert.equal(polls, 2);
 });
 
+test("a running poll with stage and snapshot keeps polling until success", async () => {
+  let polls = 0;
+  const { fetchImpl } = backgroundFetch(async () => {
+    polls += 1;
+    if (polls === 1) {
+      return fakeResponse(200, {
+        status: "running",
+        stage: "chronology",
+        snapshot: { concept: "battery", chronology: [] },
+      });
+    }
+    if (polls === 2) {
+      return fakeResponse(200, {
+        status: "running",
+        stage: "epiphanies",
+        snapshot: { concept: "battery", chronology: [], epiphanies: [] },
+      });
+    }
+    return fakeResponse(200, { status: "success", body: { reply: "done" } });
+  });
+  const result = await callAgent({}, {
+    fetchImpl,
+    pollIntervalMs: 1,
+    deadlineMs: 2000,
+  });
+  assert.deepEqual(result, { ok: true, data: { reply: "done" } });
+  assert.equal(polls, 3);
+});
+
 test("a 202 job that ends in an error record returns its stable code", async () => {
   const { fetchImpl } = backgroundFetch(async () =>
     fakeResponse(200, { status: "error", code: "upstream_error", message: "secret provider detail" })

@@ -37,8 +37,8 @@ the v1 stack.
   (resolved); `/prototype` on ticket 04 (resolved; KEEP Chapel).
   anti-slop, tsc, netlify-build discipline.
 - **Next session:** claim
-  [Poll forwards running stage snapshots](issues/09-poll-forwards-running-stage-snapshots.md)
-  (AFK). Tickets 06-08 closed 2026-08-24. Do not ship the throwaway
+  [Ship the Chapel Dependence flowchart](issues/10-ship-the-chapel-dependence-flowchart.md)
+  (AFK). Ticket 09 closed 2026-08-24. Do not ship the throwaway
   prototype. One ticket per session.
 - Style: single dashes, no emojis. Windows/PowerShell-tested.
 
@@ -89,6 +89,11 @@ the v1 stack.
   plus note if non-empty. No hover if both UNKNOWN. No card hover. No
   click-to-inspect.
   [Hover inventors and inspection on the chapel flowchart](issues/08-hover-inventors-and-inspection-on-the-chapel-flowchart.md).
+- Running poll forwards learner-safe Chronology then Epiphanies snapshots
+  while status stays `running`. Missing blob stays running with no
+  snapshot. Snapshot writes never throw after 202. Terminal shapes
+  unchanged. No SSE, no fourth status.
+  [Poll forwards running stage snapshots](issues/09-poll-forwards-running-stage-snapshots.md).
 
 ## Not yet specified
 
@@ -131,7 +136,5 @@ into 10.
 
 ## Open frontier
 
-- [Poll forwards running stage snapshots](issues/09-poll-forwards-running-stage-snapshots.md)
-  (AFK; unblocked)
 - [Ship the Chapel Dependence flowchart](issues/10-ship-the-chapel-dependence-flowchart.md)
-  (AFK; unblocked; parallel with 09)
+  (AFK; unblocked)

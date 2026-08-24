@@ -327,6 +327,50 @@ test("a failed stage is terminal with no retry or later call", async () => {
   assert.equal(result.retried, false);
 });
 
+test("accepted stages publish learner-safe snapshots; a throwing publisher does not fail the map", async () => {
+  const dirtyChronology = /** @type {any} */ (structuredClone(CHRONOLOGY));
+  dirtyChronology.prompts = { system: "secret" };
+  dirtyChronology.chronology[0].provenance = "hidden";
+  const dirtyEpiphanies = /** @type {any} */ (structuredClone(EPIPHANIES));
+  dirtyEpiphanies.discarded_input_ids = ["x"];
+  dirtyEpiphanies.epiphanies[0].reasoning = "inner talk";
+
+  /** @type {any[]} */
+  const published = [];
+  const { callLLM } = scriptedTransport([dirtyChronology, dirtyEpiphanies, EDGE_SET]);
+  const result = await generateRealityMap(
+    { concept: "battery", callLLM },
+    {
+      onStageSnapshot: async (stage, snapshot) => {
+        published.push({ stage, snapshot });
+        throw new Error("blob write failed");
+      },
+    }
+  );
+  assert.equal(result.ok, true, result.errors && result.errors.join(" | "));
+  assert.equal(published.length, 2);
+  assert.equal(published[0].stage, "chronology");
+  assert.equal(published[0].snapshot.concept, "battery");
+  assert.equal("prompts" in published[0].snapshot, false);
+  assert.equal("provenance" in published[0].snapshot.chronology[0], false);
+  assert.equal(published[1].stage, "epiphanies");
+  assert.equal("discarded_input_ids" in published[1].snapshot, false);
+  assert.equal("reasoning" in published[1].snapshot.epiphanies[0], false);
+});
+
+test("invalid Chronology does not publish a snapshot", async () => {
+  const badChronology = { concept: "battery", chronology: [] };
+  /** @type {any[]} */
+  const published = [];
+  const { callLLM } = scriptedTransport([badChronology]);
+  const result = await generateRealityMap(
+    { concept: "battery", callLLM },
+    { onStageSnapshot: (stage, snapshot) => { published.push({ stage, snapshot }); } }
+  );
+  assert.equal(result.ok, false);
+  assert.equal(published.length, 0);
+});
+
 test("invalid Epiphanies are terminal with no retry or Arrange call", async () => {
   const badEpiphanies = structuredClone(EPIPHANIES);
   badEpiphanies.epiphanies[0].from_regimes = ["regime-name"];

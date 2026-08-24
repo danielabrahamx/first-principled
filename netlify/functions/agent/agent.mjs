@@ -81,18 +81,46 @@ function terminalError(code, message) {
  * @returns {Promise<Response>}
  */
 async function writeTerminal(jobId, record) {
+  await writeJobRecord(jobId, record);
+  return new Response(null, { status: 204 });
+}
+
+/**
+ * Mid-job learner-safe snapshot. Never throws after 202: a failed write
+ * logs and the generation continues. Status stays "running".
+ *
+ * @param {string} jobId
+ * @param {"chronology" | "epiphanies"} stage
+ * @param {any} snapshot
+ * @param {{ setJSON: (key: string, value: any, options?: any) => Promise<any> } | null} [store]
+ * @returns {Promise<void>}
+ */
+export async function writeSnapshot(jobId, stage, snapshot, store = null) {
+  await writeJobRecord(
+    jobId,
+    { status: "running", stage, snapshot },
+    store
+  );
+}
+
+/**
+ * @param {string} jobId
+ * @param {any} record
+ * @param {{ setJSON: (key: string, value: any, options?: any) => Promise<any> } | null} [store]
+ * @returns {Promise<void>}
+ */
+async function writeJobRecord(jobId, record, store = null) {
   try {
-    const store = getStore({ name: "agent-jobs" });
+    const blobStore = store ?? getStore({ name: "agent-jobs" });
     // setJSON, not set: @netlify/blobs v10 set() sends the value as a raw
     // body, so an object would be stored as the literal string
     // "[object Object]" and the poll would never parse it.
-    await store.setJSON(`job:${jobId}`, record, { expires: JOB_TTL_SECONDS });
+    await blobStore.setJSON(`job:${jobId}`, record, { expires: JOB_TTL_SECONDS });
   } catch (e) {
     // The job record could not be persisted. Do not throw - the platform
     // would retry and re-run the generation, double-spending LLM tokens.
-    console.error("writeTerminal failed:", e && e.message, "job:", jobId);
+    console.error("writeJobRecord failed:", e && e.message, "job:", jobId);
   }
-  return new Response(null, { status: 204 });
 }
 
 /** The real client IP, set by Netlify's proxy layer. */
@@ -310,7 +338,9 @@ async function run(req) {
   }
 
   try {
-    const result = await handleRequest(request);
+    const result = await handleRequest(request, {
+      onStageSnapshot: (stage, snapshot) => writeSnapshot(jobId, stage, snapshot),
+    });
     return writeTerminal(jobId, {
       status: "success",
       httpStatus: result.status,

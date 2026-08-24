@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 // The wrapper reads the cap at module load; a small cap makes the
 // in-memory fallback testable without sending 60+ requests.
 process.env.RATE_LIMIT_MAX = "3";
-const { overRateLimit } = await import("./agent.mjs");
+const { overRateLimit, writeSnapshot } = await import("./agent.mjs");
 
 const HOUR = new Date().toISOString().slice(0, 13);
 const OLD_HOUR = "20000101T00";
@@ -90,4 +90,13 @@ test("rate limiter falls back to in-memory counting without a store", async () =
   assert.equal(await overRateLimit(memIp), false);
   assert.equal(await overRateLimit(memIp), false);
   assert.equal(await overRateLimit(memIp), true);
+});
+
+test("snapshot writes swallow store errors instead of throwing after 202", async () => {
+  const broken = {
+    async setJSON() {
+      throw new Error("blobs down");
+    },
+  };
+  await writeSnapshot("job-1", "chronology", { concept: "battery", chronology: [] }, broken);
 });

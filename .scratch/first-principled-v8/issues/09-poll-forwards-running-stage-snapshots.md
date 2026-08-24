@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** resolved (Cursor, 2026-08-24)
 
 **Blocked by:** none
 ([Can the poll carry stage snapshots](01-can-the-poll-carry-stage-snapshots.md)
@@ -31,14 +31,18 @@ the wire. Windows/PowerShell tests. No prod deploy in this ticket.
 
 ## Acceptance criteria
 
-- [ ] Running blob and status GET carry `{ status, stage, snapshot }`
+- [x] Running blob and status GET carry `{ status, stage, snapshot }`
       after accepted Chronology and after accepted Epiphanies
-- [ ] Snapshot writes never throw after 202
-- [ ] Terminal success and error shapes stay unchanged
-- [ ] No provenance / prompt / inner talk on the snapshot
-- [ ] Tests cover the running arm and the "missing blob stays running
+- [x] Snapshot writes never throw after 202
+- [x] Terminal success and error shapes stay unchanged
+- [x] No provenance / prompt / inner talk on the snapshot
+- [x] Tests cover the running arm and the "missing blob stays running
       with no snapshot" case
-- [ ] Map Decisions so far points at this ticket
+- [x] Map Decisions so far points at this ticket
+
+## Answer
+
+Keep snapshots on the existing `agent-jobs` blob and `GET /api/agent-status?job=`. After accepted Chronology the job record is `{ status: "running", stage: "chronology", snapshot }`. After accepted Epiphanies it is the same with `stage: "epiphanies"` and joints included. Status stays `running` until the existing terminal success or error write. A missing blob stays `{ status: "running" }` with no snapshot. Snapshot `setJSON` uses the same never-throw wrapper as the terminal write. The client already continues the poll on `running` and ignores extra keys. No fourth status string. No SSE. Chapel chrome waits for ticket 10. Hidden fields are stripped in `src/lib/agent/stageSnapshot.js`.
 
 ## Docs rule
 

@@ -13,6 +13,7 @@
 
 import { callChatCompletion } from "./llm.js";
 import { parseModelJson } from "./jsonParse.js";
+import { chronologySnapshot, epiphaniesSnapshot } from "./stageSnapshot.js";
 import { validateRealityMap } from "../mmg/validator.js";
 import { observationProblems } from "../mmg/observation.js";
 import {
@@ -613,7 +614,7 @@ export function stageThinking(stage, options = {}) {
  * Generate one map through exactly three serial model calls.
  *
  * @param {{ concept: string; callLLM?: CallLLM }} input
- * @param {{ thinking?: boolean; thinkingByStage?: Partial<Record<"chronology" | "epiphanies" | "arrange", boolean>>; maxTokens?: number }} [options]
+ * @param {{ thinking?: boolean; thinkingByStage?: Partial<Record<"chronology" | "epiphanies" | "arrange", boolean>>; maxTokens?: number; onStageSnapshot?: (stage: "chronology" | "epiphanies", snapshot: { concept: string; chronology: any[]; epiphanies?: any[] }) => void | Promise<void> }} [options]
  * @returns {Promise<MapResult>}
  */
 export async function generateRealityMap({ concept, callLLM }, options = {}) {
@@ -661,6 +662,11 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
     }
     const chronologyItems = /** @type {any} */ (chronology).chronology;
     const chronologyIds = new Set(chronologyItems.map((/** @type {any} */ item) => item.id));
+    await publishStageSnapshot(
+      options.onStageSnapshot,
+      "chronology",
+      chronologySnapshot(trimmed, chronology)
+    );
 
     const epiphanies = normalizeEpiphanies(
       await request(
@@ -675,6 +681,11 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
     }
     const epiphanyItems = /** @type {any} */ (epiphanies).epiphanies;
     const epiphanyIds = new Set(epiphanyItems.map((/** @type {any} */ item) => item.id));
+    await publishStageSnapshot(
+      options.onStageSnapshot,
+      "epiphanies",
+      epiphaniesSnapshot(trimmed, chronology, epiphanies)
+    );
 
     const inventoryIds = new Set([...chronologyIds, ...epiphanyIds]);
     const rawEdges = await request(
@@ -794,6 +805,29 @@ export function deriveCheck(map) {
     }
   }
   return { ok: errors.length === 0, errors };
+}
+
+/**
+ * Mid-job snapshots must never fail the generator. A blob write that throws
+ * after 202 would otherwise look like a stage failure and skip Arrange.
+ *
+ * @param {((stage: "chronology" | "epiphanies", snapshot: any) => void | Promise<void>) | undefined} publish
+ * @param {"chronology" | "epiphanies"} stage
+ * @param {any} snapshot
+ * @returns {Promise<void>}
+ */
+async function publishStageSnapshot(publish, stage, snapshot) {
+  if (typeof publish !== "function") return;
+  try {
+    await publish(stage, snapshot);
+  } catch (error) {
+    console.error(
+      "onStageSnapshot failed:",
+      error instanceof Error ? error.message : error,
+      "stage:",
+      stage
+    );
+  }
 }
 
 /**

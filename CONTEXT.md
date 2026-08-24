@@ -27,9 +27,10 @@ Prod is OpenRouter paid Nemotron
 locked Option A. Sibling display map (does not replace v7 KEEP/KILL):
 `.scratch/first-principled-v8/map.md` - etymology-style Dependence
 flowchart and stage-product wait-state. Poll snapshots, crown-at-bottom,
-fan-in spine, Chapel look, and morph wait-state are locked. Next
-session (display map only):
-[Poll forwards running stage snapshots](.scratch/first-principled-v8/issues/09-poll-forwards-running-stage-snapshots.md)
+fan-in spine, Chapel look, and morph wait-state are locked. Running
+stage snapshots are on the poll (2026-08-24). Next session (display
+map only):
+[Ship the Chapel Dependence flowchart](.scratch/first-principled-v8/issues/10-ship-the-chapel-dependence-flowchart.md)
 (AFK). Card, arrow, and hover contracts are locked.
 
 ## Language

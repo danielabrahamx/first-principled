@@ -9,6 +9,7 @@
  * the old sync path:
  *
  *   - no record yet            -> 200 {status:"running"}
+ *   - running record           -> 200 {status:"running", stage?, snapshot?}
  *   - success record           -> 200 {status:"success", body} (the turn
  *     response), or, when the app returned a non-200 envelope, the mapped
  *     error: 200 {status:"error", code, message}
@@ -21,6 +22,7 @@
  */
 
 import { getStore } from "@netlify/blobs";
+import { pollJson } from "../../../src/lib/agent/stageSnapshot.js";
 
 /**
  * @param {number} status
@@ -35,7 +37,7 @@ function errorResponse(status, code, message) {
 export default async (req) => {
   let store;
   try {
-    store = getStore({ name: "agent-jobs" });
+    store = getStore({ name: "agent-jobs", consistency: "strong" });
   } catch (e) {
     console.error("agent-status getStore failed:", e && e.message);
     return errorResponse(500, "internal", "An unexpected server error occurred.");
@@ -58,22 +60,19 @@ export default async (req) => {
   /** @type {any} */
   let record = null;
   try {
-    record = await store.get(`job:${jobId}`, { type: "json" });
+    record = await store.get(`job:${jobId}`, { type: "json", consistency: "strong" });
   } catch (e) {
     console.error("agent-status store.get failed:", e && e.message, "job:", jobId);
     return errorResponse(500, "internal", "An unexpected server error occurred.");
   }
 
   if (record === null) {
-    return Response.json({ status: "running" }, { status: 200 });
+    return Response.json(pollJson(null), { status: 200 });
   }
 
   if (record.status === "success") {
     if (record.httpStatus === 200) {
-      return Response.json(
-        { status: "success", body: record.body },
-        { status: 200 }
-      );
+      return Response.json(pollJson(record), { status: 200 });
     }
     // The app answered with a non-200 stable envelope; map it to the error
     // shape the client already knows.
@@ -88,14 +87,11 @@ export default async (req) => {
   }
 
   if (record.status === "error" && typeof record.code === "string") {
-    return Response.json(
-      {
-        status: "error",
-        code: record.code,
-        message: typeof record.message === "string" ? record.message : "",
-      },
-      { status: 200 }
-    );
+    return Response.json(pollJson(record), { status: 200 });
+  }
+
+  if (record.status === "running") {
+    return Response.json(pollJson(record), { status: 200 });
   }
 
   // An unrecognized record shape: behave as running rather than surface

@@ -394,9 +394,10 @@ function truncateHistory(messages) {
  *
  * @param {any} request
  * @param {CallLLM} callLLM
+ * @param {{ onStageSnapshot?: (stage: "chronology" | "epiphanies", snapshot: any) => void | Promise<void> }} [options]
  * @returns {Promise<ApiResult>}
  */
-async function handleInit(request, callLLM) {
+async function handleInit(request, callLLM, options = {}) {
   const word = typeof request.word === "string" ? request.word.trim() : "";
   if (word.length === 0) {
     return errorResult(
@@ -413,7 +414,10 @@ async function handleInit(request, callLLM) {
     );
   }
 
-  const generation = await generateRealityMap({ concept: word, callLLM });
+  const generation = await generateRealityMap(
+    { concept: word, callLLM },
+    { onStageSnapshot: options.onStageSnapshot }
+  );
   if (!generation.ok) {
     if (generation.kind === "refused") {
       return {
@@ -611,7 +615,7 @@ async function handleEnd(request, callLLM) {
  * reports a missing key as a stable config_error instead of a thrown error.
  *
  * @param {any} request - the parsed request body.
- * @param {{ callLLM?: CallLLM }} [options]
+ * @param {{ callLLM?: CallLLM; onStageSnapshot?: (stage: "chronology" | "epiphanies", snapshot: any) => void | Promise<void> }} [options]
  * @returns {Promise<ApiResult>}
  */
 export async function handleRequest(request, options = {}) {
@@ -630,7 +634,7 @@ export async function handleRequest(request, options = {}) {
   }
 
   const phase = request && request.phase;
-  if (phase === "init") return handleInit(request, callLLM);
+  if (phase === "init") return handleInit(request, callLLM, options);
   if (phase === "active") return handleActive(request, callLLM);
   if (phase === "end") return handleEnd(request, callLLM);
   return errorResult(
