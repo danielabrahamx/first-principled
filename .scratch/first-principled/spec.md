@@ -95,8 +95,11 @@ Phases:
   and Arrange builds the Dependence Tree. Each Stage runs once with no LLM
   retry, repair, fallback, or fourth semantic call. A mechanical gate checks
   the final map, roles, trunk, edge reasons, provenance, and complete
-  use-or-drop accounting. Only the checked map reaches the learner;
-  intermediate Stage outputs and provenance remain server-side.
+  use-or-drop accounting. Only the checked map reaches the learner as the
+  finished Tree; intermediate Stage outputs and provenance remain
+  server-side except learner-safe Chronology then Epiphanies poll
+  snapshots (v8 tickets 09 and 11; contract in
+  `.scratch/first-principled-v8/research/01-stage-snapshots-on-the-poll.md`).
 - Active: Socratic turns (engine: `src/lib/agent/socratic.js`). Opening rule: empty learner map means observation-first (what have you seen, used, or noticed about this thing); a populated map means gap-first (probe the biggest gaps in dependency order, lower layers before abstractions). Each turn: ask a question, update the learner map, choose the next gap. Explanation fallback: when the learner asks, or after two failed attempts on the same point. A failed attempt is an answer that leaves the point non-correct; asking a question is not a failure, and after the fallback the count restarts. If the learner has no model of a concept, the agent teaches observationally before questioning it. Briefing (ticket 16): when the learner asks for direct information to model a decision, the tutor delivers a direct, accurate, plain-language briefing built from the reality map instead of a question.
 - End: the orchestrator triggers it when every reality node is known, or the turn cap (24 learner messages) is reached. The agent asks a transfer question, a novel problem that requires the corrected model. The learner answers; the agent records pass or fail against the reality map. The comparison view unlocks.
 
@@ -185,7 +188,7 @@ Space Grotesk. Mental-model states use stained-glass colors: untested gray,
 missing red, misconception amber, correct green. Exact tokens and the orb CSS
 recipe live in `research/13-ui-design-spec.md`.
 
-- Tree home chrome (v6): one surface. Header is logo, foundations word box,
+- Tree home chrome: one surface. Header is logo, foundations word box,
   and How it works. Placeholder: "A thing in reality (laptop, photosynthesis)".
   Empty Tree sentence: "Type the thing you want to understand from its
   foundations." `#how` is a short page (not an overlay) that states: this is
@@ -226,22 +229,20 @@ recipe live in `research/13-ui-design-spec.md`.
   edges between cards) in the order the learner engaged with them; no reality
   structure (layers) is used for layout. Learner-grid chrome, closeness, and
   the page tabs stay hidden. Home is the Tree: a first-principles
-  dependence path of the held Reality Map. Crown (the concept) at the top,
-  foundations at the bottom. Y follows existing `built-on` / `depends-on` /
-  `abstraction-of` edges, not observation dates (dates stay on hover). Layers
-  are captions on the hang, capped to the card width so they do not cross
-  the trunk, not table rows. Cards hang off a continuous
-  trunk; extra parents of a convergence occupy the other side or a further
-  column. The stage is at least the viewport and may grow wider for branches
-  (the Tree scrolls horizontally; html/body do not overflow). On land the tree plays
-  a one-shot elapsed grow (~1s: trunk, then deepest-first layer bands) and
-  then stays fully visible; scroll never gates opacity. Reduced motion skips
-  grow and sap. Clicking a node opens an invitation card: label, reality
-  description, observation / crux, dependence neighbors (what it rests on /
-  what rests on it), and one line that the node is a rabbit hole - a thing
-  to go understand, not a chat topic. No learner-state chrome (confidence,
-  evidence, rotation trail, untested copy) and no control that generates a
-  nested Tree. A metrics row of closeness
+  dependence path of the held Reality Map. v8 display locks (map
+  `.scratch/first-principled-v8/map.md`, tickets 02-08) supersede the
+  hanging-card cladogram: Chapel flowchart, crown (the concept) at the
+  bottom, supporting knowledge above, spine plus side fan-in. Cards are
+  `label`, layer name, `description`. Downward arrows carry `because` or
+  stay unlabeled. Hover is on the labeled arrow (discoverer/date when not
+  UNKNOWN), not a card dump. Click-to-inspect and rabbit-hole invitation
+  stay parked until a later ticket. Do not implement hanging cards, crown
+  at the top, or layer-band grow as the product surface. Tickets 10-12
+  ship that chrome. Until they land, prod still shows the v6 hang. The
+  stage is at least the viewport and may grow for branches
+  (the Tree scrolls; html/body do not overflow). No learner-state chrome
+  (confidence, evidence, rotation trail, untested copy) and no control
+  that generates a nested Tree. A metrics row of closeness
   score, gap closures and the transfer result, plus the transfer assessment,
   stay parked with the learner chrome. The unmounted chat helpers NEVER leak
   reality content (labels, layers, descriptions).
