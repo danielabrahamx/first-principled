@@ -124,8 +124,50 @@ test("maps default to thinking off; thinkingByStage can turn one stage on", () =
   assert.equal(stageThinking("arrange", { thinkingByStage: { arrange: true } }), true);
 });
 
-test("thinkingByStage can send thinking off, on, off", async () => {
-  const { callLLM, requests } = scriptedTransport([CHRONOLOGY, EPIPHANIES, EDGE_SET]);
+test("ox-alpha-style Epiphanies histories normalize to pass the gate", async () => {
+  const broken = {
+    concept: "battery",
+    epiphanies: [
+      {
+        id: "e1",
+        from_regimes: ["c1"],
+        to_regimes: ["c2"],
+        result: "Two metals and an electrolyte sustain a circuit.",
+        joint_kind: "experimental result",
+        history: {
+          who: "Alessandro Volta",
+          when: "1800",
+          observation: "Alternating metal discs separated by brine produced continuous current.",
+        },
+        candidate_node: "voltaic pile",
+      },
+      {
+        id: "e2",
+        from_regimes: ["c2"],
+        to_regimes: ["c2"],
+        result: "A stable cell delivers steady current for a long time.",
+        joint_kind: "ENGINEERED_RESULT",
+        history: null,
+        candidate_node: "Daniell cell",
+      },
+    ],
+  };
+  const { callLLM, requests } = scriptedTransport([CHRONOLOGY, broken, EDGE_SET]);
+  const result = await generateRealityMap({ concept: "battery", callLLM });
+  assert.equal(result.ok, true, `expected ok, got ${result.kind}: ${JSON.stringify(result.errors)}`);
+  const e1 = /** @type {any} */ (result.diagnostics).epiphanies.epiphanies[0];
+  assert.equal(e1.joint_kind, "EXPERIMENTAL_RESULT");
+  assert.deepEqual(e1.history.who, ["Alessandro Volta"]);
+  assert.equal(e1.history.certainty, "EXACT");
+  assert.equal(e1.history.uncertainty_note, "");
+  const e2 = /** @type {any} */ (result.diagnostics).epiphanies.epiphanies[1];
+  assert.equal(e2.history.certainty, "UNKNOWN");
+  assert.deepEqual(e2.history.who, []);
+  assert.ok(e2.history.uncertainty_note.length > 0);
+  assert.equal(requests.length, 3);
+});
+
+test("thinkingByStage can send thinking off, on, off", async () => {  const { callLLM, requests } = scriptedTransport([CHRONOLOGY, EPIPHANIES, EDGE_SET]);
   const result = await generateRealityMap(
     { concept: "battery", callLLM },
     { thinkingByStage: { chronology: false, epiphanies: true, arrange: false } }

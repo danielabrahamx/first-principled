@@ -34,6 +34,7 @@ import {
  * @property {{ name: string; strict?: boolean; schema: Record<string, any> }} [jsonSchema]
  * @property {boolean} thinking
  * @property {number} maxTokens
+ * @property {number} [timeoutMs]
  */
 
 /**
@@ -177,6 +178,69 @@ function normalizeChronology(value) {
   };
 }
 
+/** Note used when the contract wants one and the model gave none. */
+const FALLBACK_UNCERTAINTY_NOTE = "Partly recorded.";
+
+/**
+ * Coerce one model history record into a gate-consistent shape. The
+ * OpenRouter default model (stealth/ox-alpha) systematically omits
+ * certainty / uncertainty_note and writes who as a string, and OpenRouter
+ * passes JSON Schema as a hint rather than an enforcement, so the strict
+ * mechanical gate would reject every reply (ticket 12 deploy leg).
+ * Derivation follows the Stage 2 prompt's own rule: EXACT needs who, when,
+ * and observation; APPROXIMATE needs an observation; anything else is
+ * UNKNOWN with empty facts.
+ *
+ * @param {any} history
+ * @returns {any}
+ */
+function normalizeHistory(history) {
+  const rawWho = history ? history.who : undefined;
+  let who = Array.isArray(rawWho)
+    ? rawWho.filter((name) => nonEmptyString(name))
+    : nonEmptyString(rawWho)
+      ? String(rawWho)
+          .split(/[;,]/)
+          .map((part) => part.trim())
+          .filter((part) => part.length > 0)
+      : [];
+  const observation = history && nonEmptyString(history.observation) ? history.observation : null;
+  const when = history && nonEmptyString(history.when) ? history.when : null;
+  const note = history && nonEmptyString(history.uncertainty_note) ? history.uncertainty_note : "";
+  let certainty = /** @type {any} */ (canonicalEnum(history ? history.certainty : undefined, CERTAINTIES));
+  if (!CERTAINTIES.has(certainty)) {
+    certainty =
+      who.length > 0 && when !== null && observation !== null
+        ? "EXACT"
+        : observation !== null
+          ? "APPROXIMATE"
+          : "UNKNOWN";
+  }
+  if (certainty === "EXACT" && (who.length === 0 || when === null || observation === null)) {
+    certainty = observation !== null ? "APPROXIMATE" : "UNKNOWN";
+  }
+  if (certainty === "APPROXIMATE" && observation === null) {
+    certainty = "UNKNOWN";
+  }
+  if (certainty === "UNKNOWN") {
+    who = [];
+    return {
+      certainty,
+      who: [],
+      when: null,
+      observation: null,
+      uncertainty_note: note !== "" ? note : FALLBACK_UNCERTAINTY_NOTE,
+    };
+  }
+  return {
+    certainty,
+    who,
+    when,
+    observation,
+    uncertainty_note: certainty === "APPROXIMATE" && note === "" ? FALLBACK_UNCERTAINTY_NOTE : note,
+  };
+}
+
 /**
  * @param {any} value
  * @returns {any}
@@ -187,16 +251,11 @@ function normalizeEpiphanies(value) {
     ...value,
     epiphanies: value.epiphanies.map((item) => {
       if (!isRecord(item)) return item;
-      const history = isRecord(item.history)
-        ? {
-            ...item.history,
-            certainty: canonicalEnum(item.history.certainty, CERTAINTIES),
-          }
-        : item.history;
+      const jointKind = /** @type {any} */ (canonicalEnum(item.joint_kind, JOINT_KINDS));
       return {
         ...item,
-        joint_kind: canonicalEnum(item.joint_kind, JOINT_KINDS),
-        history,
+        joint_kind: JOINT_KINDS.has(jointKind) ? jointKind : "OBSERVATION",
+        history: normalizeHistory(item.history),
       };
     }),
   };
@@ -614,7 +673,7 @@ export function stageThinking(stage, options = {}) {
  * Generate one map through exactly three serial model calls.
  *
  * @param {{ concept: string; callLLM?: CallLLM }} input
- * @param {{ thinking?: boolean; thinkingByStage?: Partial<Record<"chronology" | "epiphanies" | "arrange", boolean>>; maxTokens?: number; onStageSnapshot?: (stage: "chronology" | "epiphanies", snapshot: { concept: string; chronology: any[]; epiphanies?: any[] }) => void | Promise<void> }} [options]
+ * @param {{ thinking?: boolean; thinkingByStage?: Partial<Record<"chronology" | "epiphanies" | "arrange", boolean>>; maxTokens?: number; timeoutMs?: number; onStageSnapshot?: (stage: "chronology" | "epiphanies", snapshot: { concept: string; chronology: any[]; epiphanies?: any[] }) => void | Promise<void> }} [options]
  * @returns {Promise<MapResult>}
  */
 export async function generateRealityMap({ concept, callLLM }, options = {}) {
@@ -647,7 +706,12 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
       ],
       jsonMode: true,
       thinking: stageThinking(stage, options),
-      maxTokens: options.maxTokens ?? 8192,
+      // The OpenRouter default model mandates reasoning, which burns the
+      // completion budget before the JSON: at 8192 the Epiphanies schema
+      // call spent every token on thinking and truncated (ticket 12).
+      // 65536 gives thinking plus the JSON room; a low cap truncates.
+      maxTokens: options.maxTokens ?? 65536,
+      timeoutMs: options.timeoutMs ?? 600000,
     };
     if (jsonSchema) transportRequest.jsonSchema = jsonSchema;
     const response = await transport(transportRequest);

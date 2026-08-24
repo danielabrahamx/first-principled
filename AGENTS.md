@@ -14,8 +14,9 @@ Prod stays OpenRouter.
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
 **Resume:** v6 chrome shipped; one-shot scoring parked. The v7 three-stage
 Tree builder is live on prod in one background init job with a 14 min
-poll deadline. Thinking architecture is Option A (thinking off, JSON
-Schema on Epiphanies, OpenRouter paid Nemotron). v7 open frontier:
+poll deadline. Thinking architecture is Option A amended 2026-08-24
+(JSON Schema on Epiphanies; the OpenRouter default model mandates
+reasoning, so maps omit `reasoning` and run on mandatory thinking). v7 open frontier:
 [Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md)
 (HITL; capture done, do not recapture; remaining KEEP or KILL). Record:
 `.scratch/first-principled-v7/research/07-danny-followability.md`.
@@ -49,10 +50,12 @@ closed. Do not ship the throwaway prototype. One ticket per session.
 - Client holds session state in memory; the function stores nothing.
 - OpenAI-compatible LLM via `LLM_PROVIDER=openrouter|deepseek` (default
   openrouter uses `LLM_*`; deepseek uses `DEEPSEEK_*`). Default OpenRouter
-  model: `nvidia/nemotron-3-ultra-550b-a55b` at
+  model: `stealth/ox-alpha` at
   `https://openrouter.ai/api/v1`. Prod stays OpenRouter. JSON maps send
-  `thinking: false` (OpenRouter `reasoning` effort none; DeepSeek
-  `thinking` type disabled). Epiphanies sends JSON Schema. The next
+  `thinking: false`, which on OpenRouter omits the `reasoning` field
+  (the default model mandates reasoning; effort none returns HTTP 400;
+  DeepSeek keeps `thinking` type disabled). Epiphanies sends JSON
+  Schema. The next
   HITL ticket is
   [Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md).
 - No DB, no auth, no agent framework (Mastra/LangGraph is v2).

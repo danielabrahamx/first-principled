@@ -152,9 +152,11 @@ Current architecture (v1):
   and is parked from the UI.
 - OpenAI-compatible LLM via `LLM_PROVIDER=openrouter|deepseek` (default
   openrouter uses `LLM_*`; deepseek uses `DEEPSEEK_*`). Default OpenRouter
-  model: `nvidia/nemotron-3-ultra-550b-a55b`. Prod stays OpenRouter.
-  JSON maps send `thinking: false`: OpenRouter
-  `reasoning: { effort: "none" }`, DeepSeek
+  model: `stealth/ox-alpha`. Prod stays OpenRouter. JSON maps pass
+  `thinking: false`, but the OpenRouter default model mandates reasoning
+  and rejects `reasoning: { effort: "none" }` with HTTP 400, so on
+  OpenRouter the `reasoning` field is omitted and maps run on mandatory
+  provider thinking; DeepSeek still sends
   `thinking: { type: "disabled" }`. A per-stage override exists as an
   unused seam; DeepSeek Epiphanies-on was tried and failed to parse.
   Do not parse `reasoning_content` as the JSON contract. Epiphanies

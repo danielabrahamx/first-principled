@@ -41,8 +41,9 @@ can load the vendored TypeScript anti-slop plugin.
 2. Copy `.env.example` to `.env` and fill the key for the provider you
    want. Switch with `LLM_PROVIDER=openrouter` or `LLM_PROVIDER=deepseek`
    in `.env`, then restart `npm run dev`. Prod stays OpenRouter. JSON
-   maps turn thinking off per provider (OpenRouter `reasoning` effort
-   none; DeepSeek `thinking` type disabled).
+   maps pass `thinking: false`; the OpenRouter default model mandates
+   reasoning so the field is omitted there, DeepSeek sends `thinking`
+   type disabled.
 3. `npm run dev` - serves `src/` at `http://localhost:8888` with the function
    available at `/api/agent`.
 

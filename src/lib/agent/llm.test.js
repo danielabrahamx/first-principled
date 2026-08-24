@@ -152,7 +152,7 @@ test("sends OpenRouter attribution headers and no DeepSeek thinking field", asyn
       assert.equal(headers["X-OpenRouter-Title"], "first-principled");
       assert.equal(headers.Authorization, "Bearer test-key");
       const payload = JSON.parse(captured.init.body);
-      assert.deepEqual(payload.reasoning, { effort: "none" });
+      assert.equal(payload.reasoning, undefined);
       assert.equal(payload.thinking, undefined);
       assert.deepEqual(payload.response_format, { type: "json_object" });
     } finally {

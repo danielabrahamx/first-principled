@@ -246,7 +246,9 @@ function expandCardSupports(id, byId, edges, because, hover, depth) {
  * @param {string} layerId
  */
 function layerNameOf(map, layerId) {
-  const layers = map && Array.isArray(map.layers) ? map.layers : [];
+  const layers = /** @type {Array<{ id?: unknown; name?: unknown }>} */ (
+    map && Array.isArray(map.layers) ? map.layers : []
+  );
   const layer = layers.find((item) => item && item.id === layerId);
   if (layer && typeof layer.name === "string") return layer.name;
   return typeof layerId === "string" ? layerId : "";
@@ -578,8 +580,9 @@ export function treeLayout(realityMap, options = {}) {
 
 /**
  * SVG strokes: one downward arrow per rest-on, support above dependent.
+ * Accepts any chapel-shaped layout (tree or grow); only `arrows` is read.
  *
- * @param {ReturnType<typeof treeLayout>} layout
+ * @param {{ arrows?: Array<{ d: string }> }} layout
  * @returns {string[]}
  */
 export function spinePaths(layout) {

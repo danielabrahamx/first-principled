@@ -2,7 +2,7 @@
 
 **Type:** task
 
-**Status:** ready-for-agent
+**Status:** claimed (agent, 2026-08-24)
 
 **Blocked by:** [Grow stage products in place on the Chapel flowchart](11-grow-stage-products-in-place-on-the-chapel-flowchart.md)
 

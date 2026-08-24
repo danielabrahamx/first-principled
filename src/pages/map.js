@@ -1200,7 +1200,7 @@ export function renderMapPage(root, store, options = {}) {
       }
       if (arrow.because && arrow.hover) {
         const hit = el("button", "tree-chapel-arrow-hit");
-        hit.type = "button";
+        /** @type {HTMLButtonElement} */ (hit).type = "button";
         hit.style.left = `${arrow.labelX - 48}px`;
         hit.style.top = `${arrow.labelY - 18}px`;
         hit.setAttribute("aria-label", arrow.because);

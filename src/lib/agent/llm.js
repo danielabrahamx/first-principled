@@ -4,12 +4,16 @@
  * `LLM_PROVIDER=openrouter|deepseek` selects one env triple. Default
  * (unset or anything other than deepseek) is OpenRouter via `LLM_*`.
  * DeepSeek uses `DEEPSEEK_*` and must not inherit OpenRouter referer /
- * title / `reasoning` fields. Maps pass `thinking: false`. On OpenRouter
- * that is `reasoning: { effort: "none" }`. On DeepSeek that is
- * `thinking: { type: "disabled" }` (thinking is on by default at effort
- * `high`; the OpenRouter `reasoning` field is ignored and burns the
- * `max_tokens` budget into `reasoning_content`). Mixed thinking
- * (`thinkingByStage`) exists but DeepSeek Epiphanies-on failed to parse.
+ * title / `reasoning` fields. On OpenRouter the default model
+ * (`stealth/ox-alpha`) mandates reasoning and rejects
+ * `reasoning: { effort: "none" }` with HTTP 400, so thinking-off maps
+ * omit the `reasoning` field entirely and run on the provider's
+ * mandatory thinking; content still parses defensively. On DeepSeek,
+ * `thinking: { type: "disabled" }` is sent as before (thinking is on by
+ * default at effort `high`; the OpenRouter `reasoning` field is ignored
+ * and burns the `max_tokens` budget into `reasoning_content`). Mixed
+ * thinking (`thinkingByStage`) exists but DeepSeek Epiphanies-on failed
+ * to parse.
  *
  * Per the v6 ticket 01 findings (OpenRouter path):
  * - Base URL https://openrouter.ai/api/v1, Bearer auth via LLM_API_KEY.
@@ -19,8 +23,9 @@
  *   for constrained decoding. Both paths still parse defensively - see
  *   jsonParse.js.
  * - Reasoning arrives in `message.reasoning` (and possibly
- *   `reasoning_details`), not DeepSeek `reasoning_content`. Callers that pass
- *   `thinking: false` send OpenRouter `reasoning: { effort: "none" }`.
+ *   `reasoning_details`), not DeepSeek `reasoning_content`. Thinking-off
+ *   maps omit the OpenRouter `reasoning` field because the default model
+ *   mandates reasoning (ticket 12 deploy leg).
  *
  * Zero dependencies: global fetch (Node 18+, browsers). The stateless Netlify
  * function and the static frontend both run this code.
@@ -47,10 +52,12 @@ const DEEPSEEK_DEFAULT_BASE = "https://api.deepseek.com/v1";
  *   prompt must then mention "json" and show an example - see realityMap.js).
  * @property {{ name: string; strict?: boolean; schema: Record<string, any> }} [jsonSchema]
  *   - request response_format json_schema. Takes precedence over jsonMode.
- * @property {boolean} [thinking] - false turns thinking off for JSON maps.
- *   OpenRouter: `reasoning: { effort: "none" }`. DeepSeek:
- *   `thinking: { type: "disabled" }`. true turns it on. Omit to leave the
- *   provider default (DeepSeek default is thinking on, effort high).
+ * @property {boolean} [thinking] - false is best-effort. OpenRouter: the
+ *   `reasoning` field is omitted because the default model mandates
+ *   reasoning (`reasoning: { effort: "none" }` returns HTTP 400).
+ *   DeepSeek: `thinking: { type: "disabled" }`. true turns it on
+ *   (OpenRouter `reasoning: { enabled: true }`). Omit to leave the
+ *   provider default.
  * @property {number} [maxTokens] - headroom matters: a low cap truncates JSON.
  *   Default 4096.
  * @property {number} [timeoutMs] - abort the fetch after this long. Default
@@ -159,11 +166,12 @@ export async function callChatCompletion(options) {
     payload.response_format = { type: "json_object" };
   }
   if (provider === "openrouter") {
-    if (options.thinking === false) {
-      payload.reasoning = { effort: "none" };
-    } else if (options.thinking === true) {
+    if (options.thinking === true) {
       payload.reasoning = { enabled: true };
     }
+    // thinking === false: omit `reasoning` entirely. The default model
+    // (stealth/ox-alpha) mandates reasoning and rejects effort "none"
+    // with HTTP 400, so maps run on the provider's mandatory thinking.
   } else if (options.thinking === false) {
     payload.thinking = { type: "disabled" };
   } else if (options.thinking === true) {
