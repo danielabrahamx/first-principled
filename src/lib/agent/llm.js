@@ -13,7 +13,7 @@
  *
  * Per the v6 ticket 01 findings (OpenRouter path):
  * - Base URL https://openrouter.ai/api/v1, Bearer auth via LLM_API_KEY.
- * - Model id from LLM_MODEL (nvidia/nemotron-3-ultra-550b-a55b). The
+ * - Model id from LLM_MODEL (stealth/ox-alpha). The
  *   `:free` slug cannot constrain Epiphanies JSON Schema.
  * - JSON object mode is best-effort. Callers may instead supply a JSON Schema
  *   for constrained decoding. Both paths still parse defensively - see
@@ -29,7 +29,7 @@
 const DEFAULT_TIMEOUT_MS = 240000;
 const OPENROUTER_REFERER = "https://first-principled.netlify.app";
 const OPENROUTER_TITLE = "first-principled";
-const OPENROUTER_DEFAULT_MODEL = "nvidia/nemotron-3-ultra-550b-a55b";
+const OPENROUTER_DEFAULT_MODEL = "stealth/ox-alpha";
 const OPENROUTER_DEFAULT_BASE = "https://openrouter.ai/api/v1";
 const DEEPSEEK_DEFAULT_MODEL = "deepseek-v4-flash";
 const DEEPSEEK_DEFAULT_BASE = "https://api.deepseek.com/v1";

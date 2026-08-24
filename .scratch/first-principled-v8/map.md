@@ -38,8 +38,9 @@ the v1 stack.
   anti-slop, tsc, netlify-build discipline.
 - **Next session:** claim
   [Deploy the Chapel Tree](issues/12-deploy-the-chapel-tree.md)
-  (AFK). Ticket 11 shipped the grow-in-place wait-state. One ticket per
-  session.
+  (AFK). Ticket 11 shipped the grow-in-place wait-state; the model
+  default is now `stealth/ox-alpha` (prod `LLM_MODEL` unset, so the
+  committed default governs after deploy). One ticket per session.
 - Style: single dashes, no emojis. Windows/PowerShell-tested.
 
 ## Decisions so far
@@ -140,6 +141,8 @@ the v1 stack.
 06 + 07 + 08 -> 10 ship the Chapel Dependence flowchart
 09 + 10 -> 11 grow stage products in place on the Chapel flowchart
 11 -> 12 deploy the Chapel Tree
+12 -> 13 reattach to a running background job after refresh
+12 -> 14 fix grow-mode arrow label collisions on the trunk
 ```
 
 Instant appear, cheap placeholder until first snapshot, and error-blob
@@ -149,4 +152,17 @@ into 10.
 ## Open frontier
 
 - [Deploy the Chapel Tree](issues/12-deploy-the-chapel-tree.md)
-  (AFK; unblocked)
+  (AFK; unblocked; next)
+- [Reattach to a running background job after refresh](issues/13-reattach-to-a-running-background-job-after-refresh.md)
+  (AFK; blocked by 12)
+- [Fix grow-mode arrow label collisions on the trunk](issues/14-fix-grow-mode-arrow-label-collisions-on-the-trunk.md)
+  (AFK; blocked by 12)
+
+## Out of scope (recorded, not ticketed)
+
+- Retry asymmetry: one-shot stages mean a failed Arrange reruns all
+  three Stages from scratch. Fixing it touches the locked v7
+  no-retry contract - a v7/v9 decision, not v8 work.
+- Generation caching / concept normalization: DB-adjacent and
+  premature until the trees are verified worth following. The real
+  prerequisite is the parked v7 followability scoring.
