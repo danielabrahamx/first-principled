@@ -2,7 +2,7 @@
 
 **Type:** grilling
 
-**Status:** ready-for-human
+**Status:** resolved
 
 **Blocked by:** none (04 resolved; 01 and 03 already resolved)
 
@@ -29,12 +29,37 @@ checked Arrange, morph edges and membership into the Dependence
 flowchart. Do not leave Chronology order on screen as if it were
 Dependence. SSE stays out.
 
+## Answer
+
+**Morph**, with a status line, over the existing poll. No SSE.
+
+After accepted Chronology, draw regimes as a temporary spine in the
+locked Chapel orientation (crown at the bottom). After accepted
+Epiphanies, grow the joints on that spine. Where a joint sits on the
+card versus the arrow stays
+[Do Epiphanies sit on the arrows](07-do-epiphanies-sit-on-the-arrows.md).
+After checked Arrange, morph order, edges, and membership into the
+Dependence flowchart. Dropped regimes leave. Collapsed regimes merge.
+Promoted parents appear as fan-in. Chronology order must not remain on
+screen as if it were Dependence.
+
+The spine uses the same Chapel look as the finished Tree. Until Arrange
+finishes, the status line is `building tree...`. That line then goes
+away. Exact card fields stay on
+[What each card on that flowchart holds](06-what-each-card-on-that-flowchart-holds.md).
+
+Wait-state transport stays the background poll plus learner-safe
+snapshots. The long job has no response stream. Inner talk stays off.
+Do not add an open wire as a fallback.
+
+HITL 2026-08-24 (Cursor).
+
 ## Acceptance criteria
 
-- [ ] One grow rule locked for the three stage boundaries
-- [ ] Stated whether Chronology-on-screen is labeled as temporary
-- [ ] SSE is not used as a wait-state fallback
-- [ ] Map Decisions so far points at this lock
+- [x] One grow rule locked for the three stage boundaries
+- [x] Stated whether Chronology-on-screen is labeled as temporary
+- [x] SSE is not used as a wait-state fallback
+- [x] Map Decisions so far points at this lock
 
 ## Docs rule
 

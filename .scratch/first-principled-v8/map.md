@@ -37,10 +37,10 @@ the v1 stack.
   (resolved); `/prototype` on ticket 04 (resolved; KEEP Chapel).
   anti-slop, tsc, netlify-build discipline.
 - **Next session:** claim
-  [How stage products grow in place when Arrange reorders](issues/05-how-stage-products-grow-in-place-when-arrange-reorders.md).
-  HITL grilling. Chapel is the locked look. Do not ship the throwaway
-  prototype. Tickets 06-08 hold card, arrow-Epiphany, and hover follow-ups
-  from the prototype verdict; do not start them in the 05 session.
+  [What each card on that flowchart holds](issues/06-what-each-card-on-that-flowchart-holds.md).
+  HITL grilling. Chapel is the locked look. Grow-in-place is morph plus
+  `building tree...` on the poll. Do not ship the throwaway prototype.
+  Tickets 07-08 stay open; one ticket per session.
 - Style: single dashes, no emojis. Windows/PowerShell-tested.
 
 ## Decisions so far
@@ -76,6 +76,10 @@ the v1 stack.
   shell (Fraunces / amethyst), crown at bottom, fan-in then spine.
   Throwaway prototype, do not copy into `src/` yet. Tweaks graduated.
   [Prototype the etymology-style Dependence layout](issues/04-prototype-the-etymology-style-dependence-layout.md).
+- Morph grow-in-place: Chronology spine, then joints, then membership
+  morph into Dependence. Status line `building tree...` until Arrange.
+  Poll snapshots, not SSE.
+  [How stage products grow in place when Arrange reorders](issues/05-how-stage-products-grow-in-place-when-arrange-reorders.md).
 
 ## Not yet specified
 
@@ -119,10 +123,8 @@ Further build tickets stay in fog until 05-08 close.
 
 ## Open frontier
 
-- [How stage products grow in place when Arrange reorders](issues/05-how-stage-products-grow-in-place-when-arrange-reorders.md)
-  (grilling; next session)
 - [What each card on that flowchart holds](issues/06-what-each-card-on-that-flowchart-holds.md)
-  (grilling)
+  (grilling; next session)
 - [Do Epiphanies sit on the arrows](issues/07-do-epiphanies-sit-on-the-arrows.md)
   (grilling)
 - [Hover inventors and inspection on the chapel flowchart](issues/08-hover-inventors-and-inspection-on-the-chapel-flowchart.md)

@@ -20,8 +20,9 @@ Schema on Epiphanies, OpenRouter paid Nemotron). v7 open frontier:
 (HITL; capture done, do not recapture; remaining KEEP or KILL). Record:
 `.scratch/first-principled-v7/research/07-danny-followability.md`.
 v8 next session: HITL grilling, do not ship chrome.
-[How stage products grow in place when Arrange reorders](.scratch/first-principled-v8/issues/05-how-stage-products-grow-in-place-when-arrange-reorders.md).
-Chapel KEEP is locked. Do not start tickets 06-08 in that session.
+[What each card on that flowchart holds](.scratch/first-principled-v8/issues/06-what-each-card-on-that-flowchart-holds.md).
+Chapel KEEP and morph wait-state (`building tree...` on the poll) are
+locked. One ticket per session.
 
 ## Golden rules
 

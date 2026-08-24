@@ -27,10 +27,10 @@ Prod is OpenRouter paid Nemotron
 locked Option A. Sibling display map (does not replace v7 KEEP/KILL):
 `.scratch/first-principled-v8/map.md` - etymology-style Dependence
 flowchart and stage-product wait-state. Poll snapshots, crown-at-bottom,
-fan-in spine, and Chapel look are locked. Next session (display map
-only):
-[How stage products grow in place when Arrange reorders](.scratch/first-principled-v8/issues/05-how-stage-products-grow-in-place-when-arrange-reorders.md)
-(HITL grilling). Do not start tickets 06-08 in that session.
+fan-in spine, Chapel look, and morph wait-state are locked. Next
+session (display map only):
+[What each card on that flowchart holds](.scratch/first-principled-v8/issues/06-what-each-card-on-that-flowchart-holds.md)
+(HITL grilling).
 
 ## Language
 
@@ -73,8 +73,11 @@ hero-and-date per transition
 **Stage**:
 One LLM call with one job while building the Tree. Chronology, then
 Epiphanies, then Arrange. Each runs once, with no repair Stage. The
-learner never sees a Stage, only the checked Tree.
-_Avoid_: another model, pipeline step, one-shot
+learner never sees Stage machinery, prompts, or inner talk. While the
+job runs, the Tree may show accepted stage products from poll
+snapshots. The status line is `building tree...` until Arrange
+finishes. Then nodes morph into the checked Dependence Tree.
+_Avoid_: another model, pipeline step, one-shot, SSE wait-state
 
 **Reality Map**:
 The canonical learner-facing data for a concept: layers, role-marked
@@ -131,8 +134,11 @@ Current architecture (v1):
 - Init runs Chronology, Epiphanies, and Arrange exactly once each in one
   background job. The mechanical gate checks the role-marked Reality Map,
   declared trunk, Dependence reasons, hidden provenance, and complete
-  use-or-drop accounting. Only the checked map crosses the learner-facing
-  boundary. There is no one-shot, per-layer, retry, repair, or fallback path.
+  use-or-drop accounting. Accepted Chronology and Epiphanies records may
+  appear on the Tree as poll snapshots while the job is still running.
+  Provenance, prompts, and inner talk stay hidden. The finished Tree is
+  the checked Arrange map. There is no one-shot, per-layer, retry,
+  repair, fallback, or SSE wait-state path.
 - The Mental Model Graph has two sides: the Reality Map (canonical, from the
   model's knowledge, contiguous layer chain) and the Learner Mental Model
   (node states, confidence, evidence, updated each turn). Learner Mental
