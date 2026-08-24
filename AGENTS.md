@@ -19,10 +19,10 @@ Schema on Epiphanies, OpenRouter paid Nemotron). v7 open frontier:
 [Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md)
 (HITL; capture done, do not recapture; remaining KEEP or KILL). Record:
 `.scratch/first-principled-v7/research/07-danny-followability.md`.
-v8 next session: HITL grilling, do not ship chrome.
-[What each card on that flowchart holds](.scratch/first-principled-v8/issues/06-what-each-card-on-that-flowchart-holds.md).
-Chapel KEEP and morph wait-state (`building tree...` on the poll) are
-locked. One ticket per session.
+v8 card / arrow / hover contracts locked 2026-08-24. Next:
+[Poll forwards running stage snapshots](.scratch/first-principled-v8/issues/09-poll-forwards-running-stage-snapshots.md)
+(AFK). Chapel KEEP, morph wait-state, and 06-08 display locks are
+closed. Do not ship the throwaway prototype. One ticket per session.
 
 ## Golden rules
 

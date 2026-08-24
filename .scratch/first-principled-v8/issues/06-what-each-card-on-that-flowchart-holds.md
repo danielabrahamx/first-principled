@@ -2,7 +2,7 @@
 
 **Type:** grilling
 
-**Status:** ready-for-human
+**Status:** resolved
 
 **Blocked by:** none
 ([Prototype the etymology-style Dependence layout](04-prototype-the-etymology-style-dependence-layout.md)
@@ -31,15 +31,27 @@ map. Dates and discoverers stay off the card face. Do not invent new
 fields the generator does not already emit. Do not use this ticket to
 retune v7 prompts or thicken the gold fixture.
 
+## Answer
+
+Title = `label`. Tag = layer name (`layer` / `layers[].name`), never a
+calendar date and never `role`. Gloss = `description` (truncate in
+chrome; do not add a second gloss field). Discoverer, date, and
+`keyObservation` are omitted from the card face. `EPIPHANY` nodes are
+not cards; that placement is
+[Do Epiphanies sit on the arrows](07-do-epiphanies-sit-on-the-arrows.md).
+DOMAIN and STRUCTURAL nodes stay cards. No new generator fields. No v7
+prompt retune.
+
+HITL 2026-08-24 (Cursor).
+
 ## Acceptance criteria
 
-- [ ] Title, tag, and gloss each map to an existing Reality Map field
+- [x] Title, tag, and gloss each map to an existing Reality Map field
       (or are explicitly omitted)
-- [ ] EPIPHANY-only history is placed or refused
-- [ ] Map Decisions so far points at this lock
+- [x] EPIPHANY-only history is placed or refused
+- [x] Map Decisions so far points at this lock
 
 ## Docs rule
 
-If this becomes the product card contract, update the Tree (or renamed
-surface) paragraph in `CONTEXT.md` in the same commit. Otherwise
-pointer only.
+Product card contract: Tree paragraph in `CONTEXT.md` in the same
+commit.

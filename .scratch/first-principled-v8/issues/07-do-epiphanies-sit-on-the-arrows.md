@@ -2,7 +2,7 @@
 
 **Type:** grilling
 
-**Status:** ready-for-human
+**Status:** resolved
 
 **Blocked by:** none
 ([Prototype the etymology-style Dependence layout](04-prototype-the-etymology-style-dependence-layout.md)
@@ -30,13 +30,26 @@ B carries the Epiphany that warrants that rest-on (short result line).
 Cards stay concepts. Hover can hold discoverer and date (ticket 08).
 Kill a picture that puts a famous person on every shaft.
 
+## Answer
+
+**On the downward shaft, not as a card.** Cards are DOMAIN and
+STRUCTURAL. The arrow from support A to dependent B shows `because` as
+the short warrant. Chronology regimes are not arrow copy. If `because`
+is missing, the shaft stays unlabeled; do not invent copy. Observation
+records stay off the shaft (no hero-and-date on every arrow); hover is
+[Hover inventors and inspection on the chapel flowchart](08-hover-inventors-and-inspection-on-the-chapel-flowchart.md).
+Wait-state "grow joints" means labeled arrows appearing, not extra
+epiphany cards. No fourth stage.
+
+HITL 2026-08-24 (Cursor).
+
 ## Acceptance criteria
 
-- [ ] One placement locked (arrow, card, both, or refused)
-- [ ] Stated which existing field is the arrow copy
-- [ ] Map Decisions so far points at this lock
+- [x] One placement locked (arrow, card, both, or refused)
+- [x] Stated which existing field is the arrow copy
+- [x] Map Decisions so far points at this lock
 
 ## Docs rule
 
-Pointer unless the Tree paragraph must say arrows carry Epiphanies;
-then edit `CONTEXT.md` in the same commit.
+Tree paragraph in `CONTEXT.md` says arrows carry Epiphanies via
+`because`. Same commit.

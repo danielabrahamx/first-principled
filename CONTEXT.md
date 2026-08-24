@@ -29,17 +29,19 @@ locked Option A. Sibling display map (does not replace v7 KEEP/KILL):
 flowchart and stage-product wait-state. Poll snapshots, crown-at-bottom,
 fan-in spine, Chapel look, and morph wait-state are locked. Next
 session (display map only):
-[What each card on that flowchart holds](.scratch/first-principled-v8/issues/06-what-each-card-on-that-flowchart-holds.md)
-(HITL grilling).
+[Poll forwards running stage snapshots](.scratch/first-principled-v8/issues/09-poll-forwards-running-stage-snapshots.md)
+(AFK). Card, arrow, and hover contracts are locked.
 
 ## Language
 
 **Tree**:
-The product surface. A first-principles dependence path of one concept.
-Supporting knowledge sits at the top; the typed concept (crown) sits at
-the bottom. The trunk is that downward spine. Extra parents merge in
-from the side. Layers are captions on the cards, capped to card width,
-not table rows.
+The product surface. A first-principles dependence path of one concept,
+drawn as a Chapel flowchart. Supporting knowledge sits at the top; the
+typed concept (crown) sits at the bottom. The trunk is that downward
+spine. Extra parents merge in from the side. Each card is `label`, a
+layer caption, and `description`. Downward arrows carry `because` as the
+Epiphany warrant, or stay unlabeled. Hover on a labeled arrow shows
+known discoverer and date, never the full observation record.
 _Avoid_: hanging-card cladogram, Map (as a page or tab name), Reality (as a
 tab name), Ask, phylogenetic tree (as the product metaphor)
 
@@ -64,11 +66,13 @@ Chronology is a chain of these, not of events, people, or calendar dates.
 _Avoid_: era, invention, event, historical period
 
 **Epiphany**:
-The result that warrants a transition between two regimes. Observation
-records live only on Reality Map nodes explicitly marked `EPIPHANY`.
-Not a person's private insight, and not one famous discovery per arrow.
+The result that warrants a rest-on. On the Tree it sits on the downward
+arrow as `because`, not as its own card. Observation records live only
+on Reality Map nodes marked `EPIPHANY` and appear on arrow hover when
+discoverer or date is not UNKNOWN. Not a person's private insight, and
+not one famous discovery per arrow.
 _Avoid_: insight (as a slogan), aha, basis (as a required field on every node),
-hero-and-date per transition
+hero-and-date per transition, epiphany card
 
 **Stage**:
 One LLM call with one job while building the Tree. Chronology, then

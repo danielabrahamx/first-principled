@@ -37,10 +37,9 @@ the v1 stack.
   (resolved); `/prototype` on ticket 04 (resolved; KEEP Chapel).
   anti-slop, tsc, netlify-build discipline.
 - **Next session:** claim
-  [What each card on that flowchart holds](issues/06-what-each-card-on-that-flowchart-holds.md).
-  HITL grilling. Chapel is the locked look. Grow-in-place is morph plus
-  `building tree...` on the poll. Do not ship the throwaway prototype.
-  Tickets 07-08 stay open; one ticket per session.
+  [Poll forwards running stage snapshots](issues/09-poll-forwards-running-stage-snapshots.md)
+  (AFK). Tickets 06-08 closed 2026-08-24. Do not ship the throwaway
+  prototype. One ticket per session.
 - Style: single dashes, no emojis. Windows/PowerShell-tested.
 
 ## Decisions so far
@@ -80,21 +79,24 @@ the v1 stack.
   morph into Dependence. Status line `building tree...` until Arrange.
   Poll snapshots, not SSE.
   [How stage products grow in place when Arrange reorders](issues/05-how-stage-products-grow-in-place-when-arrange-reorders.md).
+- Card slots: title = `label`; tag = layer name; gloss = `description`.
+  History off the card face. EPIPHANY nodes are not cards.
+  [What each card on that flowchart holds](issues/06-what-each-card-on-that-flowchart-holds.md).
+- Epiphanies on the downward shaft via `because`. Unlabeled if missing.
+  No hero-and-date on the shaft. Grow joints = labeled arrows.
+  [Do Epiphanies sit on the arrows](issues/07-do-epiphanies-sit-on-the-arrows.md).
+- Hover on the labeled arrow: discoverer and/or date when not UNKNOWN,
+  plus note if non-empty. No hover if both UNKNOWN. No card hover. No
+  click-to-inspect.
+  [Hover inventors and inspection on the chapel flowchart](issues/08-hover-inventors-and-inspection-on-the-chapel-flowchart.md).
 
 ## Not yet specified
 
 - Whether the chrome still uses the glossary name Tree, or is renamed.
-- Skeleton retirement vs keeping a cheap placeholder before the first
-  snapshot.
-- Motion (arrow draw, card fade) versus instant appear.
-- What the poll shows if Chronology succeeds and Epiphanies or Arrange
-  fails the mechanical gate.
-- Mobile layout of long chains and dense fan-in.
 - How How-it-works copy describes this surface.
-- Field-level snapshot payload inside the locked poll shape
-  (`running` + `stage` + learner-safe `snapshot`).
 - How many nodes / phases the chapel picture should show when gold is
   thin and a live map is a practical cell. Not a v7 prompt retune.
+- Rabbit-hole click after hover.
 
 ## Out of scope
 
@@ -117,15 +119,19 @@ the v1 stack.
 04 -> 06 grilling what each card holds
 04 -> 07 grilling do Epiphanies sit on the arrows
 04 -> 08 grilling hover inventors and inspection
+01 + 05 -> 09 poll forwards running stage snapshots
+06 + 07 + 08 -> 10 ship the Chapel Dependence flowchart
+09 + 10 -> 11 grow stage products in place on the Chapel flowchart
+11 -> 12 deploy the Chapel Tree
 ```
 
-Further build tickets stay in fog until 05-08 close.
+Instant appear, cheap placeholder until first snapshot, and error-blob
+wins after a failed later stage are folded into 10 and 11. Mobile folds
+into 10.
 
 ## Open frontier
 
-- [What each card on that flowchart holds](issues/06-what-each-card-on-that-flowchart-holds.md)
-  (grilling; next session)
-- [Do Epiphanies sit on the arrows](issues/07-do-epiphanies-sit-on-the-arrows.md)
-  (grilling)
-- [Hover inventors and inspection on the chapel flowchart](issues/08-hover-inventors-and-inspection-on-the-chapel-flowchart.md)
-  (grilling)
+- [Poll forwards running stage snapshots](issues/09-poll-forwards-running-stage-snapshots.md)
+  (AFK; unblocked)
+- [Ship the Chapel Dependence flowchart](issues/10-ship-the-chapel-dependence-flowchart.md)
+  (AFK; unblocked; parallel with 09)
