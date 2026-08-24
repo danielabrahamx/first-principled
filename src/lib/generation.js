@@ -66,6 +66,9 @@ export function errorMessage(code) {
  * @param {SessionStore} store
  * @param {object} [options]
  * @param {typeof defaultCallAgent} [options.callAgent] - injected for tests.
+ * @param {(data: any) => void} [options.onPoll] - called with each running
+ *   poll record while the background init job works (ticket 11); passed
+ *   straight through to the transport.
  * @returns {Promise<TurnResult>}
  */
 export async function runAgentTurn(store, options = {}) {
@@ -74,6 +77,7 @@ export async function runAgentTurn(store, options = {}) {
   const request = store.toRequest();
   const result = await callAgent(request, {
     turnstileToken: token ?? undefined,
+    onPoll: options.onPoll,
   });
   if (result.ok) {
     const applied = store.applyResponse(result.data);
@@ -91,6 +95,7 @@ export async function runAgentTurn(store, options = {}) {
  * @param {string} word
  * @param {object} [options]
  * @param {typeof defaultCallAgent} [options.callAgent] - injected for tests.
+ * @param {(data: any) => void} [options.onPoll] - see runAgentTurn.
  * @returns {Promise<TurnResult>}
  */
 export async function generateTree(store, word, options = {}) {

@@ -10,10 +10,13 @@
  * Tutor is parked from chrome. The Socratic engine, forceBrief, and dock
  * module stay in the repo, unmounted.
  *
- * Ticket 11: submitting the word input starts generation here. While the
- * generator works a progressive skeleton mirrors the tree and lights its
- * layer bands bottom-up; when the tree arrives this page shows it. A refusal
- * surfaces the model's reply on the page instead.
+ * Ticket 11 (v8): submitting the word input starts generation here. A cheap
+ * placeholder stands in until the first poll snapshot lands; accepted
+ * Chronology then grows a temporary spine and accepted Epiphanies grow
+ * labeled arrows on the chapel surface, under a `building tree...` status
+ * line. When checked Arrange lands, the page swaps to the real Tree - the
+ * morph. A refusal or an error surfaces its banner instead and clears every
+ * stage product.
  *
  * Ticket 12 timeline stays parked hidden.
  *
@@ -29,6 +32,7 @@ import {
 } from "../lib/mapview/viewmodel.js";
 import { comparisonMetrics } from "../lib/mapview/comparison.js";
 import { spinePaths, treeLayout } from "../lib/mapview/tree.js";
+import { growLayout } from "../lib/mapview/grow.js";
 import {
   columnCount,
   gridMetrics,
@@ -105,11 +109,9 @@ function pct(confidence) {
 }
 
 /**
- * The skeleton's layer shape (ticket 11): the bands of card placeholders
- * that mirror the vertical-path tree (ticket 10) - a root block at the top,
- * then layer bands downward to the foundation. Pure so node:test can check
- * it without a DOM. Band 0 sits nearest the crown; the last band is the
- * foundation, which the generator builds first.
+ * The cheap placeholder (ticket 11 v8): a few neutral bands shown only until
+ * the first accepted poll snapshot replaces it. Pure so node:test can check
+ * it without a DOM.
  *
  * @returns {Array<{ cards: number }>}
  */
@@ -119,9 +121,9 @@ export function skeletonBands() {
 
 /**
  * Build the skeleton element: a caption, a root card placeholder, a trunk,
- * and one band per skeletonBands entry - a layer label placeholder plus a
- * column of card placeholders. The skeleton starts hidden; startSkeleton
- * reveals the bands bottom-up while the tree builds.
+ * and one placeholder band per skeletonBands entry. The skeleton starts
+ * hidden; it shows while the background job runs and hides for good at the
+ * first snapshot.
  *
  * @returns {HTMLElement}
  */
@@ -133,7 +135,7 @@ function buildSkeleton() {
     el(
       "p",
       "sk-caption",
-      "Building the tree. The foundation shows first, then each layer."
+      "Building. Early stages appear here as they finish."
     )
   );
   const root = el("div", "sk-root");
@@ -280,10 +282,15 @@ export function renderMapPage(root, store, options = {}) {
   const cmpBlock = el("section", "cmp-block");
   cmpBlock.hidden = true;
 
-  /* Ticket 11 generation surfaces: the progressive skeleton that stands in
-     for the tree while it builds, an error banner with retry on transport
-     failure, and a note when the model refuses the word. */
+  /* Ticket 11 generation surfaces: the cheap placeholder that stands in for
+     the tree until the first poll snapshot lands, the grow surface (the same
+     chapel stage, fed by growLayout), a status line until Arrange, an error
+     banner with retry on transport failure, and a note when the model
+     refuses the word. */
   const skeleton = buildSkeleton();
+  const buildingNote = el("p", "note map-empty map-building", "building tree...");
+  buildingNote.hidden = true;
+  buildingNote.setAttribute("role", "status");
   const mapError = el("div", "error-banner map-error");
   mapError.hidden = true;
   const mapErrorText = el("p", "error-text");
@@ -334,6 +341,7 @@ export function renderMapPage(root, store, options = {}) {
     titleRow,
     legend,
     mapError,
+    buildingNote,
     skeleton,
     scroll,
     treePanel,
@@ -347,17 +355,14 @@ export function renderMapPage(root, store, options = {}) {
   page.append(split);
   root.append(page);
 
-  /* Ticket 11 generation state: the input + skeleton live for the ~20s the
-     generator works, then the Tree shows. */
-  const reducedMotion =
-    typeof matchMedia === "function" &&
-    matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /* Ticket 11 generation state: the wait-state lives for the minutes the
+     background job works - cheap placeholder, then grown stage products -
+     then the checked Tree shows. */
   /** True while a generation turn is in flight. */
   let generating = false;
-  /** The skeleton reveal timer. */
-  let skeletonTimer = /** @type {number | null} */ (null);
-  /** One layer band lights every SKELETON_STEP_MS, bottom-up. */
-  const SKELETON_STEP_MS = 3200;
+  /** The latest learner-safe poll snapshot (ticket 11), or null before the
+   * first one lands and again once the job reaches a terminal record. */
+  let growSnapshot = /** @type {any | null} */ (null);
 
   /**
    * @param {boolean} on
@@ -369,37 +374,42 @@ export function renderMapPage(root, store, options = {}) {
   }
 
   /**
-   * Show the skeleton and reveal its layer bands bottom-up: the generator
-   * builds the tree bottom-up (foundation first, ticket 08), so the
-   * skeleton lights the foundation band first, then each band upward, one
-   * every SKELETON_STEP_MS. Under reduced motion every band lights at once.
+   * Show the cheap placeholder (ticket 11 v8). It stands in only until the
+   * first accepted poll snapshot replaces it; no timed reveal.
    */
   function startSkeleton() {
     skeleton.hidden = false;
-    const layers = [...skeleton.querySelectorAll(".sk-layer")];
-    for (const layer of layers) layer.classList.remove("lit");
-    if (reducedMotion) {
-      for (const layer of layers) layer.classList.add("lit");
-      return;
+    for (const layer of skeleton.querySelectorAll(".sk-layer")) {
+      layer.classList.add("lit");
     }
-    let i = layers.length - 1;
-    const tick = () => {
-      if (i < 0) return;
-      layers[i].classList.add("lit");
-      i -= 1;
-      if (i >= 0) {
-        skeletonTimer = /** @type {any} */ (setTimeout(tick, SKELETON_STEP_MS));
-      }
-    };
-    tick();
   }
 
   function stopSkeleton() {
-    if (skeletonTimer !== null) {
-      clearTimeout(skeletonTimer);
-      skeletonTimer = null;
-    }
     skeleton.hidden = true;
+  }
+
+  /**
+   * Ticket 11: each running poll record hands its learner-safe snapshot to
+   * the page. The first accepted Chronology replaces the cheap placeholder;
+   * accepted Epiphanies grow labeled arrows on the same surface. A snapshot
+   * never ends the poll - the transport owns the loop, this only draws.
+   *
+   * @param {any} data - the running status record `{ status, stage?, snapshot? }`.
+   */
+  function onPollRecord(data) {
+    if (!generating) return;
+    const snapshot = data && typeof data === "object" ? data.snapshot : null;
+    if (
+      !snapshot ||
+      !Array.isArray(snapshot.chronology) ||
+      snapshot.chronology.length === 0
+    ) {
+      return;
+    }
+    if (snapshot === growSnapshot) return;
+    growSnapshot = snapshot;
+    stopSkeleton();
+    sync();
   }
 
   /**
@@ -421,19 +431,15 @@ export function renderMapPage(root, store, options = {}) {
     if (onHowPage()) goTree();
     entryInput.value = "";
     generating = true;
+    growSnapshot = null;
     setEntryBusy(true);
     hideMapError();
     startSkeleton();
-    const result = await generateTree(store, word, { callAgent });
-    generating = false;
-    setEntryBusy(false);
-    stopSkeleton();
-    if (result.ok) {
-      sync();
-    } else {
-      showMapError(result.code ?? "unknown");
-    }
-    sync();
+    const result = await generateTree(store, word, {
+      callAgent,
+      onPoll: onPollRecord,
+    });
+    finishGeneration(result);
   }
 
   /** Retry the failed generation: the store was untouched, so the same
@@ -442,19 +448,34 @@ export function renderMapPage(root, store, options = {}) {
     if (generating) return;
     if (store.getState().word === null) return;
     generating = true;
+    growSnapshot = null;
     setEntryBusy(true);
     hideMapError();
     startSkeleton();
-    const result = await runAgentTurn(store, { callAgent });
+    const result = await runAgentTurn(store, { callAgent, onPoll: onPollRecord });
+    finishGeneration(result);
+  }
+
+  /**
+   * Terminal record landed (ticket 11): drop the wait-state - status line
+   * and any on-screen Chronology or Epiphanies - then show the checked Tree
+   * or the error. A snapshot stage product never survives as a fake finished
+   * Tree.
+   *
+   * @param {{ ok: boolean; code?: string }} result
+   */
+  function finishGeneration(result) {
     generating = false;
-    setEntryBusy(false);
+    growSnapshot = null;
     stopSkeleton();
+    setEntryBusy(false);
+    buildingNote.hidden = true;
     if (result.ok) {
       sync();
     } else {
       showMapError(result.code ?? "unknown");
+      sync();
     }
-    sync();
   }
 
   entry.addEventListener("submit", (event) => {
@@ -1138,22 +1159,18 @@ export function renderMapPage(root, store, options = {}) {
   document.addEventListener("keydown", onKeydown);
 
   /**
-   * The dependence-path Tree: crown (the concept) at the top, foundations
-   * at the bottom, y from built-on / depends-on / abstraction-of. Named
-   * layer bands sit behind the cards. A linear chain stays on one trunk;
-   * extra parents of a convergence occupy full columns. Observation hovers,
-   * node panels, and convergence chips stay on the cards. One-shot grow
-   * rides `.tree-layer` wrappers; reduced motion shows the full Tree instantly.
+   * Paint one chapel layout (cards, because labels, arrow hovers, SVG
+   * strokes) onto the tree stage. Shared by the finished Tree
+   * (`treeLayout`) and the wait-state grow surface (`growLayout`,
+   * ticket 11).
    *
-   * @param {import("../state/session.js").SessionState} state
+   * @param {ReturnType<typeof treeLayout> | ReturnType<typeof growLayout>} layout
    */
-  function renderTree(state) {
+  function paintChapel(layout) {
     if (treeMotion !== null) {
       treeMotion.destroy();
       treeMotion = null;
     }
-    const width = Math.round(treeScroll.clientWidth || main.clientWidth || 480);
-    const layout = treeLayout(state.realityMap, { width });
 
     treeStage.style.width = `${layout.width}px`;
     treeStage.style.height = `${layout.height}px`;
@@ -1227,6 +1244,34 @@ export function renderMapPage(root, store, options = {}) {
       path.setAttribute("marker-end", "url(#chapel-arrowhead)");
       treeSvg.appendChild(path);
     }
+  }
+
+  /**
+   * The dependence-path Tree: crown (the concept) at the top, foundations
+   * at the bottom, y from built-on / depends-on / abstraction-of. Named
+   * layer bands sit behind the cards. A linear chain stays on one trunk;
+   * extra parents of a convergence occupy full columns. Observation hovers,
+   * node panels, and convergence chips stay on the cards. One-shot grow
+   * rides `.tree-layer` wrappers; reduced motion shows the full Tree instantly.
+   *
+   * @param {import("../state/session.js").SessionState} state
+   */
+  function renderTree(state) {
+    const width = Math.round(treeScroll.clientWidth || main.clientWidth || 480);
+    paintChapel(treeLayout(state.realityMap, { width }));
+  }
+
+  /**
+   * Ticket 11: draw the current poll snapshot in place on the chapel stage.
+   * Regimes form a temporary spine (crown at the bottom); accepted
+   * Epiphanies are labeled arrows between regimes, never extra cards. This
+   * is visibly temporary: the next snapshot repaints it, checked Arrange
+   * replaces it with the real Tree, and an error clears it.
+   */
+  function renderGrow() {
+    if (!growSnapshot) return;
+    const width = Math.round(treeScroll.clientWidth || main.clientWidth || 480);
+    paintChapel(growLayout(growSnapshot, { width }));
   }
 
   /**
@@ -1358,12 +1403,22 @@ export function renderMapPage(root, store, options = {}) {
     if (generating) {
       noSession.hidden = true;
       refusalNote.hidden = true;
-      treePanel.hidden = true;
       mapError.hidden = true;
-      skeleton.hidden = false;
+      buildingNote.hidden = false;
+      if (growSnapshot) {
+        // Ticket 11: accepted stage products grow in place on the chapel
+        // surface; the cheap placeholder leaves at the first snapshot.
+        skeleton.hidden = true;
+        treePanel.hidden = false;
+        renderGrow();
+      } else {
+        treePanel.hidden = true;
+        skeleton.hidden = false;
+      }
       return;
     }
     skeleton.hidden = true;
+    buildingNote.hidden = true;
 
     if (!hasWord) {
       noSession.hidden = false;
@@ -1411,10 +1466,6 @@ export function renderMapPage(root, store, options = {}) {
     sync,
     /** Tear the page down (not used in v1; keeps the subscription clean). */
     destroy() {
-      if (skeletonTimer !== null) {
-        clearTimeout(skeletonTimer);
-        skeletonTimer = null;
-      }
       if (treeMotion !== null) {
         treeMotion.destroy();
         treeMotion = null;

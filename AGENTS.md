@@ -22,10 +22,10 @@ Schema on Epiphanies, OpenRouter paid Nemotron). v7 open frontier:
 v8 card / arrow / hover contracts locked 2026-08-24. Poll snapshots
 locked 2026-08-24. Chapel flowchart shipped on the finished Tree.
 Next:
-[Grow stage products in place on the Chapel flowchart](.scratch/first-principled-v8/issues/11-grow-stage-products-in-place-on-the-chapel-flowchart.md)
+[Deploy the Chapel Tree](.scratch/first-principled-v8/issues/12-deploy-the-chapel-tree.md)
 (AFK). Chapel KEEP, morph wait-state, display locks, running
-snapshots, and finished Chapel chrome are closed. Do not ship the
-throwaway prototype. One ticket per session.
+snapshots, finished Chapel chrome, and grow-in-place wait-state are
+closed. Do not ship the throwaway prototype. One ticket per session.
 
 ## Golden rules
 

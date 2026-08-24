@@ -47,6 +47,10 @@ export const DEFAULT_AGENT_DEADLINE_MS = 840000;
  *   "/api/agent-status".
  * @property {number} [pollIntervalMs] - poll spacing, default 2000.
  * @property {number} [deadlineMs] - poll deadline, default 840000.
+ * @property {(data: any) => void} [onPoll] - called with each running status
+ *   record while the poll loops (ticket 11: the page grows Chronology then
+ *   Epiphanies snapshots in place). A snapshot never ends the poll; a
+ *   listener fault is swallowed and never ends it either.
  * @property {string} [turnstileToken] - single-use Turnstile token (ticket
  *   18); included in the body only when present so unconfigured clients stay
  *   compatible with the gate-free server.
@@ -197,6 +201,16 @@ async function pollForJob(jobId, options) {
         return { ok: false, code: data.code };
       }
       if (data.status === "running") {
+        // Ticket 11: hand the running record (stage, snapshot) to the page
+        // and keep polling. A snapshot is never terminal, and a throwing
+        // listener must not end the poll either.
+        if (typeof options.onPoll === "function") {
+          try {
+            options.onPoll(data);
+          } catch {
+            /* ignore */
+          }
+        }
         continue;
       }
     }

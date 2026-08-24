@@ -37,9 +37,9 @@ the v1 stack.
   (resolved); `/prototype` on ticket 04 (resolved; KEEP Chapel).
   anti-slop, tsc, netlify-build discipline.
 - **Next session:** claim
-  [Grow stage products in place on the Chapel flowchart](issues/11-grow-stage-products-in-place-on-the-chapel-flowchart.md)
-  (AFK). Ticket 10 shipped Chapel on the finished Tree. Do not ship the
-  throwaway prototype. One ticket per session.
+  [Deploy the Chapel Tree](issues/12-deploy-the-chapel-tree.md)
+  (AFK). Ticket 11 shipped the grow-in-place wait-state. One ticket per
+  session.
 - Style: single dashes, no emojis. Windows/PowerShell-tested.
 
 ## Decisions so far
@@ -99,6 +99,13 @@ the v1 stack.
   shafts, hover on labeled arrows only (UNKNOWN: no hover). Instant
   appear. Mobile stacks extra parents. Wait-state snapshots stay ticket 11.
   [Ship the Chapel Dependence flowchart](issues/10-ship-the-chapel-dependence-flowchart.md).
+- Wait-state grows in place on the chapel stage over the ticket 09 poll:
+  cheap placeholder until the first accepted snapshot; Chronology as a
+  temporary spine (crown at the bottom); Epiphanies as labeled arrows
+  between regimes, never cards; status line exactly `building tree...`
+  until the terminal record; the morph is the swap to the checked
+  `treeLayout` render; an error clears every stage product. No SSE.
+  [Grow stage products in place on the Chapel flowchart](issues/11-grow-stage-products-in-place-on-the-chapel-flowchart.md).
 
 ## Not yet specified
 
@@ -141,5 +148,5 @@ into 10.
 
 ## Open frontier
 
-- [Grow stage products in place on the Chapel flowchart](issues/11-grow-stage-products-in-place-on-the-chapel-flowchart.md)
+- [Deploy the Chapel Tree](issues/12-deploy-the-chapel-tree.md)
   (AFK; unblocked)

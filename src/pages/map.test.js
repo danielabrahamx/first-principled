@@ -19,6 +19,32 @@ test("the skeleton mirrors the vertical-path tree with a chain of layer bands", 
   }
 });
 
+test("the wait-state is cheap placeholder then grow-in-place on the chapel stage", () => {
+  const source = readFileSync(path.join(here, "map.js"), "utf8");
+  // Ticket 11 v8: the placeholder stands in only until the first snapshot.
+  assert.match(source, /growLayout/);
+  assert.match(source, /renderGrow\(\)/);
+  assert.match(source, /onPollRecord/);
+  assert.doesNotMatch(source, /SKELETON_STEP_MS/);
+});
+
+test("the status line is building tree... until Arrange, then gone", () => {
+  const source = readFileSync(path.join(here, "map.js"), "utf8");
+  assert.match(source, /"building tree\.\.\."/);
+  assert.match(source, /buildingNote\.hidden = false/);
+  // Terminal records hide it again.
+  assert.match(source, /buildingNote\.hidden = true/);
+});
+
+test("an error after a snapshot clears stage products instead of faking a Tree", () => {
+  const source = readFileSync(path.join(here, "map.js"), "utf8");
+  assert.match(source, /function finishGeneration/);
+  assert.match(
+    source,
+    /function finishGeneration[\s\S]*?growSnapshot = null;[\s\S]*?showMapError/
+  );
+});
+
 test("the Tree header has no Tutor toggle and no page tabs", () => {
   const source = readFileSync(path.join(here, "map.js"), "utf8");
   assert.doesNotMatch(source, /tutor-toggle/);

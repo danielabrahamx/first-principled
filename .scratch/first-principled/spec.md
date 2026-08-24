@@ -237,9 +237,16 @@ recipe live in `research/13-ui-design-spec.md`.
   stay unlabeled. Hover is on the labeled arrow (discoverer/date when not
   UNKNOWN), not a card dump. Click-to-inspect and rabbit-hole invitation
   stay parked until a later ticket. Do not implement hanging cards, crown
-  at the top, or layer-band grow as the product surface. Ticket 10 shipped
-  the Chapel flowchart on the finished Tree. Tickets 11-12 grow the
-  wait-state and deploy. Prod deploy of Chapel is ticket 12. The
+   at the top, or layer-band grow as the product surface. Ticket 10 shipped
+   the Chapel flowchart on the finished Tree. The wait-state grows in place
+   on the same chapel surface (ticket 11): a cheap placeholder stands in
+   only until the first accepted poll snapshot; accepted Chronology draws a
+   temporary spine (crown at the bottom), accepted Epiphanies grow labeled
+   arrows between regimes (never epiphany cards), under a `building tree...`
+   status line. When checked Arrange lands, the page swaps to the real Tree
+   - the morph - and an error clears every stage product instead of leaving
+   a fake finished Tree. Ticket 12 deploys. Prod deploy of Chapel is
+   ticket 12. The
   stage is at least the viewport and may grow for branches
   (the Tree scrolls; html/body do not overflow). No learner-state chrome
   (confidence, evidence, rotation trail, untested copy) and no control

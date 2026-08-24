@@ -210,6 +210,42 @@ test("a running poll with stage and snapshot keeps polling until success", async
   assert.equal(polls, 3);
 });
 
+test("onPoll sees each running record without ending the poll (ticket 11)", async () => {
+  /** @type {any[]} */
+  const seen = [];
+  let polls = 0;
+  const { fetchImpl } = backgroundFetch(async () => {
+    polls += 1;
+    if (polls === 1) {
+      return fakeResponse(200, {
+        status: "running",
+        stage: "chronology",
+        snapshot: { concept: "battery", chronology: [{ id: "r1", regime: "Cell" }] },
+      });
+    }
+    if (polls === 2) {
+      return fakeResponse(200, {
+        status: "running",
+        stage: "epiphanies",
+        snapshot: { concept: "battery", chronology: [], epiphanies: [] },
+      });
+    }
+    return fakeResponse(200, { status: "success", body: { reply: "done" } });
+  });
+  const result = await callAgent({}, {
+    fetchImpl,
+    pollIntervalMs: 1,
+    deadlineMs: 2000,
+    onPoll(data) {
+      seen.push(data);
+      if (seen.length === 1) throw new Error("a listener fault must not end the poll");
+    },
+  });
+  assert.deepEqual(result, { ok: true, data: { reply: "done" } });
+  assert.equal(seen.length, 2);
+  assert.equal(seen[1].stage, "epiphanies");
+});
+
 test("a 202 job that ends in an error record returns its stable code", async () => {
   const { fetchImpl } = backgroundFetch(async () =>
     fakeResponse(200, { status: "error", code: "upstream_error", message: "secret provider detail" })
