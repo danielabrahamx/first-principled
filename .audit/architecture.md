@@ -69,8 +69,10 @@ Verified by import graph, not vibes:
 - **pages/dock.js (241)**: parked Tutor dock. Zero importers, zero tests.
   Pure dead file.
 - **agent/gaps.js (236) + gaps.test.js (235)**: imported only by its test.
-  Dead since Tutor left the chrome.
-- **agent/confidence.js (164) + confidence.test.js (110)**: same fate.
+  Dead since Tutor left the chrome. Note: both files are untracked -
+  never committed.
+- **agent/confidence.js (164) + confidence.test.js (110)**: same fate,
+  also untracked. Deletion is a non-commit, not a revert.
 - **Hidden chrome inside map.js**: timeline scrubber, title/closeness row,
   legend, learner grid scroll, comparison block, ended note - all built
   then `.hidden = true` forever. Roughly 250-350 lines of mounted-but-dead
