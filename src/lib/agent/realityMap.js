@@ -3,12 +3,16 @@
  *
  * Chronology identifies target-specific capability regimes. Epiphanies
  * identify the warranted joints between those regimes. Arrange turns both
- * inputs into the learner-facing Dependence Tree. Each stage runs exactly
- * once. Code performs only mechanical validation and normalization.
- * OpenRouter keeps thinking off on every stage. DeepSeek defaults to
- * thinking off too: turning Epiphanies on dumped the reply into
- * `reasoning_content` and failed to parse. Callers can still pass
- * `thinkingByStage` to try a mixed pattern.
+ * inputs into the learner-facing Dependence Tree. Each stage runs once,
+ * with one repair attempt when the mechanical gate rejects it: the gate's
+ * own complaints and the prior reply are fed back so a formatting drift or
+ * an over-linear edge set can be corrected instead of killing the build.
+ * Code performs only mechanical validation and normalization. OpenRouter
+ * keeps thinking off on every stage, bounded to explicit low effort on the
+ * mandated-reasoning default model. DeepSeek defaults to thinking off too:
+ * turning Epiphanies on dumped the reply into `reasoning_content` and
+ * failed to parse. Callers can still pass `thinkingByStage` to try a mixed
+ * pattern.
  */
 
 import { callChatCompletion } from "./llm.js";
@@ -33,6 +37,7 @@ import {
  * @property {boolean} jsonMode
  * @property {{ name: string; strict?: boolean; schema: Record<string, any> }} [jsonSchema]
  * @property {boolean} thinking
+ * @property {"low" | "medium" | "high"} [reasoningEffort]
  * @property {number} maxTokens
  * @property {number} [timeoutMs]
  */
@@ -58,7 +63,8 @@ import {
  * @property {string | null} reason
  * @property {string[]} errors
  * @property {number} latencyMs
- * @property {false} retried
+ * @property {false} retried - kept for callers; repair attempts are
+ *   internal to a stage and not counted as retries.
  * @property {GenerationDiagnostics | null} diagnostics
  */
 
@@ -245,14 +251,57 @@ function normalizeHistory(history) {
  * @param {any} value
  * @returns {any}
  */
-function normalizeEpiphanies(value) {
+/**
+ * Canonicalize one epiphany reference list. Models drift between ids and
+ * regime names ("c3" vs "Charge separation"): the Stage 2 prompt shows both.
+ * A name that uniquely matches exactly one chronology item is rewritten to
+ * its id; anything ambiguous or unknown is left for the gate to reject.
+ *
+ * @param {any} refs
+ * @param {Map<string, string>} nameToId - lowercase trimmed regime name -> id.
+ * @returns {any}
+ */
+function canonicalizeRefs(refs, nameToId) {
+  if (!Array.isArray(refs)) return refs;
+  return refs.map((ref) => {
+    if (typeof ref !== "string") return ref;
+    const key = ref.trim().toLowerCase();
+    return nameToId.has(key) ? nameToId.get(key) : ref;
+  });
+}
+
+/**
+ * Coerce the model's Stage 2 reply into a gate-consistent shape. Ids are
+ * renumbered by position, joint kinds fall back to OBSERVATION, histories
+ * are derived per the prompt's own rule, and from/to references written as
+ * regime names are resolved to chronology ids where unambiguous.
+ *
+ * @param {any} value
+ * @param {Array<{id: any; regime: any}>} [chronologyItems] - accepted Stage 1 items.
+ * @returns {any}
+ */
+function normalizeEpiphanies(value, chronologyItems = []) {
+  const nameToId = new Map(
+    chronologyItems
+      .filter((item) => nonEmptyString(item.id) && nonEmptyString(item.regime))
+      .map((item) => [String(item.regime).trim().toLowerCase(), String(item.id)])
+  );
   if (!isRecord(value) || !Array.isArray(value.epiphanies)) return value;
   return {
     ...value,
     epiphanies: value.epiphanies.map((item, index) => {
       if (!isRecord(item)) return item;
       const jointKind = /** @type {any} */ (canonicalEnum(item.joint_kind, JOINT_KINDS));
-      return {
+      // Models drift on candidate_node: they omit the field or send ""
+      // where the contract says null. All three states mean the same
+      // thing downstream (label falls back to result), so coerce to null.
+      const candidateNode =
+        typeof item.candidate_node === "string" && item.candidate_node.trim().length === 0
+          ? null
+          : item.candidate_node === undefined
+            ? null
+            : item.candidate_node;
+      const normalized = {
         ...item,
         // The Stage 2 prompt never pins the id format, so models drift
         // (ep1, joint-1, prose). Ids are opaque keys: everything downstream
@@ -261,7 +310,13 @@ function normalizeEpiphanies(value) {
         id: `e${index + 1}`,
         joint_kind: JOINT_KINDS.has(jointKind) ? jointKind : "OBSERVATION",
         history: normalizeHistory(item.history),
+        candidate_node: candidateNode,
       };
+      if (nameToId.size > 0) {
+        normalized.from_regimes = canonicalizeRefs(item.from_regimes, nameToId);
+        normalized.to_regimes = canonicalizeRefs(item.to_regimes, nameToId);
+      }
+      return normalized;
     }),
   };
 }
@@ -701,16 +756,25 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
   const request = async (
     /** @type {"chronology" | "epiphanies" | "arrange"} */ stage,
     /** @type {any} */ payload,
-    /** @type {{ name: string; strict: true; schema: Record<string, any> } | undefined} */ jsonSchema = undefined
+    /** @type {{ name: string; strict: true; schema: Record<string, any> } | undefined} */ jsonSchema = undefined,
+    /** @type {{ priorReply?: any } | undefined} */ callOptions = undefined
   ) => {
+    const userContent =
+      callOptions && callOptions.priorReply !== undefined
+        ? `${JSON.stringify(payload)}\n\nYour previous reply (shown below) failed validation. Return the full corrected JSON object only.\n\nPrevious reply:\n${JSON.stringify(callOptions.priorReply)}`
+        : JSON.stringify(payload);
     /** @type {CallLLMRequest} */
     const transportRequest = {
       messages: [
         { role: "system", content: prompts[stage] },
-        { role: "user", content: JSON.stringify(payload) },
+        { role: "user", content: userContent },
       ],
       jsonMode: true,
       thinking: stageThinking(stage, options),
+      // Bound reasoning on the mandated-thinking default model. Measured
+      // 2026-08-25: provider-default effort took 116-131s per stage; an
+      // explicit effort is accepted where "none"/enabled:false are not.
+      reasoningEffort: "low",
       // The OpenRouter default model mandates reasoning, which burns the
       // completion budget before the JSON: at 8192 the Epiphanies schema
       // call spent every token on thinking and truncated (ticket 12).
@@ -724,8 +788,31 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
   };
 
   try {
-    const chronology = normalizeChronology(await request("chronology", { concept: trimmed }));
-    const chronologyErrors = chronologyProblems(chronology, trimmed);
+    const rawChronology = await request("chronology", { concept: trimmed });
+    let chronology = normalizeChronology(rawChronology);
+    let chronologyErrors = chronologyProblems(chronology, trimmed);
+    if (chronologyErrors.length > 0) {
+      // One repair attempt per stage (the generateJson policy): feed the
+      // gate's own complaints back. A formatting drift after minutes of
+      // thinking otherwise kills the whole build with no recourse.
+      const repair = await request(
+        "chronology",
+        {
+          concept: trimmed,
+          previous_reply_failed_because: chronologyErrors.slice(0, 8),
+          instruction:
+            "Return the full corrected chronology JSON object in exactly the required shape.",
+        },
+        undefined,
+        { priorReply: rawChronology }
+      );
+      const repaired = normalizeChronology(repair);
+      const repairedErrors = chronologyProblems(repaired, trimmed);
+      if (repairedErrors.length === 0 || repairedErrors.length < chronologyErrors.length) {
+        chronology = repaired;
+        chronologyErrors = repairedErrors;
+      }
+    }
     if (chronologyErrors.length > 0) {
       return failure("invalid", "The Chronology stage failed its contract.", chronologyErrors, Date.now() - started);
     }
@@ -742,7 +829,8 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
         "epiphanies",
         chronology,
         buildEpiphaniesJsonSchema(trimmed, chronologyIds)
-      )
+      ),
+      chronologyItems
     );
     const epiphanyErrors = epiphaniesProblems(epiphanies, trimmed, chronologyIds);
     if (epiphanyErrors.length > 0) {
@@ -757,56 +845,104 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
     );
 
     const inventoryIds = new Set([...chronologyIds, ...epiphanyIds]);
-    const rawEdges = await request(
-      "arrange",
-      {
+    const arrangeInventory = () =>
+      shuffleInventory([
+        ...chronologyItems.map((/** @type {any} */ item) => ({
+          kind: "regime",
+          id: item.id,
+          name: item.regime,
+          capability: item.new_capability,
+          enabled_by: item.enabled_by_previous,
+        })),
+        ...epiphanyItems.map((/** @type {any} */ item) => ({
+          kind: "joint",
+          id: item.id,
+          result: item.result,
+          from: item.from_regimes,
+          to: item.to_regimes,
+          joint_kind: item.joint_kind,
+          history: {
+            certainty: item.history?.certainty,
+            who: item.history?.who,
+            when: item.history?.when,
+            observation: item.history?.observation,
+          },
+          candidate_node: item.candidate_node,
+        })),
+      ]);
+
+    /**
+     * Run the full Arrange evaluation chain on a raw reply. Every rejection
+     * reason lands in errors so the repair attempt (and any failure record)
+     * cites exactly what the gates demanded.
+     *
+     * @param {any} rawEdges
+     * @returns {{ connect: any; arrangement: any; errors: string[] }}
+     */
+    const evaluateArrange = (rawEdges) => {
+      const connect = normalizeConnect(rawEdges);
+      let errors = edgeSetProblems(connect, trimmed, inventoryIds, epiphanyIds);
+      if (errors.length > 0) {
+        return { connect, arrangement: null, errors };
+      }
+      const arrangement = deterministicArrange({
         concept: trimmed,
-        inventory: shuffleInventory([
-          ...chronologyItems.map((/** @type {any} */ item) => ({
-            kind: "regime",
-            id: item.id,
-            name: item.regime,
-            capability: item.new_capability,
-            enabled_by: item.enabled_by_previous,
-          })),
-          ...epiphanyItems.map((/** @type {any} */ item) => ({
-            kind: "joint",
-            id: item.id,
-            result: item.result,
-            from: item.from_regimes,
-            to: item.to_regimes,
-            joint_kind: item.joint_kind,
-            history: {
-              certainty: item.history?.certainty,
-              who: item.history?.who,
-              when: item.history?.when,
-              observation: item.history?.observation,
-            },
-            candidate_node: item.candidate_node,
-          })),
-        ]),
-      },
+        chronologyItems,
+        epiphanyItems,
+        edges: connect.edges,
+      });
+      const gate = arrangeCheck(arrangement, { concept: trimmed, chronologyIds, epiphanyIds });
+      if (!gate.ok) {
+        errors = gate.errors;
+      } else {
+        // The listness heuristic is part of the same quality bar: a
+        // stepwise stack passes the mechanical gate yet is still a
+        // timeline copy, so its complaint joins the same repair loop.
+        errors = listnessProblems(arrangement.map);
+      }
+      return { connect, arrangement, errors };
+    };
+
+    let rawEdges = await request(
+      "arrange",
+      { concept: trimmed, inventory: arrangeInventory() },
       buildArrangeJsonSchema(trimmed, inventoryIds, epiphanyIds)
     );
-    const connect = normalizeConnect(rawEdges);
-    const connectErrors = edgeSetProblems(connect, trimmed, inventoryIds, epiphanyIds);
-    if (connectErrors.length > 0) {
-      return failure("invalid", "The Arrange stage failed its contract.", connectErrors, Date.now() - started);
+    let evaluated = evaluateArrange(rawEdges);
+    if (evaluated.errors.length > 0) {
+      console.error(
+        `generateRealityMap arrange rejected; repairing once. errors: ${evaluated.errors.slice(0, 3).join("; ")}`
+      );
+      // One repair attempt fed the exact gate complaints - the same policy
+      // as the Chronology stage. The instruction names the concrete fix:
+      // a stepwise stack needs at least one edge that skips a layer below
+      // the crown, so the next tree up is not built only on its neighbor.
+      const repairedRaw = await request(
+        "arrange",
+        {
+          concept: trimmed,
+          previous_reply_failed_because: evaluated.errors.slice(0, 8),
+          how_to_fix: evaluated.errors.some((e) => /stepwise|unbranching path/.test(e))
+            ? "Do not connect items only to adjacent layers. Add at least one edge where an item rests on something two or more levels deeper (a foundation), and branch at least one item so it supports two later items. Then return the full corrected edge-set JSON object."
+            : "Return the full corrected edge-set JSON object in exactly the required shape.",
+        },
+        buildArrangeJsonSchema(trimmed, inventoryIds, epiphanyIds),
+        { priorReply: rawEdges }
+      );
+      const repaired = evaluateArrange(repairedRaw);
+      console.error(
+        `generateRealityMap arrange repair: ${repaired.errors.length === 0 ? "accepted" : `still failing (${repaired.errors.slice(0, 2).join("; ")})`}`
+      );
+      // Accept the repair when it is clean or strictly closer to valid.
+      if (repaired.errors.length === 0 || repaired.errors.length < evaluated.errors.length) {
+        rawEdges = repairedRaw;
+        evaluated = repaired;
+      }
     }
-    const arrangement = deterministicArrange({
-      concept: trimmed,
-      chronologyItems,
-      epiphanyItems,
-      edges: connect.edges,
-    });
-    const gate = arrangeCheck(arrangement, { concept: trimmed, chronologyIds, epiphanyIds });
-    if (!gate.ok) {
-      return failure("invalid", "The Arrange stage failed the mechanical gate.", gate.errors, Date.now() - started);
+    if (evaluated.errors.length > 0 || !evaluated.arrangement) {
+      return failure("invalid", "The Arrange stage failed.", evaluated.errors, Date.now() - started);
     }
-    const listness = listnessProblems(arrangement.map);
-    if (listness.length > 0) {
-      return failure("invalid", "The Arrange stage produced a timeline copy.", listness, Date.now() - started);
-    }
+    const arrangement = evaluated.arrangement;
 
     const discardedInputIds = /** @type {string[]} */ ([]);
     return {

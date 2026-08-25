@@ -58,6 +58,10 @@ const DEEPSEEK_DEFAULT_BASE = "https://api.deepseek.com/v1";
  *   DeepSeek: `thinking: { type: "disabled" }`. true turns it on
  *   (OpenRouter `reasoning: { enabled: true }`). Omit to leave the
  *   provider default.
+ * @property {"low" | "medium" | "high"} [reasoningEffort] - OpenRouter only:
+ *   an explicit reasoning effort, accepted by the default model where
+ *   "none"/disabled are not. Bounds thinking time; takes precedence over
+ *   `thinking`.
  * @property {number} [maxTokens] - headroom matters: a low cap truncates JSON.
  *   Default 4096.
  * @property {number} [timeoutMs] - abort the fetch after this long. Default
@@ -166,12 +170,19 @@ export async function callChatCompletion(options) {
     payload.response_format = { type: "json_object" };
   }
   if (provider === "openrouter") {
-    if (options.thinking === true) {
+    if (options.reasoningEffort) {
+      // Bounded reasoning: the default model mandates reasoning (effort
+      // "none" and enabled:false both return HTTP 400), but an explicit
+      // effort IS accepted. Without this field every stage runs on the
+      // provider-default effort, which measured 116-131s per stage on
+      // live calls - minutes of thinking to write half a page of JSON.
+      payload.reasoning = { effort: options.reasoningEffort };
+    } else if (options.thinking === true) {
       payload.reasoning = { enabled: true };
     }
-    // thinking === false: omit `reasoning` entirely. The default model
-    // (stealth/ox-alpha) mandates reasoning and rejects effort "none"
-    // with HTTP 400, so maps run on the provider's mandatory thinking.
+    // thinking === false with no reasoningEffort: omit `reasoning`
+    // entirely. The default model mandates reasoning, so such calls run
+    // on unbounded provider-default thinking.
   } else if (options.thinking === false) {
     payload.thinking = { type: "disabled" };
   } else if (options.thinking === true) {
@@ -246,7 +257,17 @@ export async function callChatCompletion(options) {
   const body = await response.json();
   const choice = body.choices && body.choices[0];
   if (!choice || !choice.message) {
+    // Seen live on the stealth provider: HTTP 200 with an empty choices
+    // array. Surface it as a transport failure so the caller's own retry
+    // policy (or the stage repair) handles it instead of parsing garbage.
     throw new Error("LLM response had no choices");
+  }
+  const finishReason =
+    typeof choice.finish_reason === "string" ? choice.finish_reason : null;
+  if (finishReason && finishReason !== "stop") {
+    // "length" means the completion budget truncated mid-JSON - without
+    // this log, truncation is indistinguishable from a shape error.
+    console.error(`LLM finish_reason=${finishReason} model=${llmModel()}`);
   }
   const reasoningContent =
     typeof choice.message.reasoning_content === "string"

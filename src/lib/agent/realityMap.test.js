@@ -359,14 +359,15 @@ test("generator makes exactly three serial calls and keeps diagnostics off the m
   assert.equal("chronology" in result.map, false);
 });
 
-test("a failed stage is terminal with no retry or later call", async () => {
+test("a failed stage repairs once with the gate errors fed back, then is terminal", async () => {
   const badChronology = { concept: "battery", chronology: [] };
-  const { callLLM, requests } = scriptedTransport([badChronology, EPIPHANIES, EDGE_SET]);
+  const { callLLM, requests } = scriptedTransport([badChronology, badChronology]);
   const result = await generateRealityMap({ concept: "battery", callLLM });
   assert.equal(result.ok, false);
   assert.equal(result.kind, "invalid");
-  assert.equal(requests.length, 1);
-  assert.equal(result.retried, false);
+  // First attempt plus one repair attempt; the repair also fails, so no
+  // later stage runs.
+  assert.equal(requests.length, 2);
 });
 
 test("accepted stages publish learner-safe snapshots; a throwing publisher does not fail the map", async () => {

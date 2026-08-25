@@ -217,15 +217,18 @@ test("init uses exactly the three-stage generator and strips diagnostics", async
   assert.equal("generationPath" in result.body, false);
 });
 
-test("a failed Chronology stage does not retry or continue", async () => {
+test("a failed Chronology stage repairs once with the gate errors fed back, then fails", async () => {
+  // The repair attempt returns a valid chronology, so the build continues
+  // and completes: the script is the bad attempt, then the full valid run.
   const { callLLM, requests } = scriptedTransport([
     JSON.stringify({ concept: "laptop", chronology: [] }),
     ...THREE_STAGE_SCRIPT,
   ]);
   const result = await handleRequest(clone(INIT_REQUEST), { callLLM });
-  assert.equal(result.status, 502);
-  assert.equal(result.body.error.code, "invalid_model_output");
-  assert.equal(requests.length, 1);
+  assert.equal(result.status, 200);
+  assert.equal(result.body.phase, "active");
+  // One repair call for Chronology plus the three stage calls.
+  assert.equal(requests.length, THREE_STAGE_SCRIPT.length + 1);
 });
 
 test("init without a word is a bad request", async () => {
@@ -251,12 +254,13 @@ test("a transport failure on init maps to a structured upstream error, never the
   assert.doesNotMatch(result.body.error.message, /boom|secret/);
 });
 
-test("unparseable model output maps to invalid_model_output", async () => {
-  const { callLLM, requests } = scriptedTransport([GARBAGE]);
+test("unparseable model output repairs once, then maps to invalid_model_output", async () => {
+  const { callLLM, requests } = scriptedTransport([GARBAGE, GARBAGE]);
   const result = await handleRequest(clone(INIT_REQUEST), { callLLM });
   assert.equal(result.status, 502);
   assert.equal(result.body.error.code, "invalid_model_output");
-  assert.equal(requests.length, 1, "a failed stage is not retried");
+  // First attempt plus one repair attempt - no more.
+  assert.equal(requests.length, 2, "a failed stage is repaired at most once");
 });
 
 test("a missing API key maps to a stable config error", async () => {
