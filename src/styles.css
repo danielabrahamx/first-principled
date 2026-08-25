@@ -1116,6 +1116,7 @@ body {
   border-radius: 16px;
   box-shadow: 0 10px 28px rgba(30, 34, 40, 0.07);
   pointer-events: auto;
+  cursor: pointer;
 }
 
 .tree-chapel-card.is-crown {
@@ -1152,29 +1153,6 @@ body {
 .tree-chapel-card.is-crown .tree-chapel-tag {
   background: #2a3038;
   color: #c4baf2;
-}
-
-.tree-chapel-gloss {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--ink-muted);
-}
-
-.tree-chapel-card.is-crown .tree-chapel-gloss {
-  color: #b9c0cc;
-}
-
-.tree-chapel-because {
-  position: absolute;
-  margin: 0;
-  max-width: 200px;
-  transform: translate(-50%, -50%);
-  font-size: 11px;
-  line-height: 1.3;
-  color: var(--ink-muted);
-  text-align: center;
-  pointer-events: none;
 }
 
 .tree-chapel-arrow-hit {

@@ -61,13 +61,14 @@ test("layer overlays do not steal clicks from cards above them", () => {
   assert.match(css, /\.tree-svg\s*\{[^}]*pointer-events:\s*none/s);
 });
 
-test("Chapel cards carry title, tag, and gloss", () => {
+test("Chapel cards are streamlined: title and tag on the card, gloss and because on hover", () => {
   const source = readFileSync(path.join(here, "map.js"), "utf8");
   assert.match(source, /tree-chapel-title/);
   assert.match(source, /tree-chapel-tag/);
-  assert.match(source, /tree-chapel-gloss/);
-  assert.match(source, /tree-chapel-because/);
-  assert.doesNotMatch(source, /tree-branch-label/);
+  assert.doesNotMatch(source, /tree-chapel-gloss/);
+  assert.doesNotMatch(source, /tree-chapel-because/);
+  assert.match(source, /showCardGloss/);
+  assert.match(source, /showArrowHover/);
 });
 
 test("How it works chrome stays in the header", () => {

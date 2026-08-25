@@ -965,18 +965,51 @@ export function renderMapPage(root, store, options = {}) {
   }
 
   /**
-   * Ticket 08: hover on a labeled arrow. Discoverer and/or date when not
-   * UNKNOWN, plus note when nonempty. Never the full observation record.
+   * Hover on a chapel card: the gloss (what the node is), since the card
+   * itself carries only title and tag. No gloss, no popover.
    *
    * @param {HTMLElement} source
-   * @param {{ discoverer: string; date: string; note: string }} hover
+   * @param {string} label
+   * @param {string} gloss
    */
-  function showArrowHover(source, hover) {
+  function showCardGloss(source, label, gloss) {
+    if (gloss.trim().length === 0) return;
+    popover.replaceChildren();
+    popover.appendChild(el("p", "history-popover-label", label));
+    popover.appendChild(el("p", "tree-arrow-hover-note", gloss));
+    popover.appendChild(el("p", "tree-arrow-hover-line", "Activate for the full story."));
+    popover.hidden = false;
+    const rect = source.getBoundingClientRect();
+    const popRect = popover.getBoundingClientRect();
+    let left = rect.left;
+    let top = rect.bottom + 8;
+    if (left + popRect.width > window.innerWidth - 8) {
+      left = Math.max(8, window.innerWidth - popRect.width - 8);
+    }
+    if (top + popRect.height > window.innerHeight - 8) {
+      top = Math.max(8, rect.top - popRect.height - 8);
+    }
+    popover.style.left = `${left}px`;
+    popover.style.top = `${top}px`;
+    popoverSource = source;
+  }
+
+  /**
+   * Ticket 08: hover on a labeled arrow. The because text, then discoverer
+   * and/or date when not UNKNOWN, plus note when nonempty. Never the full
+   * observation record.
+   *
+   * @param {HTMLElement} source
+   * @param {string} because
+   * @param {{ discoverer: string; date: string; note: string } | null} hover
+   */
+  function showArrowHover(source, because, hover) {
     popover.replaceChildren();
     popover.appendChild(el("p", "history-popover-label", "On this rest-on"));
-    if (hover.discoverer) popover.appendChild(el("p", "tree-arrow-hover-line", hover.discoverer));
-    if (hover.date) popover.appendChild(el("p", "tree-arrow-hover-line", hover.date));
-    if (hover.note) popover.appendChild(el("p", "tree-arrow-hover-note", hover.note));
+    if (because) popover.appendChild(el("p", "tree-arrow-hover-line", because));
+    if (hover && hover.discoverer) popover.appendChild(el("p", "tree-arrow-hover-line", hover.discoverer));
+    if (hover && hover.date) popover.appendChild(el("p", "tree-arrow-hover-line", hover.date));
+    if (hover && hover.note) popover.appendChild(el("p", "tree-arrow-hover-note", hover.note));
     popover.hidden = false;
     const box = source.getBoundingClientRect();
     const popBox = popover.getBoundingClientRect();
@@ -1181,8 +1214,7 @@ export function renderMapPage(root, store, options = {}) {
       node.style.width = `${card.width}px`;
       node.append(
         el("h2", "tree-chapel-title", card.label),
-        el("span", "tree-chapel-tag", card.tag || ""),
-        el("p", "tree-chapel-gloss", card.gloss || "")
+        el("span", "tree-chapel-tag", card.tag || "")
       );
       probe.appendChild(node);
     }
@@ -1228,36 +1260,55 @@ export function renderMapPage(root, store, options = {}) {
       node.style.width = `${card.width}px`;
       node.append(
         el("h2", "tree-chapel-title", card.label),
-        el("span", "tree-chapel-tag", card.tag || ""),
-        el("p", "tree-chapel-gloss", card.gloss || "")
+        el("span", "tree-chapel-tag", card.tag || "")
       );
+      node.tabIndex = 0;
+      // Streamlined card contract: the card carries only the title and the
+      // layer tag. The gloss is hover-only, and activating the card opens
+      // the node panel for the full story.
+      const gloss = card.gloss || "";
+      const queueGloss = () => {
+        if (popoverTimer !== null) clearTimeout(popoverTimer);
+        popoverTimer = /** @type {any} */ (
+          setTimeout(() => showCardGloss(node, card.label, gloss), hoverDelay)
+        );
+      };
+      node.addEventListener("mouseenter", queueGloss);
+      node.addEventListener("focus", queueGloss);
+      node.addEventListener("mouseleave", hidePopover);
+      node.addEventListener("blur", hidePopover);
+      node.addEventListener("click", () => {
+        hidePopover();
+        openPanel(card.id, node);
+      });
+      node.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        hidePopover();
+        openPanel(card.id, node);
+      });
       layer.appendChild(node);
     }
     for (const arrow of layout.arrows || []) {
-      if (arrow.because) {
-        const label = el("p", "tree-chapel-because", arrow.because);
-        label.style.left = `${arrow.labelX}px`;
-        label.style.top = `${arrow.labelY}px`;
-        layer.appendChild(label);
-      }
-      if (arrow.because && arrow.hover) {
-        const hit = el("button", "tree-chapel-arrow-hit");
-        /** @type {HTMLButtonElement} */ (hit).type = "button";
-        hit.style.left = `${arrow.labelX - 48}px`;
-        hit.style.top = `${arrow.labelY - 18}px`;
-        hit.setAttribute("aria-label", arrow.because);
-        const hover = arrow.hover;
-        hit.addEventListener("mouseenter", () => {
-          if (popoverTimer !== null) clearTimeout(popoverTimer);
-          popoverTimer = /** @type {any} */ (
-            setTimeout(() => showArrowHover(hit, hover), hoverDelay)
-          );
-        });
-        hit.addEventListener("mouseleave", hidePopover);
-        hit.addEventListener("focus", () => showArrowHover(hit, hover));
-        hit.addEventListener("blur", hidePopover);
-        layer.appendChild(hit);
-      }
+      if (!arrow.because && !arrow.hover) continue;
+      const hit = el("button", "tree-chapel-arrow-hit");
+      /** @type {HTMLButtonElement} */ (hit).type = "button";
+      hit.style.left = `${arrow.labelX - 48}px`;
+      hit.style.top = `${arrow.labelY - 18}px`;
+      if (arrow.because) hit.setAttribute("aria-label", arrow.because);
+      const hover = arrow.hover;
+      const because = arrow.because || "";
+      const queueArrow = () => {
+        if (popoverTimer !== null) clearTimeout(popoverTimer);
+        popoverTimer = /** @type {any} */ (
+          setTimeout(() => showArrowHover(hit, because, hover), hoverDelay)
+        );
+      };
+      hit.addEventListener("mouseenter", queueArrow);
+      hit.addEventListener("focus", queueArrow);
+      hit.addEventListener("mouseleave", hidePopover);
+      hit.addEventListener("blur", hidePopover);
+      layer.appendChild(hit);
     }
     treeLayer.appendChild(layer);
 

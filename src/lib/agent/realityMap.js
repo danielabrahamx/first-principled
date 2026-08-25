@@ -249,11 +249,16 @@ function normalizeEpiphanies(value) {
   if (!isRecord(value) || !Array.isArray(value.epiphanies)) return value;
   return {
     ...value,
-    epiphanies: value.epiphanies.map((item) => {
+    epiphanies: value.epiphanies.map((item, index) => {
       if (!isRecord(item)) return item;
       const jointKind = /** @type {any} */ (canonicalEnum(item.joint_kind, JOINT_KINDS));
       return {
         ...item,
+        // The Stage 2 prompt never pins the id format, so models drift
+        // (ep1, joint-1, prose). Ids are opaque keys: everything downstream
+        // (Arrange inventory, evidence_ids) reads this normalized list, so
+        // renumbering by position is safe and beats rejecting the stage.
+        id: `e${index + 1}`,
         joint_kind: JOINT_KINDS.has(jointKind) ? jointKind : "OBSERVATION",
         history: normalizeHistory(item.history),
       };
@@ -902,6 +907,9 @@ async function publishStageSnapshot(publish, stage, snapshot) {
  * @returns {MapResult}
  */
 function failure(kind, reason, errors, latencyMs) {
+  if (errors.length > 0) {
+    console.error(`generateRealityMap ${kind}: ${reason}; ${errors.slice(0, 5).join("; ")}`);
+  }
   return {
     ok: false,
     map: null,

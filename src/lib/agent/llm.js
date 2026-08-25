@@ -189,23 +189,44 @@ export async function callChatCompletion(options) {
   }
 
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
+  /**
+   * The stealth provider rate-limits intermittently (HTTP 429 on identical
+   * payloads that succeed seconds later). A single 429 must not kill a
+   * whole build, so the transport retries with backoff. Retry-After wins
+   * when the provider sends one.
+   *
+   * @param {number} attempt - 1-based.
+   * @returns {number} milliseconds to wait before this attempt.
+   */
+  function backoffMs(attempt) {
+    return 2000 * 2 ** (attempt - 1);
+  }
+
+  const MAX_ATTEMPTS = 4;
   let response;
-  try {
-    response = await fetch(`${llmBaseUrl()}/chat/completions`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-    });
-  } catch (err) {
-    throw new Error(
-      `LLM request failed: ${err instanceof Error && err.name === "AbortError" ? `aborted after ${timeoutMs}ms` : err instanceof Error ? err.message : String(err)}`
-    );
-  } finally {
-    clearTimeout(timer);
+  for (let attempt = 1; ; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      response = await fetch(`${llmBaseUrl()}/chat/completions`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+    } catch (err) {
+      throw new Error(
+        `LLM request failed: ${err instanceof Error && err.name === "AbortError" ? `aborted after ${timeoutMs}ms` : err instanceof Error ? err.message : String(err)}`
+      );
+    } finally {
+      clearTimeout(timer);
+    }
+    if (response.status !== 429 || attempt >= MAX_ATTEMPTS) break;
+    const retryAfter = Number(response.headers.get("retry-after"));
+    const waitMs = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : backoffMs(attempt);
+    console.error(`LLM 429 on attempt ${attempt}; retrying in ${Math.round(waitMs / 1000)}s`);
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
   }
 
   if (!response.ok) {
