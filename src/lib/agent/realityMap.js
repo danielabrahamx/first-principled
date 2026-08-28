@@ -301,7 +301,7 @@ function normalizeEpiphanies(value, chronologyItems = []) {
           : item.candidate_node === undefined
             ? null
             : item.candidate_node;
-      const normalized = {
+      const normalized = /** @type {any} */ ({
         ...item,
         // The Stage 2 prompt never pins the id format, so models drift
         // (ep1, joint-1, prose). Ids are opaque keys: everything downstream
@@ -311,7 +311,7 @@ function normalizeEpiphanies(value, chronologyItems = []) {
         joint_kind: JOINT_KINDS.has(jointKind) ? jointKind : "OBSERVATION",
         history: normalizeHistory(item.history),
         candidate_node: candidateNode,
-      };
+      });
       if (nameToId.size > 0) {
         normalized.from_regimes = canonicalizeRefs(item.from_regimes, nameToId);
         normalized.to_regimes = canonicalizeRefs(item.to_regimes, nameToId);

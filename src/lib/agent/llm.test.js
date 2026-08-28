@@ -103,7 +103,7 @@ function completionBody(content, message = {}) {
 test("defaults to OpenRouter ox-alpha stealth", async () => {
   await withEnv({}, () => {
     assert.equal(llmProvider(), "openrouter");
-    assert.equal(llmModel(), "stealth/ox-alpha");
+    assert.equal(llmModel(), "z-ai/glm-5.3-flash");
     assert.equal(llmBaseUrl(), "https://openrouter.ai/api/v1");
     assert.equal(llmApiKeyName(), "LLM_API_KEY");
   });
