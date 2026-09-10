@@ -66,3 +66,42 @@ are built. Live evidence is partial: 0 of 4 gold words have a
 target-to-foundation path yet, 1 failed honestly at validation, 1
 blocked on credits, 2 unattempted. Go/kill undecided. Do not proceed
 to Ticket 02 until the remaining first attempts are recorded.
+
+## 2026-09-10 DeepSeek attempts (official platform, `deepseek-flash`)
+
+Route: `LLM_PROVIDER=deepseek`, official base URL, platform key.
+The DeepSeek path downgrades JSON Schema to `json_object`, so these
+runs test shape conformance without constrained decoding. All four
+inventories passed validation (10 candidates, 55 pairs, 4 batches).
+All four failed at pair-batch validation on envelope shape, never on
+dependence semantics. No repair sent in any run. No topology selected.
+
+- recursion attempt 2: batches 2 clean. Batch 1 returned bare
+  newline-delimited judgment objects (no wrapper). Batch 3 echoed
+  `{"type":"json_object","judgments":[...]}`. Batch 4 same echo plus
+  one rationale mentioning position/chronology.
+- laptop attempt 1: batches 3-4 clean. Batch 1 the `type` echo.
+  Batch 2 a keyed object (`{"p-k10--k6":{...}}`) instead of an array.
+- battery attempt 1: batches 3-4 clean. Batches 1-2 the keyed-object
+  envelope.
+- photosynthesis attempt 1: batches 1-3 the keyed-object envelope,
+  batch 4 the `type` echo.
+
+Envelope failure modes seen across both routes: SMALL on NONE rows,
+bare JSONL objects, `type` echo, keyed-object envelope, one
+chronology-mentioning rationale. Against that, the underlying local
+judgments are consistently sensible: correct NONE reasoning (hinged
+clamshell not necessary to a portable computer; light reactions not
+depending on carbon dioxide), correct directional calls (cathode
+rests on electron concept), and an unprompted TOO_LARGE with a
+bridge-missing rationale on battery.
+
+Reading: the bottleneck is envelope conformance, not dependence
+judgment. No kill criterion is triggered: dependence is not
+inconsistent, chronology does not appear in topology (never reached),
+and there is no evidence of omitted-bridge no-paths. Ticket 02 or 04
+must decide: keep the strict envelope and treat this as model
+incapability, or add documented mechanical tolerance (accept bare
+arrays, ignore the `type` echo, coerce NONE jumps) while keeping
+code validation authoritative. No decision taken here; the strict
+record stands.

@@ -68,7 +68,11 @@ relationships are the point, would open a rabbit hole.
   `scripts/pairwise-spike.mjs` ship; `node --test` 394/394, lint and
   typecheck green. Live: recursion attempt 1 failed honestly at pair
   validation (SMALL on NONE rows), laptop blocked on 402 credits.
-  Record: `research/01-spike-evidence.md`. Go/kill undecided.
+  2026-09-10 DeepSeek official platform (`deepseek-flash`): all four
+  inventories passed; all four failed on pair-batch envelope shape
+  only, with sensible underlying judgments. No kill criterion
+  triggered. Record: `research/01-spike-evidence.md`. Go/kill
+  undecided.
 
 ## Open frontier
 

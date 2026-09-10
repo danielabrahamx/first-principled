@@ -82,7 +82,8 @@ endpoint switch, prompt repair, history.
 - [x] `node --test` green (394/394, including 25 new pairwise tests).
 - [x] `npm run lint` and `npm run typecheck` green on Windows/PowerShell.
 - [ ] Live CLI run on laptop, battery, photosynthesis, and recursion recorded (or blocked with evidence such as missing key or credit refusal; no secrets in the record). Go wants: all four first live runs return a target-to-foundation path, no synthesized edge, genuine fan-in where judged (recursion may be a path), all SMALL trunk jumps, at most 55 pairs, under 10 minutes, under USD 0.40 per concept.
-  - 2026-09-10: recursion attempt 1 failed honestly (batch 1 set SMALL on NONE rows; terminal, no repair). Laptop attempt 1 blocked on 402 credits. Battery/photosynthesis unattempted. Record: `research/01-spike-evidence.md`. Go/kill undecided.
+  - 2026-09-10 OpenRouter: recursion attempt 1 failed honestly (batch 1 set SMALL on NONE rows; terminal, no repair). Laptop attempt 1 blocked on 402 credits.
+  - 2026-09-10 DeepSeek official platform (`deepseek-flash`): all four inventories passed (55 pairs each); all four failed at pair-batch validation on envelope shape only (JSONL bare objects, `type` echo, keyed-object envelope, one chronology rationale). Underlying judgments sensible. Record: `research/01-spike-evidence.md`. Go/kill undecided; no kill criterion triggered.
 - [ ] Kill honored if two or more gold words have no path from omitted bridges, results reproduce field order or chronology, Dependence is too inconsistent to select without invention, or the job exceeds budget. Then stop; no critic, forced branch, or longer timeout.
 
 ## Docs rule
