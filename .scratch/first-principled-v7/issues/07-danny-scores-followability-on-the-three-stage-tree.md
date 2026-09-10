@@ -2,7 +2,7 @@
 
 **Type:** grilling
 
-**Status:** ready-for-agent
+**Status:** ready-for-human (capture done 2026-08-18; KEEP/KILL remaining)
 
 **Blocked by:** [Deploy the three-stage Tree](06-deploy-the-three-stage-tree.md), [Ship JSON Schema on Epiphanies](10-ship-json-schema-on-epiphanies.md)
 
@@ -57,17 +57,21 @@ Chronology is not the layout.
 Do not change prompts in this ticket. A failed architecture is killed,
 not rescued in this session.
 
+2026-08-18 capture is done. Do not recapture. Record:
+[07-danny-followability.md](../research/07-danny-followability.md).
+Remaining: Danny KEEP or KILL.
+
 ## Acceptance criteria
 
-- [ ] Four complete three-stage diagnostic bundles and learner maps persisted
-- [ ] Persisted one-shot controls identified for the same four concepts
+- [x] Four complete three-stage diagnostic bundles and learner maps persisted
+- [x] Persisted one-shot controls identified for the same four concepts
 - [ ] Danny scored both builders on all four concepts against the rubric
-- [ ] Every three-stage run has an Arrange diagnosis with evidence
+- [x] Every three-stage run has an Arrange diagnosis with evidence
 - [ ] Danny recorded a final KEEP or KILL verdict
-- [ ] Scores file contains every concept and builder, every line is 0 or 1,
+- [x] Scores file contains every concept and builder, every line is 0 or 1,
       no skip, no secrets
-- [ ] The agent did not invent Danny's scores
-- [ ] No prompt or generator change in this ticket
+- [x] The agent did not invent Danny's scores
+- [x] No prompt or generator change in this ticket
 
 ## Docs rule
 

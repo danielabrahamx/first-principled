@@ -8,30 +8,45 @@
         "id": "l0",
         "name": "Foundation",
         "nodes": [
-          "n-charge"
+          "c1",
+          "c2"
         ]
       },
       {
         "id": "l1",
-        "name": "Stored current",
+        "name": "Level 1",
         "nodes": [
-          "n-battery"
+          "e1",
+          "e2"
+        ]
+      },
+      {
+        "id": "l2",
+        "name": "Level 2",
+        "nodes": [
+          "target"
         ]
       }
     ],
     "nodes": [
       {
-        "id": "n-charge",
-        "label": "charge separation",
-        "layer": "l0",
-        "description": "Separated charges create electrical potential.",
-        "role": "DOMAIN"
+        "id": "c1",
+        "label": "separated charge",
+        "description": "stored electrical potential",
+        "role": "DOMAIN",
+        "layer": "l0"
       },
       {
-        "id": "n-battery",
-        "label": "battery",
-        "layer": "l1",
-        "description": "A controlled reaction sustains current through a circuit.",
+        "id": "c2",
+        "label": "controlled redox reaction",
+        "description": "sustained electron flow",
+        "role": "DOMAIN",
+        "layer": "l0"
+      },
+      {
+        "id": "e1",
+        "label": "voltaic pile",
+        "description": "Two metals and an electrolyte sustain a circuit.",
         "role": "EPIPHANY",
         "basis": {
           "discoverer": {
@@ -48,20 +63,70 @@
           },
           "confidence": "high",
           "note": ""
-        }
+        },
+        "layer": "l1"
+      },
+      {
+        "id": "e2",
+        "label": "Daniell cell",
+        "description": "A stable cell delivers steady current for a long time.",
+        "role": "EPIPHANY",
+        "basis": {
+          "discoverer": {
+            "value": "John Frederic Daniell",
+            "mark": "EXACT"
+          },
+          "date": {
+            "value": "1836",
+            "mark": "EXACT"
+          },
+          "keyObservation": {
+            "value": "Copper and zinc cells with a porous barrier kept current steady.",
+            "mark": "EXACT"
+          },
+          "confidence": "high",
+          "note": ""
+        },
+        "layer": "l1"
+      },
+      {
+        "id": "target",
+        "label": "battery",
+        "description": "battery",
+        "role": "DOMAIN",
+        "layer": "l2"
       }
     ],
     "edges": [
       {
-        "source": "n-battery",
-        "target": "n-charge",
+        "source": "e1",
+        "target": "c1",
         "type": "depends-on",
-        "because": "A battery needs separated charge to drive electron flow."
+        "because": "The voltaic pile needs separated charge to sustain a circuit."
+      },
+      {
+        "source": "e2",
+        "target": "c2",
+        "type": "depends-on",
+        "because": "The Daniell cell rests on a controlled redox reaction."
+      },
+      {
+        "source": "target",
+        "target": "e1",
+        "type": "depends-on",
+        "because": "The target rests on voltaic pile because the target cannot exist without it."
+      },
+      {
+        "source": "target",
+        "target": "e2",
+        "type": "depends-on",
+        "because": "The target rests on Daniell cell because the target cannot exist without it."
       }
     ],
     "trunk": [
-      "n-charge",
-      "n-battery"
+      "c1",
+      "e1",
+      "target"
     ]
   }
 }

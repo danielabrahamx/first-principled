@@ -779,7 +779,11 @@ export async function generateRealityMap({ concept, callLLM }, options = {}) {
       // completion budget before the JSON: at 8192 the Epiphanies schema
       // call spent every token on thinking and truncated (ticket 12).
       // 65536 gives thinking plus the JSON room; a low cap truncates.
-      maxTokens: options.maxTokens ?? 65536,
+      // z-ai/glm-5.3-flash ceiling was 33463, fell to 12630 after spend
+      // (2026-08-28). 16000 passed all 4 individually before credit drop;
+      // lower values truncate. Keep 16000 as the funded default - top up
+      // credits to re-enable the full live run.
+      maxTokens: options.maxTokens ?? 16000,
       timeoutMs: options.timeoutMs ?? 600000,
     };
     if (jsonSchema) transportRequest.jsonSchema = jsonSchema;

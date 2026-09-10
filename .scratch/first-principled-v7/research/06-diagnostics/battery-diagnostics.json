@@ -2,6 +2,9 @@
   "concept": "battery",
   "ok": true,
   "reason": null,
+  "kind": null,
+  "latencyMs": 7,
+  "errors": [],
   "chronology": {
     "concept": "battery",
     "chronology": [
@@ -48,39 +51,100 @@
           "uncertainty_note": ""
         },
         "candidate_node": "voltaic pile"
+      },
+      {
+        "id": "e2",
+        "from_regimes": [
+          "c2"
+        ],
+        "to_regimes": [
+          "c2"
+        ],
+        "result": "A stable cell delivers steady current for a long time.",
+        "joint_kind": "ENGINEERED_RESULT",
+        "history": {
+          "certainty": "EXACT",
+          "who": [
+            "John Frederic Daniell"
+          ],
+          "when": "1836",
+          "observation": "Copper and zinc cells with a porous barrier kept current steady.",
+          "uncertainty_note": ""
+        },
+        "candidate_node": "Daniell cell"
       }
     ]
   },
   "provenance": {
     "nodes": [
       {
-        "node_id": "n-charge",
+        "node_id": "c1",
         "input_refs": [
           "c1"
         ]
       },
       {
-        "node_id": "n-battery",
+        "node_id": "c2",
         "input_refs": [
-          "c2",
+          "c2"
+        ]
+      },
+      {
+        "node_id": "e1",
+        "input_refs": [
           "e1"
+        ]
+      },
+      {
+        "node_id": "e2",
+        "input_refs": [
+          "e2"
+        ]
+      },
+      {
+        "node_id": "target",
+        "input_refs": [
+          "e1",
+          "e2"
         ]
       }
     ],
     "edges": [
       {
-        "source": "n-battery",
-        "target": "n-charge",
+        "source": "e1",
+        "target": "c1",
         "input_refs": [
-          "c1",
-          "c2",
+          "e1",
+          "c1"
+        ]
+      },
+      {
+        "source": "e2",
+        "target": "c2",
+        "input_refs": [
+          "e2",
+          "c2"
+        ]
+      },
+      {
+        "source": "target",
+        "target": "e1",
+        "input_refs": [
           "e1"
+        ]
+      },
+      {
+        "source": "target",
+        "target": "e2",
+        "input_refs": [
+          "e2"
         ]
       }
     ],
     "discarded_input_ids": []
   },
   "discardedInputIds": [],
+  "arrange": null,
   "prompts": {
     "chronology": true,
     "epiphanies": true,
