@@ -28,6 +28,19 @@ default; `LLM_MODEL` unset). No secrets recorded.
 
 - Same credit blocker. First attempts remain to be run.
 
+## 2026-09-10 route switch: DeepSeek V4.1 Flash
+
+- Local `.env` (gitignored) switched to `LLM_PROVIDER=deepseek`,
+  `DEEPSEEK_MODEL=deepseek-flash` (per DeepSeek API news, V4.1-Flash
+  is live under `deepseek-flash`; `deepseek-v4-flash` routes to it).
+  Base stays the configured proxy. No code or committed docs changed.
+- Probe call 2026-09-10: provider, model, and base resolve; the proxy
+  returns 402 credit balance exhausted, not model-not-found, so the
+  route and model id are valid. Wallet top-up needed before any live
+  attempt on this route. OpenRouter credit was likewise exhausted
+  earlier, so both routes are currently blocked on billing, not on
+  the spike.
+
 ## Findings for the next tickets
 
 1. `json_object` mode drifts shape on this route (bare arrays,
