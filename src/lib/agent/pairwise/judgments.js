@@ -19,7 +19,13 @@ const RATIONALE_CAP = 500;
 const BANNED_RATIONALE = /(input order|list position|position in|first in the list|earlier in the list|chronolog|came before|led to|discovered first)/i;
 
 /**
- * Locked Ticket 01 pair-batch system prompt.
+ * The prompt is unchanged from Ticket 01. An attempt on 2026-09-29 to
+ * add a paragraph telling the model the target is not a prerequisite of
+ * its own parts was reverted in the same session: recursion's inverted
+ * edges were a real observation, but the paragraph pushed the honest
+ * per-word call to zero across three of four gold words (tgtOK 0,0,0,5).
+ * The real cause of the short trunks is upstream, in the inventory.
+ * Do not retry this paragraph without new evidence.
  *
  * @returns {string}
  */
@@ -88,6 +94,9 @@ export function buildPairBatchUserPayload(concept, pairs, byId) {
  *   no referent: NONE and SAME_CONCEPT are not walkable in either
  *   direction, so the only legal value is NOT_APPLICABLE
  * - relation and confidence tokens in free case or with separators
+ * - the judgment array under the user payload's key name (`pairs`)
+ *   rather than the schema's (`judgments`). From photosynthesis batch 3
+ *   on 2026-09-29, after the inventory prompt changed.
  *
  * Deliberately NOT coerced: a missing, unknown, or duplicate pair_id, a
  * rationale that names position or chronology, and unexpected fields. Each
@@ -129,12 +138,13 @@ function unwrapJudgmentArray(value, expectedPairIds, coerced) {
   }
   if (!isRecord(value)) return null;
 
+  const keys = Object.keys(value);
+
   // Keyed-object envelope: every key is a requested pair id and every value
   // is a judgment body. The id lives in the key, so lift it back onto the
   // record. Only applied when the key set actually matches the request, so a
   // genuinely malformed reply still reaches the validator and fails.
   if (typeof value.judgments !== "object" || value.judgments === null) {
-    const keys = Object.keys(value);
     const expected = new Set(expectedPairIds);
     const keyed = keys.filter((key) => expected.has(key));
     if (keys.length > 0 && keyed.length === keys.length) {
@@ -145,7 +155,22 @@ function unwrapJudgmentArray(value, expectedPairIds, coerced) {
       });
     }
   }
-  if (!Array.isArray(value.judgments)) return null;
+  if (!Array.isArray(value.judgments)) {
+    // Wrong key for the same array. The user payload names the rows
+    // `pairs` and the schema names them `judgments`; the model reached
+    // for the payload's name. Lifted only when the record holds exactly
+    // one array and every row in it carries a string pair_id, so a reply
+    // with real content problems still reaches the validator untouched.
+    const arrays = keys.filter((key) => Array.isArray(value[key]));
+    const looksLikeJudgments = (/** @type {unknown[]} */ rows) =>
+      rows.length > 0 &&
+      rows.every((row) => isRecord(row) && typeof row.pair_id === "string");
+    if (arrays.length === 1 && looksLikeJudgments(value[arrays[0]])) {
+      coerced.push(`renamed envelope key "${arrays[0]}" to "judgments"`);
+      return value[arrays[0]];
+    }
+    return null;
+  }
 
   if ("type" in value) {
     coerced.push("dropped the echoed type field");

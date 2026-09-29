@@ -12,7 +12,16 @@ import { TARGET_ID } from "./pairs.js";
 
 export const MAX_NODES = 10;
 export const MAX_PATH_NODES = 8;
-const TRUNK_MIN = 4;
+/**
+ * Acceptance thresholds, not preferences. A tree that misses either is
+ * `ok: false`, never a smaller "pass". Both existed as scoring input
+ * before (TRUNK_MIN) or not at all (MIN_NODES), which is how a 2-node
+ * stub was reported as a pass on 2026-09-29. See
+ * `.scratch/first-principled-v9/research/01-spike-evidence.md`.
+ */
+export const MIN_NODES = 5;
+export const MIN_TRUNK_NODES = 4;
+const TRUNK_MIN = MIN_TRUNK_NODES;
 const TRUNK_MAX = 7;
 const MAX_FANIN_PER_TRUNK_NODE = 2;
 
@@ -163,11 +172,25 @@ export function selectTopology({ concept, candidates, judgments }) {
   const paths = enumeratePaths(TARGET_ID, prereqs);
   // A lone target is not a target-to-foundation path: the walk must reach
   // at least one prerequisite leaf, else the failure is honest, not a map.
-  const usable = paths.filter((path) => path.length > 1 && isLeaf(path[path.length - 1], prereqs));
-  if (usable.length === 0) {
+  const walkable = paths.filter((path) => path.length > 1 && isLeaf(path[path.length - 1], prereqs));
+  if (walkable.length === 0) {
     return {
       ok: false,
       reason: "no target-to-foundation path: judgments do not connect the target to a demonstrable leaf",
+      droppedCandidates,
+      droppedJudgments,
+    };
+  }
+  // The trunk floor is an acceptance rule. A path shorter than
+  // MIN_TRUNK_NODES cannot be walked as a dependence chain, so no amount
+  // of support branching makes the tree one. Fail honestly and name the
+  // longest path that did exist, rather than returning a stub as a pass.
+  const usable = walkable.filter((path) => path.length >= MIN_TRUNK_NODES);
+  if (usable.length === 0) {
+    const longest = walkable.reduce((best, path) => Math.max(best, path.length), 0);
+    return {
+      ok: false,
+      reason: `degenerate trunk: longest target-to-foundation path is ${longest} node${longest === 1 ? "" : "s"}, below the ${MIN_TRUNK_NODES}-node minimum`,
       droppedCandidates,
       droppedJudgments,
     };
@@ -220,9 +243,43 @@ export function selectTopology({ concept, candidates, judgments }) {
     fanin.set(attachment, (fanin.get(attachment) ?? 0) + 1);
   }
 
-  // 7. Deterministic ranks from foundation to crown: leaves rank 0,
+  // 7. The node floor. The trunk check bounds depth; this bounds how much
+  // map the learner actually gets. A chain that satisfies the trunk floor
+  // but carries no side prerequisite is not the product the v9 map
+  // describes, so it fails honestly rather than passing as a small map.
+  if (selected.size < MIN_NODES) {
+    return {
+      ok: false,
+      reason: `degenerate tree: ${selected.size} node${selected.size === 1 ? "" : "s"} selected, below the ${MIN_NODES}-node minimum`,
+      droppedCandidates,
+      droppedJudgments,
+    };
+  }
+
+  // 8. Deterministic ranks from foundation to crown: leaves rank 0,
   // every other node one above its deepest prerequisite.
   const ranks = computeRanks(selected, selectedEdges);
+  // 9. The crown invariant. The target is the whole the learner typed,
+  // so nothing in the map may rest on it: a part cannot be a
+  // prerequisite of the whole it belongs to. Measured 2026-09-29, both
+  // realized trees: "voltaic cell needs battery" and "light absorption
+  // needs photosynthesis" were selected edges, so the crown had incoming
+  // edges and the map had no single top.
+  //
+  // This is a rejection, not a silent edge drop. Dropping the edge would
+  // be salvage of a judgment the model actually made, which is the
+  // pattern that made v7 unreadable
+  // (docs/FALSIFIED.md, arrange.js force-attaching orphans).
+  const onTarget = selectedEdges.filter((edge) => edge.target === TARGET_ID);
+  if (onTarget.length > 0) {
+    return {
+      ok: false,
+      reason: `crown invariant broken: ${onTarget.length} selected edge${onTarget.length === 1 ? "" : "s"} rest${onTarget.length === 1 ? "s" : ""} on the target, so the map has no single top (${onTarget.map((edge) => edge.pair_id).join(", ")})`,
+      droppedCandidates,
+      droppedJudgments,
+    };
+  }
+
   const orderedNodes = [...selected].sort((a, b) => ranks[a] - ranks[b] || (a < b ? -1 : 1));
   const orderedEdges = [...selectedEdges].sort((a, b) =>
     a.pair_id < b.pair_id ? -1 : 1

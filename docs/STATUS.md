@@ -23,12 +23,13 @@ between the learner's mental model and reality.
 | Default OpenRouter model | `z-ai/glm-5.3-flash` | `src/lib/agent/llm.js` `OPENROUTER_DEFAULT_MODEL` |
 | Default DeepSeek model | `deepseek-v4-flash` | `src/lib/agent/llm.js` `DEEPSEEK_DEFAULT_MODEL` |
 | Generator route that passes | `deepseek-flash` | `.scratch/first-principled-v9/research/01-spike-evidence.md` |
-| Frontier | v9 ticket 02, surface realization and honesty | `.scratch/first-principled-v9/map.md` |
+| Frontier | v9 ticket 03, blocked on generator variance | `.scratch/first-principled-v9/map.md` |
 | Gold words | laptop, battery, photosynthesis, recursion | `eval/map-quality/gold.js` |
-| Gold result | **4 of 4 pass**, twice, as of 2026-09-29 | `01-spike-evidence.md` |
-| Gold node count | **2 to 9**, uncontrolled | `01-spike-evidence.md` |
+| Gold result under the honest gate | **1 to 2 of 4 pass**, across four runs 2026-09-29 | `02-realization-evidence.md` |
+| Gold node count | **4 to 9**, still uncontrolled, now under a real gate | `02-realization-evidence.md` |
+| Realization | ships, not in prod | `src/lib/agent/pairwise/realize.js` |
 | Live generator in prod | v7 three-stage (`realityMap.js`) | `src/api/agent.js` |
-| Checks | `npm test` (416), `npm run lint`, `npm run typecheck` | all green 2026-09-29 |
+| Checks | `npm test` (443), `npm run lint`, `npm run typecheck` | all green 2026-09-29 |
 
 Three of those rows are enforced by a test
 (`src/claims.test.js`). If you change the model in `llm.js` without
@@ -36,19 +37,25 @@ updating this file, `npm test` fails and tells you.
 
 ## The one-paragraph version of where we are
 
-The v9 pairwise generator is the live direction and it **works**: four
-of four gold words now produce a bounded, connected, acyclic dependence
-tree with one target-to-foundation trunk. Before 2026-09-29 that was
-zero of four. The fix was mechanical envelope coercion, not a better
-model - see `01-spike-evidence.md`. It is **not** in prod. Prod still
-runs the v7 three-stage generator, which is retained and battle-tested
-but is known to produce list-shaped maps.
+The v9 pairwise generator is the live direction. It has an inventory
+call, 55 local pair judgments, pure-code topology selection, and now a
+realization call that writes learner-facing copy for a shape code has
+already chosen. **The gate was broken and is now fixed**: it used to
+report a 2-node, 1-edge stub as a pass, so the recorded 4 of 4 was
+partly measuring nothing. With `MIN_TRUNK_NODES`, `MIN_NODES`, and a
+crown invariant enforced, the honest rate is **1 to 2 of 4**. The
+previous number was the bug, not a regression.
 
-**But "pass" currently means much less than it sounds.** The same code
-on the same route returned a 9-node, 15-edge, 8-node-trunk tree for
-`photosynthesis` and a 2-node, 1-edge stub for `laptop` in the same
-run. The acceptance set cannot currently tell those apart. The task
-graph is settled; the size and shape of what it produces are not.
+None of it is in prod. Prod still runs the v7 three-stage generator,
+retained and battle-tested but known to produce list-shaped maps.
+
+**What is fixed and what is not.** The cause of the short trunks was the
+inventory, identified by reading the candidate labels: the prompt asked
+for concepts "directly" necessary to the target and got ten parts of a
+laptop, all at one level. That prompt is fixed. What is not fixed is
+run-to-run variance, and it is now visible per run instead of hidden
+behind a green check. Ticket 03 is blocked on it. The next thing to
+measure is judgment sparsity, not the next thing to build.
 
 ## The three findings that should drive every future decision
 
@@ -96,42 +103,70 @@ prompt rewrite and not a new architecture.
 
 ### 3. A gate that passes a degenerate output is worse than no gate
 
-`selectTopology` returns `ok: true` for a two-node graph. `MAX_NODES` is
-a cap; `TRUNK_MIN` only affects path *scoring*, never acceptance. So
-the 2026-09-29 free-route run reported a "pass" for `laptop` that was
-actually a 2-node, 1-edge tree - a false success that converted an
-honest failure into a green check.
+**This one is now fixed, and the fix lowered the score.** That is the
+shape of the lesson, so it is worth reading twice.
 
-This is the same class of bug as the v7 funnel, which passed its own
-gate while producing a flat list. Both times, the gate was fitted to
-the failure it was meant to catch.
+`selectTopology` returned `ok: true` for a two-node graph. `MAX_NODES`
+was a cap and `TRUNK_MIN` only affected path *scoring*, never
+acceptance. So the 2026-09-29 free-route run reported a "pass" for
+`laptop` that was actually a 2-node, 1-edge tree.
+
+Ticket 02 replaced the preferences with three acceptance rules, all
+exported from `topology.js` and all enforced: `MIN_TRUNK_NODES` is 4
+and is applied *before* trunk scoring, `MIN_NODES` is 5 on the published
+tree, and a crown invariant rejects any selected edge resting on the
+target. `MAX_NODES` stays a cap at 10 and was not changed. The honest
+gold rate went from a recorded 4 of 4 to **1 to 2 of 4**.
+
+The tempting move at that point is to relax a threshold until the
+number recovers. That is precisely the v7 failure: the gate gets fitted
+to the failure it was meant to catch. The thresholds came from the
+product (a walkable trunk, a map that is more than a chain, a single
+top) and are not to be moved to chase a pass rate. Raise them only with
+a measurement of why the current value is wrong.
 
 **Consequence:** a gate must reject the degenerate case by
-construction, and the acceptance test must include a case that fails it.
-`src/lib/agent/pairwise/topology.test.js` must gain a
-"2-node graph is not a tree" test before ticket 02 is resolved.
+construction, and the acceptance test must include a case that fails
+it. `topology.test.js` now carries "a 2-node graph is not a tree", "a
+trunk shorter than the minimum is rejected, with its length named", and
+"nothing may rest on the target: the crown invariant".
 
 ## What is known to be broken or missing
 
-Carried into ticket 02. All measured 2026-09-29.
+Carried into ticket 03. All measured 2026-09-29, recorded in
+`02-realization-evidence.md`.
 
-- **The gate accepts degenerate trees.** `selectTopology` returns
-  `ok: true` for a two-node graph. `MAX_NODES` is a cap; `TRUNK_MIN`
-  only affects path *scoring*, never acceptance. A 2-node, 1-edge
-  `laptop` and a 9-node, 15-edge `photosynthesis` both "pass" in the
-  same run. This is the first thing ticket 02 must fix, and fixing it
-  will make previously-green runs fail honestly, which is the point.
-- **Output size is completely uncontrolled.** Across two full gold
-  sets, node counts ranged 2 to 9 on the same code and route. Nothing
-  in the system constrains it.
-- **Run-to-run variance is real and large.** Two full sets, two
-  different answers per word.
-- **Trunks are short more often than not.** A trunk of 2 or 3 nodes
-  against a `TRUNK_MIN` of 4 is the common case, not the exception.
-- **Nothing is realized to learner-facing copy.** The generator emits
-  ids, labels, glosses, and rationales. No human has walked one of
-  these trees. Followability is entirely unmeasured, and it is the
-  product.
+- **The gate accepts degenerate trees.** FIXED in ticket 02.
+  `MIN_TRUNK_NODES`, `MIN_NODES`, and the crown invariant are acceptance
+  rules now, each with a test named for the defect it replaced. See
+  finding 3 above.
+- **The generator does not reliably clear the real gate.** The honest
+  rate is 1 to 2 of 4 across four runs on identical code and route, and
+  node count on a given word swings 4 to 9. The gate is correct, so this
+  is a generator-quality gap. **This blocks ticket 03.**
+- **The inventory is often one level deep.** The 2026-09-29 laptop run
+  returned ten parts of a laptop, all peers of the target. The prompt
+  asked for concepts "directly" necessary to the target and got
+  exactly that. Fixed in the prompt. Two escalations of that demand
+  were measured and reverted the same day, because a more demanding
+  inventory made the judgment stage refuse more pairs rather than reach
+  deeper. Do not retry them without new evidence.
+- **Judgment sparsity is the open cause.** On the runs that fail with
+  `no target-to-foundation path`, the target has 0 accepted
+  prerequisites: the model refuses the target's real prerequisites,
+  often with a `TOO_LARGE` and a bridge-missing rationale. This is the
+  next thing to measure and it is not yet diagnosed.
+- **The crown invariant fires on live data.** One photosynthesis run of
+  four produced two selected edges resting on the target. The gate
+  catches it, which is the fix working; the model behaviour is not
+  addressed.
+- **Trunks bottom out above ground.** A realized `recursion` tree
+  bottoms out at "stack frame", which is not a foundation a reader could
+  arrive at without prior knowledge. The four-node floor is met and the
+  map is walkable, but it is a walk inside a closed loop.
+- **Realization has never been in prod.** It ships with the boundary
+  enforced (a hallucinated id is a gate failure, not a dropped row) but
+  nothing calls it except `scripts/gold-words.mjs`.
 - **18.5 MB of `.scratch/first-principled-v7/research/_sources/`** is
   scraped vendor HTML and plain text. Nothing imports it, no
   measurement depends on it, and it is 66 files of documentation the
@@ -158,21 +193,30 @@ drift cannot silently mislead the next session again.
 ## How to work in this repo
 
 ```bash
-npm test                      # 409 tests, the real safety net
+npm test                      # 443 tests, the real safety net
 npm run typecheck             # JSDoc types over src/
 npm run lint                  # anti-slop
 node scripts/gold-words.mjs   # run the acceptance set, see the table
+node scripts/gold-words.mjs --dump   # inventories, edge graphs, realized copy
 ```
 
 `scripts/gold-words.mjs` is the one command that answers "does the
 generator still work". It runs the four gold words and prints nodes,
-trunk, coercions, and drops per word, plus a pass line. Costs 20 model
-calls. Use it after any change to the generator, the coercion layer, the
-judge prompt, or the transport.
+trunk, coercions, and drops per word, plus a pass line. Costs 6 model
+calls per word (5 to select, 1 to realize). Use it after any change to
+the generator, the coercion layer, the judge prompt, the topology
+thresholds, or the transport.
+
+It also prints a diagnostics table, and that table is how ticket 02
+found the real cause: relation and jump histograms, the accepted
+prerequisites of the target, and the gate's own reason per word. The
+`--dump` flag adds the inventory verbatim, the full accepted dependence
+graph, the target refusals, and the realized copy. Reading a candidate
+list told us more than any histogram did.
 
 Read before you build: `docs/FALSIFIED.md`, then
 `.scratch/first-principled-v9/map.md`, then
-`.scratch/first-principled-v9/research/01-spike-evidence.md`.
+`.scratch/first-principled-v9/research/02-realization-evidence.md`.
 
 ## Where the pieces live
 

@@ -41,7 +41,16 @@ export function buildClosedWorld(concept, candidates) {
   const target = {
     id: TARGET_ID,
     label: concept,
-    gloss: `The typed concept under study: ${concept}.`,
+    // The target gloss is read by the judgment batches, which need a
+    // neutral description of what is being judged against, and by the
+    // realization call, whose model tends to lift the gloss verbatim
+    // onto the crown card. It used to read "The typed concept under
+    // study: battery" and that machine phrasing surfaced on a realized
+    // card on 2026-09-29. It is now a description of the role, not of
+    // the concept: the realization prompt is told to write the crown
+    // copy from the concept name, which is in the payload and on the
+    // node's label.
+    gloss: "The whole the learner asked about, rather than any single part of it.",
     kind: "typed target",
     foundation_fit: "ABSTRACT",
   };

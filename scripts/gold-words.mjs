@@ -5,6 +5,7 @@
  *   node scripts/gold-words.mjs              # live run, needs a key in .env
  *   node scripts/gold-words.mjs --words laptop,battery
  *   node scripts/gold-words.mjs --json
+ *   node scripts/gold-words.mjs --dump   # raw replies for failed batches
  *
  * The four gold words are the acceptance set for the v9 generator. This
  * is the one command that answers "does the generator still work". Run it
@@ -31,7 +32,7 @@ import {
   buildInventoryUserPayload,
   inventoryProblems,
 } from "../src/lib/agent/pairwise/inventory.js";
-import { buildClosedWorld, enumeratePairs, partitionBatches } from "../src/lib/agent/pairwise/pairs.js";
+import { TARGET_ID, buildClosedWorld, enumeratePairs, partitionBatches } from "../src/lib/agent/pairwise/pairs.js";
 import {
   buildPairBatchJsonSchema,
   buildPairBatchSystemPrompt,
@@ -41,6 +42,14 @@ import {
   parsePairBatchText,
 } from "../src/lib/agent/pairwise/judgments.js";
 import { selectTopology } from "../src/lib/agent/pairwise/topology.js";
+import {
+  buildRealizeJsonSchema,
+  buildRealizeSystemPrompt,
+  buildRealizeUserPayload,
+  normalizeRealize,
+  realizeProblems,
+  realizeTree,
+} from "../src/lib/agent/pairwise/realize.js";
 
 /** The acceptance set. Fixed; not configurable by default. */
 const GOLD_WORDS = ["laptop", "battery", "photosynthesis", "recursion"];
@@ -89,9 +98,10 @@ async function eachWithLimit(total, run) {
  * rather than for one concept and a debug dump.
  *
  * @param {string} concept
+ * @param {boolean} [dump] - print raw model replies for failed batches.
  * @returns {Promise<Record<string, unknown>>}
  */
-async function attempt(concept) {
+async function attempt(concept, dump = false) {
   const started = Date.now();
   let calls = 0;
   let promptTokens = 0;
@@ -155,6 +165,8 @@ async function attempt(concept) {
   const batchErrors = [];
   /** @type {string[]} */
   const coercions = [];
+  /** @type {string[]} */
+  const batchReplies = [];
 
   await eachWithLimit(batches.length, async (index) => {
     const batch = batches[index];
@@ -169,6 +181,12 @@ async function attempt(concept) {
     const errors = pairBatchProblems(normalized.value, expected);
     if (errors.length > 0) {
       batchErrors.push(`batch ${index + 1}: ${errors.slice(0, 2).join("; ")}`);
+      if (dump) {
+        // The raw text is what decides whether a failure is frame or
+        // content. Guessing from the validator's error string is how a
+        // content defect gets "coerced" away.
+        batchReplies.push(`--- batch ${index + 1} raw ---\n${String(reply.raw).slice(0, 2000)}`);
+      }
       return;
     }
     for (const item of normalized.value.judgments) {
@@ -177,10 +195,38 @@ async function attempt(concept) {
     }
   });
   if (batchErrors.length > 0) {
-    return { word: concept, ok: false, stage: "pairs", calls, coercions, errors: batchErrors };
+    return {
+      word: concept,
+      ok: false,
+      stage: "pairs",
+      calls,
+      coercions,
+      errors: batchErrors,
+      dump: batchReplies,
+    };
   }
 
   const selection = selectTopology({ concept, candidates: inventory.candidates, judgments });
+  // Where do the nodes go? The 2026-09-29 record measured a 2-to-9 node
+  // range on identical code, and named two candidate causes: the
+  // inventory being too shallow, or the judgment being too sparse. The
+  // histograms below separate them on a real run rather than by argument.
+  const relations = tally(judgments, (item) => item.relation);
+  const jumps = tally(judgments, (item) => (item.relation === "A_RESTS_ON_B" || item.relation === "B_RESTS_ON_A" ? item.jump : "n/a"));
+  const targetPairs = judgments.filter(
+    (item) => item.a_id === TARGET_ID || item.b_id === TARGET_ID
+  );
+  const targetRestsOn = targetPairs.filter(
+    (item) =>
+      (item.relation === "A_RESTS_ON_B" && item.a_id === TARGET_ID) ||
+      (item.relation === "B_RESTS_ON_A" && item.b_id === TARGET_ID)
+  );
+  const walkable = targetRestsOn.filter((item) => item.jump === "SMALL");
+  // Realization runs before the summary is built, because the summary
+  // reports the call count and the realize call is one of them.
+  const realized = selection.ok
+    ? await realizeTreeFor(concept, selection, byId, callModel)
+    : {};
   return {
     word: concept,
     ok: selection.ok,
@@ -196,10 +242,143 @@ async function attempt(concept) {
     edges: selection.ok ? selection.edges.length : 0,
     trunk: selection.ok ? selection.trunk.length : 0,
     trunkPath: selection.ok ? selection.trunk.join(" -> ") : "",
+    candidates: inventory.candidates.length,
+    // The inventory verbatim. The 2026-09-29 hypothesis was that a flat
+    // one-level candidate set is why no 4-node walk exists, and that can
+    // only be checked by reading the labels, not a histogram.
+    inventory: inventory.candidates.map((item) => item.label),
+    relations,
+    jumps,
+    targetPrereqs: walkable.length,
+    targetPairsTooLarge: targetRestsOn.length - walkable.length,
     droppedCandidates: selection.ok ? selection.droppedCandidates.length : 0,
     droppedJudgments: selection.ok ? selection.droppedJudgments.length : 0,
+    // The full directional graph, so a run can be read rather than
+    // summarised. Only the accepted edges and the refusals on target
+    // pairs: everything else is NONE noise and drowns the signal.
+    graph: [
+      ...judgments
+        .filter(
+          (item) =>
+            (item.relation === "A_RESTS_ON_B" || item.relation === "B_RESTS_ON_A") &&
+            item.jump === "SMALL"
+        )
+        .map((item) => {
+          const dependent =
+            item.relation === "A_RESTS_ON_B" ? item.a_id : item.b_id;
+          const prerequisite =
+            item.relation === "A_RESTS_ON_B" ? item.b_id : item.a_id;
+          return {
+            on: labelOf(byId, dependent),
+            needs: labelOf(byId, prerequisite),
+            confidence: item.confidence,
+            selected:
+              selection.ok &&
+              selection.edges.some(
+                (edge) => edge.source === dependent && edge.target === prerequisite
+              ),
+          };
+        }),
+    ],
+    refusals: targetRestsOn
+      .filter((item) => item.jump !== "SMALL")
+      .map((item) => ({
+        on: "target",
+        needs: labelOf(byId, item.a_id === TARGET_ID ? item.b_id : item.a_id),
+        jump: item.jump,
+        why: item.rationale,
+      })),
     errors: selection.ok ? [] : [selection.reason],
+    ...realized,
   };
+}
+
+/**
+ * The fourth stage: write learner-facing copy for the shape topology
+ * already chose. Returns the realized copy, or an honest failure naming
+ * the gate's reason. It never alters the selection it was handed.
+ *
+ * @param {string} concept
+ * @param {{ ok: true; nodes: string[]; edges: Array<{ edge_id: string; source: string; target: string }>; trunk: string[]; ranks: Record<string, number> }} selection
+ * @param {Map<string, { id: string; label: string; gloss: string; kind: string }>} byId
+ * @param {(system: string, user: unknown, schema: Record<string, any>) => Promise<{ raw: string }>} callModel
+ * @returns {Promise<Record<string, unknown>>}
+ */
+async function realizeTreeFor(concept, selection, byId, callModel) {
+  const nodeOf = (/** @type {string} */ id) => {
+    const known = byId.get(id);
+    return {
+      id,
+      label: known ? known.label : id,
+      gloss: known ? known.gloss : "",
+      kind: known ? known.kind : "concept",
+    };
+  };
+  const nodes = selection.nodes.map(nodeOf);
+  const edges = selection.edges.map((edge) => ({
+    id: edge.edge_id,
+    source: edge.source,
+    target: edge.target,
+  }));
+  const reply = await callModel(
+    buildRealizeSystemPrompt(),
+    buildRealizeUserPayload(concept, nodes, edges),
+    buildRealizeJsonSchema(nodes, edges)
+  );
+  const normalized = normalizeRealize(parseModelJson(reply.raw));
+  const errors = realizeProblems(normalized.value, nodes, edges);
+  if (errors.length > 0) {
+    return {
+      realized: false,
+      realizeErrors: errors.slice(0, 3),
+      realizeCoercions: normalized.coerced,
+      // The raw reply, so a realization failure can be read rather than
+      // guessed at. A duplicate id is a content question and the
+      // DESIGN law forbids coercing it away, so the evidence matters.
+      dump: [String(reply.raw).slice(0, 3000)],
+    };
+  }
+  const tree = realizeTree(nodes, edges, normalized.value);
+  const rankOf = (/** @type {string} */ id) => selection.ranks[id] ?? 0;
+  return {
+    realized: true,
+    realizeCoercions: normalized.coerced,
+    tree: tree.cards.map((card) => ({
+      ...card,
+      label: labelOf(byId, card.id),
+      rank: rankOf(card.id),
+      onTrunk: selection.trunk.includes(card.id),
+    })),
+    warrants: tree.warrants.map((warrant) => ({
+      ...warrant,
+      on: labelOf(byId, edges.find((edge) => edge.id === warrant.id)?.source ?? ""),
+      needs: labelOf(byId, edges.find((edge) => edge.id === warrant.id)?.target ?? ""),
+    })),
+  };
+}
+
+/**
+ * @param {Map<string, { label: string }>} byId
+ * @param {string} id
+ * @returns {string}
+ */
+function labelOf(byId, id) {
+  return byId.get(id)?.label ?? id;
+}
+
+/**
+ * @param {Array<Record<string, any>>} rows
+ * @param {(row: Record<string, any>) => string} key
+ * @returns {Record<string, number>}
+ */
+function tally(rows, key) {
+  /** @type {Record<string, number>} */
+  const counts = {};
+  for (const row of rows) {
+    const token = key(row);
+    counts[token] = (counts[token] ?? 0) + 1;
+  }
+  return counts;
 }
 
 async function main() {
@@ -210,12 +389,13 @@ async function main() {
       ? args[wordsArg + 1].split(",").map((w) => w.trim()).filter(Boolean)
       : GOLD_WORDS;
   const asJson = args.includes("--json");
+  const dump = args.includes("--dump");
 
   loadDotEnv();
   const results = [];
   for (const word of words) {
     try {
-      results.push(await attempt(word));
+      results.push(await attempt(word, dump));
     } catch (error) {
       results.push({
         word,
@@ -235,9 +415,9 @@ async function main() {
     console.log(
       pad("word", 16) + pad("result", 9) + pad("stage", 11) +
       pad("nodes", 7) + pad("edges", 7) + pad("trunk", 7) +
-      pad("ms", 7) + pad("coerce", 8) + "trunk path"
+      pad("ms", 7) + pad("coerce", 8) + pad("copy", 6) + "trunk path"
     );
-    console.log("-".repeat(96));
+    console.log("-".repeat(102));
     for (const r of results) {
       console.log(
         pad(r.word, 16) +
@@ -248,13 +428,79 @@ async function main() {
           pad(r.ok ? r.trunk : "-", 7) +
           pad(r.elapsedMs ?? "-", 7) +
           pad(r.coercions ? r.coercions.length : "-", 8) +
+          pad(r.realized === true ? "ok" : r.realized === false ? "FAIL" : "-", 6) +
           (r.trunkPath || (r.errors && r.errors[0]) || "")
       );
     }
     const passed = results.filter((r) => r.ok).length;
     console.log(`\n${passed}/${results.length} gold words produced a tree.`);
+    console.log("");
+    console.log("Where the nodes go (diagnostics, not the gate):");
+    console.log(
+      pad("word", 16) +
+        pad("inv", 5) +
+        pad("pairs", 7) +
+        pad("tgtOK", 7) +
+        pad("tgtBig", 8) +
+        pad("dep", 6) +
+        pad("NONE", 6) +
+        pad("same", 6) +
+        "reason"
+    );
+    console.log("-".repeat(96));
+    for (const r of results) {
+      if (r.stage !== "topology" || !r.relations) {
+        console.log(pad(r.word, 16) + pad(r.stage, 10) + ((r.errors && r.errors[0]) || ""));
+        for (const chunk of r.dump || []) console.log(chunk);
+        continue;
+      }
+      const directional =
+        (r.relations.A_RESTS_ON_B ?? 0) + (r.relations.B_RESTS_ON_A ?? 0);
+      console.log(
+        pad(r.word, 16) +
+          pad(r.candidates, 5) +
+          pad(r.pairs, 7) +
+          pad(r.targetPrereqs, 7) +
+          pad(r.targetPairsTooLarge, 8) +
+          pad(directional, 6) +
+          pad(r.relations.NONE ?? 0, 6) +
+          pad(r.relations.SAME_CONCEPT ?? 0, 6) +
+          (r.trunkPath || (r.errors && r.errors[0]) || "")
+      );
+    }
+    if (dump) {
+      for (const r of results) {
+        if (!r.inventory) continue;
+        console.log(`\n${r.word}: inventory (${r.candidates} candidates)`);
+        for (const label of r.inventory) console.log(`  - ${label}`);
+        if (!r.graph) continue;
+        console.log(`\n${r.word}: accepted dependence edges (selected marked *)`);
+        for (const edge of r.graph) {
+          console.log(
+            `  ${edge.selected ? "*" : " "} ${edge.on} <- rests on -> ${edge.needs} (${edge.confidence})`
+          );
+        }
+        for (const refusal of r.refusals || []) {
+          console.log(`  x target refused ${refusal.needs}: ${refusal.jump} - ${refusal.why}`);
+        }
+        if (r.realized === false) {
+          console.log(`  realization FAILED: ${(r.realizeErrors || []).join("; ")}`);
+          for (const chunk of r.dump || []) console.log(chunk);
+        } else if (r.tree) {
+          console.log(`\n${r.word}: realized copy (${r.tree.length} cards, ${r.warrants.length} warrants)`);
+          for (const card of r.tree) {
+            const mark = card.onTrunk ? "T" : " ";
+            console.log(`  ${mark} [rank ${card.rank}] ${card.heading}  (${card.label})`);
+            console.log(`      ${card.gloss}`);
+          }
+          for (const warrant of r.warrants) {
+            console.log(`  -> ${warrant.on} needs ${warrant.needs}: ${warrant.because}`);
+          }
+        }
+      }
+    }
     if (passed < results.length) {
-      console.log("Baseline for comparison: .scratch/first-principled-v9/research/01-spike-evidence.md");
+      console.log("\nBaseline for comparison: .scratch/first-principled-v9/research/01-spike-evidence.md");
     }
   }
   process.exit(results.every((r) => r.ok) ? 0 : 1);

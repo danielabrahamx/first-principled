@@ -110,10 +110,37 @@ relationships are the point, would open a rabbit hole.
   not want open-world inference, and RDFS reasoning would infer
   relations nobody asserted, which is the inverse of the fail-honest
   contract.
+- 2026-09-29 **Ticket 02 resolved, and the honest number is worse.**
+  `selectTopology` no longer accepts a degenerate tree: `MIN_TRUNK_NODES`
+  (4) is applied before trunk scoring rather than inside it,
+  `MIN_NODES` (5) bounds the published tree, and a crown invariant
+  rejects any selected edge resting on the target. The gold rate on
+  `deepseek-flash` is now 1 to 2 of 4 across four runs, against a
+  recorded 4 of 4 that partly measured a 2-node stub. The gate was
+  wrong; the fix is to state that, not to move the threshold.
+- 2026-09-29 the cause of the short trunks is the **inventory**, read
+  from the candidate labels rather than inferred: the 2026-09-29 laptop
+  run returned ten parts of a laptop, all at one level, and the Ticket 01
+  prompt asked for concepts "directly necessary" to the target. The
+  prompt's first paragraph now asks for a set spanning several levels.
+  Two escalations of that demand were measured and reverted in the same
+  session: a pair-prompt paragraph about the target pushed three of four
+  words to zero accepted target prerequisites, and a countable
+  inventory demand dropped laptop to 2 accepted edges of 55. Do not
+  escalate either. The remaining gap is judgment sparsity.
+- 2026-09-29 realization ships (`src/lib/agent/pairwise/realize.js`,
+  18 tests) and a human walked a `recursion` tree. A hallucinated id is
+  a gate failure, not a dropped row, because silently dropping it would
+  hide a model that has crossed back into r2. The walk found two
+  defects, both fixed: machine phrasing lifted verbatim onto the crown
+  card, and one edge id answered four times with rewordings (collapsed
+  only when byte-identical). Record:
+  `research/02-realization-evidence.md`.
 
 ## Open frontier
 
-- [02 - Surface realization and honesty](issues/02-surface-realization-and-honesty.md) (to be written; next)
+- [03 - RealityMap adapter and generated-map gate](issues/03-realitymap-adapter.md) (to be written). **Blocked** on generator variance: the honest gold rate is 1 to 2 of 4, and node count on a given word swings 4 to 9. Adapting a map with that variance bakes it into the assembly layer. Next measurement is judgment sparsity, not a new build.
+- [02 - Surface realization and honesty](issues/02-surface-realization-and-honesty.md) is resolved (2026-09-29). Do not rewrite it.
 - [01 - Pairwise falsification spike](issues/01-pairwise-falsification-spike.md) is resolved (2026-09-29, GO). Do not rewrite it.
 
 ## Not yet specified

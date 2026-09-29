@@ -51,6 +51,20 @@ test("fifty-five pairs partition into bounded batches", () => {
   }
 });
 
+test("the target gloss is learner-facing and does not name the concept", () => {
+  // The target gloss travels to the realization call, whose model lifts
+  // it toward the crown card a learner reads. When it read "The typed
+  // concept under study: battery" that machine phrasing surfaced
+  // verbatim on a realized card on 2026-09-29. It must also stay neutral
+  // for the judge, which sees it on every target pair.
+  const { target } = world("battery", 8);
+  assert.ok(!/typed concept|under study|for study/i.test(target.gloss), target.gloss);
+  assert.ok(!target.gloss.toLowerCase().includes("battery"), target.gloss);
+  assert.ok(!/foundation|rests on|depends on|prerequisite/i.test(target.gloss), target.gloss);
+  // The concept itself still reaches both readers through the label.
+  assert.equal(target.label, "battery");
+});
+
 test("thirty-six pairs partition into three batches of twelve", () => {
   const { nodes } = world("battery", 8);
   const pairs = enumeratePairs(nodes);

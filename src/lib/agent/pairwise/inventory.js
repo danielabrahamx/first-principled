@@ -18,15 +18,34 @@ const KIND_CAP = 80;
 const ID_CAP = 64;
 
 /**
- * Locked Ticket 01 inventory system prompt.
+ * Ticket v9-02 rewrote the first paragraph. The Ticket 01 wording asked
+ * for "concepts that may be directly necessary to understand the
+ * requested target", and "directly" is what produced a one-level set:
+ * on the 2026-09-29 laptop run every one of the 10 candidates was judged
+ * a direct prerequisite of the target, zero were prerequisites of each
+ * other, and the longest walk was 3 nodes.
+ *
+ * A stronger version that demanded "at least three concepts that some
+ * other concept in your own list rests on" was measured and reverted in
+ * the same session: it made the inventory more demanding, and the
+ * judgment stage answered by refusing more pairs. laptop fell to 2
+ * accepted edges out of 55. Do not escalate the demand in the prompt;
+ * the remaining gap is a judgment-sparsity question, and it is recorded
+ * in `.scratch/first-principled-v9/research/02-realization-evidence.md`.
+ * The rest of the prompt is unchanged.
  *
  * @returns {string}
  */
 export function buildInventorySystemPrompt() {
-  return `Name an unordered set of concepts that may be directly necessary to
-understand the requested target at a curious-adult teaching granularity.
-A concept is necessary when the target cannot exist or be understood
-without it.
+  return `Name an unordered set of concepts that a learner would need in
+order to understand the requested target at a curious-adult teaching
+granularity.
+
+The set must span several levels of depth, not one. Include some
+concepts the target directly rests on, and also concepts that those
+concepts in turn rest on, down to foundations a learner can point at
+or run. A set of peers that all sit at the same distance from the
+target is the wrong answer: it has no foundation to walk down to.
 
 Return JSON only with concept and candidates. Each candidate has id,
 label, gloss, kind, and foundation_fit. id is an opaque unique key such

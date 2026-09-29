@@ -34,7 +34,9 @@ function read(relative) {
 }
 
 /**
- * Pull a `const NAME = "value"` string constant out of a source file.
+ * Pull a `const NAME = value` constant out of a source file. Accepts a
+ * quoted string or a bare number, because thresholds like MIN_NODES are
+ * numbers and the model constants are strings.
  *
  * @param {string} relative
  * @param {string} name
@@ -42,9 +44,9 @@ function read(relative) {
  */
 function sourceConst(relative, name) {
   const text = read(relative);
-  const match = new RegExp(`${name}\\s*=\\s*["'\`]([^"'\`]+)["'\`]`).exec(text);
+  const match = new RegExp(`(?:export\\s+)?const\\s+${name}\\s*=\\s*("[^"]*"|[0-9]+)`).exec(text);
   assert.ok(match, `${relative} must declare ${name}`);
-  return /** @type {string} */ (match[1]);
+  return /** @type {string} */ (match[1]).replace(/^"|"$/g, "");
 }
 
 const DEFAULT_OPENROUTER_MODEL = sourceConst(
@@ -88,6 +90,32 @@ test("no entry document names a model the transport does not use", () => {
   }
 });
 
+test("STATUS.md quotes the topology thresholds that decide the gold set", () => {
+  // The 2026-09-29 defect: a gate that returned ok for a 2-node tree,
+  // and STATUS.md still said 4 of 4 gold words passed. Both halves
+  // drifted from the code at once. These thresholds are what the honest
+  // pass rate is measured against, so a change to one that is not
+  // reflected here is a change nobody measured.
+  const status = read("docs/STATUS.md");
+  const topology = read("src/lib/agent/pairwise/topology.js");
+  for (const name of ["MIN_NODES", "MIN_TRUNK_NODES", "MAX_NODES"]) {
+    const value = sourceConst("src/lib/agent/pairwise/topology.js", name);
+    assert.ok(
+      new RegExp(`export const ${name} = ${value};`).test(topology),
+      `${name} must stay an exported constant set to ${value}, not an inline literal`
+    );
+    assert.ok(
+      status.includes(value),
+      `docs/STATUS.md must state the real ${name} value (${value})`
+    );
+  }
+  // And the gate must have a test that fails it. A gate nobody can fail
+  // is the v7 funnel.
+  const tests = read("src/lib/agent/pairwise/topology.test.js");
+  assert.match(tests, /a 2-node graph is not a tree/);
+  assert.match(tests, /crown invariant/);
+});
+
 test("the v9 frontier agrees with the v9 issue statuses", () => {
   // The frontier and the issue files must not disagree about what is
   // open. A resolved ticket still listed as the next task sends the next
@@ -95,12 +123,14 @@ test("the v9 frontier agrees with the v9 issue statuses", () => {
   const frontier = read(".scratch/first-principled-v9/map.md");
   assert.ok(/## Open frontier/.test(frontier), "the v9 map must declare an open frontier");
   assert.ok(
-    /\[02 - Surface realization and honesty\]/.test(frontier),
-    "the open frontier must name ticket 02"
+    /\[03 - RealityMap adapter and generated-map gate\]/.test(frontier),
+    "the open frontier must name ticket 03"
   );
 
   const ticket01 = read(".scratch/first-principled-v9/issues/01-pairwise-falsification-spike.md");
   assert.match(ticket01, /\*\*Status:\*\*\s*resolved/i, "ticket 01 must be marked resolved");
+  const ticket02 = read(".scratch/first-principled-v9/issues/02-surface-realization-and-honesty.md");
+  assert.match(ticket02, /\*\*Status:\*\*\s*resolved/i, "ticket 02 must be marked resolved");
   assert.ok(
     !/\[01 - Pairwise falsification spike\][^\n]*\(unblocked; next\)/.test(frontier),
     "ticket 01 is resolved and must not be listed as next"
