@@ -105,3 +105,110 @@ incapability, or add documented mechanical tolerance (accept bare
 arrays, ignore the `type` echo, coerce NONE jumps) while keeping
 code validation authoritative. No decision taken here; the strict
 record stands.
+
+## 2026-09-29 decision and implementation
+
+The decision above is now taken: add documented mechanical tolerance.
+The tolerance lives in `normalizePairBatch` and `parsePairBatchText`
+(`src/lib/agent/pairwise/judgments.js`), and `pairBatchProblems` is
+unchanged and still authoritative over what survives.
+
+Coerced, each traced to a live failure in this file:
+
+- bare array of judgments, no wrapper (recursion batch 1)
+- newline-delimited judgment objects, one per line (recursion batch 1)
+- echoed `type` field beside `judgments` (recursion batch 3, laptop 1,
+  photosynthesis 4)
+- keyed-object envelope keyed by pair_id (laptop 2, battery 1-2,
+  photosynthesis 1-3)
+- SMALL or TOO_LARGE on a non-directional row, where jump has no
+  referent (recursion 1)
+- enum tokens in free case or with separators
+- pair_id case mismatch against the requested set
+
+Deliberately NOT coerced, each a real signal about the judgment rather
+than its frame: missing / unknown / duplicate pair_id, a rationale that
+names position or chronology, and unexpected fields.
+
+Offline replay of the four recorded failure shapes:
+`.scratch/first-principled-v9/research/verify-coercion.mjs`. Run
+2026-09-29: 4 of 4 now survive validation, each with the coercions it
+needed listed. Suite 409/409, lint and typecheck green.
+
+What this does NOT establish: the gold acceptance is one predeclared run
+per word, not repeated runs. Read the two attempts below as evidence
+that the stage is no longer envelope-blocked, not as a quality verdict.
+
+## 2026-09-29 first live runs after the coercion
+
+Route: `LLM_PROVIDER=deepseek`, `deepseek-flash`, official base. This is
+the only working route; the OpenRouter key is dead.
+
+### recursion, attempt 3: PASS, first tree ever selected
+
+- 5 calls, 55 pairs, 4 batches, 9.1s, 5753 prompt / 4306 completion
+  tokens.
+- Coercions applied: keyed-object envelope lifted (batch 2), echoed
+  `type` dropped (batches 1 and 4). Without these the run dies exactly
+  as attempt 2 did.
+- `selectTopology` returned ok with 5 nodes, 4 edges, a 3-node trunk
+  `k7 -> k3 -> target`, and honest drops: `k1` merged into the target as
+  a HIGH-confidence duplicate, and every NONE judgment listed with its
+  reason.
+- Edges carry real rationales, e.g. "a recursive function requires a
+  base case to terminate; self-reference alone cannot define a finite
+  computation."
+
+### recursion, attempt 4: PASS, different tree
+
+- 5 calls, 9.4s, 5933 prompt / 4186 completion tokens.
+- Coercions: echoed `type` dropped (batch 2), keyed-object lifted
+  (batch 3).
+- `ok` with 5 nodes, 4 edges, trunk `k7 -> k3 -> target`,
+  `k1` merged again.
+
+### What this means, and what it does not
+
+The envelope blocker is gone. Both attempts cleared a stage that had
+terminally failed on all four gold words before.
+
+Two things to be honest about. First, run-to-run variance is real: the
+node set and edges differ between attempt 3 and attempt 4, and the
+three-node trunk is short against the ticket's `TRUNK_MIN` of 4. That
+is a quality question for Ticket 02, not an envelope question, and it
+is not settled by two runs. Second, `recursion` was already the word
+whose underlying judgments the earlier evidence called "consistently
+sensible", so it is the most likely word to pass. The other three
+gold words are unattempted on this route since the coercion.
+
+Next: laptop, battery, photosynthesis on this route, one recorded
+attempt each, before any Go/Kill.
+
+
+## 2026-09-29 Jev decision mode: not adopted
+
+Jev (`typesafe/jev-1.13`, Decisions API) returns typed answers with
+probabilities and cannot emit a malformed envelope, which is exactly
+the failure class recorded above. It is the wrong tool for this
+project, for three reasons:
+
+1. It answers Choice / Noul / Score against criteria the caller
+   defines. A dependence relation is not a fixed option set; defining
+   `A_RESTS_ON_B` and `B_RESTS_ON_A` as two Choice options is
+   possible, but the gloss and the relation arrive together in one
+   probability distribution, so the semantic work is still done by a
+   model whose output we cannot inspect.
+2. The pairwise prompt deliberately asks for a `rationale` per
+   judgment, and one of the hard gates is that the rationale must not
+   appeal to position or chronology. Jev returns no rationale and no
+   reasoning trace at all. The evidence shows an unprompted
+   `TOO_LARGE` with a bridge-missing rationale was genuinely
+   informative; that signal is the thing we would be deleting.
+3. Untestable here. The Decisions endpoint is OpenRouter-only and the
+   local OpenRouter key is dead, so this is a judgement on the design,
+   not a measurement.
+
+Revisit only if a future run shows dependence judgment itself is
+wrong, rather than its delivery. Envelope conformance is no longer the
+bottleneck, and that was never Jev's differentiator anyway.
+

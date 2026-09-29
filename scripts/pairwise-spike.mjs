@@ -35,7 +35,9 @@ import {
   buildPairBatchJsonSchema,
   buildPairBatchSystemPrompt,
   buildPairBatchUserPayload,
+  normalizePairBatch,
   pairBatchProblems,
+  parsePairBatchText,
 } from "../src/lib/agent/pairwise/judgments.js";
 import { selectTopology } from "../src/lib/agent/pairwise/topology.js";
 
@@ -124,7 +126,20 @@ async function main() {
       promptTokens += Number(reply.usage.prompt_tokens || 0);
       completionTokens += Number(reply.usage.completion_tokens || 0);
     }
-    return { parsed: parseModelJson(reply.content), raw: reply.content };
+    return { raw: reply.content };
+  }
+
+  /**
+   * Parse a reply, preferring the pair-batch reader (which recovers a bare
+   * array and newline-delimited objects) and falling back to the general
+   * defensive parser for every other stage.
+   *
+   * @param {string} raw
+   * @returns {unknown}
+   */
+  function parseReply(raw) {
+    const fromPairs = parsePairBatchText(raw);
+    return fromPairs !== null ? fromPairs : parseModelJson(raw);
   }
 
   // Wave 1: inventory.
@@ -133,7 +148,7 @@ async function main() {
     buildInventoryUserPayload(concept),
     buildInventoryJsonSchema(concept)
   );
-  const inventory = inventoryReply.parsed;
+  const inventory = parseReply(inventoryReply.raw);
   const inventoryErrors = inventoryProblems(inventory, concept);
   if (inventoryErrors.length > 0) {
     console.log(JSON.stringify({ ok: false, stage: "inventory", errors: inventoryErrors.slice(0, 8), calls }, null, 2));
@@ -148,6 +163,8 @@ async function main() {
   const judgments = [];
   /** @type {string[]} */
   const batchErrors = [];
+  /** @type {string[]} */
+  const coercions = [];
   await eachWithLimit(batches.length, async (index) => {
     const batch = batches[index];
     const reply = await callModel(
@@ -156,7 +173,14 @@ async function main() {
       buildPairBatchJsonSchema(concept, batch.map((pair) => pair.pair_id))
     );
     const expected = batch.map((pair) => pair.pair_id);
-    const errors = pairBatchProblems(reply.parsed, expected);
+    // Coerce the envelope first, then validate what survives. The recorded
+    // live failures were envelope shape, not judgment; coercion fixes only
+    // the frame, and pairBatchProblems stays authoritative.
+    const normalized = normalizePairBatch(parseReply(reply.raw), expected);
+    for (const note of normalized.coerced) {
+      coercions.push(`batch ${index + 1}: ${note}`);
+    }
+    const errors = pairBatchProblems(normalized.value, expected);
     if (errors.length > 0) {
       // Truncated preview only (model output, never secrets) to tell
       // shape drift apart from a parser artifact.
@@ -164,13 +188,15 @@ async function main() {
       batchErrors.push(`batch ${index + 1}: ${errors.slice(0, 3).join("; ")} || preview: ${preview}`);
       return;
     }
-    for (const item of reply.parsed.judgments) {
+    for (const item of normalized.value.judgments) {
       const pair = batch.find((entry) => entry.pair_id === item.pair_id);
       judgments.push({ ...item, a_id: pair.a_id, b_id: pair.b_id });
     }
   });
   if (batchErrors.length > 0) {
-    console.log(JSON.stringify({ ok: false, stage: "pairs", errors: batchErrors, calls }, null, 2));
+    console.log(
+      JSON.stringify({ ok: false, stage: "pairs", errors: batchErrors, coercions, calls }, null, 2)
+    );
     process.exit(1);
   }
 
@@ -189,6 +215,7 @@ async function main() {
         elapsedMs: Date.now() - started,
         promptTokens,
         completionTokens,
+        coercions,
         selection,
       },
       null,

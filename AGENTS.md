@@ -8,25 +8,36 @@ against it. v1 is a static web app plus one stateless serverless function on
 Netlify, no database. Local LLM is `LLM_PROVIDER=openrouter|deepseek`.
 Prod stays OpenRouter.
 
-**Map (only):** `.scratch/first-principled-v7/map.md`
-**Display map (parallel):** `.scratch/first-principled-v8/map.md`
+**Map (only):** `.scratch/first-principled-v9/map.md`
 **Spec:** `.scratch/first-principled/spec.md`
 **Immutable mission:** `docs/MISSION.md` (written by ticket 01)
-**Resume:** v6 chrome shipped; one-shot scoring parked. The v7 three-stage
-Tree builder is live on prod in one background init job with a 14 min
-poll deadline. Thinking architecture is Option A amended 2026-08-24
-(JSON Schema on Epiphanies; the OpenRouter default model mandates
-reasoning, so maps omit `reasoning` and run on mandatory thinking). v7 open frontier:
-[Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md)
-(HITL; capture done, do not recapture; remaining KEEP or KILL). Record:
-`.scratch/first-principled-v7/research/07-danny-followability.md`.
-v8 card / arrow / hover contracts locked 2026-08-24. Poll snapshots
-locked 2026-08-24. Chapel flowchart shipped on the finished Tree.
-Next:
-[Deploy the Chapel Tree](.scratch/first-principled-v8/issues/12-deploy-the-chapel-tree.md)
-(AFK). Chapel KEEP, morph wait-state, display locks, running
-snapshots, finished Chapel chrome, and grow-in-place wait-state are
-closed. Do not ship the throwaway prototype. One ticket per session.
+**Resume:** v9 is the live direction. The v7 three-stage funnel is
+retired in principle (falsified by its own rule: Arrange preserved
+Chronology as a flat list) and the v8 Chapel chrome, job/poll envelope,
+transport, MMG, and layout are retained and battle-tested. The v9
+pairwise generator ships as a spike under `src/lib/agent/pairwise/`
+plus `scripts/pairwise-spike.mjs`; nothing in the runtime imports it
+yet, and prod still runs the v7 three-stage path.
+
+**v9 status:** Ticket 01 (pairwise falsification spike) is the open
+frontier. Modules, 25 unit tests, and the diagnostic CLI are built and
+green. Live evidence is partial: 0 of 4 gold words have a
+target-to-foundation path, 1 failed honestly at pair validation, 1 was
+blocked on credits, 2 unattempted. Record:
+`.scratch/first-principled-v9/research/01-spike-evidence.md`.
+
+**Blocker (2026-09-29):** the local OpenRouter key is dead. Every
+OpenRouter endpoint returns HTTP 401 `User not found`, including
+`/api/v1/credits`, `openrouter/free`, and the Decisions API. The
+DeepSeek key is live and is currently the only working route. Replace
+the key before any run that needs OpenRouter, `space-bunny-free`, or
+Jev.
+
+Next: run the four gold words on
+[01 - Pairwise falsification spike](.scratch/first-principled-v9/issues/01-pairwise-falsification-spike.md)
+and take a real Go/Kill. Do not start Ticket 02 until the first
+attempts for the remaining three gold words are recorded. Do not ship
+the throwaway prototype. One ticket per session.
 
 ## Golden rules
 
@@ -50,14 +61,15 @@ closed. Do not ship the throwaway prototype. One ticket per session.
 - Client holds session state in memory; the function stores nothing.
 - OpenAI-compatible LLM via `LLM_PROVIDER=openrouter|deepseek` (default
   openrouter uses `LLM_*`; deepseek uses `DEEPSEEK_*`). Default OpenRouter
-  model: `stealth/ox-alpha` at
-  `https://openrouter.ai/api/v1`. Prod stays OpenRouter. JSON maps send
+  model: `z-ai/glm-5.3-flash` at `https://openrouter.ai/api/v1` (set in
+  `llm.js`; the older `stealth/ox-alpha` references in the v6/v7 research
+  notes are historical). Prod stays OpenRouter. JSON maps send
   `thinking: false`, which on OpenRouter omits the `reasoning` field
   (the default model mandates reasoning; effort none returns HTTP 400;
   DeepSeek keeps `thinking` type disabled). Epiphanies sends JSON
   Schema. The next
   HITL ticket is
-  [Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md).
+  [01 - Pairwise falsification spike](.scratch/first-principled-v9/issues/01-pairwise-falsification-spike.md).
 - No DB, no auth, no agent framework (Mastra/LangGraph is v2).
 - Home is the Tree. v6 parks Tutor from the chrome (engine stays). There
   is no Chat page and no learner-map tab. How it works lives in the header.

@@ -71,8 +71,28 @@ relationships are the point, would open a rabbit hole.
   2026-09-10 DeepSeek official platform (`deepseek-flash`): all four
   inventories passed; all four failed on pair-batch envelope shape
   only, with sensible underlying judgments. No kill criterion
-  triggered. Record: `research/01-spike-evidence.md`. Go/kill
-  undecided.
+  triggered. Record: `research/01-spike-evidence.md`.
+- 2026-09-29 the open question from 01 is decided: mechanical envelope
+  tolerance, not model incapability. `normalizePairBatch` and
+  `parsePairBatchText` coerce the four recorded failure shapes;
+  `pairBatchProblems` is unchanged and still authoritative. Offline
+  replay passes 4/4 (`research/verify-coercion.mjs`). Suite 409/409,
+  lint and typecheck green. No live batch has run since; no gold word
+  has produced a tree.
+- 2026-09-29 Jev (Decisions API) considered and not adopted: no
+  rationale field, so it would delete the bridge-missing signal the
+  record calls informative, and it cannot be tested while the local
+  OpenRouter key is dead. Full reasoning in the evidence record.
+- 2026-09-29 the local OpenRouter key returns HTTP 401 `User not
+  found` on every endpoint including the Decisions API, so
+  `space-bunny-free` and Jev are unreachable. DeepSeek is the only live
+  route. Replace the key before any OpenRouter-dependent run.
+- TriplyDB and RDF considered and deferred. The concept-identity half
+  (labels to URIs) is a real gain and worth a spike after Ticket 01
+  passes; the graph-store half is out: a 10-node per-session map does
+  not want open-world inference, and RDFS reasoning would infer
+  relations nobody asserted, which is the inverse of the fail-honest
+  contract.
 
 ## Open frontier
 

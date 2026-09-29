@@ -68,8 +68,178 @@ export function buildPairBatchUserPayload(concept, pairs, byId) {
 }
 
 /**
+ * Mechanical envelope coercion for one pair-batch reply.
+ *
+ * The recorded live evidence (v9 research 01) is that this stage fails on
+ * envelope conformance, not on dependence judgment: across both routes and
+ * all four gold words, every terminal failure was one of the shapes below
+ * while the underlying relations were judged sensible. These are mechanical
+ * corrections - the reply's own content is never changed, only the frame
+ * around it, and nothing here infers a relation the model did not state.
+ *
+ * Handled, each with the live failure it came from:
+ * - a bare array of judgment objects with no wrapper (recursion batch 1)
+ * - a `type` field echoing the response format alongside `judgments`
+ *   (`{"type":"json_object","judgments":[...]}`)
+ * - a keyed-object envelope keyed by pair_id instead of an array
+ *   (`{"p-k10--k6":{...}}`), which is the same data with ids as keys
+ * - newline-delimited judgment objects, one per line (recursion batch 1)
+ * - SMALL or TOO_LARGE on a non-directional row, where the jump field has
+ *   no referent: NONE and SAME_CONCEPT are not walkable in either
+ *   direction, so the only legal value is NOT_APPLICABLE
+ * - relation and confidence tokens in free case or with separators
+ *
+ * Deliberately NOT coerced: a missing, unknown, or duplicate pair_id, a
+ * rationale that names position or chronology, and unexpected fields. Each
+ * of those is a real signal about the judgment itself, and pairBatchProblems
+ * stays authoritative over what survives coercion.
+ *
+ * @param {unknown} value - the parsed reply, or null when nothing parsed.
+ * @param {string[]} expectedPairIds
+ * @returns {{ value: unknown; coerced: string[] }}
+ */
+export function normalizePairBatch(value, expectedPairIds) {
+  /** @type {string[]} */
+  const coerced = [];
+  const unwrapped = unwrapJudgmentArray(value, expectedPairIds, coerced);
+  if (!Array.isArray(unwrapped)) {
+    return { value, coerced };
+  }
+  const judgments = unwrapped
+    .filter((item) => isRecord(item))
+    .map((item) => coerceJudgment(item, expectedPairIds, coerced));
+  return {
+    value: { concept: /** @type {any} */ (isRecord(value) ? value.concept : undefined), judgments },
+    coerced,
+  };
+}
+
+/**
+ * Find the judgment array in any of the observed envelopes.
+ *
+ * @param {unknown} value
+ * @param {string[]} expectedPairIds
+ * @param {string[]} coerced - mutated with what was changed.
+ * @returns {unknown[] | null}
+ */
+function unwrapJudgmentArray(value, expectedPairIds, coerced) {
+  if (Array.isArray(value)) {
+    coerced.push("bare array wrapped as {judgments}");
+    return value;
+  }
+  if (!isRecord(value)) return null;
+
+  // Keyed-object envelope: every key is a requested pair id and every value
+  // is a judgment body. The id lives in the key, so lift it back onto the
+  // record. Only applied when the key set actually matches the request, so a
+  // genuinely malformed reply still reaches the validator and fails.
+  if (typeof value.judgments !== "object" || value.judgments === null) {
+    const keys = Object.keys(value);
+    const expected = new Set(expectedPairIds);
+    const keyed = keys.filter((key) => expected.has(key));
+    if (keys.length > 0 && keyed.length === keys.length) {
+      coerced.push("keyed-object envelope lifted to an array");
+      return keys.map((key) => {
+        const body = value[key];
+        return isRecord(body) ? { pair_id: key, ...body } : body;
+      });
+    }
+  }
+  if (!Array.isArray(value.judgments)) return null;
+
+  if ("type" in value) {
+    coerced.push("dropped the echoed type field");
+  }
+  return value.judgments;
+}
+
+/**
+ * Coerce one judgment's enum tokens and its jump-where-NONE mismatch.
+ *
+ * @param {Record<string, any>} item
+ * @param {string[]} expectedPairIds
+ * @param {string[]} coerced - mutated with what was changed.
+ * @returns {Record<string, any>}
+ */
+function coerceJudgment(item, expectedPairIds, coerced) {
+  const out = { ...item };
+  for (const field of ["relation", "confidence", "jump"]) {
+    if (typeof out[field] !== "string") continue;
+    const token = out[field].trim().toUpperCase().replace(/[\s-]+/g, "_");
+    if (token !== out[field]) {
+      out[field] = token;
+      coerced.push(`canonicalized ${field} to ${token}`);
+    }
+  }
+  // A pair id may be a name rather than the id, or vice versa, when the
+  // model re-keys the envelope. Match case-insensitively before giving up.
+  if (typeof out.pair_id === "string") {
+    const wanted = out.pair_id.trim().toLowerCase();
+    const hit = expectedPairIds.find((id) => id.toLowerCase() === wanted);
+    if (hit !== undefined && hit !== out.pair_id) {
+      coerced.push(`repaired pair_id ${out.pair_id} to ${hit}`);
+      out.pair_id = hit;
+    }
+  }
+  const directional =
+    out.relation === "A_RESTS_ON_B" || out.relation === "B_RESTS_ON_A";
+  if (!directional && (out.jump === "SMALL" || out.jump === "TOO_LARGE")) {
+    coerced.push(`set jump to NOT_APPLICABLE on a ${out.relation} row`);
+    out.jump = "NOT_APPLICABLE";
+  }
+  return out;
+}
+
+/**
+ * Parse a raw pair-batch reply, including the newline-delimited form that
+ * JSON.parse rejects. `parseModelJson` returns null for a top-level array by
+ * design, so the array and JSONL cases are recovered from the raw text here.
+ *
+ * @param {string} raw
+ * @returns {unknown}
+ */
+export function parsePairBatchText(raw) {
+  if (typeof raw !== "string" || raw.trim().length === 0) return null;
+  const text = raw.trim();
+
+  const parsed = tryParse(text);
+  if (parsed !== undefined) return parsed;
+
+  // Newline-delimited objects: one complete JSON object per line.
+  const lines = text
+    .split("\n")
+    .map((line) => line.trim().replace(/^```(?:json)?$/, "").trim())
+    .filter((line) => line.length > 0);
+  if (lines.length > 1 && lines.every((line) => line.startsWith("{") || line.startsWith("["))) {
+    const objects = [];
+    for (const line of lines) {
+      const value = tryParse(line);
+      if (value === undefined) return null;
+      objects.push(value);
+    }
+    return objects;
+  }
+  return null;
+}
+
+/**
+ * @param {string} text
+ * @returns {unknown} the parsed value, or undefined when it does not parse.
+ */
+function tryParse(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Validate one pair batch. Mechanical only. Any missing or malformed
  * batch is a terminal model-output failure: no inference, no repair.
+ *
+ * Run this AFTER `normalizePairBatch`: normalization fixes the envelope,
+ * this is the authority on the judgment.
  *
  * @param {unknown} value
  * @param {string[]} expectedPairIds
