@@ -1,7 +1,11 @@
 # 01 - Pairwise falsification spike
 
 **Type:** task
-**Status:** in-progress (spike modules, 25 unit tests, and CLI done 2026-09-10; live runs partial - recursion failed honestly at pair validation, laptop blocked on 402 credits, battery/photosynthesis unattempted)
+**Status:** resolved (2026-09-29) - GO. All four gold words pass on
+`deepseek-flash` after mechanical envelope coercion, one predeclared
+attempt each. 5 calls per word, 8-9s. Before the coercion 0 of 4
+passed. Evidence: `../research/01-spike-evidence.md`. Replay:
+`../research/verify-coercion.mjs`.
 **Blocked by:** none
 **Related:** v7 map (funnel falsified), v7 ticket 11 (shape fix kept global call), Part B implementation prompt Ticket 1
 

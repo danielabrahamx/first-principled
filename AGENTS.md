@@ -19,11 +19,10 @@ pairwise generator ships as a spike under `src/lib/agent/pairwise/`
 plus `scripts/pairwise-spike.mjs`; nothing in the runtime imports it
 yet, and prod still runs the v7 three-stage path.
 
-**v9 status:** Ticket 01 (pairwise falsification spike) is the open
-frontier. Modules, 25 unit tests, and the diagnostic CLI are built and
-green. Live evidence is partial: 0 of 4 gold words have a
-target-to-foundation path, 1 failed honestly at pair validation, 1 was
-blocked on credits, 2 unattempted. Record:
+**v9 status:** Ticket 01 is resolved and it is a GO. All four gold
+words (laptop, battery, photosynthesis, recursion) pass on
+`deepseek-flash`, one predeclared attempt each, 5 calls per word. Before
+the 2026-09-29 envelope coercion, 0 of 4 passed. Record:
 `.scratch/first-principled-v9/research/01-spike-evidence.md`.
 
 **Blocker (2026-09-29):** the local OpenRouter key is dead. Every
@@ -33,11 +32,11 @@ DeepSeek key is live and is currently the only working route. Replace
 the key before any run that needs OpenRouter, `space-bunny-free`, or
 Jev.
 
-Next: run the four gold words on
-[01 - Pairwise falsification spike](.scratch/first-principled-v9/issues/01-pairwise-falsification-spike.md)
-and take a real Go/Kill. Do not start Ticket 02 until the first
-attempts for the remaining three gold words are recorded. Do not ship
-the throwaway prototype. One ticket per session.
+Next: write and work Ticket 02, surface realization and honesty. Known
+carry-in: trunks came back 3-4 nodes against `TRUNK_MIN` 4 and two
+words returned only 4 nodes, so the tree may be too small to be a
+rabbit hole. Do not ship the throwaway prototype. One ticket per
+session.
 
 ## Golden rules
 
@@ -69,7 +68,8 @@ the throwaway prototype. One ticket per session.
   DeepSeek keeps `thinking` type disabled). Epiphanies sends JSON
   Schema. The next
   HITL ticket is
-  [01 - Pairwise falsification spike](.scratch/first-principled-v9/issues/01-pairwise-falsification-spike.md).
+  [02 - Surface realization and honesty](.scratch/first-principled-v9/issues/02-surface-realization-and-honesty.md)
+  (to be written).
 - No DB, no auth, no agent framework (Mastra/LangGraph is v2).
 - Home is the Tree. v6 parks Tutor from the chrome (engine stays). There
   is no Chat page and no learner-map tab. How it works lives in the header.

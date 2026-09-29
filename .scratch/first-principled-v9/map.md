@@ -72,13 +72,20 @@ relationships are the point, would open a rabbit hole.
   inventories passed; all four failed on pair-batch envelope shape
   only, with sensible underlying judgments. No kill criterion
   triggered. Record: `research/01-spike-evidence.md`.
+- 2026-09-29 **Ticket 01 goes.** All four gold words (laptop, battery,
+  photosynthesis, recursion) pass on `deepseek-flash` after the
+  envelope coercion, one predeclared attempt each. 5 calls per word,
+  8 to 9s, 4 to 8 nodes, one target-to-foundation trunk each. Before
+  the coercion, 0 of 4 passed. Open for Ticket 02: trunks are short
+  (3 to 4 nodes against `TRUNK_MIN` 4) and two words returned only 4
+  nodes, so the map may be too small to be a rabbit hole. Record:
+  `research/01-spike-evidence.md`.
 - 2026-09-29 the open question from 01 is decided: mechanical envelope
   tolerance, not model incapability. `normalizePairBatch` and
   `parsePairBatchText` coerce the four recorded failure shapes;
   `pairBatchProblems` is unchanged and still authoritative. Offline
   replay passes 4/4 (`research/verify-coercion.mjs`). Suite 409/409,
-  lint and typecheck green. No live batch has run since; no gold word
-  has produced a tree.
+  lint and typecheck green.
 - 2026-09-29 Jev (Decisions API) considered and not adopted: no
   rationale field, so it would delete the bridge-missing signal the
   record calls informative, and it cannot be tested while the local
@@ -96,13 +103,16 @@ relationships are the point, would open a rabbit hole.
 
 ## Open frontier
 
-- [01 - Pairwise falsification spike](issues/01-pairwise-falsification-spike.md) (unblocked; next)
+- [02 - Surface realization and honesty](issues/02-surface-realization-and-honesty.md) (to be written; next)
+- 01 is resolved. Do not rewrite it.
 
 ## Not yet specified
 
-- Ticket 02 (surface realization and honesty) through Ticket 08 (live
-  gold acceptance and Danny walk) graduate only if Ticket 01 goes.
-- Whether ticket numbering stays 02-08 per the Part B sequence.
+- Ticket 03 onward (RealityMap adapter and generated-map gate, transport
+  hardening, job integration, Chapel edge-history adapter, delete the
+  killed runtime, live gold acceptance and Danny walk) graduate from a
+  Ticket 02 result.
+- Whether ticket numbering stays 03-08 per the Part B sequence.
 
 ## Out of scope
 

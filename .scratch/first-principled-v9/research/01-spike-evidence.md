@@ -184,6 +184,45 @@ gold words are unattempted on this route since the coercion.
 Next: laptop, battery, photosynthesis on this route, one recorded
 attempt each, before any Go/Kill.
 
+## 2026-09-29 remaining three gold words
+
+Same route, one attempt each, committed as predeclared.
+
+| Word | Result | Calls | ms | Tokens (p/c) | Nodes | Edges | Trunk | Coercions |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| laptop | PASS | 5 | 8587 | 5693 / 4296 | 4 | 4 | `k10 -> k2 -> target` | 1 |
+| battery | PASS | 5 | 8231 | 5743 / 3991 | 8 | 10 | `k2 -> k5 -> k6 -> target` | 3 |
+| photosynthesis | PASS | 5 | 8548 | 5343 / 4218 | 4 | 4 | `k5 -> k9 -> k10 -> target` | 3 |
+
+Dropped judgments (NONE relations, TOO_LARGE jumps, LOW confidence) ran
+48 / 38 / 45 for laptop / battery / photosynthesis. `battery` dropped
+one candidate as a HIGH-confidence duplicate. Every run selected
+exactly one crown and an acyclic connected graph.
+
+**All four gold words now pass. Before the coercion, 0 of 4 did.**
+
+This is a Go on the falsification the ticket was set up to run: local
+pair judgments plus pure code topology selection produce a bounded,
+connected, acyclic dependence tree with one target-to-foundation trunk.
+The envelope blocker is gone and the underlying judgments hold up on
+the three words that had never been attempted on this route.
+
+What it does not settle, and what Ticket 02 must:
+
+- **Trunk length.** Three of four trunks are 3 to 4 nodes against a
+  `TRUNK_MIN` of 4, and `laptop` and `photosynthesis` returned only 4
+  nodes. The map may be too small to be a rabbit hole. Whether
+  `MAX_NODES` of 10 and the inventory of 8 to 10 candidates are the
+  binding constraint, or the judgment, is open.
+- **Run-to-run variance.** `recursion` produced a different node set and
+  edge set on each of two runs. One predeclared run per word is the
+  acceptance set, so this is noted, not scored.
+- **Learner-facing quality.** These are ids and rationales, not copy.
+  Nothing here has been realized to a Tree, and no human has walked one.
+
+Next: Ticket 02, surface realization and honesty. Not Ticket 03.
+
+
 
 ## 2026-09-29 Jev decision mode: not adopted
 
