@@ -86,14 +86,24 @@ relationships are the point, would open a rabbit hole.
   `pairBatchProblems` is unchanged and still authoritative. Offline
   replay passes 4/4 (`research/verify-coercion.mjs`). Suite 409/409,
   lint and typecheck green.
-- 2026-09-29 Jev (Decisions API) considered and not adopted: no
-  rationale field, so it would delete the bridge-missing signal the
-  record calls informative, and it cannot be tested while the local
-  OpenRouter key is dead. Full reasoning in the evidence record.
-- 2026-09-29 the local OpenRouter key returns HTTP 401 `User not
-  found` on every endpoint including the Decisions API, so
-  `space-bunny-free` and Jev are unreachable. DeepSeek is the only live
-  route. Replace the key before any OpenRouter-dependent run.
+- 2026-09-29 a replacement OpenRouter key was supplied and put in the
+  gitignored `.env`. The 401 `User not found` blocker is cleared.
+  `openrouter/free`, `stealth/space-bunny-alpha`, `z-ai/glm-5.3-flash`,
+  and the Jev Decisions API all return 200, though `/api/v1/credits`
+  reports a zero balance.
+- 2026-09-29 `deepseek-flash` stays the generator route. On
+  `stealth/space-bunny-alpha` the same code passes 2 of 4 gold words,
+  and the two that pass produce 2-node and 3-node trees against
+  DeepSeek's 4, 8, 4, 5. The free route is the cheap diagnostic, not
+  the acceptance route.
+- 2026-09-29 **gate bug found for Ticket 02:** `selectTopology` returns
+  `ok: true` for a two-node graph. `MAX_NODES` is a cap and `TRUNK_MIN`
+  is only a scoring preference, so nothing rejects a degenerate tree.
+  The 2-node laptop tree on the free route is the clearest example.
+- 2026-09-29 Jev (Decisions API) measured and **rejected**: one of three
+  real pairs correct, and it inverts the clamshell NONE call that the
+  evidence record calls informative, at 0.64 confidence. Cost was never
+  the argument ($0.00006 for three calls). Rationale in the record.
 - TriplyDB and RDF considered and deferred. The concept-identity half
   (labels to URIs) is a real gain and worth a spike after Ticket 01
   passes; the graph-store half is out: a 10-node per-session map does

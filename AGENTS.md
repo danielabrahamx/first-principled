@@ -25,18 +25,20 @@ words (laptop, battery, photosynthesis, recursion) pass on
 the 2026-09-29 envelope coercion, 0 of 4 passed. Record:
 `.scratch/first-principled-v9/research/01-spike-evidence.md`.
 
-**Blocker (2026-09-29):** the local OpenRouter key is dead. Every
-OpenRouter endpoint returns HTTP 401 `User not found`, including
-`/api/v1/credits`, `openrouter/free`, and the Decisions API. The
-DeepSeek key is live and is currently the only working route. Replace
-the key before any run that needs OpenRouter, `space-bunny-free`, or
-Jev.
+**Blocker (2026-09-29, resolved):** a dead local OpenRouter key was
+replaced. `openrouter/free`, `stealth/space-bunny-alpha`,
+`z-ai/glm-5.3-flash`, and the Jev Decisions API all return 200, though
+`/api/v1/credits` reports a zero balance. The DeepSeek key is also live.
+Generator route stays `deepseek-flash`: on `stealth/space-bunny-alpha`
+the same code passes only 2 of 4 gold words and returns 2-node trees.
 
 Next: write and work Ticket 02, surface realization and honesty. Known
-carry-in: trunks came back 3-4 nodes against `TRUNK_MIN` 4 and two
-words returned only 4 nodes, so the tree may be too small to be a
-rabbit hole. Do not ship the throwaway prototype. One ticket per
-session.
+carry-in, all three from the 2026-09-29 runs: trunks came back 3-4 nodes
+against `TRUNK_MIN` 4 and two words returned only 4 nodes, so the tree
+may be too small to be a rabbit hole; `selectTopology` returns `ok: true`
+for a 2-node graph, which is a gate bug and the first thing to fix; and
+run-to-run variance is real. Do not ship the throwaway prototype. One
+ticket per session.
 
 ## Golden rules
 
@@ -66,7 +68,9 @@ session.
   `thinking: false`, which on OpenRouter omits the `reasoning` field
   (the default model mandates reasoning; effort none returns HTTP 400;
   DeepSeek keeps `thinking` type disabled). Epiphanies sends JSON
-  Schema. The next
+  Schema. Jev (`typesafe/jev-1.13`) is reachable but measured and
+  rejected for pair judgment: 1 of 3 real pairs correct, no rationale.
+  The next
   HITL ticket is
   [02 - Surface realization and honesty](.scratch/first-principled-v9/issues/02-surface-realization-and-honesty.md)
   (to be written).

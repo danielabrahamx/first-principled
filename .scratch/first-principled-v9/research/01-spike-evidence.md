@@ -222,6 +222,72 @@ What it does not settle, and what Ticket 02 must:
 
 Next: Ticket 02, surface realization and honesty. Not Ticket 03.
 
+## 2026-09-29 new OpenRouter key: both prior blockers cleared
+
+A replacement `LLM_API_KEY` was supplied and put in the gitignored
+`.env`. The 401 `User not found` is gone.
+
+- `/api/v1/credits` returns 200 with `total_credits: 0`,
+  `total_usage: 0`. The account reports no balance, yet `openrouter/free`,
+  `stealth/space-bunny-alpha`, `z-ai/glm-5.3-flash`, and the Jev
+  Decisions API all return 200. So the free routes are reachable at
+  present, and the credit balance is not a reliable predictor of that.
+- `stealth/space-bunny-alpha` answers on an OpenAI-compatible
+  `/chat/completions` with a normal `message.content`, which is all
+  `llm.js` needs.
+
+### Gold words on the free OpenRouter route: 2 of 4, and the failures matter
+
+Route: `LLM_PROVIDER=openrouter`, `LLM_MODEL=stealth/space-bunny-alpha`.
+
+| Word | Result | Detail |
+| --- | --- | --- |
+| recursion | FAIL | `no target-to-foundation path: judgments do not connect the target to a demonstrable leaf`. 4 calls. |
+| laptop | PASS, degenerate | 2 nodes, 1 edge, trunk `k2 -> target`, 50 of 55 judgments dropped, 0 coercions. |
+| battery | FAIL at pair validation | batch 2 returned a judgment with `confidence` absent. 4 calls. |
+| photosynthesis | PASS, degenerate | 3 nodes, 2 edges, trunk `k7 -> k8 -> target`, 0 coercions. |
+
+This is materially worse than the DeepSeek route on the same code. Two
+of four words fail, and the two that pass produce trees of 2 and 3
+nodes against DeepSeek's 4, 8, 4, and 5. The battery failure is a new
+mode: a genuinely absent required field, which is a content failure
+rather than an envelope failure, and therefore correctly terminal. The
+coercion did not rescue it and should not.
+
+Reading: `deepseek-flash` remains the better generator route and is
+still the one the acceptance runs used. `space-bunny-alpha` is free and
+reachable, which makes it the right diagnostic route, but a 2-node tree
+is not a Dependence Tree and the `MAX_NODES` cap is doing the work the
+`TRUNK_MIN` check was supposed to catch. That gap is Ticket 02's first
+job, and it is a gate bug, not a model bug: `selectTopology` returns
+`ok: true` for a two-node graph.
+
+### Jev, measured on real pairs
+
+The Decisions API is reachable with the new key, so the earlier
+argument can be settled with data. Three pairs were taken from the
+2026-09-29 DeepSeek recursion run, with the relation that run's model
+gave, and put to Jev as a `choice` over the same four options.
+
+| Pair | DeepSeek said | Jev said | Jev confidence |
+| --- | --- | --- | --- |
+| base case / recursive call | `A_RESTS_ON_B` | `B_RESTS_ON_A` | 0.56 |
+| proton gradient / ATP synthase | `B_RESTS_ON_A` | `B_RESTS_ON_A` | 0.57 |
+| hinged clamshell / portable computer | `NONE` | `A_RESTS_ON_B` | 0.64 |
+
+One of three. The clamshell case is the one the 2026-09-10 evidence
+record singled out as a correct NONE call, and Jev inverts it with 0.72
+probability on the wrong answer. Confidence sits between 0.56 and 0.64
+on all three, so it is not a threshold problem that tuning would fix.
+Cost was $0.00006 for all three, so cost was never the argument.
+
+Decision: **do not adopt Jev for pair judgment.** It is measurably
+worse than the model it would replace on the specific judgments the
+evidence record calls informative, and it returns no rationale to check
+it with. Revisit only if a run shows dependence judgment itself is
+wrong rather than its delivery.
+
+
 
 
 ## 2026-09-29 Jev decision mode: not adopted
