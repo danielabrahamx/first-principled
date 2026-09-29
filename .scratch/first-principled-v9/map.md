@@ -114,7 +114,7 @@ relationships are the point, would open a rabbit hole.
 ## Open frontier
 
 - [02 - Surface realization and honesty](issues/02-surface-realization-and-honesty.md) (to be written; next)
-- 01 is resolved. Do not rewrite it.
+- [01 - Pairwise falsification spike](issues/01-pairwise-falsification-spike.md) is resolved (2026-09-29, GO). Do not rewrite it.
 
 ## Not yet specified
 

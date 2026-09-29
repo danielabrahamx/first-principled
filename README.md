@@ -1,5 +1,10 @@
 # first-principled
 
+> **Start at `docs/STATUS.md`.** It is the single source of current
+> truth and it is enforced by `src/claims.test.js`. `docs/DESIGN.md`
+> explains the system, `docs/FALSIFIED.md` records what was killed and
+> why.
+
 An AI tutor. The learner types a word or phrase (laptop, recursion,
 photosynthesis). The agent builds a Reality Map of that thing from the model's
 own knowledge. Home is the Tree of that map. How it works lives in the header.
@@ -16,18 +21,24 @@ mental model and reality.** See `docs/MISSION.md`.
   chrome.
 - `src/lib/mmg/` - the shared Mental Model Graph schema (types, validators,
   closeness score, fixtures), imported by both the frontend and the function.
-- `src/lib/agent/` - the agent engine: LLM transport (llm.js), defensive JSON
-  parsing (jsonParse.js), reality map generation (realityMap.js, ticket 04),
-  the Socratic engine with learner map updates (socratic.js, ticket 05), and
-  the stateless phase orchestrator (orchestrator.js, ticket 06).
+  Pure: no LLM, no I/O. This is layer r0 in `docs/DESIGN.md`.
+- `src/lib/agent/` - the agent engine: LLM transport (`llm.js`, the only
+  file that knows a provider exists), defensive JSON parsing
+  (`jsonParse.js`), reality map generation (`realityMap.js`, the v7
+  three-stage path still in prod), the Socratic engine (`socratic.js`),
+  deterministic gap selection (`gaps.js`), and the stateless phase
+  orchestrator (`orchestrator.js`).
+- `src/lib/agent/pairwise/` - the v9 pairwise generator (inventory, pairs,
+  judgments, topology). The live direction, not yet wired into the runtime.
+  `topology.js` makes no model call by design.
 - `netlify/functions/agent/` - the one serverless function, `POST /api/agent`
   (rewritten from `/.netlify/functions/agent` by `netlify.toml`). Stateless:
   it receives the full session state with every call and stores nothing.
-- `.scratch/first-principled/` - v1 product spec (`spec.md`). Current
-  effort map: `.scratch/first-principled-v7/map.md`. See
-  `docs/agents/issue-tracker.md`.
-- `docs/MISSION.md` - immutable mission, theory of learning, 12 core principles.
-- `AGENTS.md` - instructions for agent sessions working this repo.
+- `docs/` - `STATUS.md` (current truth), `DESIGN.md` (the system),
+  `FALSIFIED.md` (killed approaches), `MISSION.md` (immutable).
+- `.scratch/first-principled-v9/` - the current effort: map, issues, and
+  the evidence record. `.scratch/first-principled-v*/` for v1-v8 is
+  closed history. See `docs/agents/issue-tracker.md`.
 
 ## Run locally
 
@@ -73,10 +84,10 @@ from the environment, and the published `src/` bundle must never contain it.
 
 Deploy: `netlify deploy --prod` publishes `src/` plus
 `netlify/functions/` per `netlify.toml` (no build step). New env values
-require a redeploy to take effect. v6 rotated `LLM_*` to OpenRouter
-Nemotron `:free` (deploy `6a821d5637d95139bd35956f`). Current prod is
-OpenRouter paid Nemotron `nvidia/nemotron-3-ultra-550b-a55b` with JSON
-Schema on Epiphanies (deploy `6a8429c0f3fea97f620a6800`).
+require a redeploy to take effect. The historical prod model was
+`nvidia/nemotron-3-ultra-550b-a55b`; the default in `llm.js` is now
+`z-ai/glm-5.3-flash`. Check `docs/STATUS.md` for the current route
+before assuming anything about prod.
 
 ## Stack (v1)
 

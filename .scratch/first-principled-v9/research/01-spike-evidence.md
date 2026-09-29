@@ -222,6 +222,44 @@ What it does not settle, and what Ticket 02 must:
 
 Next: Ticket 02, surface realization and honesty. Not Ticket 03.
 
+## 2026-09-29 variance is worse than first measured
+
+`node scripts/gold-words.mjs` on `deepseek-flash`, same code, same
+route, second full set:
+
+| Word | nodes | edges | trunk | ms | coercions |
+| --- | --- | --- | --- | --- | --- |
+| laptop | **2** | 1 | 2 | 5566 | 1 |
+| battery | 3 | 3 | 3 | 8570 | 4 |
+| photosynthesis | **9** | 15 | 8 | 9993 | 4 |
+| recursion | 7 | 10 | 3 | 8583 | 4 |
+
+4 of 4 passed again, and the spread is far wider than the first set
+suggested. The honest node range across two full sets is **2 to 9**,
+not "4 to 8" as recorded above. The first set happened to land in a
+narrow band; this one did not. `photosynthesis` produced a genuine
+8-node trunk with 15 edges - a real tree with branches - while `laptop`
+produced a 2-node, 1-edge stub in the same run on the same route.
+
+This is the strongest evidence yet for the gate bug. `laptop` at 2
+nodes is `ok: true`. `selectTopology` has no minimum-size rejection;
+`MAX_NODES` is a cap and `TRUNK_MIN` only scores candidate paths. So a
+2-node stub and a 9-node branching tree are both "pass", and the
+acceptance set cannot currently distinguish them.
+
+Revised reading of the whole record:
+
+- **The task graph is right.** Four of four, twice, with real
+  rationales and honest drops. That part is settled.
+- **The size and shape of the output is not controlled at all.** The
+  same prompt on the same route yields 2 nodes or 9. Nothing in the
+  system constrains it, so "pass" currently means "not empty and
+  connected", which is much weaker than a followable Dependence Tree.
+- **Ticket 02 is bigger than a realization pass.** It has to make the
+  gate reject a degenerate tree, and then make the generator reliably
+  clear the stronger gate. Those are one problem, not two.
+
+
 ## 2026-09-29 new OpenRouter key: both prior blockers cleared
 
 A replacement `LLM_API_KEY` was supplied and put in the gitignored

@@ -1,5 +1,10 @@
 # First-Principled - Context
 
+> **Read `docs/STATUS.md` first.** It is the single source of current
+> truth. This file is the domain vocabulary and the long-form
+> architecture, and it is deliberately *behind* STATUS.md on anything
+> time-sensitive. If the two disagree, STATUS.md and the code win.
+
 An AI tutor. The learner types a thing in reality; the agent builds a
 Reality Map from the model's knowledge. The Tree is the product surface: a
 first-principles dependence path of that map. This effort is Tree-only:
@@ -10,29 +15,31 @@ cognitive distance between the learner's mental model and reality.
 
 ## Frontier (resume here)
 
-v6 chrome is live. One-shot scoring is parked. Current effort is v7:
-a three-stage Tree builder. Map:
-`.scratch/first-principled-v7/map.md`. Three stages stay in one
-background init job
-([Can one background agent finish three serial LLM calls](.scratch/first-principled-v7/issues/01-can-one-background-agent-finish-three-serial-llm-calls.md)).
-The three-stage generator is live on prod
-([Deploy the three-stage Tree](.scratch/first-principled-v7/issues/06-deploy-the-three-stage-tree.md)).
-JSON Schema on Epiphanies is shipped
-([Ship JSON Schema on Epiphanies](.scratch/first-principled-v7/issues/10-ship-json-schema-on-epiphanies.md)).
-Prod is OpenRouter paid Nemotron
-`nvidia/nemotron-3-ultra-550b-a55b`. Open frontier:
-[Danny scores followability on the three-stage Tree](.scratch/first-principled-v7/issues/07-danny-scores-followability-on-the-three-stage-tree.md)
-(HITL).
-[Lock the thinking architecture from the council](.scratch/first-principled-v7/issues/09-lock-the-thinking-architecture-from-the-council.md)
-locked Option A. Sibling display map (does not replace v7 KEEP/KILL):
-`.scratch/first-principled-v8/map.md` - etymology-style Dependence
-flowchart and stage-product wait-state. Poll snapshots, crown-at-bottom,
-fan-in spine, Chapel look, and morph wait-state are locked. Running
-stage snapshots are on the poll (2026-08-24). Chapel flowchart is
-shipped on the finished Tree (2026-08-24). Next session (display
-map only):
-[Grow stage products in place on the Chapel flowchart](.scratch/first-principled-v8/issues/11-grow-stage-products-in-place-on-the-chapel-flowchart.md)
-(AFK). Card, arrow, and hover contracts are locked.
+**v9 is the live effort.** Map:
+`.scratch/first-principled-v9/map.md`. Ticket 01 (pairwise
+falsification spike) is resolved and is a GO: all four gold words pass
+on `deepseek-flash` as of 2026-09-29. The next ticket is 02, surface
+realization and honesty (to be written).
+
+Ticket 01 evidence:
+`.scratch/first-principled-v9/research/01-spike-evidence.md`.
+
+**v7 is dead but still in prod.** The three-stage generator
+(Chronology -> Epiphanies -> Arrange) is falsified: Arrange preserved
+Chronology as a flat list on 3 of 4 gold words. It is retained only
+because the Chapel chrome, job/poll envelope, transport, and MMG base
+shape are battle-tested. Its map and issues are history:
+`.scratch/first-principled-v7/`. Do not retune its prompts; the task
+graph is the problem, and the reasoning is in `docs/FALSIFIED.md`.
+
+**v8 (Chapel display) is shipped**, not planned. The etymology-style
+Dependence flowchart, crown-at-bottom, fan-in spine, card/arrow/hover
+contracts, and morph wait-state are all live. Its map describes display
+work that is done: `.scratch/first-principled-v8/map.md`.
+
+Everything under `.scratch/first-principled-v*/` other than v9 is
+closed. Ten `map.md` files exist because the effort ran for ten
+versions; only the v9 one is current.
 
 ## Language
 
@@ -152,21 +159,34 @@ Current architecture (v1):
   and is parked from the UI.
 - OpenAI-compatible LLM via `LLM_PROVIDER=openrouter|deepseek` (default
   openrouter uses `LLM_*`; deepseek uses `DEEPSEEK_*`). Default OpenRouter
-  model: `stealth/ox-alpha`. Prod stays OpenRouter. JSON maps pass
-  `thinking: false`, but the OpenRouter default model mandates reasoning
-  and rejects `reasoning: { effort: "none" }` with HTTP 400, so on
-  OpenRouter the `reasoning` field is omitted and maps run on mandatory
-  provider thinking; DeepSeek still sends
-  `thinking: { type: "disabled" }`. A per-stage override exists as an
-  unused seam; DeepSeek Epiphanies-on was tried and failed to parse.
+  model: `z-ai/glm-5.3-flash`, set as `OPENROUTER_DEFAULT_MODEL` in
+  `llm.js` and asserted against this file by `src/claims.test.js`. The
+  older `stealth/ox-alpha` and `nvidia/nemotron-3-ultra-550b-a55b`
+  defaults named in the v6/v7 research notes are historical. Prod stays
+  OpenRouter. JSON maps pass `thinking: false`, but the OpenRouter
+  default model mandates reasoning and rejects `reasoning: { effort:
+  "none" }` with HTTP 400, so on OpenRouter the `reasoning` field is
+  omitted and maps run on mandatory provider thinking; DeepSeek still
+  sends `thinking: { type: "disabled" }`. A per-stage override exists as
+  an unused seam; DeepSeek Epiphanies-on was tried and failed to parse.
   Do not parse `reasoning_content` as the JSON contract. Epiphanies
   sends JSON Schema
   ([Ship JSON Schema on Epiphanies](.scratch/first-principled-v7/issues/10-ship-json-schema-on-epiphanies.md)).
   The `:free` slug cannot constrain that call. No DB, no auth, no framework.
+- The **live generator direction is the v9 pairwise spike** under
+  `src/lib/agent/pairwise/`: an inventory call, up to four independent
+  pair-judgment batches, then pure-code topology selection with no model
+  call. Mechanical envelope coercion lives in `normalizePairBatch`.
+  Nothing in the runtime imports it yet; the switch is a later ticket
+  and is atomic with no fallback. `llm.js` and the browser client are
+  the two transports; `docs/DESIGN.md` explains why the provider seam
+  is one file.
 - `src/lib/agent/` holds the engine: reality map generation, the Socratic
   turn loop (kept, not shown), and the LLM transport.
 
-Source of truth: `.scratch/first-principled/spec.md` (v1 product),
-`.scratch/first-principled-v7/map.md` (generator effort),
-`.scratch/first-principled-v8/map.md` (display and wait-state). Immutable
+Source of truth for current state: `docs/STATUS.md`. Architecture and
+the reasoning behind it: `docs/DESIGN.md`. Killed approaches and the
+measurements that killed them: `docs/FALSIFIED.md`. Product spec:
+`.scratch/first-principled/spec.md` (v1, mostly still accurate).
+Current effort map: `.scratch/first-principled-v9/map.md`. Immutable
 mission: `docs/MISSION.md`.
