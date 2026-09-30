@@ -120,26 +120,51 @@ gold rate went from a recorded 4 of 4 to **1 to 2 of 4**.
 
 The tempting move at that point is to relax a threshold until the
 number recovers. That is precisely the v7 failure: the gate gets fitted
-to the failure it was meant to catch. The thresholds came from the
-product (a walkable trunk, a map that is more than a chain, a single
-top) and are not to be moved to chase a pass rate. Raise them only with
-a measurement of why the current value is wrong.
+to the failure it was meant to catch.
+
+**Correction, 2026-09-29: the gate was partly fitted anyway.** Measured
+against `eval/map-quality/gold.js`, the hand-written maps that define a
+good Dependence Tree: `recursion` at 4 nodes fails `MIN_NODES` = 5, and
+`battery` at 4 nodes with a depth-2 trunk fails `MIN_TRUNK_NODES` = 4.
+Two of the four maps a human wrote on purpose are rejected by the gate
+written to judge them.
+
+`MIN_TRUNK_NODES` = 4 has lineage; it was ticket 01's `TRUNK_MIN`.
+`MIN_NODES` = 5 and the crown invariant are ticket 02 additions, and
+the only recorded justification for the node floor was that the gold
+runs were failing. An earlier version of this file claimed all three
+"came from the product rather than from the score". For `MIN_NODES`
+that was false.
 
 **Consequence:** a gate must reject the degenerate case by
 construction, and the acceptance test must include a case that fails
 it. `topology.test.js` now carries "a 2-node graph is not a tree", "a
 trunk shorter than the minimum is rejected, with its length named", and
-"nothing may rest on the target: the crown invariant".
+"nothing may rest on the target: the crown invariant". But a gate that
+rejects the target definition is also wrong, and the thresholds are
+disputed until ticket 03 re-derives them from the hand-written maps
+rather than from the acceptance runs.
 
 ## What is known to be broken or missing
 
 Carried into ticket 03. All measured 2026-09-29, recorded in
 `02-realization-evidence.md`.
 
-- **The gate accepts degenerate trees.** FIXED in ticket 02.
-  `MIN_TRUNK_NODES`, `MIN_NODES`, and the crown invariant are acceptance
-  rules now, each with a test named for the defect it replaced. See
-  finding 3 above.
+- **The gate accepts degenerate trees.** FIXED in ticket 02, but the
+  fix is **disputed**. `MIN_TRUNK_NODES`, `MIN_NODES`, and the crown
+  invariant are acceptance rules now, each with a test named for the
+  defect it replaced. Two of the four hand-written gold maps fail them.
+  See finding 3 above.
+- **The gold four may not be the product.** They are four physical and
+  computational mechanisms. Run against four unseen words on
+  2026-09-29, the generator produced a good tree for `sourdough` and
+  failed `monarchy`, `supply chain`, and `memory allocation`, the latter
+  two both with zero accepted prerequisites for the target. The pipeline
+  is verifiably not fitted to the four words (checked by execution, see
+  `.scratch/first-principled-v9/map.md`). Whether the *failures* cluster
+  by category is unmeasured and is ticket 03's first question. If they
+  do, the tutor has an unwritten domain boundary and that is a product
+  decision, not a generator bug.
 - **The generator does not reliably clear the real gate.** The honest
   rate is 1 to 2 of 4 across four runs on identical code and route, and
   node count on a given word swings 4 to 9. The gate is correct, so this

@@ -136,10 +136,37 @@ relationships are the point, would open a rabbit hole.
   card, and one edge id answered four times with rewordings (collapsed
   only when byte-identical). Record:
   `research/02-realization-evidence.md`.
+- 2026-09-29 **the ticket 02 gate rejects two of the four hand-written
+  gold maps.** Measured against `eval/map-quality/gold.js`: `recursion`
+  (4 nodes) fails `MIN_NODES` = 5 and `battery` (4 nodes, depth-2 trunk)
+  fails `MIN_TRUNK_NODES` = 4. `MIN_TRUNK_NODES` has lineage, it was
+  ticket 01's `TRUNK_MIN`. `MIN_NODES` = 5 and the crown invariant are
+  ticket 02 additions and the only recorded justification for the node
+  floor was that the gold runs were failing. That is the gate fitted to
+  the fixture, which is the documented v7 failure mode, committed one
+  session after it was written down. `docs/STATUS.md` claimed the
+  thresholds came from the product; for `MIN_NODES` that was false and
+  the file is corrected by ticket 03.
+- 2026-09-29 **the pipeline is not fitted to the gold words, checked by
+  execution rather than by reading.** Every occurrence of a gold word in
+  `src/lib/agent/pairwise/` is in a comment; prompts, schemas, and
+  payload builders were run against a non-gold word and diffed, and only
+  the concept string differs. The v9 generator is reachable only from
+  `scripts/`, never from `eval/` or `src/api/`. Four unseen words run
+  live: `sourdough` produced a 6-node trunk and 13 coherent warrants;
+  `monarchy`, `supply chain`, and `memory allocation` failed, and
+  `monarchy` and `memory allocation` both at `tgtOK` 0. Whether those
+  failures cluster by category is ticket 03's first question, because
+  the ticket four is four physical and computational mechanisms.
+- 2026-09-29 the 18.5 MB of scraped vendor HTML under
+  `.scratch/first-principled-v7/research/_sources/` is deleted. It was
+  untracked, so the deletion is not in git history and `docs/ARCHIVE.md`
+  is the record. Working tree 113.9 MB to 95.4 MB.
 
 ## Open frontier
 
-- [03 - RealityMap adapter and generated-map gate](issues/03-realitymap-adapter.md) (to be written). **Blocked** on generator variance: the honest gold rate is 1 to 2 of 4, and node count on a given word swings 4 to 9. Adapting a map with that variance bakes it into the assembly layer. Next measurement is judgment sparsity, not a new build.
+- [03 - Generality and gate provenance](issues/03-generality-and-gate-provenance.md) (next). Research only, no code. Two questions in order: is the gold four representative, and where do the judgments go? Generality first, because the sparsity measurement is taken against the gold four and would be a measurement of the wrong population if they are not representative.
+- [04 - RealityMap adapter and generated-map gate](issues/04-realitymap-adapter.md) (to be written). **Blocked** on 03: the thresholds must be applied and the gold set re-measured against them. Adapting a map with a disputed gate bakes the dispute into the assembly layer.
 - [02 - Surface realization and honesty](issues/02-surface-realization-and-honesty.md) is resolved (2026-09-29). Do not rewrite it.
 - [01 - Pairwise falsification spike](issues/01-pairwise-falsification-spike.md) is resolved (2026-09-29, GO). Do not rewrite it.
 
@@ -165,10 +192,18 @@ relationships are the point, would open a rabbit hole.
 ```
 01 pairwise falsification spike (inventory + pairs + topology, local CLI)
 01 -> 02 surface realization and honesty
-02 -> 03 RealityMap adapter and generated-map gate
-03 -> 04 transport hardening
-04 -> 05 job integration (atomic init switch)
-05 -> 06 Chapel edge-history adapter
-06 -> 07 delete the killed runtime
-07 -> 08 live gold acceptance and Danny walk
+02 -> 03 generality and gate provenance        (renumbered 2026-09-29)
+03 -> 04 RealityMap adapter and generated-map gate
+04 -> 05 transport hardening
+05 -> 06 job integration (atomic init switch)
+06 -> 07 Chapel edge-history adapter
+07 -> 08 delete the killed runtime
+08 -> 09 live gold acceptance and Danny walk
 ```
+
+Ticket 03 was inserted on 2026-09-29 and the downstream sequence
+shifted. Only the adapter had actually been named before that, so the
+renumber touched no written ticket. It went in ahead of the adapter
+because the adapter is blocked on a disputed gate, and a ticket that
+documents the dispute is cheaper to write than one that argues about it
+inside a build.

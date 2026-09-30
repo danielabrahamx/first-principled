@@ -116,6 +116,50 @@ test("STATUS.md quotes the topology thresholds that decide the gold set", () => 
   assert.match(tests, /crown invariant/);
 });
 
+test("if the gate rejects a hand-written gold map, the dispute is recorded", () => {
+  // Measured 2026-09-29: MIN_NODES=5 rejects recursion and battery, both
+  // hand-written 4-node gold maps, so a gate that rejects the target
+  // definition has shipped. Ticket 03 re-derives the thresholds from the
+  // hand-written maps rather than from the acceptance runs.
+  //
+  // This test is deliberately NOT a red test. `npm test` is the safety
+  // net and a red suite gets "fixed" by the next session without anyone
+  // reading why. Instead the dispute has to stay written down: either the
+  // thresholds get re-derived and this passes on the merits, or someone
+  // deleting the note makes it fail. Both outcomes are the ones we want.
+  const minNodes = Number(sourceConst("src/lib/agent/pairwise/topology.js", "MIN_NODES"));
+  const minTrunk = Number(sourceConst("src/lib/agent/pairwise/topology.js", "MIN_TRUNK_NODES"));
+  // Known sizes of the hand-written maps, measured not parsed so that a
+  // change to either the maps or the gate is what moves this test.
+  const handWritten = { laptop: 8, recursion: 4, photosynthesis: 5, battery: 4 };
+  const rejected = Object.entries(handWritten).filter(([, nodes]) => nodes < minNodes);
+  if (rejected.length === 0) return; // the gate accepts the target definition
+
+  const status = read("docs/STATUS.md");
+  const ticket = read(".scratch/first-principled-v9/issues/03-generality-and-gate-provenance.md");
+  for (const [name] of rejected) {
+    assert.ok(
+      status.includes(`\`${name}\``),
+      `docs/STATUS.md must name the rejected hand-written map ${name}`
+    );
+  }
+  assert.match(
+    status,
+    /fitted|fitted-to-the-fixture|came from the acceptance|came from the product rather than from the score/i,
+    "docs/STATUS.md must say the threshold is disputed, not defend it"
+  );
+  assert.match(
+    ticket,
+    /re-?derive[^\n]*gold maps|hand-written gold maps/i,
+    "ticket 03 must carry the re-derivation"
+  );
+  assert.ok(
+    !/\*\*Status:\*\*\s*resolved/i.test(ticket),
+    "ticket 03 cannot be resolved while the thresholds are disputed"
+  );
+  void minTrunk;
+});
+
 test("the v9 frontier agrees with the v9 issue statuses", () => {
   // The frontier and the issue files must not disagree about what is
   // open. A resolved ticket still listed as the next task sends the next
@@ -123,14 +167,23 @@ test("the v9 frontier agrees with the v9 issue statuses", () => {
   const frontier = read(".scratch/first-principled-v9/map.md");
   assert.ok(/## Open frontier/.test(frontier), "the v9 map must declare an open frontier");
   assert.ok(
-    /\[03 - RealityMap adapter and generated-map gate\]/.test(frontier),
+    /\[03 - Generality and gate provenance\]/.test(frontier),
     "the open frontier must name ticket 03"
+  );
+  // The adapter is the next thing anyone will reach for. It must stay
+  // visibly blocked while the gate thresholds are disputed, or the next
+  // session builds on a gate nobody has defended.
+  assert.ok(
+    /\[04 - RealityMap adapter[^\]]*\]\([^)]*\)[^\n]*\n?[^\n]*\*\*Blocked\*\* on 03/.test(frontier),
+    "ticket 04 must be marked blocked on 03 in the frontier"
   );
 
   const ticket01 = read(".scratch/first-principled-v9/issues/01-pairwise-falsification-spike.md");
   assert.match(ticket01, /\*\*Status:\*\*\s*resolved/i, "ticket 01 must be marked resolved");
   const ticket02 = read(".scratch/first-principled-v9/issues/02-surface-realization-and-honesty.md");
   assert.match(ticket02, /\*\*Status:\*\*\s*resolved/i, "ticket 02 must be marked resolved");
+  const ticket03 = read(".scratch/first-principled-v9/issues/03-generality-and-gate-provenance.md");
+  assert.match(ticket03, /\*\*Status:\*\*\s*open/i, "ticket 03 must be marked open");
   assert.ok(
     !/\[01 - Pairwise falsification spike\][^\n]*\(unblocked; next\)/.test(frontier),
     "ticket 01 is resolved and must not be listed as next"
