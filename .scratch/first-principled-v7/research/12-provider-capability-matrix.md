@@ -6,7 +6,12 @@ claim that "no provider ships thinking and structured outputs in the same call")
 This file verifies that claim against current primary sources and recommends a
 zero-dependency, serverless 3-call pipeline.
 
-Raw fetched sources (HTML + extracted text) live in `_sources/` next to this file.
+Raw fetched sources (HTML + extracted text) lived in `_sources/` next to this
+file. That directory was deleted on 2026-09-29: 18.5 MB across 66 files,
+imported by nothing, cited by no measurement. The findings below were
+checked against those sources when they were fetched, and the citations
+inside this file are the durable record. The raw HTML is gone; re-fetch
+it from the URLs named here if a claim above ever needs rechecking.
 
 ## TL;DR
 

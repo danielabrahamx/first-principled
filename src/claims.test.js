@@ -220,11 +220,22 @@ test("closed effort directories are labelled closed, and v9 is the live one", ()
   );
 });
 
-test("the fenced 18.5 MB of scraped vendor HTML is still flagged as removable", () => {
-  // A known dead-weight directory. The claim must stay honest: if a
-  // future session uses it, or deletes it, the note must be updated
-  // rather than left to rot into a false statement.
+test("the scraped vendor HTML is gone, and the record says so", () => {
+  // This directory was 18.5 MB across 66 files and was deleted
+  // 2026-09-29. The test's job is to keep the note and the filesystem
+  // from disagreeing in either direction: the note must not claim a
+  // directory that exists, and must not go silent about one that is
+  // gone. It was untracked, so git history cannot be the record.
   const archive = read("docs/ARCHIVE.md");
   assert.match(archive, /_sources/);
-  assert.match(archive, /Nothing\s+imports it/i);
+  assert.match(archive, /Deleted\s*\n?\s*2026-09-29/);
+  assert.ok(
+    !existsSync(join(ROOT, ".scratch/first-principled-v7/research/_sources")),
+    "the directory is deleted; docs/ARCHIVE.md must not imply it is still there"
+  );
+  // And the one document that cited it as an evidence base is marked,
+  // so nobody follows a pointer to nothing.
+  const matrix = read(".scratch/first-principled-v7/research/12-provider-capability-matrix.md");
+  assert.match(matrix, /lived in `_sources\/`/);
+  assert.match(matrix, /deleted on 2026-09-29/);
 });

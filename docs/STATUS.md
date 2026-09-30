@@ -167,10 +167,11 @@ Carried into ticket 03. All measured 2026-09-29, recorded in
 - **Realization has never been in prod.** It ships with the boundary
   enforced (a hallucinated id is a gate failure, not a dropped row) but
   nothing calls it except `scripts/gold-words.mjs`.
-- **18.5 MB of `.scratch/first-principled-v7/research/_sources/`** is
-  scraped vendor HTML and plain text. Nothing imports it, no
-  measurement depends on it, and it is 66 files of documentation the
-  model does not need. Candidate for archival.
+- **18.5 MB of `.scratch/first-principled-v7/research/_sources/` was
+  scraped vendor HTML.** Imported by nothing, cited by no measurement.
+  **Deleted 2026-09-29**, repo working size 113.9 MB to 95.4 MB. It was
+  untracked so the deletion is not in git history; `docs/ARCHIVE.md`
+  carries the record.
 
 ## The system is wired so the next change is cheap
 

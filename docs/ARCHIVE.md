@@ -26,12 +26,16 @@ maintaining a document that was no longer the frontier.
 
 ## Known-bad contents
 
-- **`.scratch/first-principled-v7/research/_sources/` is 18.5 MB of
+- **`.scratch/first-principled-v7/research/_sources/` was 18.5 MB of
   scraped vendor HTML and plain text** across 66 files - DeepSeek,
   OpenAI, Anthropic, OpenRouter, and library documentation. Nothing
-  imports it, no measurement depends on it, and it is not cited by
-  content anywhere. It is the single largest thing in the repository
-  and it is dead weight. Safe to delete or move to cold storage.
+  imported it and no measurement depended on it. **Deleted
+  2026-09-29.** It was untracked, so the deletion is not in git history;
+  this note is the record. One document cited it as an evidence base
+  (`.scratch/first-principled-v7/research/12-provider-capability-matrix.md`,
+  now marked), and its in-file citations remain the durable version of
+  that research. Re-fetch from the URLs named there if it is ever
+  rechecked.
 - **The v6 and v7 research notes name models the code has not used for
   several versions** (`nvidia/nemotron-3-ultra-550b-a55b`,
   `stealth/ox-alpha`). Read them as history. `src/claims.test.js`
