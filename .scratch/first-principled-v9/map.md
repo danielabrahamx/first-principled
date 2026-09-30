@@ -162,11 +162,54 @@ relationships are the point, would open a rabbit hole.
   `.scratch/first-principled-v7/research/_sources/` is deleted. It was
   untracked, so the deletion is not in git history and `docs/ARCHIVE.md`
   is the record. Working tree 113.9 MB to 95.4 MB.
+- 2026-10-01 **Ticket 03 answered both questions and opened no
+  architecture.** Question 1, generality: 20 words across 5 categories, 4
+  each, one attempt each on `deepseek-flash`, **1 of 20 passed**, and the
+  failures **do not cluster by category**. Every category produced at
+  least two distinct failure modes, and the physical-mechanism category,
+  which is what the gold four are made of, held 2 of the 6
+  `no target-to-foundation path` failures and zero passes. The one pass,
+  `supply chain`, is institutional. So there is no unwritten domain
+  boundary, no human product decision is owed on that question, and the
+  gold four were an unlucky draw. Question 2, judgment sparsity: the
+  recorded signature was wrong. `tgtBig` was **0** on 15 of the 20 words
+  and 0 on every word that failed at `tgtOK` 0, across 14 attempts on 5
+  words. The cause is **inversion**: the model judges each candidate as
+  resting **on** the whole target, part-of read as dependence, or returns
+  `NONE` with "inflation as a whole does not rest on money supply alone".
+  The `TOO_LARGE` rationales name different intermediates every run
+  because the inventory is redrawn per run, so they cannot recur. Kill
+  criterion honoured: no targeted second pass built, negative recorded.
+  Record: `research/03-generality-evidence.md`.
+- 2026-10-01 **the two gate floors are wrong by one and neither has
+  product lineage.** Derived offline from `eval/map-quality/gold.js` by
+  `research/03-runs/derive-thresholds.mjs`, which is pure and reproduces
+  the numbers without a model call. `MIN_NODES` 5 to **4** and
+  `MIN_TRUNK_NODES` 4 to **3**; `MAX_FANIN_PER_TRUNK_NODE` 2 to **3**
+  because it clips the canonical `laptop` fixture, and it is **not
+  exported** so no test can assert on it. `MAX_NODES` 10, `MAX_PATH_NODES`
+  8 and the crown invariant are unchanged and confirmed derived: all four
+  hand-written maps have zero edges resting on the crown. **Proposed, not
+  applied.** The product question stays open for a human: two of the four
+  hand-written maps are 4 nodes with a 3-node trunk, and whether that is a
+  rabbit hole is a judgement about the learner, not about the code.
+  Ticket 04 stays blocked until it is answered.
+- 2026-10-01 two `src/claims.test.js` defects were part of the ticket 03
+  defect. The dispute test measured node count only and discarded the
+  trunk floor with a `void`, which is exactly why `battery`'s
+  `MIN_TRUNK_NODES` rejection shipped unmeasured for a session; it now
+  measures both floors and requires the derivation and the proposal to be
+  on record. A new test asserts that every non-exported constant in
+  `topology.js` is named as such in the evidence file. And the honest gold
+  rate is now **0 to 2 of 4 across six runs**: two identical gold runs on
+  2026-10-01, minutes apart, both returned 0 of 4 with different failure
+  modes, so run-to-run variance is the finding, not a defect in the
+  measurement.
 
 ## Open frontier
 
-- [03 - Generality and gate provenance](issues/03-generality-and-gate-provenance.md) (next). Research only, no code. Two questions in order: is the gold four representative, and where do the judgments go? Generality first, because the sparsity measurement is taken against the gold four and would be a measurement of the wrong population if they are not representative.
-- [04 - RealityMap adapter and generated-map gate](issues/04-realitymap-adapter.md) (to be written). **Blocked** on 03: the thresholds must be applied and the gold set re-measured against them. Adapting a map with a disputed gate bakes the dispute into the assembly layer.
+- [03 - Generality and gate provenance](issues/03-generality-and-gate-provenance.md) is resolved (2026-10-01, research only, no code changed). Do not rewrite it.
+- [04 - RealityMap adapter and generated-map gate](issues/04-realitymap-adapter.md) (to be written). **Blocked** on 03: the thresholds must be applied, and the human product decision ticket 03 reopened must be answered first. Two of the four hand-written gold maps are 4 nodes with a 3-node trunk, so either a 4-node map is an acceptable Dependence Tree and both floors drop to 4 and 3, or the hand-written maps are underspecified and should grow. Adapting a map with a disputed gate bakes the dispute into the assembly layer.
 - [02 - Surface realization and honesty](issues/02-surface-realization-and-honesty.md) is resolved (2026-09-29). Do not rewrite it.
 - [01 - Pairwise falsification spike](issues/01-pairwise-falsification-spike.md) is resolved (2026-09-29, GO). Do not rewrite it.
 
@@ -206,4 +249,6 @@ shifted. Only the adapter had actually been named before that, so the
 renumber touched no written ticket. It went in ahead of the adapter
 because the adapter is blocked on a disputed gate, and a ticket that
 documents the dispute is cheaper to write than one that argues about it
-inside a build.
+inside a build. Ticket 03 was worked on 2026-10-01 and answered its
+questions without changing the gate, so the sequence is unchanged and
+ticket 04 is still first.

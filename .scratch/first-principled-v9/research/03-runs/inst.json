@@ -1,0 +1,453 @@
+﻿{
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "results": [
+    {
+      "word": "parliament",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 8990,
+      "promptTokens": 6018,
+      "completionTokens": 3747,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "dropped the echoed type field",
+        "dropped the echoed type field",
+        "set jump to NOT_APPLICABLE on a NONE row",
+        "dropped the echoed type field"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "majority voting with quorum rules",
+        "deliberative assembly procedure",
+        "representative election by district",
+        "separation of legislative and executive powers",
+        "collective decision rule and aggregation",
+        "written constitution allocating authority",
+        "committee reporting and bill stages",
+        "accountability through public questioning",
+        "interest aggregation and party discipline",
+        "legislative record keeping and public access"
+      ],
+      "relations": {
+        "A_RESTS_ON_B": 15,
+        "NONE": 33,
+        "B_RESTS_ON_A": 7
+      },
+      "jumps": {
+        "TOO_LARGE": 5,
+        "n/a": 33,
+        "SMALL": 17
+      },
+      "targetPrereqs": 4,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "representative election by district",
+          "needs": "parliament",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "separation of legislative and executive powers",
+          "needs": "written constitution allocating authority",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "separation of legislative and executive powers",
+          "needs": "parliament",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "majority voting with quorum rules",
+          "needs": "collective decision rule and aggregation",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "majority voting with quorum rules",
+          "needs": "parliament",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "legislative record keeping and public access",
+          "needs": "parliament",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "deliberative assembly procedure",
+          "needs": "collective decision rule and aggregation",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "deliberative assembly procedure",
+          "needs": "parliament",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "collective decision rule and aggregation",
+          "needs": "interest aggregation and party discipline",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "collective decision rule and aggregation",
+          "needs": "parliament",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "committee reporting and bill stages",
+          "needs": "written constitution allocating authority",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "accountability through public questioning",
+          "needs": "written constitution allocating authority",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "interest aggregation and party discipline",
+          "needs": "written constitution allocating authority",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "parliament",
+          "needs": "written constitution allocating authority",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "parliament",
+          "needs": "committee reporting and bill stages",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "parliament",
+          "needs": "accountability through public questioning",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "parliament",
+          "needs": "interest aggregation and party discipline",
+          "confidence": "MEDIUM",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "degenerate trunk: longest target-to-foundation path is 3 nodes, below the 4-node minimum"
+      ]
+    },
+    {
+      "word": "supply chain",
+      "ok": true,
+      "stage": "topology",
+      "calls": 6,
+      "elapsedMs": 11930,
+      "promptTokens": 6626,
+      "completionTokens": 4609,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "dropped the echoed type field",
+        "dropped the echoed type field",
+        "dropped the echoed type field"
+      ],
+      "nodes": 6,
+      "edges": 7,
+      "trunk": 5,
+      "trunkPath": "k7 -> k2 -> k4 -> k3 -> target",
+      "candidates": 10,
+      "inventory": [
+        "inventory holding cost",
+        "order lead time",
+        "bullwhip effect",
+        "batch production",
+        "queueing at a single server",
+        "division of labor",
+        "freight transport mode",
+        "stockout",
+        "double-entry bookkeeping",
+        "standardized container"
+      ],
+      "relations": {
+        "NONE": 42,
+        "A_RESTS_ON_B": 8,
+        "B_RESTS_ON_A": 5
+      },
+      "jumps": {
+        "n/a": 42,
+        "SMALL": 10,
+        "TOO_LARGE": 3
+      },
+      "targetPrereqs": 2,
+      "targetPairsTooLarge": 1,
+      "droppedCandidates": 0,
+      "droppedJudgments": 46,
+      "graph": [
+        {
+          "on": "standardized container",
+          "needs": "freight transport mode",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "bullwhip effect",
+          "needs": "order lead time",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "batch production",
+          "needs": "order lead time",
+          "confidence": "MEDIUM",
+          "selected": true
+        },
+        {
+          "on": "order lead time",
+          "needs": "freight transport mode",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "order lead time",
+          "needs": "stockout",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "bullwhip effect",
+          "needs": "batch production",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "supply chain",
+          "needs": "bullwhip effect",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "batch production",
+          "needs": "queueing at a single server",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "supply chain",
+          "needs": "batch production",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "freight transport mode",
+          "needs": "supply chain",
+          "confidence": "MEDIUM",
+          "selected": false
+        }
+      ],
+      "refusals": [
+        {
+          "on": "target",
+          "needs": "stockout",
+          "jump": "TOO_LARGE",
+          "why": "Stockout is a supply-chain failure outcome but not a foundational dependency for the whole."
+        }
+      ],
+      "errors": [],
+      "realized": true,
+      "realizeCoercions": [],
+      "tree": [
+        {
+          "id": "k7",
+          "heading": "Freight transport mode",
+          "gloss": "The physical channel such as truck, ship, rail, or air used to move goods between locations. Each mode trades cost against speed and reach.",
+          "label": "freight transport mode",
+          "rank": 0,
+          "onTrunk": true
+        },
+        {
+          "id": "k10",
+          "heading": "Standardized container",
+          "gloss": "A reusable box of fixed dimensions that can be moved between ship, rail, and truck without unloading. It makes transfers fast and cheap.",
+          "label": "standardized container",
+          "rank": 1,
+          "onTrunk": false
+        },
+        {
+          "id": "k2",
+          "heading": "Order lead time",
+          "gloss": "The delay between placing a replenishment order and receiving the goods. This delay forces firms to forecast and hold buffer stock.",
+          "label": "order lead time",
+          "rank": 1,
+          "onTrunk": true
+        },
+        {
+          "id": "k4",
+          "heading": "Batch production",
+          "gloss": "Making goods in fixed-size lots rather than one at a time, which creates waiting and stock between steps. It spreads setup costs but ties up inventory.",
+          "label": "batch production",
+          "rank": 2,
+          "onTrunk": true
+        },
+        {
+          "id": "k3",
+          "heading": "Bullwhip effect",
+          "gloss": "The tendency for small changes in end-customer demand to cause growing swings in orders upstream. It creates waste and stockouts across the chain.",
+          "label": "bullwhip effect",
+          "rank": 3,
+          "onTrunk": true
+        },
+        {
+          "id": "target",
+          "heading": "Supply chain",
+          "gloss": "The entire network of firms, activities, and resources that move a product from raw materials to the end customer. Its performance depends on how well the parts coordinate.",
+          "label": "supply chain",
+          "rank": 4,
+          "onTrunk": true
+        }
+      ],
+      "warrants": [
+        {
+          "id": "e-p-k10--k7",
+          "because": "A standard container makes any freight mode faster and cheaper to load, so transport choices depend on it.",
+          "on": "standardized container",
+          "needs": "freight transport mode"
+        },
+        {
+          "id": "e-p-k2--k3",
+          "because": "Long order lead times make it harder to match supply with demand, which lets small demand swings grow into bigger upstream order swings.",
+          "on": "bullwhip effect",
+          "needs": "order lead time"
+        },
+        {
+          "id": "e-p-k2--k4",
+          "because": "Batch production creates waiting and stock between steps, which adds to the total order lead time.",
+          "on": "batch production",
+          "needs": "order lead time"
+        },
+        {
+          "id": "e-p-k2--k7",
+          "because": "The choice of freight transport mode sets how long goods spend moving, which is a key part of order lead time.",
+          "on": "order lead time",
+          "needs": "freight transport mode"
+        },
+        {
+          "id": "e-p-k3--k4",
+          "because": "Batch production rules, such as long lot sizes and infrequent orders, amplify the bullwhip effect by adding delay and lumpiness.",
+          "on": "bullwhip effect",
+          "needs": "batch production"
+        },
+        {
+          "id": "e-p-k3--target",
+          "because": "A supply chain's performance depends on how well it dampens the bullwhip effect, so the whole system rests on this dynamic.",
+          "on": "supply chain",
+          "needs": "bullwhip effect"
+        },
+        {
+          "id": "e-p-k4--target",
+          "because": "Batch production decisions shape the flow of goods through a supply chain, so the whole system rests on this practice.",
+          "on": "supply chain",
+          "needs": "batch production"
+        }
+      ]
+    },
+    {
+      "word": "contract",
+      "ok": false,
+      "stage": "pairs",
+      "calls": 5,
+      "coercions": [
+        "keyed-object envelope lifted to an array"
+      ],
+      "errors": [
+        "batch 1: pair batch has unexpected top-level field \"pair_id\"; pair batch has unexpected top-level field \"relation\""
+      ],
+      "dump": []
+    },
+    {
+      "word": "inflation",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 7991,
+      "promptTokens": 5728,
+      "completionTokens": 4038,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "keyed-object envelope lifted to an array",
+        "dropped the echoed type field"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "consumer price index basket",
+        "price of a single good over time",
+        "money supply",
+        "quantity theory of money",
+        "aggregate demand",
+        "aggregate supply",
+        "expectations of future prices",
+        "real versus nominal values",
+        "percentage change calculation",
+        "supply and demand for a single market"
+      ],
+      "relations": {
+        "NONE": 48,
+        "B_RESTS_ON_A": 3,
+        "A_RESTS_ON_B": 4
+      },
+      "jumps": {
+        "n/a": 48,
+        "SMALL": 2,
+        "TOO_LARGE": 5
+      },
+      "targetPrereqs": 0,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "quantity theory of money",
+          "needs": "money supply",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "consumer price index basket",
+          "needs": "inflation",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "no target-to-foundation path: judgments do not connect the target to a demonstrable leaf"
+      ]
+    }
+  ]
+}

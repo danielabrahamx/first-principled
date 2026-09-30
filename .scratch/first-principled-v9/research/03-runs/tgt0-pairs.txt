@@ -1,0 +1,78 @@
+﻿
+=== sourdough attempt 1/2 stage topology
+  verdict: PASS nodes 5 trunk 4 | k6 -> k4 -> k2 -> target
+  inventory: wild yeast and lactic acid bacteria in flour and water | fermentation of sugars into carbon dioxide and organic acids | gluten network formation by hydration and kneading | gas retention in a viscoelastic dough matrix | maintaining a starter by periodic feeding | dough hydration ratio | temperature dependence of microbial activity | cell division and population growth in a starter | enzyme breakdown of starch into simple sugars | pH measurement of acidity
+  target pairs: 10, of which claim the target rests on them: 4
+   OK  wild yeast and lactic acid bacteria in flour and water | B_RESTS_ON_A HIGH SMALL | Sourdough as a whole rests on the wild yeast and lactic acid bacteria community.
+   --  pH measurement of acidity | NONE HIGH NOT_APPLICABLE | pH measurement is a part/aspect of sourdough but sourdough as a whole does not rest on this single measurement for its existence or understanding.
+   OK  fermentation of sugars into carbon dioxide and organic acids | B_RESTS_ON_A HIGH SMALL | Sourdough as a whole fundamentally depends on fermentation of sugars into carbon dioxide and organic acids.
+   OK  gluten network formation by hydration and kneading | B_RESTS_ON_A HIGH SMALL | Sourdough bread structure depends partially on gluten network formation, a core component of the whole.
+   OK  gas retention in a viscoelastic dough matrix | B_RESTS_ON_A HIGH SMALL | Sourdough depends on gas retention for rise and texture, a key component of the whole.
+   --  maintaining a starter by periodic feeding | NONE HIGH NOT_APPLICABLE | Sourdough as a whole is not required to understand starter feeding.
+   --  dough hydration ratio | NONE HIGH NOT_APPLICABLE | Sourdough as a whole is not needed to understand hydration ratio.
+   --  temperature dependence of microbial activity | NONE HIGH NOT_APPLICABLE | Sourdough as a whole is not required to understand temperature effects on microbes.
+   --  cell division and population growth in a starter | NONE HIGH NOT_APPLICABLE | Sourdough as a whole is not necessary to understand cell division in a starter.
+   --  enzyme breakdown of starch into simple sugars | NONE HIGH NOT_APPLICABLE | Sourdough as a whole is not required to understand enzyme starch breakdown.
+
+=== sourdough attempt 2/2 stage topology
+  verdict: FAIL nodes 0 trunk 0 | crown invariant broken: 2 selected edges rest on the target, so the map has no single top (p-k2--target, p-k2--target)
+  inventory: wild yeast and lactic acid bacteria in a flour-water mixture | fermentation of sugars by yeast producing carbon dioxide and ethanol | lactic acid bacteria producing lactic and acetic acids | gluten network formation by hydration and kneading | gas retention in a viscoelastic dough matrix | maintaining a sourdough starter through regular feeding | enzymatic breakdown of starch into simple sugars in dough | measuring pH and total titratable acidity in sourdough | bacterial production of exopolysaccharides in sourdough | microbial succession during spontaneous flour fermentation
+  target pairs: 10, of which claim the target rests on them: 6
+   --  wild yeast and lactic acid bacteria in a flour-water mixture | A_RESTS_ON_B HIGH SMALL | Sourdough depends on the wild yeast and LAB community as its essential fermenting agent.
+   --  microbial succession during spontaneous flour fermentation | A_RESTS_ON_B HIGH SMALL | microbial succession is a core process within the broader concept of sourdough.
+   --  fermentation of sugars by yeast producing carbon dioxide and ethanol | A_RESTS_ON_B HIGH SMALL | yeast fermentation is a fundamental process within the broader concept of sourdough.
+   OK  lactic acid bacteria producing lactic and acetic acids | B_RESTS_ON_A HIGH SMALL | Sourdough as a whole includes the activity of lactic acid bacteria; without them, it would not be sourdough.
+   OK  gluten network formation by hydration and kneading | B_RESTS_ON_A HIGH SMALL | Sourdough bread structure relies on the gluten network formed by hydration and kneading; without it, the dough would not trap gas properly.
+   OK  gas retention in a viscoelastic dough matrix | B_RESTS_ON_A HIGH SMALL | Sourdough as a whole cannot be understood without the dough's gas retention, which drives expansion.
+   OK  maintaining a sourdough starter through regular feeding | B_RESTS_ON_A HIGH SMALL | Sourdough as a sustained culture depends on the practice of maintaining the starter through feeding.
+   OK  enzymatic breakdown of starch into simple sugars in dough | B_RESTS_ON_A MEDIUM SMALL | Sourdough fermentation depends on enzymatic sugar release, though it is one of several metabolic inputs.
+   OK  measuring pH and total titratable acidity in sourdough | B_RESTS_ON_A MEDIUM SMALL | Understanding sourdough sourness and stability rests on measuring pH and titratable acidity, though other factors contribute.
+   --  bacterial production of exopolysaccharides in sourdough | NONE MEDIUM NOT_APPLICABLE | Exopolysaccharide production improves sourdough texture but is not a necessary basis for the whole concept.
+
+=== inflation attempt 1/2 stage topology
+  verdict: FAIL nodes 0 trunk 0 | no target-to-foundation path: judgments do not connect the target to a demonstrable leaf
+  inventory: consumer price index | money supply | quantity theory of money | supply and demand | purchasing power | central bank interest rate policy | price level | base money creation by central bank | aggregate demand | basket of goods and services
+  target pairs: 10, of which claim the target rests on them: 1
+   --  consumer price index | A_RESTS_ON_B HIGH SMALL | CPI is a measure used to quantify inflation, so it depends on the concept of inflation.
+   --  basket of goods and services | NONE HIGH NOT_APPLICABLE | The basket is a component of inflation but not a necessary condition for inflation to exist.
+   --  money supply | NONE HIGH NOT_APPLICABLE | Money supply is a determinant of inflation, not a necessary condition for its definition.
+   --  quantity theory of money | NONE HIGH NOT_APPLICABLE | Quantity theory is a specific theory, not the same as the general concept of inflation.
+   --  supply and demand | NONE HIGH NOT_APPLICABLE | Supply and demand is a mechanism, inflation is a phenomenon; not the same concept.
+   --  purchasing power | NONE HIGH NOT_APPLICABLE | Purchasing power is a component or determinant of inflation, but does not rest on the whole concept.
+   --  central bank interest rate policy | NONE HIGH NOT_APPLICABLE | Interest rate policy is a tool that affects inflation but does not rest on the whole concept.
+   BIG price level | B_RESTS_ON_A MEDIUM TOO_LARGE | Inflation involves changes in price level, but a bridge is missing.
+   --  base money creation by central bank | A_RESTS_ON_B LOW TOO_LARGE | Base money creation is often considered a cause of inflation, but direction and bridge are unclear.
+   --  aggregate demand | NONE MEDIUM NOT_APPLICABLE | Aggregate demand is a determinant of inflation but does not rest on it for existence.
+
+=== inflation attempt 2/2 stage topology
+  verdict: FAIL nodes 0 trunk 0 | no target-to-foundation path: judgments do not connect the target to a demonstrable leaf
+  inventory: Consumer price index | Purchasing power | Money supply | Central bank interest rate | Aggregate demand | Supply and demand | Quantity theory of money | Price level | Hyperinflation | Market basket of goods
+  target pairs: 10, of which claim the target rests on them: 0
+   --  Consumer price index | NONE HIGH NOT_APPLICABLE | CPI is a part/measure of inflation, not the whole concept itself.
+   --  Market basket of goods | NONE LOW NOT_APPLICABLE | Market basket is a tool used to track inflation, but is not the same as the inflation concept.
+   --  Purchasing power | NONE MEDIUM NOT_APPLICABLE | Purchasing power is closely related to inflation but is a distinct concept, not the same or directly dependent.
+   --  Money supply | NONE HIGH NOT_APPLICABLE | Inflation as a whole does not strictly rest on money supply alone.
+   --  Central bank interest rate | NONE HIGH NOT_APPLICABLE | Inflation as a whole does not strictly rest on central bank interest rate.
+   --  Aggregate demand | NONE HIGH NOT_APPLICABLE | Aggregate demand is a component of some inflation explanations, but inflation as a whole does not rest on aggregate demand alone.
+   --  Supply and demand | NONE HIGH NOT_APPLICABLE | Inflation can be explained via supply and demand, but the concept of inflation does not rest on the supply and demand model alone.
+   --  Quantity theory of money | NONE HIGH NOT_APPLICABLE | Quantity theory of money is a specific theory about inflation, but the general concept of inflation does not rest on it.
+   --  Price level | NONE HIGH NOT_APPLICABLE | Inflation is a sustained increase in the price level, but the concept of price level itself does not rest on inflation.
+   --  Hyperinflation | A_RESTS_ON_B HIGH SMALL | Hyperinflation is defined as an extreme form of inflation, so understanding hyperinflation requires the concept of inflation.
+
+=== argument attempt 1/2 stage pairs
+  errors: batch 2: pair batch has unexpected top-level field "k10--k6"; pair batch has unexpected top-level field "k10--k7"
+
+=== argument attempt 2/2 stage topology
+  verdict: FAIL nodes 0 trunk 0 | degenerate trunk: longest target-to-foundation path is 2 nodes, below the 4-node minimum
+  inventory: premise | conclusion | inference | truth value | proposition | deductive validity | soundness | symbolic logic notation | truth table | natural language sentence
+  target pairs: 10, of which claim the target rests on them: 2
+   --  premise | A_RESTS_ON_B MEDIUM SMALL | A premise is a part of an argument, so the concept premise depends on the concept argument.
+   --  natural language sentence | NONE HIGH NOT_APPLICABLE | An argument is a whole composed of premises and conclusion, not a natural language sentence.
+   --  conclusion | A_RESTS_ON_B HIGH SMALL | A conclusion is a part of an argument, so the concept of conclusion depends on the concept of argument.
+   OK  inference | B_RESTS_ON_A HIGH SMALL | An argument minimally consists of inferences; without inference there is no argument.
+   --  truth value | NONE HIGH NOT_APPLICABLE | Truth value is a property of propositions; an argument as a whole does not have a truth value.
+   --  proposition | A_RESTS_ON_B HIGH SMALL | An argument is composed of propositions as its premises and conclusion.
+   --  deductive validity | A_RESTS_ON_B HIGH SMALL | Deductive validity is a property of arguments.
+   --  soundness | A_RESTS_ON_B HIGH SMALL | Soundness is a property of arguments.
+   OK  symbolic logic notation | B_RESTS_ON_A HIGH SMALL | Symbolic notation is used to represent logical structure of arguments.
+   --  truth table | A_RESTS_ON_B MEDIUM SMALL | Truth tables evaluate propositions, which are components of arguments.

@@ -1,9 +1,10 @@
 # 03 - Generality and gate provenance
 
 **Type:** research
-**Status:** open
+**Status:** resolved (2026-10-01)
 **Blocked by:** 02 (resolved 2026-09-29)
 **Related:** `../research/02-realization-evidence.md`,
+`../research/03-generality-evidence.md`,
 `../../docs/FALSIFIED.md`, `eval/map-quality/gold.js`,
 `../../docs/STATUS.md` finding 3
 
@@ -157,24 +158,69 @@ hand-written maps, rather than from the acceptance runs.
 
 ## Acceptance criteria
 
-- [ ] `../research/03-generality-evidence.md` exists with the full
+- [x] `../research/03-generality-evidence.md` exists with the full
       per-word table, the category clustering verdict, and at least one
       realized tree from outside the gold four quoted in full.
-- [ ] The clustering question is answered one way or the other with the
+- [x] The clustering question is answered one way or the other with the
       numbers, not with an impression. "Mostly fine" is not a verdict.
-- [ ] The `TOO_LARGE`-on-target-pairs rationales are read across at least
+      **Answered: no clustering. 1 of 20 across 5 categories, every
+      category with at least two distinct failure modes, and the
+      physical-mechanism category holding 2 of the 6 no-path failures
+      and 0 passes.**
+- [x] The `TOO_LARGE`-on-target-pairs rationales are read across at least
       three runs per word and the recurrence question is answered.
-- [ ] Every threshold in `topology.js` has a stated derivation, and any
+      **Answered: they do not recur, and they are not the mechanism.
+      `tgtBig` was 0 on 15 of 20 words and 0 on every `tgtOK` 0 word.
+      The cause is inversion: candidates judged as resting on the whole
+      target, or `NONE`. 14 attempts over 5 words. Kill criterion met, no
+      targeted second pass built.**
+- [x] Every threshold in `topology.js` has a stated derivation, and any
       threshold whose only justification was a failing gold run says so
       in `docs/STATUS.md` rather than claiming product lineage.
-- [ ] A proposed threshold set, with evidence, is recorded. Not applied.
-- [ ] `docs/STATUS.md` no longer claims `MIN_NODES` came from the
+- [x] A proposed threshold set, with evidence, is recorded. Not applied.
+      **`MIN_NODES` 5 to 4, `MIN_TRUNK_NODES` 4 to 3,
+      `MAX_FANIN_PER_TRUNK_NODE` 2 to 3 and export it. `MAX_NODES`,
+      `MAX_PATH_NODES` and the crown invariant unchanged and confirmed
+      derived. Reproducible offline via `03-runs/derive-thresholds.mjs`.**
+- [x] `docs/STATUS.md` no longer claims `MIN_NODES` came from the
       product. It did not, and the file says so.
-- [ ] No threshold, prompt, or coercion is changed in this ticket.
-- [ ] `npm test`, `npm run typecheck`, `npm run lint` green.
-- [ ] `node scripts/gold-words.mjs` unchanged in behaviour. Run it once
+- [x] No threshold, prompt, or coercion is changed in this ticket.
+- [x] `npm test`, `npm run typecheck`, `npm run lint` green.
+- [x] `node scripts/gold-words.mjs` unchanged in behaviour. Run it once
       before and once after and record both numbers, so "nothing changed"
-      is a measurement rather than a claim.
+      is a measurement rather than a claim. **0 of 4 before and 0 of 4
+      after, different failure modes. Honest range across six runs is
+      now 0 to 2 of 4.**
+
+## Result, and what it hands to the next ticket
+
+Both questions answered, and neither one opened a new architecture.
+Ticket 03 changed no threshold, prompt, coercion or validator. It
+corrected `docs/STATUS.md`, and it corrected two `src/claims.test.js`
+assertions that were themselves part of the defect:
+
+- The dispute test measured node count only and discarded the trunk floor
+  with a `void`, which is why `battery`'s `MIN_TRUNK_NODES` rejection
+  shipped unmeasured for a whole session. It now measures both floors and
+  requires the derivation and the proposal to be on record.
+- A new test asserts that every non-exported constant in `topology.js` is
+  named as such in the evidence file, because `MAX_FANIN_PER_TRUNK_NODE`
+  was unreachable by any test.
+
+**The product decision this ticket cannot make.** Two of the four
+hand-written gold maps are 4 nodes with a 3-node trunk. Either a 4-node
+map is an acceptable Dependence Tree and both floors drop to 4 and 3, or
+the hand-written maps are underspecified and should grow and the floors
+stand. The numbers cannot decide it, and it is not resolved by whichever
+pair makes the acceptance set score better. A human has to answer it
+before ticket 04, because ticket 04 assembles maps against this gate.
+
+**For the applying ticket.** The proposed `claims.test.js` assertion that
+the hand-written gold maps pass the gate is written out verbatim in
+`../research/03-generality-evidence.md`, section "The proposed
+`claims.test.js` assertion". It cannot be added here: with the live floors
+it fails, and this ticket forbids changing a threshold. It goes in when the
+floors move, and `MAX_FANIN_PER_TRUNK_NODE` has to be exported with it.
 
 ## Kill criteria
 
@@ -182,12 +228,18 @@ hand-written maps, rather than from the acceptance runs.
   a product boundary question about what the tutor is for, and it is not
   a generator problem to be tuned away. Do not fix a domain boundary by
   changing prompts until the boundary stops appearing.
+  **NOT TRIGGERED. Measured across 20 words, no clustering.**
 - If the `TOO_LARGE` rationales do not recur for a word, do not build a
   targeted second pass. Record the negative and leave the architecture
-  alone.
+  alone. **TRIGGERED AND HONOURED. Recorded as a negative; no second
+  pass was built.**
 - If the hand-written gold maps turn out to disagree with each other
   about what a Dependence Tree is, stop. Two human-written answers to
   the same question means there is no target to measure against yet.
+  **NOT TRIGGERED. All four agree that the crown is the one node nothing
+  rests on, and that assertion passed on all four. They disagree on
+  depth, 3 to 8 nodes, which is a spread not a contradiction, and it is
+  what makes the floor a judgement call rather than a derivation.**
 
 ## Out of scope
 

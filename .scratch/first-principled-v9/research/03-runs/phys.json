@@ -1,0 +1,414 @@
+﻿{
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "results": [
+    {
+      "word": "sourdough",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9755,
+      "promptTokens": 6063,
+      "completionTokens": 4496,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "keyed-object envelope lifted to an array",
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array",
+        "keyed-object envelope lifted to an array"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "wild yeast and lactic acid bacteria in flour and water",
+        "gluten network formation by hydration and kneading",
+        "carbon dioxide production and dough rise",
+        "fermentation of sugars into organic acids",
+        "yeast budding and population growth",
+        "enzyme activity breaking starch into sugars",
+        "temperature control of microbial activity",
+        "salt inhibiting microbes and tightening gluten",
+        "steam expansion and crust formation in a hot oven",
+        "maintaining a starter by periodic feeding"
+      ],
+      "relations": {
+        "NONE": 45,
+        "A_RESTS_ON_B": 5,
+        "B_RESTS_ON_A": 5
+      },
+      "jumps": {
+        "n/a": 45,
+        "TOO_LARGE": 2,
+        "SMALL": 8
+      },
+      "targetPrereqs": 0,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "carbon dioxide production and dough rise",
+          "needs": "fermentation of sugars into organic acids",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "maintaining a starter by periodic feeding",
+          "needs": "wild yeast and lactic acid bacteria in flour and water",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "wild yeast and lactic acid bacteria in flour and water",
+          "needs": "carbon dioxide production and dough rise",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "wild yeast and lactic acid bacteria in flour and water",
+          "needs": "fermentation of sugars into organic acids",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "yeast budding and population growth",
+          "needs": "wild yeast and lactic acid bacteria in flour and water",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "wild yeast and lactic acid bacteria in flour and water",
+          "needs": "sourdough",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "carbon dioxide production and dough rise",
+          "needs": "maintaining a starter by periodic feeding",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "fermentation of sugars into organic acids",
+          "needs": "maintaining a starter by periodic feeding",
+          "confidence": "MEDIUM",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "no target-to-foundation path: judgments do not connect the target to a demonstrable leaf"
+      ]
+    },
+    {
+      "word": "tidal power",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9713,
+      "promptTokens": 6163,
+      "completionTokens": 4598,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array",
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "tidal range measurement",
+        "tidal barrage operation",
+        "tidal stream turbine",
+        "gravitational force between Earth and Moon",
+        "tide-generating force",
+        "Earth rotation and tidal cycle",
+        "resonance in ocean basins",
+        "water turbine energy conversion",
+        "gravitational potential energy of impounded water",
+        "estuarine hydrodynamics"
+      ],
+      "relations": {
+        "NONE": 39,
+        "A_RESTS_ON_B": 12,
+        "B_RESTS_ON_A": 4
+      },
+      "jumps": {
+        "n/a": 39,
+        "TOO_LARGE": 3,
+        "SMALL": 13
+      },
+      "targetPrereqs": 0,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "water turbine energy conversion",
+          "needs": "tidal barrage operation",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "gravitational potential energy of impounded water",
+          "needs": "tidal barrage operation",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "tidal barrage operation",
+          "needs": "tidal power",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "tidal range measurement",
+          "needs": "tidal power",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "tidal barrage operation",
+          "needs": "estuarine hydrodynamics",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "tidal stream turbine",
+          "needs": "water turbine energy conversion",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "tidal stream turbine",
+          "needs": "tidal power",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "tide-generating force",
+          "needs": "gravitational potential energy of impounded water",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "tide-generating force",
+          "needs": "tidal power",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Earth rotation and tidal cycle",
+          "needs": "tidal power",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "resonance in ocean basins",
+          "needs": "tidal power",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "water turbine energy conversion",
+          "needs": "tidal power",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "gravitational potential energy of impounded water",
+          "needs": "tidal power",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "no target-to-foundation path: judgments do not connect the target to a demonstrable leaf"
+      ]
+    },
+    {
+      "word": "cantilever bridge",
+      "ok": false,
+      "stage": "pairs",
+      "calls": 5,
+      "coercions": [
+        "dropped the echoed type field",
+        "set jump to NOT_APPLICABLE on a NONE row",
+        "set jump to NOT_APPLICABLE on a NONE row",
+        "dropped the echoed type field",
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array"
+      ],
+      "errors": [
+        "batch 1: judgment has unexpected field \"a\"; judgment has unexpected field \"b\""
+      ],
+      "dump": []
+    },
+    {
+      "word": "refraction",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9305,
+      "promptTokens": 5968,
+      "completionTokens": 4324,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "dropped the echoed type field",
+        "dropped the echoed type field",
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "Snell's law",
+        "Refractive index",
+        "Speed of light in a medium",
+        "Wavefront",
+        "HuygensÔÇôFresnel principle",
+        "Fermat's principle",
+        "Electromagnetic wave",
+        "Phase velocity",
+        "Boundary conditions for electromagnetic fields",
+        "Wave interference"
+      ],
+      "relations": {
+        "NONE": 34,
+        "A_RESTS_ON_B": 17,
+        "B_RESTS_ON_A": 4
+      },
+      "jumps": {
+        "n/a": 34,
+        "SMALL": 17,
+        "TOO_LARGE": 4
+      },
+      "targetPrereqs": 4,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "Refractive index",
+          "needs": "Speed of light in a medium",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Refractive index",
+          "needs": "refraction",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Speed of light in a medium",
+          "needs": "Fermat's principle",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Speed of light in a medium",
+          "needs": "Electromagnetic wave",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Speed of light in a medium",
+          "needs": "Phase velocity",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "refraction",
+          "needs": "Speed of light in a medium",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Wavefront",
+          "needs": "HuygensÔÇôFresnel principle",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Wavefront",
+          "needs": "Electromagnetic wave",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "refraction",
+          "needs": "Wavefront",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "HuygensÔÇôFresnel principle",
+          "needs": "Electromagnetic wave",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Snell's law",
+          "needs": "Refractive index",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Snell's law",
+          "needs": "refraction",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Wave interference",
+          "needs": "Wavefront",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Electromagnetic wave",
+          "needs": "Phase velocity",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Electromagnetic wave",
+          "needs": "Boundary conditions for electromagnetic fields",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "refraction",
+          "needs": "Phase velocity",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "refraction",
+          "needs": "Boundary conditions for electromagnetic fields",
+          "confidence": "MEDIUM",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "crown invariant broken: 2 selected edges rest on the target, so the map has no single top (p-k2--target, p-k1--target)"
+      ]
+    }
+  ]
+}

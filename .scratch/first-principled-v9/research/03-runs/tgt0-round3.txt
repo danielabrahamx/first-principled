@@ -1,0 +1,30 @@
+﻿
+=== sourdough attempt 1/1 stage topology
+  verdict: FAIL nodes 0 trunk 0 | crown invariant broken: 1 selected edge rests on the target, so the map has no single top (p-k3--target)
+  inventory: Lactic acid bacteria fermentation | Wild yeast fermentation | Gluten network development | Dough hydration | Carbon dioxide production | Yeast cell budding | Saccharification | Amylase enzyme activity | Glucose molecule | Wheat starch granule
+  target pairs: 10, of which claim the target rests on them: 3
+   OK  Lactic acid bacteria fermentation | B_RESTS_ON_A HIGH SMALL | Sourdough depends on lactic acid bacteria fermentation as a defining process.
+   BIG Wheat starch granule | B_RESTS_ON_A HIGH TOO_LARGE | Sourdough minimally requires fermentable sugars from starch, but many bridging processes are omitted.
+   BIG Wild yeast fermentation | B_RESTS_ON_A HIGH TOO_LARGE | Sourdough requires fermentation, but a full bridge from molecular process to bread structure is missing.
+   --  Gluten network development | A_RESTS_ON_B HIGH SMALL | Gluten network development is a key component process that contributes to the overall sourdough system.
+   --  Dough hydration | A_RESTS_ON_B HIGH SMALL | Dough hydration is a foundational step required for the sourdough process.
+   --  Carbon dioxide production | A_RESTS_ON_B HIGH SMALL | Sourdough leavening depends on carbon dioxide production by microorganisms.
+   --  Yeast cell budding | A_RESTS_ON_B LOW TOO_LARGE | Yeast budding is part of sourdough fermentation but not universally necessary for the dough concept.
+   --  Saccharification | NONE MEDIUM NOT_APPLICABLE | Saccharification is a related process but not a direct requirement for sourdough.
+   --  Amylase enzyme activity | A_RESTS_ON_B MEDIUM SMALL | Sourdough fermentation relies on amylase enzymes to break down starches.
+   --  Glucose molecule | A_RESTS_ON_B MEDIUM SMALL | Sourdough fermentation depends on glucose as a primary energy source for microbes.
+
+=== inflation attempt 1/1 stage topology
+  verdict: FAIL nodes 0 trunk 0 | degenerate trunk: longest target-to-foundation path is 3 nodes, below the 4-node minimum
+  inventory: price index construction | percentage change calculation | basket of goods and services | consumer price survey | purchasing power | money supply | supply and demand for goods | wage-price spiral | central bank interest rate policy | real versus nominal value
+  target pairs: 10, of which claim the target rests on them: 2
+   OK  price index construction | B_RESTS_ON_A HIGH SMALL | Inflation as a target concept rests on price index construction for measurement.
+   --  real versus nominal value | NONE MEDIUM NOT_APPLICABLE | real versus nominal value is a related concept within inflation, not the whole that inflation rests on
+   --  percentage change calculation | NONE MEDIUM NOT_APPLICABLE | percentage change calculation is a tool used in measuring inflation, not a concept inflation rests on
+   --  basket of goods and services | A_RESTS_ON_B LOW TOO_LARGE | basket is a component used in measuring inflation but the basket concept does not rest on the whole target
+   --  consumer price survey | A_RESTS_ON_B LOW TOO_LARGE | price survey is a measurement tool within inflation but does not rest on the whole
+   --  purchasing power | NONE HIGH NOT_APPLICABLE | Purchasing power is a distinct concept affected by inflation, not the whole itself.
+   --  money supply | NONE HIGH NOT_APPLICABLE | Money supply is one factor in inflation, not the whole concept.
+   --  supply and demand for goods | A_RESTS_ON_B LOW SMALL | Supply and demand for goods underlies market price setting in inflation, but inflation as a whole is broader.
+   BIG wage-price spiral | B_RESTS_ON_A MEDIUM TOO_LARGE | Inflation can encompass wage-price spirals, but the general concept does not require them.
+   --  central bank interest rate policy | NONE HIGH NOT_APPLICABLE | Central bank policy is a response to or influence on inflation, not a component that inflation rests on.

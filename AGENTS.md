@@ -37,18 +37,24 @@ pairwise generator ships as a spike under `src/lib/agent/pairwise/`
 plus `scripts/gold-words.mjs`; nothing in the runtime imports it yet,
 and prod still runs the v7 three-stage path.
 
-**v9 status:** Ticket 01 is resolved and it is a GO. All four gold
+**v9 status:** Tickets 01 and 02 are resolved and a GO. All four gold
 words (laptop, battery, photosynthesis, recursion) pass on
 `deepseek-flash`, one predeclared attempt each, 5 calls per word. Before
 the 2026-09-29 envelope coercion, 0 of 4 passed. Record:
 `.scratch/first-principled-v9/research/01-spike-evidence.md`.
 
-**Read `docs/STATUS.md` "Known to be broken" before planning.** Three
-things carry into ticket 02, all measured: `selectTopology` returns
-`ok: true` for a 2-node graph, so the gate accepts degenerate trees;
-output size is completely uncontrolled, 2 to 9 nodes across two full
-gold sets on identical code; and nothing has been realized to
-learner-facing copy, so followability is entirely unmeasured.
+**Read `docs/STATUS.md` "Known to be broken" before planning.** The
+load-bearing items as of 2026-10-01. **The gold four are not the
+product, and that is measured**: 20 words across 5 categories, 1 of 20
+passed, and the failures do not cluster by category, so there is no
+domain boundary to escalate. **The gate rejects two of the four
+hand-written gold maps**: both floors are wrong by one, `MIN_NODES` 5
+against a derivation of 4 and `MIN_TRUNK_NODES` 4 against a derivation
+of 3, and ticket 03 proposed the corrections without applying them.
+**Run-to-run variance is the open problem**: 0 to 2 of 4 across six runs
+on identical code. Records:
+`.scratch/first-principled-v9/research/02-realization-evidence.md` and
+`03-generality-evidence.md`.
 
 **Blocker (2026-09-29, resolved):** a dead local OpenRouter key was
 replaced. `openrouter/free`, `stealth/space-bunny-alpha`,
@@ -57,9 +63,14 @@ replaced. `openrouter/free`, `stealth/space-bunny-alpha`,
 Generator route stays `deepseek-flash`: on `stealth/space-bunny-alpha`
 the same code passes only 2 of 4 gold words and returns 2-node trees.
 
-Next: write and work Ticket 02, surface realization and honesty. Fix the
-2-node gate bug first, then make the generator clear the stronger gate.
-Do not ship the throwaway prototype. One ticket per session.
+Next: ticket 04, the RealityMap adapter. **It is blocked on a human
+decision, not on code.** Ticket 03 left one question open: two of the
+four hand-written gold maps are 4 nodes with a 3-node trunk, so either a
+4-node map is an acceptable Dependence Tree and both floors drop, or the
+hand-written maps are underspecified and should grow. Ticket 03 also left
+three floor corrections unapplied on purpose. Do not apply them and do not
+adapt a map against this gate without answering the product question
+first. One ticket per session.
 
 ## Golden rules
 
@@ -89,7 +100,7 @@ Do not ship the throwaway prototype. One ticket per session.
 ## The loop that works
 
 ```bash
-npm test                        # 416 tests: the real safety net
+npm test                        # 446 tests: the real safety net
 npm run typecheck               # JSDoc types over src/
 npm run lint                    # anti-slop
 node scripts/gold-words.mjs     # the acceptance set; exit 1 on any failure
@@ -123,8 +134,8 @@ and never a new architecture. See "The Contract pattern" in
   rejected for pair judgment: 1 of 3 real pairs correct, no rationale.
   The next
   HITL ticket is
-  [02 - Surface realization and honesty](.scratch/first-principled-v9/issues/02-surface-realization-and-honesty.md)
-  (to be written).
+  [04 - RealityMap adapter and generated-map gate](.scratch/first-principled-v9/map.md)
+  (to be written), blocked on the gate product decision described above.
 - No DB, no auth, no agent framework (Mastra/LangGraph is v2).
 - Home is the Tree. v6 parks Tutor from the chrome (engine stays). There
   is no Chat page and no learner-map tab. How it works lives in the header.

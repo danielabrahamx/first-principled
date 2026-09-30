@@ -116,31 +116,50 @@ test("STATUS.md quotes the topology thresholds that decide the gold set", () => 
   assert.match(tests, /crown invariant/);
 });
 
-test("if the gate rejects a hand-written gold map, the dispute is recorded", () => {
+test("if the gate rejects a hand-written gold map, the dispute and its derivation are recorded", () => {
   // Measured 2026-09-29: MIN_NODES=5 rejects recursion and battery, both
   // hand-written 4-node gold maps, so a gate that rejects the target
-  // definition has shipped. Ticket 03 re-derives the thresholds from the
-  // hand-written maps rather than from the acceptance runs.
+  // definition has shipped. Ticket 03 re-derived both floors on
+  // 2026-10-01 and proposed MIN_NODES=4 and MIN_TRUNK_NODES=3 without
+  // applying them.
   //
   // This test is deliberately NOT a red test. `npm test` is the safety
   // net and a red suite gets "fixed" by the next session without anyone
   // reading why. Instead the dispute has to stay written down: either the
   // thresholds get re-derived and this passes on the merits, or someone
   // deleting the note makes it fail. Both outcomes are the ones we want.
+  //
+  // The hand-written sizes below are BOTH gates. The 2026-10-01 version
+  // of this test measured node count only and discarded the trunk floor
+  // with a `void`, which is why `battery`'s MIN_TRUNK_NODES rejection
+  // shipped unmeasured for a whole session. A test that reads one of the
+  // two thresholds is worse than no test, because it reads as coverage.
   const minNodes = Number(sourceConst("src/lib/agent/pairwise/topology.js", "MIN_NODES"));
   const minTrunk = Number(sourceConst("src/lib/agent/pairwise/topology.js", "MIN_TRUNK_NODES"));
-  // Known sizes of the hand-written maps, measured not parsed so that a
-  // change to either the maps or the gate is what moves this test.
-  const handWritten = { laptop: 8, recursion: 4, photosynthesis: 5, battery: 4 };
-  const rejected = Object.entries(handWritten).filter(([, nodes]) => nodes < minNodes);
+  // Measured not parsed, so that a change to either the maps or the gate
+  // is what moves this test. Both numbers come from
+  // .scratch/first-principled-v9/research/03-runs/derive-thresholds.mjs.
+  const handWritten = {
+    laptop: { nodes: 8, trunk: 8 },
+    recursion: { nodes: 4, trunk: 3 },
+    photosynthesis: { nodes: 5, trunk: 4 },
+    battery: { nodes: 4, trunk: 3 },
+  };
+  /** @type {string[]} */
+  const rejected = [];
+  for (const [name, size] of Object.entries(handWritten)) {
+    if (size.nodes < minNodes) rejected.push(`${name} (MIN_NODES)`);
+    if (size.trunk < minTrunk) rejected.push(`${name} (MIN_TRUNK_NODES)`);
+  }
   if (rejected.length === 0) return; // the gate accepts the target definition
 
   const status = read("docs/STATUS.md");
-  const ticket = read(".scratch/first-principled-v9/issues/03-generality-and-gate-provenance.md");
-  for (const [name] of rejected) {
+  const evidence = read(".scratch/first-principled-v9/research/03-generality-evidence.md");
+  for (const entry of rejected) {
+    const name = entry.split(" ")[0];
     assert.ok(
       status.includes(`\`${name}\``),
-      `docs/STATUS.md must name the rejected hand-written map ${name}`
+      `docs/STATUS.md must name the rejected hand-written map ${name} (${entry})`
     );
   }
   assert.match(
@@ -148,45 +167,86 @@ test("if the gate rejects a hand-written gold map, the dispute is recorded", () 
     /fitted|fitted-to-the-fixture|came from the acceptance|came from the product rather than from the score/i,
     "docs/STATUS.md must say the threshold is disputed, not defend it"
   );
+  // The dispute is only half the record. The other half is that the
+  // alternative was derived and proposed rather than silently dropped,
+  // and that the derivation is reproducible offline.
   assert.match(
-    ticket,
-    /re-?derive[^\n]*gold maps|hand-written gold maps/i,
-    "ticket 03 must carry the re-derivation"
+    evidence,
+    new RegExp(`MIN_NODES[^\\n]*\\b${minNodes}\\b`),
+    `03-generality-evidence.md must state the live MIN_NODES value (${minNodes}) next to its proposal`
   );
-  assert.ok(
-    !/\*\*Status:\*\*\s*resolved/i.test(ticket),
-    "ticket 03 cannot be resolved while the thresholds are disputed"
+  assert.match(
+    evidence,
+    new RegExp(`MIN_TRUNK_NODES[^\\n]*\\b${minTrunk}\\b`),
+    `03-generality-evidence.md must state the live MIN_TRUNK_NODES value (${minTrunk}) next to its proposal`
   );
-  void minTrunk;
+  assert.match(
+    evidence,
+    /derive-thresholds\.mjs/,
+    "the derivation must name the script that reproduces it"
+  );
+  // And the human decision the ticket reopened must still be open. The
+  // proposal was not applied, so the product question that justifies not
+  // applying it has to stay visible.
+  assert.match(
+    evidence,
+    /rabbit hole/i,
+    "the open product question about whether a 4-node map is deep enough must stay written down"
+  );
+});
+
+test("every gate constant a test cannot reach is named as such", () => {
+  // 2026-10-01: MAX_FANIN_PER_TRUNK_NODE = 2 is a module-private const in
+  // topology.js, so no test can assert on it, and it clips the canonical
+  // `laptop` fixture, whose max fan-in is 3. An unexported threshold is
+  // an unmeasured threshold, so its absence from the export list has to
+  // be a recorded finding rather than an accident.
+  const topology = read("src/lib/agent/pairwise/topology.js");
+  // Only consts that carry their own numeric value are thresholds. A
+  // module-private alias like `TRUNK_MIN = MIN_TRUNK_NODES` holds no
+  // number of its own and is not a threshold anyone can get wrong.
+  const declared = [...topology.matchAll(/^const\s+([A-Z_]+)\s*=\s*([0-9]+)\s*;/gm)].map((m) => m[1]);
+  const unexported = declared.filter((name) => !new RegExp(`export\\s+const\\s+${name}\\s*=`).test(topology));
+  const evidence = read(".scratch/first-principled-v9/research/03-generality-evidence.md");
+  for (const name of unexported) {
+    assert.match(
+      evidence,
+      new RegExp(`\`?${name}\`?[^\\n]*not exported|not exported[^\\n]*${name}`),
+      `${name} is declared in topology.js but not exported, so nothing can assert on it. ` +
+        "Either export it or record why not, in 03-generality-evidence.md."
+    );
+  }
 });
 
 test("the v9 frontier agrees with the v9 issue statuses", () => {
   // The frontier and the issue files must not disagree about what is
   // open. A resolved ticket still listed as the next task sends the next
-  // agent back into finished work.
+  // agent back into finished work, and an open ticket missing from the
+  // frontier hides work nobody has claimed.
   const frontier = read(".scratch/first-principled-v9/map.md");
   assert.ok(/## Open frontier/.test(frontier), "the v9 map must declare an open frontier");
-  assert.ok(
-    /\[03 - Generality and gate provenance\]/.test(frontier),
-    "the open frontier must name ticket 03"
-  );
-  // The adapter is the next thing anyone will reach for. It must stay
-  // visibly blocked while the gate thresholds are disputed, or the next
-  // session builds on a gate nobody has defended.
+  const ticket01 = read(".scratch/first-principled-v9/issues/01-pairwise-falsification-spike.md");
+  const ticket02 = read(".scratch/first-principled-v9/issues/02-surface-realization-and-honesty.md");
+  const ticket03 = read(".scratch/first-principled-v9/issues/03-generality-and-gate-provenance.md");
+  assert.match(ticket01, /\*\*Status:\*\*\s*resolved/i, "ticket 01 must be marked resolved");
+  assert.match(ticket02, /\*\*Status:\*\*\s*resolved/i, "ticket 02 must be marked resolved");
+  assert.match(ticket03, /\*\*Status:\*\*\s*resolved/i, "ticket 03 must be marked resolved");
+  // Ticket 03 was research only and changed no threshold, so the gate is
+  // still the ticket 02 gate and ticket 04 is still blocked on it. The
+  // frontier has to say so, or the next session adapts a map against a
+  // gate whose proposed correction is sitting unapplied in the evidence
+  // file.
   assert.ok(
     /\[04 - RealityMap adapter[^\]]*\]\([^)]*\)[^\n]*\n?[^\n]*\*\*Blocked\*\* on 03/.test(frontier),
     "ticket 04 must be marked blocked on 03 in the frontier"
   );
-
-  const ticket01 = read(".scratch/first-principled-v9/issues/01-pairwise-falsification-spike.md");
-  assert.match(ticket01, /\*\*Status:\*\*\s*resolved/i, "ticket 01 must be marked resolved");
-  const ticket02 = read(".scratch/first-principled-v9/issues/02-surface-realization-and-honesty.md");
-  assert.match(ticket02, /\*\*Status:\*\*\s*resolved/i, "ticket 02 must be marked resolved");
-  const ticket03 = read(".scratch/first-principled-v9/issues/03-generality-and-gate-provenance.md");
-  assert.match(ticket03, /\*\*Status:\*\*\s*open/i, "ticket 03 must be marked open");
   assert.ok(
     !/\[01 - Pairwise falsification spike\][^\n]*\(unblocked; next\)/.test(frontier),
     "ticket 01 is resolved and must not be listed as next"
+  );
+  assert.ok(
+    !/\[03 - Generality and gate provenance\][^\n]*\(next\)/.test(frontier),
+    "ticket 03 is resolved and must not be listed as next"
   );
 
   for (const doc of ["README.md", "CONTEXT.md"]) {

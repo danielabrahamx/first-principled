@@ -1,0 +1,410 @@
+﻿{
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "results": [
+    {
+      "word": "memory allocation",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 8891,
+      "promptTokens": 5448,
+      "completionTokens": 4060,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "dropped the echoed type field",
+        "dropped the echoed type field",
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "physical address space",
+        "virtual address translation",
+        "page table",
+        "heap and stack regions",
+        "free list",
+        "RAM cell and byte addressing",
+        "pointer",
+        "program break or brk syscall",
+        "fragmentation",
+        "reference counting"
+      ],
+      "relations": {
+        "NONE": 37,
+        "B_RESTS_ON_A": 8,
+        "A_RESTS_ON_B": 10
+      },
+      "jumps": {
+        "n/a": 37,
+        "SMALL": 15,
+        "TOO_LARGE": 3
+      },
+      "targetPrereqs": 1,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "virtual address translation",
+          "needs": "physical address space",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "page table",
+          "needs": "physical address space",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "heap and stack regions",
+          "needs": "physical address space",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "RAM cell and byte addressing",
+          "needs": "physical address space",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "pointer",
+          "needs": "physical address space",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "memory allocation",
+          "needs": "physical address space",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "reference counting",
+          "needs": "heap and stack regions",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "reference counting",
+          "needs": "RAM cell and byte addressing",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "reference counting",
+          "needs": "pointer",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "virtual address translation",
+          "needs": "page table",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "virtual address translation",
+          "needs": "RAM cell and byte addressing",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "page table",
+          "needs": "RAM cell and byte addressing",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "heap and stack regions",
+          "needs": "RAM cell and byte addressing",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "program break or brk syscall",
+          "needs": "heap and stack regions",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "free list",
+          "needs": "pointer",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "degenerate trunk: longest target-to-foundation path is 2 nodes, below the 4-node minimum"
+      ]
+    },
+    {
+      "word": "hash table",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9027,
+      "promptTokens": 5648,
+      "completionTokens": 4477,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "keyed-object envelope lifted to an array",
+        "keyed-object envelope lifted to an array",
+        "keyed-object envelope lifted to an array"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "array indexing",
+        "key-value mapping",
+        "hash function",
+        "modulo operation",
+        "collision resolution by chaining",
+        "open addressing",
+        "load factor",
+        "dynamic resizing",
+        "amortized analysis",
+        "linked list traversal"
+      ],
+      "relations": {
+        "NONE": 41,
+        "A_RESTS_ON_B": 8,
+        "B_RESTS_ON_A": 6
+      },
+      "jumps": {
+        "n/a": 41,
+        "SMALL": 13,
+        "TOO_LARGE": 1
+      },
+      "targetPrereqs": 5,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "key-value mapping",
+          "needs": "hash function",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "key-value mapping",
+          "needs": "hash table",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "array indexing",
+          "needs": "hash table",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "linked list traversal",
+          "needs": "collision resolution by chaining",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "hash function",
+          "needs": "collision resolution by chaining",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "hash function",
+          "needs": "open addressing",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "hash table",
+          "needs": "hash function",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "hash table",
+          "needs": "collision resolution by chaining",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "load factor",
+          "needs": "open addressing",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "hash table",
+          "needs": "open addressing",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "load factor",
+          "needs": "dynamic resizing",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "hash table",
+          "needs": "load factor",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "hash table",
+          "needs": "dynamic resizing",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "degenerate trunk: longest target-to-foundation path is 3 nodes, below the 4-node minimum"
+      ]
+    },
+    {
+      "word": "DNS resolution",
+      "ok": false,
+      "stage": "inventory",
+      "calls": 1,
+      "errors": [
+        "inventory has unexpected top-level field \"type\""
+      ]
+    },
+    {
+      "word": "git commit",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 8811,
+      "promptTokens": 6158,
+      "completionTokens": 4291,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "keyed-object envelope lifted to an array",
+        "keyed-object envelope lifted to an array",
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "content-addressable storage",
+        "cryptographic hash function",
+        "directed acyclic graph of revisions",
+        "working tree and staging area",
+        "snapshot versus delta storage",
+        "file system inode and block allocation",
+        "persistent append-only log",
+        "atomic filesystem rename",
+        "SHA-1 and SHA-256 digest computation",
+        "merge and rebase parent rewriting"
+      ],
+      "relations": {
+        "NONE": 40,
+        "A_RESTS_ON_B": 12,
+        "B_RESTS_ON_A": 3
+      },
+      "jumps": {
+        "n/a": 40,
+        "SMALL": 11,
+        "TOO_LARGE": 4
+      },
+      "targetPrereqs": 1,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "directed acyclic graph of revisions",
+          "needs": "git commit",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "working tree and staging area",
+          "needs": "git commit",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "merge and rebase parent rewriting",
+          "needs": "git commit",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "SHA-1 and SHA-256 digest computation",
+          "needs": "cryptographic hash function",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "content-addressable storage",
+          "needs": "cryptographic hash function",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "content-addressable storage",
+          "needs": "SHA-1 and SHA-256 digest computation",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "git commit",
+          "needs": "content-addressable storage",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "merge and rebase parent rewriting",
+          "needs": "directed acyclic graph of revisions",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "snapshot versus delta storage",
+          "needs": "git commit",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "atomic filesystem rename",
+          "needs": "file system inode and block allocation",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "SHA-1 and SHA-256 digest computation",
+          "needs": "git commit",
+          "confidence": "MEDIUM",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "crown invariant broken: 2 selected edges rest on the target, so the map has no single top (p-k3--target, p-k10--target)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,604 @@
+﻿{
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "results": [
+    {
+      "word": "entropy",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9017,
+      "promptTokens": 5857,
+      "completionTokens": 4359,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array",
+        "dropped the echoed type field"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "Counting microstates of a simple system",
+        "Boltzmann's entropy formula",
+        "Macroscopic state variables of a gas",
+        "Microscopic particle configurations",
+        "Probability distribution over states",
+        "Second law of thermodynamics",
+        "Statistical independence",
+        "Irreversible processes",
+        "Thermodynamic heat and work",
+        "Shannon information entropy"
+      ],
+      "relations": {
+        "NONE": 41,
+        "A_RESTS_ON_B": 8,
+        "B_RESTS_ON_A": 6
+      },
+      "jumps": {
+        "n/a": 41,
+        "SMALL": 11,
+        "TOO_LARGE": 3
+      },
+      "targetPrereqs": 2,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "Counting microstates of a simple system",
+          "needs": "Boltzmann's entropy formula",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Macroscopic state variables of a gas",
+          "needs": "Counting microstates of a simple system",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Counting microstates of a simple system",
+          "needs": "Microscopic particle configurations",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Counting microstates of a simple system",
+          "needs": "Probability distribution over states",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Counting microstates of a simple system",
+          "needs": "Statistical independence",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Shannon information entropy",
+          "needs": "Probability distribution over states",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Microscopic particle configurations",
+          "needs": "entropy",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Boltzmann's entropy formula",
+          "needs": "Microscopic particle configurations",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "entropy",
+          "needs": "Probability distribution over states",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Irreversible processes",
+          "needs": "Second law of thermodynamics",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "entropy",
+          "needs": "Irreversible processes",
+          "confidence": "MEDIUM",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "degenerate trunk: longest target-to-foundation path is 3 nodes, below the 4-node minimum"
+      ]
+    },
+    {
+      "word": "debt",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9835,
+      "promptTokens": 6018,
+      "completionTokens": 4512,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "keyed-object envelope lifted to an array",
+        "renamed envelope key \"pairs\" to \"judgments\"",
+        "keyed-object envelope lifted to an array",
+        "dropped the echoed type field"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "promise to repay a specific amount by a specific time",
+        "loan principal and interest",
+        "written contract with repayment terms",
+        "delayed exchange of goods or money",
+        "lending and borrowing behavior",
+        "double-entry bookkeeping for liabilities",
+        "creditworthiness assessment",
+        "interest rate calculation",
+        "collateral and security interest",
+        "default and bankruptcy proceedings"
+      ],
+      "relations": {
+        "B_RESTS_ON_A": 11,
+        "A_RESTS_ON_B": 14,
+        "NONE": 30
+      },
+      "jumps": {
+        "SMALL": 20,
+        "n/a": 30,
+        "TOO_LARGE": 5
+      },
+      "targetPrereqs": 1,
+      "targetPairsTooLarge": 2,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "default and bankruptcy proceedings",
+          "needs": "promise to repay a specific amount by a specific time",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "promise to repay a specific amount by a specific time",
+          "needs": "loan principal and interest",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "written contract with repayment terms",
+          "needs": "promise to repay a specific amount by a specific time",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "promise to repay a specific amount by a specific time",
+          "needs": "delayed exchange of goods or money",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "promise to repay a specific amount by a specific time",
+          "needs": "lending and borrowing behavior",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "promise to repay a specific amount by a specific time",
+          "needs": "debt",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "default and bankruptcy proceedings",
+          "needs": "loan principal and interest",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "default and bankruptcy proceedings",
+          "needs": "written contract with repayment terms",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "lending and borrowing behavior",
+          "needs": "default and bankruptcy proceedings",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "default and bankruptcy proceedings",
+          "needs": "collateral and security interest",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "delayed exchange of goods or money",
+          "needs": "loan principal and interest",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "lending and borrowing behavior",
+          "needs": "loan principal and interest",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "interest rate calculation",
+          "needs": "loan principal and interest",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "debt",
+          "needs": "loan principal and interest",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "delayed exchange of goods or money",
+          "needs": "written contract with repayment terms",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "written contract with repayment terms",
+          "needs": "debt",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "delayed exchange of goods or money",
+          "needs": "lending and borrowing behavior",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "delayed exchange of goods or money",
+          "needs": "debt",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "lending and borrowing behavior",
+          "needs": "debt",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "collateral and security interest",
+          "needs": "debt",
+          "confidence": "MEDIUM",
+          "selected": false
+        }
+      ],
+      "refusals": [
+        {
+          "on": "target",
+          "needs": "default and bankruptcy proceedings",
+          "jump": "TOO_LARGE",
+          "why": "Debt as a broad concept underlies default proceedings, but default is a specific consequence; the dependency direction is reversed."
+        },
+        {
+          "on": "target",
+          "needs": "interest rate calculation",
+          "jump": "TOO_LARGE",
+          "why": "Debt can exist without interest rate calculation, but interest rate calculation is meaningless without debt, yet the dependency is not direct."
+        }
+      ],
+      "errors": [
+        "degenerate trunk: longest target-to-foundation path is 2 nodes, below the 4-node minimum"
+      ]
+    },
+    {
+      "word": "justice",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9272,
+      "promptTokens": 5563,
+      "completionTokens": 4239,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "dropped the echoed type field",
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "Procedural justice in dispute resolution",
+        "Distributive justice principles",
+        "Retributive justice",
+        "Restorative justice practices",
+        "Impartiality in decision-making",
+        "Equality before the law",
+        "Social contract theory",
+        "Reciprocity in social exchange",
+        "Fairness in non-human animals",
+        "Inequity aversion in children"
+      ],
+      "relations": {
+        "NONE": 45,
+        "A_RESTS_ON_B": 10
+      },
+      "jumps": {
+        "n/a": 45,
+        "SMALL": 9,
+        "TOO_LARGE": 1
+      },
+      "targetPrereqs": 0,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "Procedural justice in dispute resolution",
+          "needs": "Impartiality in decision-making",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Procedural justice in dispute resolution",
+          "needs": "justice",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Distributive justice principles",
+          "needs": "justice",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Retributive justice",
+          "needs": "justice",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Restorative justice practices",
+          "needs": "justice",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Impartiality in decision-making",
+          "needs": "justice",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Equality before the law",
+          "needs": "justice",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Social contract theory",
+          "needs": "justice",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Reciprocity in social exchange",
+          "needs": "justice",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "no target-to-foundation path: judgments do not connect the target to a demonstrable leaf"
+      ]
+    },
+    {
+      "word": "argument",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9683,
+      "promptTokens": 6663,
+      "completionTokens": 4229,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array",
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "Mating plugs in certain insects and arachnids",
+        "Sperm competition and sperm precedence patterns",
+        "Sexual selection and mate choice",
+        "Reproductive anatomy of internally fertilizing animals",
+        "Operational sex ratio and potential reproductive rates",
+        "Costs and benefits of mating for each sex",
+        "Adaptation and fitness in evolutionary biology",
+        "Comparative method and phylogenetic inference",
+        "Bayesian reasoning and hypothesis testing in biology",
+        "Female remating frequency and paternity in internally fertilizing species"
+      ],
+      "relations": {
+        "NONE": 32,
+        "A_RESTS_ON_B": 21,
+        "B_RESTS_ON_A": 2
+      },
+      "jumps": {
+        "n/a": 32,
+        "SMALL": 22,
+        "TOO_LARGE": 1
+      },
+      "targetPrereqs": 0,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "Sexual selection and mate choice",
+          "needs": "Adaptation and fitness in evolutionary biology",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Mating plugs in certain insects and arachnids",
+          "needs": "Female remating frequency and paternity in internally fertilizing species",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Mating plugs in certain insects and arachnids",
+          "needs": "Sperm competition and sperm precedence patterns",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Mating plugs in certain insects and arachnids",
+          "needs": "Sexual selection and mate choice",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Mating plugs in certain insects and arachnids",
+          "needs": "Reproductive anatomy of internally fertilizing animals",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Mating plugs in certain insects and arachnids",
+          "needs": "argument",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Female remating frequency and paternity in internally fertilizing species",
+          "needs": "Sperm competition and sperm precedence patterns",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Female remating frequency and paternity in internally fertilizing species",
+          "needs": "Sexual selection and mate choice",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Female remating frequency and paternity in internally fertilizing species",
+          "needs": "Reproductive anatomy of internally fertilizing animals",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Female remating frequency and paternity in internally fertilizing species",
+          "needs": "Costs and benefits of mating for each sex",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Female remating frequency and paternity in internally fertilizing species",
+          "needs": "Adaptation and fitness in evolutionary biology",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Sperm competition and sperm precedence patterns",
+          "needs": "Sexual selection and mate choice",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Sperm competition and sperm precedence patterns",
+          "needs": "Reproductive anatomy of internally fertilizing animals",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Sperm competition and sperm precedence patterns",
+          "needs": "Operational sex ratio and potential reproductive rates",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Sperm competition and sperm precedence patterns",
+          "needs": "Costs and benefits of mating for each sex",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Sperm competition and sperm precedence patterns",
+          "needs": "Adaptation and fitness in evolutionary biology",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Operational sex ratio and potential reproductive rates",
+          "needs": "argument",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Adaptation and fitness in evolutionary biology",
+          "needs": "Costs and benefits of mating for each sex",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Costs and benefits of mating for each sex",
+          "needs": "argument",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Adaptation and fitness in evolutionary biology",
+          "needs": "argument",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Comparative method and phylogenetic inference",
+          "needs": "argument",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Bayesian reasoning and hypothesis testing in biology",
+          "needs": "argument",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "no target-to-foundation path: judgments do not connect the target to a demonstrable leaf"
+      ]
+    }
+  ]
+}

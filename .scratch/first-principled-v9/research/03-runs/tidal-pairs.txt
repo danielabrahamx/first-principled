@@ -1,0 +1,45 @@
+﻿
+=== tidal power attempt 1/3 stage topology
+  verdict: FAIL nodes 0 trunk 0 | degenerate trunk: longest target-to-foundation path is 3 nodes, below the 4-node minimum
+  inventory: Tidal range | Gravitational tides | Tidal currents | Water turbine | Electrical generator | Tidal barrage | Tidal stream turbine | Energy conversion efficiency | Grid integration | Environmental impact assessment
+  target pairs: 10, of which claim the target rests on them: 3
+   --  Tidal range | A_RESTS_ON_B HIGH SMALL | Tidal range is a fundamental parameter for tidal power; understanding tidal power requires understanding tidal range.
+   --  Environmental impact assessment | NONE HIGH NOT_APPLICABLE | Assessment is a component activity within tidal power, but tidal power does not rest on it.
+   OK  Gravitational tides | B_RESTS_ON_A HIGH SMALL | Tidal power fundamentally depends on gravitational tides as the energy source.
+   OK  Tidal currents | B_RESTS_ON_A HIGH SMALL | Tidal power as a whole cannot be understood without tidal currents as a key energy source.
+   OK  Water turbine | B_RESTS_ON_A HIGH SMALL | Tidal power relies on water turbines to convert tidal energy.
+   --  Electrical generator | A_RESTS_ON_B HIGH SMALL | Generator is a core component of tidal power.
+   --  Tidal barrage | A_RESTS_ON_B HIGH SMALL | A tidal barrage is a concrete implementation of tidal power.
+   --  Tidal stream turbine | A_RESTS_ON_B HIGH SMALL | Tidal stream turbine is a specific device used in tidal power.
+   --  Energy conversion efficiency | NONE HIGH NOT_APPLICABLE | Efficiency is a property of tidal power systems, not a constituent concept.
+   --  Grid integration | NONE HIGH NOT_APPLICABLE | Grid integration is an application step, not a defining part of tidal power.
+
+=== tidal power attempt 2/3 stage topology
+  verdict: FAIL nodes 0 trunk 0 | crown invariant broken: 2 selected edges rest on the target, so the map has no single top (p-k4--target, p-k4--target)
+  inventory: tidal range | tidal current speed | gravitational force law | tidal bulge formation | water turbine | electrical generator | barrage | electromagnetic induction | energy conversion efficiency | grid synchronization
+  target pairs: 10, of which claim the target rests on them: 3
+   BIG tidal range | B_RESTS_ON_A MEDIUM TOO_LARGE | Tidal power can be understood without tidal range, but tidal range is a key factor for some tidal power schemes.
+   OK  grid synchronization | B_RESTS_ON_A HIGH SMALL | Tidal power as a grid-connected system requires grid synchronization to deliver usable electricity.
+   OK  tidal current speed | B_RESTS_ON_A HIGH SMALL | Tidal power from currents depends on the speed of tidal currents as an energy resource.
+   --  gravitational force law | A_RESTS_ON_B HIGH TOO_LARGE | Tidal power harnesses tides caused by gravity, but the causal chain requires tidal bulge formation as an intermediate.
+   --  tidal bulge formation | A_RESTS_ON_B HIGH SMALL | Tidal power fundamentally requires tidal bulges for the water level differences it exploits.
+   --  water turbine | A_RESTS_ON_B MEDIUM SMALL | Water turbine is a component of tidal power but rests on the whole for its role.
+   --  electrical generator | A_RESTS_ON_B MEDIUM SMALL | Electrical generator is a component that rests on tidal power as the whole system.
+   --  barrage | A_RESTS_ON_B MEDIUM SMALL | Barrage is a component that rests on tidal power as the whole system.
+   --  electromagnetic induction | NONE HIGH NOT_APPLICABLE | Electromagnetic induction is a general principle not dependent on tidal power.
+   --  energy conversion efficiency | NONE HIGH NOT_APPLICABLE | Energy conversion efficiency is a general concept not dependent on tidal power.
+
+=== tidal power attempt 3/3 stage topology
+  verdict: FAIL nodes 0 trunk 0 | no target-to-foundation path: judgments do not connect the target to a demonstrable leaf
+  inventory: periodic water level change in a basin | gravitational attraction between two masses | water flowing through a channel or inlet | mechanical energy of moving water | turbine driven by fluid flow | electromagnetic induction in a generator | alternating current in a closed circuit | tidal range at a coastal site | barrage or lagoon impoundment | tidal stream turbine array
+  target pairs: 10, of which claim the target rests on them: 0
+   --  periodic water level change in a basin | A_RESTS_ON_B HIGH SMALL | Tidal power as a whole rests on periodic basin water-level change as a core phenomenon.
+   --  tidal stream turbine array | A_RESTS_ON_B HIGH SMALL | Tidal stream turbine array is a concrete way of providing tidal power.
+   --  gravitational attraction between two masses | A_RESTS_ON_B HIGH TOO_LARGE | Tidal power ultimately relies on gravitational attraction, but intermediate tidal and energy conversion concepts are omitted.
+   --  water flowing through a channel or inlet | A_RESTS_ON_B HIGH SMALL | Tidal power fundamentally relies on water flowing through channels or inlets.
+   --  mechanical energy of moving water | A_RESTS_ON_B HIGH SMALL | Tidal power fundamentally relies on mechanical energy of moving water.
+   --  turbine driven by fluid flow | A_RESTS_ON_B HIGH SMALL | A turbine driven by fluid flow is a core mechanism within tidal power; understanding tidal power requires grasping such turbines.
+   --  electromagnetic induction in a generator | A_RESTS_ON_B HIGH SMALL | Electromagnetic induction in a generator is the core electricity generation process in tidal power.
+   --  alternating current in a closed circuit | A_RESTS_ON_B HIGH SMALL | Alternating current in a closed circuit is the electrical output form of tidal power.
+   --  tidal range at a coastal site | A_RESTS_ON_B HIGH SMALL | Tidal range at a coastal site is a prerequisite resource for tidal power.
+   --  barrage or lagoon impoundment | A_RESTS_ON_B HIGH SMALL | Barrage or lagoon impoundment is a key structural component of tidal power.

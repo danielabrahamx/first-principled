@@ -1,0 +1,419 @@
+﻿{
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "results": [
+    {
+      "word": "gut microbiome",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9147,
+      "promptTokens": 6758,
+      "completionTokens": 3592,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "keyed-object envelope lifted to an array",
+        "dropped the echoed type field"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "bacterial growth curve in batch culture",
+        "anaerobic fermentation of dietary fiber by gut bacteria",
+        "short-chain fatty acid measurement in stool or blood",
+        "16S rRNA gene sequencing for microbial community profiling",
+        "germ-free animal model",
+        "mucus layer as a physical barrier and nutrient source",
+        "immune tolerance to commensal bacteria",
+        "colonization resistance against pathogens",
+        "fecal microbiota transplantation",
+        "antibiotic disruption of gut microbial diversity"
+      ],
+      "relations": {
+        "NONE": 44,
+        "A_RESTS_ON_B": 3,
+        "B_RESTS_ON_A": 8
+      },
+      "jumps": {
+        "n/a": 44,
+        "SMALL": 7,
+        "TOO_LARGE": 4
+      },
+      "targetPrereqs": 2,
+      "targetPairsTooLarge": 1,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "antibiotic disruption of gut microbial diversity",
+          "needs": "colonization resistance against pathogens",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "fecal microbiota transplantation",
+          "needs": "antibiotic disruption of gut microbial diversity",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "gut microbiome",
+          "needs": "antibiotic disruption of gut microbial diversity",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "anaerobic fermentation of dietary fiber by gut bacteria",
+          "needs": "short-chain fatty acid measurement in stool or blood",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "germ-free animal model",
+          "needs": "anaerobic fermentation of dietary fiber by gut bacteria",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "anaerobic fermentation of dietary fiber by gut bacteria",
+          "needs": "colonization resistance against pathogens",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "gut microbiome",
+          "needs": "anaerobic fermentation of dietary fiber by gut bacteria",
+          "confidence": "MEDIUM",
+          "selected": false
+        }
+      ],
+      "refusals": [
+        {
+          "on": "target",
+          "needs": "16S rRNA gene sequencing for microbial community profiling",
+          "jump": "TOO_LARGE",
+          "why": "Microbiome identification conceptually presupposes methods like 16S profiling, but the abstraction itself does not rest on this single technique."
+        }
+      ],
+      "errors": [
+        "degenerate trunk: longest target-to-foundation path is 3 nodes, below the 4-node minimum"
+      ]
+    },
+    {
+      "word": "mitosis",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9243,
+      "promptTokens": 6028,
+      "completionTokens": 4659,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "keyed-object envelope lifted to an array",
+        "keyed-object envelope lifted to an array",
+        "keyed-object envelope lifted to an array",
+        "keyed-object envelope lifted to an array"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "Chromosome condensation and segregation",
+        "Microtubule dynamics and spindle assembly",
+        "Cell cycle checkpoints",
+        "DNA replication",
+        "Nuclear envelope breakdown and reformation",
+        "Sister chromatid cohesion",
+        "Base-pairing rules",
+        "Phase transitions in the cell cycle",
+        "Chromosome structure and packaging",
+        "Polymerization of tubulin"
+      ],
+      "relations": {
+        "NONE": 37,
+        "B_RESTS_ON_A": 6,
+        "A_RESTS_ON_B": 12
+      },
+      "jumps": {
+        "n/a": 37,
+        "SMALL": 16,
+        "TOO_LARGE": 2
+      },
+      "targetPrereqs": 2,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "mitosis",
+          "needs": "Polymerization of tubulin",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "mitosis",
+          "needs": "Microtubule dynamics and spindle assembly",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Chromosome condensation and segregation",
+          "needs": "Polymerization of tubulin",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Chromosome condensation and segregation",
+          "needs": "Microtubule dynamics and spindle assembly",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Chromosome condensation and segregation",
+          "needs": "DNA replication",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Chromosome condensation and segregation",
+          "needs": "Nuclear envelope breakdown and reformation",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Sister chromatid cohesion",
+          "needs": "Chromosome condensation and segregation",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Chromosome structure and packaging",
+          "needs": "Chromosome condensation and segregation",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Chromosome condensation and segregation",
+          "needs": "mitosis",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Microtubule dynamics and spindle assembly",
+          "needs": "Polymerization of tubulin",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Cell cycle checkpoints",
+          "needs": "mitosis",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "DNA replication",
+          "needs": "Base-pairing rules",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Nuclear envelope breakdown and reformation",
+          "needs": "mitosis",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Sister chromatid cohesion",
+          "needs": "mitosis",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Chromosome structure and packaging",
+          "needs": "Base-pairing rules",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Chromosome structure and packaging",
+          "needs": "mitosis",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "degenerate trunk: longest target-to-foundation path is 3 nodes, below the 4-node minimum"
+      ]
+    },
+    {
+      "word": "enzyme",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 8494,
+      "promptTokens": 5513,
+      "completionTokens": 3905,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "keyed-object envelope lifted to an array"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "protein folding",
+        "activation energy",
+        "enzyme active site",
+        "enzyme catalysis",
+        "enzyme-substrate complex",
+        "enzyme kinetics",
+        "enzyme specificity",
+        "enzyme inhibition",
+        "enzyme regulation",
+        "cofactor"
+      ],
+      "relations": {
+        "NONE": 39,
+        "A_RESTS_ON_B": 4,
+        "B_RESTS_ON_A": 12
+      },
+      "jumps": {
+        "n/a": 39,
+        "SMALL": 16
+      },
+      "targetPrereqs": 2,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "cofactor",
+          "needs": "enzyme",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "activation energy",
+          "needs": "enzyme catalysis",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "enzyme kinetics",
+          "needs": "activation energy",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "enzyme catalysis",
+          "needs": "enzyme active site",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "enzyme active site",
+          "needs": "enzyme-substrate complex",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "enzyme specificity",
+          "needs": "enzyme active site",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "enzyme inhibition",
+          "needs": "enzyme active site",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "enzyme regulation",
+          "needs": "enzyme active site",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "enzyme",
+          "needs": "enzyme active site",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "enzyme-substrate complex",
+          "needs": "enzyme catalysis",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "enzyme kinetics",
+          "needs": "enzyme catalysis",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "enzyme",
+          "needs": "enzyme catalysis",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "enzyme kinetics",
+          "needs": "enzyme-substrate complex",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "protein folding",
+          "needs": "enzyme",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "enzyme active site",
+          "needs": "cofactor",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "enzyme catalysis",
+          "needs": "cofactor",
+          "confidence": "MEDIUM",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "no target-to-foundation path: judgments do not connect the target to a demonstrable leaf"
+      ]
+    },
+    {
+      "word": "natural selection",
+      "ok": false,
+      "stage": "pairs",
+      "calls": 5,
+      "coercions": [
+        "dropped the echoed type field",
+        "dropped the echoed type field",
+        "renamed envelope key \"pairs\" to \"judgments\"",
+        "dropped the echoed type field"
+      ],
+      "errors": [
+        "batch 1: judgment \"p-k1--k2\" rationale must not mention position or chronology"
+      ],
+      "dump": []
+    }
+  ]
+}

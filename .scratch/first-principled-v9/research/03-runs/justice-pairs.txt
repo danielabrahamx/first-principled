@@ -1,0 +1,45 @@
+﻿
+=== justice attempt 1/3 stage topology
+  verdict: FAIL nodes 0 trunk 0 | degenerate trunk: longest target-to-foundation path is 3 nodes, below the 4-node minimum
+  inventory: impartiality | reciprocity | procedural fairness | restorative practice | retribution | distributive allocation | consent of the governed | due process | distributive justice | cooperative punishment of free riders
+  target pairs: 10, of which claim the target rests on them: 1
+   OK  impartiality | B_RESTS_ON_A HIGH SMALL | Justice as a whole depends on impartiality as a core component.
+   --  cooperative punishment of free riders | A_RESTS_ON_B HIGH SMALL | Cooperative punishment is a specific aspect of justice; understanding it requires the broader concept.
+   --  reciprocity | A_RESTS_ON_B HIGH SMALL | Reciprocity is a specific aspect of justice; it cannot be understood without the broader concept.
+   --  procedural fairness | A_RESTS_ON_B HIGH SMALL | Procedural fairness cannot be understood except as a component of justice.
+   --  restorative practice | A_RESTS_ON_B HIGH SMALL | Restorative practice is understood as a component of justice.
+   --  retribution | A_RESTS_ON_B HIGH SMALL | Retribution is a component of justice and cannot be understood as a justice concept without the whole target abstraction.
+   --  distributive allocation | A_RESTS_ON_B HIGH SMALL | Distributive allocation is a component of justice and rests on the whole target for its justice meaning.
+   --  consent of the governed | A_RESTS_ON_B HIGH SMALL | Consent of the governed is a justice-related component and rests on the whole justice target.
+   --  due process | A_RESTS_ON_B HIGH SMALL | Due process is a component of justice and rests on the whole target abstraction for its justice role.
+   --  distributive justice | A_RESTS_ON_B HIGH SMALL | Distributive justice is a criterion within justice and rests on the whole justice target.
+
+=== justice attempt 2/3 stage topology
+  verdict: FAIL nodes 0 trunk 0 | no target-to-foundation path: judgments do not connect the target to a demonstrable leaf
+  inventory: Reciprocal Altruism | Inequity Aversion | Social Contract | Rehabilitation | Retributive Punishment | Procedural Fairness | Distributive Fairness | Norm Enforcement | Empathy | Moral Reasoning
+  target pairs: 10, of which claim the target rests on them: 1
+   BIG Reciprocal Altruism | B_RESTS_ON_A LOW TOO_LARGE | Justice is a broad whole that may involve reciprocal altruism, but the dependency from the whole to this part is not direct without intermediaries.
+   --  Moral Reasoning | A_RESTS_ON_B LOW TOO_LARGE | Moral reasoning is part of justice but not strictly dependent on the whole justice concept; missing bridge.
+   --  Inequity Aversion | NONE HIGH NOT_APPLICABLE | Inequity aversion is a component of fairness/justice, not dependent on the whole justice concept.
+   --  Social Contract | NONE HIGH NOT_APPLICABLE | Social contract is a component or theory within justice, but justice as a whole does not rest on it alone; the relation is part-of, not dependence.
+   --  Rehabilitation | NONE HIGH NOT_APPLICABLE | Rehabilitation is one aspect of justice, but justice as a whole does not rest on it; the relation is part-of, not dependence.
+   --  Retributive Punishment | A_RESTS_ON_B HIGH SMALL | Retributive punishment is a specific conception of justice; understanding it requires the broader concept of justice.
+   --  Procedural Fairness | A_RESTS_ON_B HIGH SMALL | Procedural fairness is a dimension of justice; understanding it requires the broader concept of justice.
+   --  Distributive Fairness | A_RESTS_ON_B HIGH SMALL | Distributive fairness is an aspect of justice; understanding it requires the broader concept of justice.
+   --  Norm Enforcement | A_RESTS_ON_B MEDIUM TOO_LARGE | Norm enforcement is often associated with justice, but the dependency may be indirect; a bridge from enforcement to justice is missing.
+   --  Empathy | NONE HIGH NOT_APPLICABLE | Empathy is not a component or direct dependency of justice; they are separate concepts.
+
+=== justice attempt 3/3 stage topology
+  verdict: FAIL nodes 0 trunk 0 | crown invariant broken: 2 selected edges rest on the target, so the map has no single top (p-k6--target, p-k7--target)
+  inventory: procedural due process | equality before the law | rule of law | impartial tribunal | evidence and proof | contract enforcement | distributive fairness | restorative practice | retributive punishment | universal human rights
+  target pairs: 10, of which claim the target rests on them: 1
+   OK  procedural due process | B_RESTS_ON_A HIGH SMALL | Justice depends on procedural due process as a core component of fair adjudication.
+   --  universal human rights | NONE MEDIUM NOT_APPLICABLE | Universal human rights is one component of justice, not a whole on which justice rests.
+   --  equality before the law | NONE MEDIUM NOT_APPLICABLE | Equality before the law is one part of justice, not a base on which justice rests.
+   --  rule of law | NONE HIGH NOT_APPLICABLE | Rule of law is not the whole of justice; justice can be understood without it.
+   --  impartial tribunal | NONE HIGH NOT_APPLICABLE | Impartial tribunal is part of the justice system but not required for understanding justice broadly.
+   --  evidence and proof | A_RESTS_ON_B MEDIUM SMALL | Evidence and proof is a component of justice and is understood within the broader concept.
+   --  contract enforcement | A_RESTS_ON_B MEDIUM SMALL | Contract enforcement is a component of justice and is understood within the broader concept.
+   --  distributive fairness | A_RESTS_ON_B MEDIUM SMALL | Distributive fairness is a component of justice and is understood within the broader concept.
+   --  restorative practice | A_RESTS_ON_B MEDIUM SMALL | Restorative practice is a component of justice and is understood within the broader concept.
+   --  retributive punishment | A_RESTS_ON_B MEDIUM SMALL | Retributive punishment is a component of justice and is understood within the broader concept.
