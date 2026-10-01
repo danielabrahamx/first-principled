@@ -16,13 +16,31 @@ cognitive distance between the learner's mental model and reality.
 ## Frontier (resume here)
 
 **v9 is the live effort.** Map:
-`.scratch/first-principled-v9/map.md`. Ticket 01 (pairwise
-falsification spike) is resolved and is a GO: all four gold words pass
-on `deepseek-flash` as of 2026-09-29. The next ticket is 02, surface
-realization and honesty (to be written).
+`.scratch/first-principled-v9/map.md`. Tickets 01 to 04 are resolved. 01
+(pairwise falsification spike) and 02 (surface realization and honesty)
+are a GO on `deepseek-flash`. 03 (generality and gate provenance,
+2026-10-01) was research and changed no code. 04 (apply the derived gate
+thresholds, 2026-10-01) applied it.
 
-Ticket 01 evidence:
-`.scratch/first-principled-v9/research/01-spike-evidence.md`.
+**The next ticket is 05, the RealityMap adapter, and it is unblocked.**
+The gate dispute is closed: all four hand-written gold maps in
+`eval/map-quality/gold.js` pass the gate, and `src/claims.test.js`
+asserts that on every run.
+
+**The open problem is the model's semantics, not the gate.** Asked
+whether the typed target rests on a candidate, the model frequently
+answers that the *candidate* rests on the target - part-of read as
+dependence - so the crown invariant correctly rejects the map. That is
+6 of 20 words in the 2026-10-01 run and the largest single failure mode.
+It is a semantics failure at r2, the class v6 and v7 died of. Do not
+escalate the pair prompt or the inventory demand for it: both were
+measured on 2026-09-29 and reverted the same session, and ticket 03
+found the model's refusals do not name the same missing bridges twice.
+
+Evidence, most recent last:
+`.scratch/first-principled-v9/research/01-spike-evidence.md`,
+`02-realization-evidence.md`, `03-generality-evidence.md`,
+`04-derived-threshold-application.md`.
 
 **v7 is dead but still in prod.** The three-stage generator
 (Chronology -> Epiphanies -> Arrange) is falsified: Arrange preserved
@@ -173,14 +191,18 @@ Current architecture (v1):
   sends JSON Schema
   ([Ship JSON Schema on Epiphanies](.scratch/first-principled-v7/issues/10-ship-json-schema-on-epiphanies.md)).
   The `:free` slug cannot constrain that call. No DB, no auth, no framework.
-- The **live generator direction is the v9 pairwise spike** under
+- The **live generator direction is the v9 pairwise generator** under
   `src/lib/agent/pairwise/`: an inventory call, up to four independent
   pair-judgment batches, then pure-code topology selection with no model
-  call. Mechanical envelope coercion lives in `normalizePairBatch`.
-  Nothing in the runtime imports it yet; the switch is a later ticket
-  and is atomic with no fallback. `llm.js` and the browser client are
-  the two transports; `docs/DESIGN.md` explains why the provider seam
-  is one file.
+  call, then a realization call that writes copy for a shape code has
+  already chosen. Mechanical envelope coercion lives in
+  `normalizePairBatch`. Nothing in the runtime imports any of it yet; the
+  switch is ticket 05 and is atomic with no fallback. Its acceptance
+  thresholds in `topology.js` are `MIN_NODES` = 4, `MIN_TRUNK_NODES` = 3,
+  `MAX_FANIN_PER_TRUNK_NODE` = 3 and `TRUNK_MAX` = 8, all derived from
+  `eval/map-quality/gold.js` and all covered by `src/claims.test.js`.
+  `llm.js` and the browser client are the two transports;
+  `docs/DESIGN.md` explains why the provider seam is one file.
 - `src/lib/agent/` holds the engine: reality map generation, the Socratic
   turn loop (kept, not shown), and the LLM transport.
 

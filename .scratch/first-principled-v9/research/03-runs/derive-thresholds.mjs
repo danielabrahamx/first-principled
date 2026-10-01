@@ -12,18 +12,15 @@
  * Usage: node .scratch/first-principled-v9/research/03-runs/derive-thresholds.mjs
  */
 
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-
 import {
+  MAX_FANIN_PER_TRUNK_NODE,
   MAX_NODES,
   MAX_PATH_NODES,
   MIN_NODES,
   MIN_TRUNK_NODES,
+  TRUNK_MAX,
 } from "../../../../src/lib/agent/pairwise/topology.js";
 import { GOLD_MAPS } from "../../../../eval/map-quality/gold.js";
-
-const TOPOLOGY = fileURLToPath(import.meta.resolve("../../../../src/lib/agent/pairwise/topology.js"));
 
 /**
  * The crown is the node the learner typed: the map's concept node. In
@@ -135,17 +132,10 @@ console.log(`  MIN_TRUNK_NODES    floor ${min("trunk")}   observed ${min("trunk"
 console.log(`  MAX_NODES          cap   ${max("nodes")}   observed ${min("nodes")} to ${max("nodes")}   live value ${MAX_NODES}`);
 console.log(`  MAX_PATH_NODES     cap   ${max("trunk")}   observed ${min("trunk")} to ${max("trunk")}   live value ${MAX_PATH_NODES}`);
 console.log(`  crown fan-in cap   n/a   ${max("crownDirect")}   observed ${min("crownDirect")} to ${max("crownDirect")}   live value (none, crown invariant only)`);
-// MAX_FANIN_PER_TRUNK_NODE is a module-private const in topology.js, so it
-// cannot be read here. Measured against the hand-written maps it is 2
-// against an observed range of min to max; that it is not exported is
-// itself a finding, because no test can assert on it.
-console.log(`  MAX_FANIN_PER_TRUNK_NODE  derived ${max("maxFanIn")}   observed ${min("maxFanIn")} to ${max("maxFanIn")}   live value 2 (not exported)`);
-
-// TRUNK_MAX is also module-private, and it is a scoring preference rather
-// than an acceptance rule, so it is read as a literal here with the line
-// number it came from.
-const trunkMax = Number(/^const TRUNK_MAX = ([0-9]+);/m.exec(readFileSync(TOPOLOGY, "utf8"))?.[1]);
-console.log(`  TRUNK_MAX               cap   ${max("trunk")}   observed ${min("trunk")} to ${max("trunk")}   live value ${trunkMax} (not exported, scoring only)`);
+// Both were module-private until ticket 04 exported them, which is why the
+// numbers below used to be transcribed instead of read.
+console.log(`  MAX_FANIN_PER_TRUNK_NODE  derived ${max("maxFanIn")}   observed ${min("maxFanIn")} to ${max("maxFanIn")}   live value ${MAX_FANIN_PER_TRUNK_NODE}`);
+console.log(`  TRUNK_MAX               cap   ${max("trunk")}   observed ${min("trunk")} to ${max("trunk")}   live value ${TRUNK_MAX} (scoring only)`);
 
 console.log("\nVerdict against the live gate:");
 for (const row of rows) {

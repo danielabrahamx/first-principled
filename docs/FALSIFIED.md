@@ -95,6 +95,80 @@ correct. The fix was 30 lines, not a new version.
 
 ## Data and infrastructure
 
+### An acceptance threshold derived from the runs it judges
+
+**What:** ticket 02 added `MIN_NODES` = 5 and promoted `MIN_TRUNK_NODES`
+from 4 to an acceptance rule, in a session where the gold set was
+failing. Ticket 03 measured both against `eval/map-quality/gold.js` on
+2026-10-01: the maps a human wrote on purpose, as the definition of a
+good Dependence Tree. Two of the four are rejected.
+
+| Hand-written map | nodes | trunk | live gate |
+| --- | --- | --- | --- |
+| laptop | 8 | 8 | passes |
+| photosynthesis | 5 | 4 | passes |
+| recursion | 4 | 3 | **fails both floors** |
+| battery | 4 | 3 | **fails both floors** |
+
+`MIN_NODES` = 5 had no product derivation at all; the only recorded
+reason for it was that the gold runs were failing. `MIN_TRUNK_NODES` = 4
+had lineage as ticket 01's scoring preference, but promoting a preference
+to a floor is what broke it: as a preference it chose among adequate
+trunks, as a floor it rejected `battery`. Derived floors are 4 and 3.
+
+**Killed 2026-10-01.** Daniel answered the question the evidence could
+not: a 4-node map **is** a rabbit hole, so the hand-written maps are the
+definition and ticket 04 applied the derivation. `MAX_FANIN_PER_TRUNK_NODE`
+went 2 to 3 and `TRUNK_MAX` 7 to 8, both of which were module-private, so
+nothing in the repo could assert on either. All four hand-written maps now
+pass and `src/claims.test.js` asserts it by walking the imported maps.
+
+**The lesson, and it is the same one this file exists to hold:** the gate
+is the thing that decides what counts, so a threshold justified by the
+score it produces is circular. This was committed one session after it
+was written down here, which is exactly the failure mode the rest of this
+file is about. The correction is also a discipline: derive from the
+hand-written target, propose with the derivation attached, apply in a
+different session so the numbers are never changed in the same breath as
+the measurement that produced them, and get the human product question
+answered rather than guessing which number looks better. Reproducible
+offline and with no model call:
+`.scratch/first-principled-v9/research/03-runs/derive-thresholds.mjs`.
+
+**What it cost to find:** lowering the floors did not improve the score.
+Gold 0 of 4 before and after, generality 1 of 20 to 2 of 20, both inside
+the recorded variance. It moved the failure mix instead, degenerate trunk
+7 to 3 and **crown invariant 2 to 6**, because words that stopped failing
+the trunk floor started failing on the real defect. The floors were never
+the binding constraint and the measurement says so.
+
+**Viable again if:** never in this form. A threshold whose only
+justification is a failing acceptance run is fitted to the fixture.
+
+### A test that reads half the gate
+
+**What:** `src/claims.test.js` carried an assertion that the gate rejects
+its own target definition. It compared the live floors against
+hand-written **node counts only** and discarded the trunk floor with a
+bare `void minTrunk`.
+
+**Died because:** the discarded half was exactly the half that was wrong
+in a way the test could not see. Ticket 02 recorded that `battery` fails
+`MIN_TRUNK_NODES` and the test stayed green, because it never looked at
+trunk size. A test that covers one of two gates reads as coverage.
+
+**The same mistake appeared twice more in one session, both fixed
+2026-10-01.** `topology.test.js` had a trunk-floor test whose fixture
+failed on the *node* floor first once the floors moved to 4 and 3, so the
+trunk floor had quietly become untestable. And `MAX_FANIN_PER_TRUNK_NODE`
+and `TRUNK_MAX` were module-private, so no test could reach them at all. A
+threshold nobody can reach is a threshold nobody measured.
+
+**Viable again if:** never. Both gates, both measured sizes, every numeric
+constant exported. The test now imports `GOLD_MAPS` and walks the maps
+rather than transcribing sizes into a comment, and a further assertion
+fails if any numeric constant in `topology.js` is unexported.
+
 ### TriplyDB / RDF as the graph store
 
 **Considered and deferred, 2026-09-29.** Not built, not killed.

@@ -23,6 +23,9 @@ import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { GOLD_MAPS } from "../eval/map-quality/gold.js";
+import { MAX_PATH_NODES } from "./lib/agent/pairwise/topology.js";
+
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 /**
@@ -54,6 +57,56 @@ const DEFAULT_OPENROUTER_MODEL = sourceConst(
   "OPENROUTER_DEFAULT_MODEL"
 );
 const DEFAULT_DEEPSEEK_MODEL = sourceConst("src/lib/agent/llm.js", "DEEPSEEK_DEFAULT_MODEL");
+
+/**
+ * Walk the hand-written gold maps and measure the four properties the
+ * acceptance gate tests. Imported rather than transcribed, so a change to
+ * a map moves the assertion instead of silently invalidating a comment.
+ *
+ * The traversal mirrors `selectTopology`: dependent to prerequisite, from
+ * the crown down, capped at MAX_PATH_NODES.
+ *
+ * @returns {Array<[string, { nodes: number; trunk: number; onCrown: number; maxFanIn: number }]>}
+ */
+function measureGoldMaps() {
+  return GOLD_MAPS.map((map) => {
+    const concept = map.concept;
+    const rested = new Set(map.edges.map((edge) => edge.target));
+    const crowns = map.nodes.map((node) => node.id).filter((id) => !rested.has(id));
+    assert.equal(crowns.length, 1, `${concept} must have exactly one crown to be a Dependence Tree`);
+    const crown = /** @type {string} */ (crowns[0]);
+    /** @type {Map<string, string[]>} */
+    const prereqs = new Map();
+    for (const edge of map.edges) {
+      if (!prereqs.has(edge.source)) prereqs.set(edge.source, []);
+      prereqs.get(edge.source)?.push(edge.target);
+    }
+    let trunk = 0;
+    /** @param {string[]} path */
+    const walk = (path) => {
+      if (path.length > trunk) trunk = path.length;
+      if (path.length >= MAX_PATH_NODES) return;
+      for (const next of prereqs.get(path[path.length - 1]) ?? []) {
+        if (!path.includes(next)) walk([...path, next]);
+      }
+    };
+    walk([crown]);
+    /** @type {Map<string, number>} */
+    const dependents = new Map();
+    for (const edge of map.edges) {
+      dependents.set(edge.target, (dependents.get(edge.target) ?? 0) + 1);
+    }
+    return [
+      concept,
+      {
+        nodes: map.nodes.length,
+        trunk,
+        onCrown: map.edges.filter((edge) => edge.target === crown).length,
+        maxFanIn: Math.max(0, ...dependents.values()),
+      },
+    ];
+  });
+}
 
 test("STATUS.md quotes the real transport constants", () => {
   const status = read("docs/STATUS.md");
@@ -116,106 +169,68 @@ test("STATUS.md quotes the topology thresholds that decide the gold set", () => 
   assert.match(tests, /crown invariant/);
 });
 
-test("if the gate rejects a hand-written gold map, the dispute and its derivation are recorded", () => {
-  // Measured 2026-09-29: MIN_NODES=5 rejects recursion and battery, both
-  // hand-written 4-node gold maps, so a gate that rejects the target
-  // definition has shipped. Ticket 03 re-derived both floors on
-  // 2026-10-01 and proposed MIN_NODES=4 and MIN_TRUNK_NODES=3 without
-  // applying them.
+test("the hand-written gold maps pass the acceptance gate", () => {
+  // The load-bearing assertion of this file's whole purpose. The gate
+  // decides what counts as a Dependence Tree, and `eval/map-quality/gold.js`
+  // is the hand-written definition of one. If the thresholds reject those
+  // maps, the gate is fitted to the fixture, which is the documented v7
+  // failure mode and cost ticket 02 its honest score.
   //
-  // This test is deliberately NOT a red test. `npm test` is the safety
-  // net and a red suite gets "fixed" by the next session without anyone
-  // reading why. Instead the dispute has to stay written down: either the
-  // thresholds get re-derived and this passes on the merits, or someone
-  // deleting the note makes it fail. Both outcomes are the ones we want.
-  //
-  // The hand-written sizes below are BOTH gates. The 2026-10-01 version
-  // of this test measured node count only and discarded the trunk floor
-  // with a `void`, which is why `battery`'s MIN_TRUNK_NODES rejection
-  // shipped unmeasured for a whole session. A test that reads one of the
-  // two thresholds is worse than no test, because it reads as coverage.
+  // Measured, not hardcoded: the maps are walked here with the same
+  // traversal topology.js uses. A change to either the maps or the
+  // thresholds is what moves this test. Between 2026-09-29 and 2026-10-01
+  // this assertion could not have existed, because the live floors were
+  // wrong and a red suite gets "fixed" without anyone reading why.
+  const status = read("docs/STATUS.md");
   const minNodes = Number(sourceConst("src/lib/agent/pairwise/topology.js", "MIN_NODES"));
   const minTrunk = Number(sourceConst("src/lib/agent/pairwise/topology.js", "MIN_TRUNK_NODES"));
-  // Measured not parsed, so that a change to either the maps or the gate
-  // is what moves this test. Both numbers come from
-  // .scratch/first-principled-v9/research/03-runs/derive-thresholds.mjs.
-  const handWritten = {
-    laptop: { nodes: 8, trunk: 8 },
-    recursion: { nodes: 4, trunk: 3 },
-    photosynthesis: { nodes: 5, trunk: 4 },
-    battery: { nodes: 4, trunk: 3 },
-  };
-  /** @type {string[]} */
-  const rejected = [];
-  for (const [name, size] of Object.entries(handWritten)) {
-    if (size.nodes < minNodes) rejected.push(`${name} (MIN_NODES)`);
-    if (size.trunk < minTrunk) rejected.push(`${name} (MIN_TRUNK_NODES)`);
-  }
-  if (rejected.length === 0) return; // the gate accepts the target definition
-
-  const status = read("docs/STATUS.md");
-  const evidence = read(".scratch/first-principled-v9/research/03-generality-evidence.md");
-  for (const entry of rejected) {
-    const name = entry.split(" ")[0];
+  for (const [name, size] of measureGoldMaps()) {
     assert.ok(
-      status.includes(`\`${name}\``),
-      `docs/STATUS.md must name the rejected hand-written map ${name} (${entry})`
+      size.nodes >= minNodes,
+      `${name} is a hand-written gold map with ${size.nodes} nodes and MIN_NODES is ${minNodes}. ` +
+        "The gate must accept the definition it is written against."
     );
+    assert.ok(
+      size.trunk >= minTrunk,
+      `${name} is a hand-written gold map with a ${size.trunk}-node trunk and MIN_TRUNK_NODES is ${minTrunk}.`
+    );
+    assert.equal(
+      size.onCrown,
+      0,
+      `${name} has ${size.onCrown} edges resting on its crown, so the crown invariant rejects it. ` +
+        "Every hand-written map has a single top; that is where the invariant comes from."
+    );
+  }
+  // And the thresholds have to be recorded where they are decided, next to
+  // their derivation, or the next session cannot tell a measured floor
+  // from a tuned one.
+  for (const value of [minNodes, minTrunk]) {
+    assert.ok(status.includes(String(value)), `docs/STATUS.md must state the live floor (${value})`);
   }
   assert.match(
     status,
-    /fitted|fitted-to-the-fixture|came from the acceptance|came from the product rather than from the score/i,
-    "docs/STATUS.md must say the threshold is disputed, not defend it"
-  );
-  // The dispute is only half the record. The other half is that the
-  // alternative was derived and proposed rather than silently dropped,
-  // and that the derivation is reproducible offline.
-  assert.match(
-    evidence,
-    new RegExp(`MIN_NODES[^\\n]*\\b${minNodes}\\b`),
-    `03-generality-evidence.md must state the live MIN_NODES value (${minNodes}) next to its proposal`
-  );
-  assert.match(
-    evidence,
-    new RegExp(`MIN_TRUNK_NODES[^\\n]*\\b${minTrunk}\\b`),
-    `03-generality-evidence.md must state the live MIN_TRUNK_NODES value (${minTrunk}) next to its proposal`
-  );
-  assert.match(
-    evidence,
-    /derive-thresholds\.mjs/,
-    "the derivation must name the script that reproduces it"
-  );
-  // And the human decision the ticket reopened must still be open. The
-  // proposal was not applied, so the product question that justifies not
-  // applying it has to stay visible.
-  assert.match(
-    evidence,
-    /rabbit hole/i,
-    "the open product question about whether a 4-node map is deep enough must stay written down"
+    /derive[d]?-thresholds\.mjs|derive-thresholds/,
+    "docs/STATUS.md must name the script that derives the floors from the hand-written maps"
   );
 });
 
 test("every gate constant a test cannot reach is named as such", () => {
-  // 2026-10-01: MAX_FANIN_PER_TRUNK_NODE = 2 is a module-private const in
-  // topology.js, so no test can assert on it, and it clips the canonical
-  // `laptop` fixture, whose max fan-in is 3. An unexported threshold is
-  // an unmeasured threshold, so its absence from the export list has to
-  // be a recorded finding rather than an accident.
+  // 2026-10-01: MAX_FANIN_PER_TRUNK_NODE = 2 and TRUNK_MAX = 7 were
+  // module-private consts in topology.js, so no test could assert on
+  // either, and the first clipped the canonical `laptop` fixture. Both are
+  // exported now. This test keeps it that way: a new unexported threshold
+  // has to be recorded here or turned into a dead number.
   const topology = read("src/lib/agent/pairwise/topology.js");
   // Only consts that carry their own numeric value are thresholds. A
   // module-private alias like `TRUNK_MIN = MIN_TRUNK_NODES` holds no
   // number of its own and is not a threshold anyone can get wrong.
   const declared = [...topology.matchAll(/^const\s+([A-Z_]+)\s*=\s*([0-9]+)\s*;/gm)].map((m) => m[1]);
   const unexported = declared.filter((name) => !new RegExp(`export\\s+const\\s+${name}\\s*=`).test(topology));
-  const evidence = read(".scratch/first-principled-v9/research/03-generality-evidence.md");
-  for (const name of unexported) {
-    assert.match(
-      evidence,
-      new RegExp(`\`?${name}\`?[^\\n]*not exported|not exported[^\\n]*${name}`),
-      `${name} is declared in topology.js but not exported, so nothing can assert on it. ` +
-        "Either export it or record why not, in 03-generality-evidence.md."
-    );
-  }
+  assert.deepEqual(
+    unexported,
+    [],
+    `topology.js declares a numeric constant that is not exported, so nothing can assert on it: ${unexported.join(", ")}`
+  );
 });
 
 test("the v9 frontier agrees with the v9 issue statuses", () => {
@@ -231,14 +246,19 @@ test("the v9 frontier agrees with the v9 issue statuses", () => {
   assert.match(ticket01, /\*\*Status:\*\*\s*resolved/i, "ticket 01 must be marked resolved");
   assert.match(ticket02, /\*\*Status:\*\*\s*resolved/i, "ticket 02 must be marked resolved");
   assert.match(ticket03, /\*\*Status:\*\*\s*resolved/i, "ticket 03 must be marked resolved");
-  // Ticket 03 was research only and changed no threshold, so the gate is
-  // still the ticket 02 gate and ticket 04 is still blocked on it. The
-  // frontier has to say so, or the next session adapts a map against a
-  // gate whose proposed correction is sitting unapplied in the evidence
-  // file.
+  const ticket04 = read(".scratch/first-principled-v9/issues/04-apply-derived-gate-thresholds.md");
+  assert.match(ticket04, /\*\*Status:\*\*\s*resolved/i, "ticket 04 must be marked resolved");
+  // Ticket 04 applied the floors ticket 03 derived, so the adapter is
+  // unblocked and has to be named as the next thing. The moment the
+  // frontier says "blocked on the disputed gate" again, either the
+  // dispute is back or the note is a lie, and both deserve a red suite.
   assert.ok(
-    /\[04 - RealityMap adapter[^\]]*\]\([^)]*\)[^\n]*\n?[^\n]*\*\*Blocked\*\* on 03/.test(frontier),
-    "ticket 04 must be marked blocked on 03 in the frontier"
+    /\[05 - RealityMap adapter/.test(frontier),
+    "the frontier must name ticket 05, the adapter, as the next ticket"
+  );
+  assert.ok(
+    !/\*\*Blocked\*\* on 0[34]/.test(frontier),
+    "tickets 03 and 04 are resolved, so nothing may still be blocked on them"
   );
   assert.ok(
     !/\[01 - Pairwise falsification spike\][^\n]*\(unblocked; next\)/.test(frontier),
@@ -247,6 +267,10 @@ test("the v9 frontier agrees with the v9 issue statuses", () => {
   assert.ok(
     !/\[03 - Generality and gate provenance\][^\n]*\(next\)/.test(frontier),
     "ticket 03 is resolved and must not be listed as next"
+  );
+  assert.ok(
+    !/\[04 - Apply the derived gate thresholds\][^\n]*\(next\)/.test(frontier),
+    "ticket 04 is resolved and must not be listed as next"
   );
 
   for (const doc of ["README.md", "CONTEXT.md"]) {

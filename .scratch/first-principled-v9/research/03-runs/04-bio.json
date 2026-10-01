@@ -1,0 +1,673 @@
+﻿{
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "results": [
+    {
+      "word": "gut microbiome",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9813,
+      "promptTokens": 5618,
+      "completionTokens": 4100,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array",
+        "canonicalized confidence to MEDIUM"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "mammalian large intestine anatomy",
+        "bacterial cell growth curve",
+        "competitive exclusion of microbes",
+        "short-chain fatty acid fermentation",
+        "germ-free animal model",
+        "16S rRNA gene sequencing",
+        "dietary fiber polysaccharide structure",
+        "mucosal immune tolerance",
+        "fecal microbiota transplant",
+        "Koch's postulates for microbial causation"
+      ],
+      "relations": {
+        "NONE": 45,
+        "A_RESTS_ON_B": 9,
+        "B_RESTS_ON_A": 1
+      },
+      "jumps": {
+        "n/a": 45,
+        "SMALL": 6,
+        "TOO_LARGE": 4
+      },
+      "targetPrereqs": 0,
+      "targetPairsTooLarge": 1,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "competitive exclusion of microbes",
+          "needs": "gut microbiome",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "short-chain fatty acid fermentation",
+          "needs": "dietary fiber polysaccharide structure",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "short-chain fatty acid fermentation",
+          "needs": "gut microbiome",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "germ-free animal model",
+          "needs": "gut microbiome",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "16S rRNA gene sequencing",
+          "needs": "gut microbiome",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "fecal microbiota transplant",
+          "needs": "gut microbiome",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [
+        {
+          "on": "target",
+          "needs": "mammalian large intestine anatomy",
+          "jump": "TOO_LARGE",
+          "why": "Gut microbiome depends on large intestine, but many microbial concepts bridge them."
+        }
+      ],
+      "errors": [
+        "no target-to-foundation path: judgments do not connect the target to a demonstrable leaf"
+      ]
+    },
+    {
+      "word": "mitosis",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9245,
+      "promptTokens": 5708,
+      "completionTokens": 4133,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "dropped the echoed type field",
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "Chromosome condensation",
+        "Spindle apparatus",
+        "Microtubule dynamics",
+        "DNA replication",
+        "Cell cycle checkpoints",
+        "Molecular motor proteins",
+        "Phosphorylation signaling",
+        "Cytokinesis",
+        "Fluorescence microscopy",
+        "Aneuploidy"
+      ],
+      "relations": {
+        "NONE": 36,
+        "B_RESTS_ON_A": 13,
+        "A_RESTS_ON_B": 6
+      },
+      "jumps": {
+        "n/a": 36,
+        "TOO_LARGE": 9,
+        "SMALL": 10
+      },
+      "targetPrereqs": 4,
+      "targetPairsTooLarge": 3,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "mitosis",
+          "needs": "Chromosome condensation",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Microtubule dynamics",
+          "needs": "Molecular motor proteins",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Cytokinesis",
+          "needs": "Microtubule dynamics",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "mitosis",
+          "needs": "Microtubule dynamics",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Cell cycle checkpoints",
+          "needs": "Phosphorylation signaling",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "mitosis",
+          "needs": "Aneuploidy",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Spindle apparatus",
+          "needs": "Microtubule dynamics",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Molecular motor proteins",
+          "needs": "Spindle apparatus",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "mitosis",
+          "needs": "Spindle apparatus",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Cytokinesis",
+          "needs": "mitosis",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [
+        {
+          "on": "target",
+          "needs": "Cell cycle checkpoints",
+          "jump": "TOO_LARGE",
+          "why": "Checkpoints are part of mitosis but the whole does not rest on this single part."
+        },
+        {
+          "on": "target",
+          "needs": "Molecular motor proteins",
+          "jump": "TOO_LARGE",
+          "why": "Motor proteins are part of mitosis but the whole does not rest on this component."
+        },
+        {
+          "on": "target",
+          "needs": "Phosphorylation signaling",
+          "jump": "TOO_LARGE",
+          "why": "Phosphorylation regulates mitosis but the whole does not rest on this single process."
+        }
+      ],
+      "errors": [
+        "crown invariant broken: 1 selected edge rests on the target, so the map has no single top (p-k8--target)"
+      ]
+    },
+    {
+      "word": "enzyme",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9127,
+      "promptTokens": 5523,
+      "completionTokens": 4410,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "dropped the echoed type field",
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array",
+        "keyed-object envelope lifted to an array",
+        "set jump to NOT_APPLICABLE on a NONE row"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "Protein folding",
+        "Chemical reaction rate",
+        "Activation energy",
+        "Substrate binding",
+        "Active site",
+        "Catalysis",
+        "Amino acid",
+        "Peptide bond",
+        "Molecular collision",
+        "Enzyme kinetics"
+      ],
+      "relations": {
+        "NONE": 39,
+        "A_RESTS_ON_B": 6,
+        "B_RESTS_ON_A": 10
+      },
+      "jumps": {
+        "n/a": 39,
+        "SMALL": 15,
+        "TOO_LARGE": 1
+      },
+      "targetPrereqs": 2,
+      "targetPairsTooLarge": 1,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "Activation energy",
+          "needs": "Catalysis",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Molecular collision",
+          "needs": "Activation energy",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Substrate binding",
+          "needs": "Active site",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Catalysis",
+          "needs": "Substrate binding",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Substrate binding",
+          "needs": "enzyme",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Enzyme kinetics",
+          "needs": "Catalysis",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Enzyme kinetics",
+          "needs": "enzyme",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Chemical reaction rate",
+          "needs": "Activation energy",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Amino acid",
+          "needs": "Protein folding",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Peptide bond",
+          "needs": "Protein folding",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Chemical reaction rate",
+          "needs": "Enzyme kinetics",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Active site",
+          "needs": "Enzyme kinetics",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "enzyme",
+          "needs": "Active site",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "enzyme",
+          "needs": "Catalysis",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Peptide bond",
+          "needs": "Amino acid",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [
+        {
+          "on": "target",
+          "needs": "Amino acid",
+          "jump": "TOO_LARGE",
+          "why": "Enzyme is composed of amino acids but requires intermediate concepts like protein structure."
+        }
+      ],
+      "errors": [
+        "degenerate trunk: longest target-to-foundation path is 2 nodes, below the 3-node minimum"
+      ]
+    },
+    {
+      "word": "natural selection",
+      "ok": true,
+      "stage": "topology",
+      "calls": 6,
+      "elapsedMs": 12862,
+      "promptTokens": 6405,
+      "completionTokens": 4867,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "keyed-object envelope lifted to an array",
+        "keyed-object envelope lifted to an array",
+        "dropped the echoed type field",
+        "dropped the echoed type field"
+      ],
+      "nodes": 6,
+      "edges": 9,
+      "trunk": 6,
+      "trunkPath": "k3 -> k8 -> k6 -> k10 -> k1 -> target",
+      "candidates": 10,
+      "inventory": [
+        "trait variation within a population",
+        "differential survival and reproduction",
+        "heritability of traits",
+        "overproduction of offspring",
+        "mutation as source of new alleles",
+        "allele frequency change across generations",
+        "DNA replication and base-pairing",
+        "Mendelian segregation of alleles",
+        "population census and trait scoring",
+        "fitness as relative reproductive output"
+      ],
+      "relations": {
+        "NONE": 32,
+        "A_RESTS_ON_B": 15,
+        "B_RESTS_ON_A": 7,
+        "SAME_CONCEPT": 1
+      },
+      "jumps": {
+        "n/a": 33,
+        "SMALL": 21,
+        "TOO_LARGE": 1
+      },
+      "targetPrereqs": 5,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 1,
+      "droppedJudgments": 38,
+      "graph": [
+        {
+          "on": "trait variation within a population",
+          "needs": "differential survival and reproduction",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "trait variation within a population",
+          "needs": "allele frequency change across generations",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "trait variation within a population",
+          "needs": "population census and trait scoring",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "natural selection",
+          "needs": "trait variation within a population",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "Mendelian segregation of alleles",
+          "needs": "heritability of traits",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "natural selection",
+          "needs": "heritability of traits",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "natural selection",
+          "needs": "overproduction of offspring",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "DNA replication and base-pairing",
+          "needs": "mutation as source of new alleles",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "fitness as relative reproductive output",
+          "needs": "allele frequency change across generations",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "fitness as relative reproductive output",
+          "needs": "population census and trait scoring",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "differential survival and reproduction",
+          "needs": "heritability of traits",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "differential survival and reproduction",
+          "needs": "overproduction of offspring",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "differential survival and reproduction",
+          "needs": "mutation as source of new alleles",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "differential survival and reproduction",
+          "needs": "allele frequency change across generations",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "differential survival and reproduction",
+          "needs": "population census and trait scoring",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "differential survival and reproduction",
+          "needs": "natural selection",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "allele frequency change across generations",
+          "needs": "Mendelian segregation of alleles",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "allele frequency change across generations",
+          "needs": "population census and trait scoring",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "allele frequency change across generations",
+          "needs": "natural selection",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "natural selection",
+          "needs": "Mendelian segregation of alleles",
+          "confidence": "MEDIUM",
+          "selected": true
+        },
+        {
+          "on": "natural selection",
+          "needs": "population census and trait scoring",
+          "confidence": "MEDIUM",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [],
+      "realized": true,
+      "realizeCoercions": [],
+      "tree": [
+        {
+          "id": "k3",
+          "heading": "Heritability of traits",
+          "gloss": "Offspring resemble their parents more than unrelated individuals for a given trait. This resemblance is required for selection to change a population.",
+          "label": "heritability of traits",
+          "rank": 0,
+          "onTrunk": true
+        },
+        {
+          "id": "k8",
+          "heading": "Mendelian segregation of alleles",
+          "gloss": "Gene variants separate into gametes so offspring receive one copy from each parent. This rule explains how variants are passed on and reshuffled.",
+          "label": "Mendelian segregation of alleles",
+          "rank": 1,
+          "onTrunk": true
+        },
+        {
+          "id": "k6",
+          "heading": "Allele frequency change across generations",
+          "gloss": "The proportions of gene variants in a population shift over time. Such shifts are the measurable outcome of evolution.",
+          "label": "allele frequency change across generations",
+          "rank": 2,
+          "onTrunk": true
+        },
+        {
+          "id": "k10",
+          "heading": "Fitness as relative reproductive output",
+          "gloss": "Fitness is an individual's share of offspring in the next generation compared with others. It determines which traits become more common.",
+          "label": "fitness as relative reproductive output",
+          "rank": 3,
+          "onTrunk": true
+        },
+        {
+          "id": "k1",
+          "heading": "Trait variation within a population",
+          "gloss": "Individuals in a group differ in measurable features such as size, color, or speed. This variation is the raw material that selection acts on.",
+          "label": "trait variation within a population",
+          "rank": 4,
+          "onTrunk": true
+        },
+        {
+          "id": "target",
+          "heading": "Natural selection",
+          "gloss": "Natural selection is the process where organisms with traits better suited to their environment tend to survive and reproduce more. Over generations, this leads to populations changing and adapting.",
+          "label": "natural selection",
+          "rank": 5,
+          "onTrunk": true
+        }
+      ],
+      "warrants": [
+        {
+          "id": "e-p-k1--k2",
+          "because": "Without variation in traits, there can be no differences in reproductive output to favor one form over another.",
+          "on": "trait variation within a population",
+          "needs": "fitness as relative reproductive output"
+        },
+        {
+          "id": "e-p-k1--k6",
+          "because": "Selection can only change allele frequencies if individuals in the population vary in their traits.",
+          "on": "trait variation within a population",
+          "needs": "allele frequency change across generations"
+        },
+        {
+          "id": "e-p-k1--target",
+          "because": "Natural selection depends on individuals within a population differing in their traits.",
+          "on": "natural selection",
+          "needs": "trait variation within a population"
+        },
+        {
+          "id": "e-p-k10--k6",
+          "because": "Changes in allele frequencies across generations result from differences in reproductive output among individuals.",
+          "on": "fitness as relative reproductive output",
+          "needs": "allele frequency change across generations"
+        },
+        {
+          "id": "e-p-k2--k3",
+          "because": "Heritability of traits is necessary for differences in reproductive output to be passed on to offspring.",
+          "on": "fitness as relative reproductive output",
+          "needs": "heritability of traits"
+        },
+        {
+          "id": "e-p-k3--k8",
+          "because": "Mendelian segregation provides the mechanism by which traits are inherited from parents to offspring.",
+          "on": "Mendelian segregation of alleles",
+          "needs": "heritability of traits"
+        },
+        {
+          "id": "e-p-k3--target",
+          "because": "Natural selection requires that traits be heritable so that favored traits appear in the next generation.",
+          "on": "natural selection",
+          "needs": "heritability of traits"
+        },
+        {
+          "id": "e-p-k6--k8",
+          "because": "The rules of Mendelian segregation explain how allele frequencies can change from one generation to the next.",
+          "on": "allele frequency change across generations",
+          "needs": "Mendelian segregation of alleles"
+        },
+        {
+          "id": "e-p-k8--target",
+          "because": "Natural selection depends on Mendelian segregation to generate the inheritance patterns it acts upon.",
+          "on": "natural selection",
+          "needs": "Mendelian segregation of alleles"
+        }
+      ]
+    }
+  ]
+}

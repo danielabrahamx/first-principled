@@ -116,6 +116,7 @@ navigable.
 | inventory | `buildInventorySystemPrompt` | `buildInventoryJsonSchema` | - | `inventoryProblems` |
 | judgments | `buildPairBatchSystemPrompt` | `buildPairBatchJsonSchema` | `normalizePairBatch` | `pairBatchProblems` |
 | topology | none - no model call | - | - | `selectTopology` |
+| realization | `buildRealizeSystemPrompt` | `buildRealizeJsonSchema` | `normalizeRealize` | `realizeProblems` |
 | reality map (v7) | `buildChronology/Epiphanies/Arrange` | two schemas | `normalizeChronology/Epiphanies/History` | `chronologyProblems`, `epiphaniesProblems`, `arrangeCheck` |
 | socratic | `buildSocraticSystemPrompt` | - | `unpackTurn` | `validateTurn` |
 
@@ -175,20 +176,61 @@ and it constrains any future work on the learner model.
 
 ## Where the seams are for the next change
 
-Ticket 02 adds realization between r2 and r5. The intended insertion:
+Realization (ticket 02) sits between r2 and r5:
 
 ```
-  [4] REALIZATION  new: model writes copy for the selected nodes
+  [4] REALIZATION  model writes copy for the selected nodes
         |
-  [5] REALITYMAP   existing: assemble into a validateRealityMap shape
+  [5] REALITYMAP   assemble into a validateRealityMap shape
 ```
 
-The seam is already clean. `selectTopology` returns node ids, labels,
-glosses, ranks, and rationales - everything a realization pass needs and
-nothing it does not. It does not return a `RealityMap`, so
+The seam was clean and stayed clean. `selectTopology` returns node ids,
+labels, glosses, ranks, and rationales - everything a realization pass
+needs and nothing it does not. It does not return a `RealityMap`, so
 `validator.js` has never had to change and does not need to.
 
 The constraint on that work: realization must not invent structure. It
 writes strings for nodes that topology already selected. If it finds
 itself choosing edges, it has crossed into r2 and the design is being
-violated.
+violated. Shipped behaviour holds this: a hallucinated node or edge id is
+a gate failure, not a dropped row, because a silent drop would hide a
+model that has crossed back into r2.
+
+### Ticket 05 assembles; the seam is not the obstacle
+
+Ticket 05 assembles a generated selection into a `RealityMap` through the
+existing r5 rung. `selectTopology` already returns node ids, labels,
+glosses, ranks and rationales, so the assembly is mechanical.
+
+The thing that *was* blocking it is closed. Until 2026-10-01
+`topology.js` rejected two of the four hand-written maps in
+`eval/map-quality/gold.js`, and assembling against a gate that rejects its
+own definition would have baked the dispute into the assembly layer, where
+it stops being visible as a number and starts being invisible as
+structure. The floors are now `MIN_NODES` = 4 and `MIN_TRUNK_NODES` = 3,
+both derived from those maps, all four maps pass, and
+`src/claims.test.js` asserts it every run. Reproduce the derivation
+offline, with no model call:
+`.scratch/first-principled-v9/research/03-runs/derive-thresholds.mjs`.
+
+**The constraint on ticket 05 is that it must not absorb the generator's
+failures.** The selection handed to it will include the inverted maps that
+died on the crown invariant, 6 of 20 words in the 2026-10-01 run. An
+adapter that repairs those, or that reinterprets a rejected selection,
+has crossed back into r2. It should fail honestly on a selection
+`selectTopology` already rejected, and it must not invent an edge the
+generator did not judge.
+
+### One shape lesson from ticket 03, because it will be re-derived otherwise
+
+The 2026-10-01 generality run measured 1 pass in 20 words across five
+categories. The dominant failure is not sparsity and not the gate: asked
+whether the typed target rests on a candidate, the model frequently
+answers that the **candidate rests on the target**, which is part-of read
+as dependence. That is a semantics failure at r2, exactly the class v6
+and v7 died of, and it is invisible to any histogram of pair counts. It
+was only readable by printing the ten target pairs verbatim with their
+rationales, which is why
+`.scratch/first-principled-v9/research/03-runs/target-pairs.mjs` exists
+and why `scripts/gold-words.mjs` records `nodes: 0` for any word that
+failed the gate. Read the rows, not the totals.

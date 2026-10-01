@@ -29,8 +29,14 @@ mental model and reality.** See `docs/MISSION.md`.
   deterministic gap selection (`gaps.js`), and the stateless phase
   orchestrator (`orchestrator.js`).
 - `src/lib/agent/pairwise/` - the v9 pairwise generator (inventory, pairs,
-  judgments, topology). The live direction, not yet wired into the runtime.
-  `topology.js` makes no model call by design.
+  judgments, topology, realize). The live direction, not yet wired into the
+  runtime; prod still runs the v7 three-stage path. `topology.js` makes no
+  model call by design. Its acceptance thresholds are derived from the
+  hand-written gold maps in `eval/map-quality/gold.js` (`MIN_NODES` = 4,
+  `MIN_TRUNK_NODES` = 3, `MAX_FANIN_PER_TRUNK_NODE` = 3, `TRUNK_MAX` = 8)
+  and all four of those maps pass the gate, asserted by
+  `src/claims.test.js`. Read `docs/STATUS.md` finding 3 before changing
+  any of them.
 - `netlify/functions/agent/` - the one serverless function, `POST /api/agent`
   (rewritten from `/.netlify/functions/agent` by `netlify.toml`). Stateless:
   it receives the full session state with every call and stores nothing.
@@ -68,6 +74,11 @@ can load the vendored TypeScript anti-slop plugin.
   `node --env-file=.env eval/map-quality/run.js --live`.
   Followability scoring persists full maps with `--maps-dir` and a
   separate `--baseline` so the ticket 07 file is not overwritten.
+- `node scripts/gold-words.mjs` - the one command that answers "does the
+  v9 generator still work". Live, needs a key in `.env`. Add `--dump` for
+  inventories, edge graphs, target refusals and realized copy, or
+  `--words a,b,c` to run any other set. It is a different harness from
+  `npm test`: it calls the model and it is allowed to fail.
 
 ## Deploy
 

@@ -1,0 +1,593 @@
+﻿{
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "results": [
+    {
+      "word": "sourdough",
+      "ok": false,
+      "stage": "pairs",
+      "calls": 4,
+      "coercions": [
+        "keyed-object envelope lifted to an array"
+      ],
+      "errors": [
+        "batch 3: pair batch has unexpected top-level field \"pair_id\"; pair batch has unexpected top-level field \"relation\""
+      ],
+      "dump": []
+    },
+    {
+      "word": "tidal power",
+      "ok": false,
+      "stage": "topology",
+      "calls": 4,
+      "elapsedMs": 7015,
+      "promptTokens": 4862,
+      "completionTokens": 3360,
+      "pairs": 45,
+      "batches": 3,
+      "coercions": [
+        "dropped the echoed type field",
+        "dropped the echoed type field",
+        "dropped the echoed type field"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 9,
+      "inventory": [
+        "Tidal range and tidal current",
+        "Gravitational attraction and orbital motion",
+        "Tidal barrage and tidal stream generator",
+        "Water turbine operation",
+        "Electromagnetic induction in a generator",
+        "Electric power grid and transmission",
+        "Energy conversion and conservation",
+        "Newton's laws of motion",
+        "Measurement of water flow and head"
+      ],
+      "relations": {
+        "NONE": 23,
+        "A_RESTS_ON_B": 18,
+        "B_RESTS_ON_A": 4
+      },
+      "jumps": {
+        "n/a": 23,
+        "TOO_LARGE": 4,
+        "SMALL": 18
+      },
+      "targetPrereqs": 1,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "Tidal barrage and tidal stream generator",
+          "needs": "Water turbine operation",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Tidal barrage and tidal stream generator",
+          "needs": "Electromagnetic induction in a generator",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Tidal barrage and tidal stream generator",
+          "needs": "Electric power grid and transmission",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Tidal barrage and tidal stream generator",
+          "needs": "Measurement of water flow and head",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Tidal barrage and tidal stream generator",
+          "needs": "tidal power",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Water turbine operation",
+          "needs": "Electromagnetic induction in a generator",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Water turbine operation",
+          "needs": "Newton's laws of motion",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Water turbine operation",
+          "needs": "tidal power",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Electromagnetic induction in a generator",
+          "needs": "Energy conversion and conservation",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Electromagnetic induction in a generator",
+          "needs": "Newton's laws of motion",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Electric power grid and transmission",
+          "needs": "Energy conversion and conservation",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Electric power grid and transmission",
+          "needs": "tidal power",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Energy conversion and conservation",
+          "needs": "tidal power",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Measurement of water flow and head",
+          "needs": "tidal power",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Tidal barrage and tidal stream generator",
+          "needs": "Tidal range and tidal current",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Water turbine operation",
+          "needs": "Tidal range and tidal current",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Measurement of water flow and head",
+          "needs": "Tidal range and tidal current",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "tidal power",
+          "needs": "Tidal range and tidal current",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "degenerate trunk: longest target-to-foundation path is 2 nodes, below the 3-node minimum"
+      ]
+    },
+    {
+      "word": "cantilever bridge",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9020,
+      "promptTokens": 6413,
+      "completionTokens": 3939,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "bare array wrapped as {judgments}",
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array",
+        "dropped the echoed type field"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "static equilibrium of a rigid body",
+        "bending moment in a beam",
+        "shear force in a beam",
+        "free-body diagram",
+        "tension and compression in truss members",
+        "anchor point and support reaction",
+        "moment of a force about a point",
+        "neutral axis and section modulus",
+        "deflection of a loaded beam",
+        "span and support spacing"
+      ],
+      "relations": {
+        "NONE": 34,
+        "A_RESTS_ON_B": 10,
+        "B_RESTS_ON_A": 11
+      },
+      "jumps": {
+        "n/a": 34,
+        "SMALL": 12,
+        "TOO_LARGE": 9
+      },
+      "targetPrereqs": 1,
+      "targetPairsTooLarge": 2,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "span and support spacing",
+          "needs": "cantilever bridge",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "bending moment in a beam",
+          "needs": "cantilever bridge",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "free-body diagram",
+          "needs": "static equilibrium of a rigid body",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "moment of a force about a point",
+          "needs": "static equilibrium of a rigid body",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "tension and compression in truss members",
+          "needs": "free-body diagram",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "anchor point and support reaction",
+          "needs": "free-body diagram",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "free-body diagram",
+          "needs": "deflection of a loaded beam",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "tension and compression in truss members",
+          "needs": "cantilever bridge",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "anchor point and support reaction",
+          "needs": "cantilever bridge",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "neutral axis and section modulus",
+          "needs": "moment of a force about a point",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "moment of a force about a point",
+          "needs": "deflection of a loaded beam",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "cantilever bridge",
+          "needs": "moment of a force about a point",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [
+        {
+          "on": "target",
+          "needs": "neutral axis and section modulus",
+          "jump": "TOO_LARGE",
+          "why": "Cantilever bridge bending behavior uses section modulus, but a bridge concept is broader."
+        },
+        {
+          "on": "target",
+          "needs": "deflection of a loaded beam",
+          "jump": "TOO_LARGE",
+          "why": "Cantilever deflection informs bridge design, but bridge understanding needs more."
+        }
+      ],
+      "errors": [
+        "crown invariant broken: 3 selected edges rest on the target, so the map has no single top (p-k10--target, p-k2--target, p-k5--target)"
+      ]
+    },
+    {
+      "word": "refraction",
+      "ok": true,
+      "stage": "topology",
+      "calls": 6,
+      "elapsedMs": 11803,
+      "promptTokens": 6498,
+      "completionTokens": 4370,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "dropped the echoed type field",
+        "bare array wrapped as {judgments}",
+        "keyed-object envelope lifted to an array",
+        "dropped the echoed type field"
+      ],
+      "nodes": 6,
+      "edges": 10,
+      "trunk": 5,
+      "trunkPath": "k2 -> k3 -> k1 -> k4 -> target",
+      "candidates": 10,
+      "inventory": [
+        "light ray direction change at a boundary",
+        "speed of light in a medium",
+        "index of refraction",
+        "Snell's law",
+        "wavefront speed change at an interface",
+        "Huygens principle",
+        "transparent medium",
+        "angle measurement from normal",
+        "sine function of an angle",
+        "ray model of light"
+      ],
+      "relations": {
+        "A_RESTS_ON_B": 18,
+        "B_RESTS_ON_A": 12,
+        "NONE": 24,
+        "SAME_CONCEPT": 1
+      },
+      "jumps": {
+        "SMALL": 18,
+        "TOO_LARGE": 12,
+        "n/a": 25
+      },
+      "targetPrereqs": 5,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 37,
+      "graph": [
+        {
+          "on": "light ray direction change at a boundary",
+          "needs": "ray model of light",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "light ray direction change at a boundary",
+          "needs": "speed of light in a medium",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "light ray direction change at a boundary",
+          "needs": "index of refraction",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "Snell's law",
+          "needs": "light ray direction change at a boundary",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "light ray direction change at a boundary",
+          "needs": "transparent medium",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "light ray direction change at a boundary",
+          "needs": "angle measurement from normal",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "light ray direction change at a boundary",
+          "needs": "sine function of an angle",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "refraction",
+          "needs": "light ray direction change at a boundary",
+          "confidence": "MEDIUM",
+          "selected": true
+        },
+        {
+          "on": "ray model of light",
+          "needs": "angle measurement from normal",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "refraction",
+          "needs": "ray model of light",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "index of refraction",
+          "needs": "speed of light in a medium",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "transparent medium",
+          "needs": "speed of light in a medium",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "refraction",
+          "needs": "speed of light in a medium",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "Snell's law",
+          "needs": "index of refraction",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "refraction",
+          "needs": "index of refraction",
+          "confidence": "HIGH",
+          "selected": true
+        },
+        {
+          "on": "Snell's law",
+          "needs": "angle measurement from normal",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Snell's law",
+          "needs": "sine function of an angle",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "refraction",
+          "needs": "Snell's law",
+          "confidence": "HIGH",
+          "selected": true
+        }
+      ],
+      "refusals": [],
+      "errors": [],
+      "realized": true,
+      "realizeCoercions": [],
+      "tree": [
+        {
+          "id": "k2",
+          "heading": "Speed of light in a medium",
+          "gloss": "Light travels at different speeds in different transparent materials. This speed sets how much a ray bends when it crosses a boundary.",
+          "label": "speed of light in a medium",
+          "rank": 0,
+          "onTrunk": true
+        },
+        {
+          "id": "k3",
+          "heading": "Index of refraction",
+          "gloss": "A number describing how much a medium slows light compared to vacuum. It compares light speed in vacuum to light speed in the material.",
+          "label": "index of refraction",
+          "rank": 1,
+          "onTrunk": true
+        },
+        {
+          "id": "k7",
+          "heading": "Transparent medium",
+          "gloss": "A material that transmits light while allowing some absorption and reflection. It sets the speed at which light travels inside it.",
+          "label": "transparent medium",
+          "rank": 1,
+          "onTrunk": false
+        },
+        {
+          "id": "k1",
+          "heading": "Light ray direction change at a boundary",
+          "gloss": "A light ray bends when it crosses between two transparent media at an angle. This bending is the visible event of refraction.",
+          "label": "light ray direction change at a boundary",
+          "rank": 2,
+          "onTrunk": true
+        },
+        {
+          "id": "k4",
+          "heading": "Snell's law",
+          "gloss": "A relation between incidence angle, refraction angle, and the indices of the two media. It predicts the exact bend direction at a boundary.",
+          "label": "Snell's law",
+          "rank": 3,
+          "onTrunk": true
+        },
+        {
+          "id": "target",
+          "heading": "Refraction",
+          "gloss": "Refraction is the bending of light as it passes between transparent media. It happens because light changes speed at the boundary.",
+          "label": "refraction",
+          "rank": 4,
+          "onTrunk": true
+        }
+      ],
+      "warrants": [
+        {
+          "id": "e-p-k1--k2",
+          "because": "Light changes direction at a boundary because its speed changes between the two media.",
+          "on": "light ray direction change at a boundary",
+          "needs": "speed of light in a medium"
+        },
+        {
+          "id": "e-p-k1--k3",
+          "because": "The size of the bend at a boundary depends on the index of refraction of each medium.",
+          "on": "light ray direction change at a boundary",
+          "needs": "index of refraction"
+        },
+        {
+          "id": "e-p-k1--k4",
+          "because": "Snell's law gives the exact angle of the bent ray at a boundary.",
+          "on": "Snell's law",
+          "needs": "light ray direction change at a boundary"
+        },
+        {
+          "id": "e-p-k1--target",
+          "because": "Refraction is the bending of a light ray at a boundary between media.",
+          "on": "refraction",
+          "needs": "light ray direction change at a boundary"
+        },
+        {
+          "id": "e-p-k2--k3",
+          "because": "The index of refraction is defined by the speed of light in the medium.",
+          "on": "index of refraction",
+          "needs": "speed of light in a medium"
+        },
+        {
+          "id": "e-p-k2--k7",
+          "because": "The speed of light inside a material depends on the properties of that transparent medium.",
+          "on": "transparent medium",
+          "needs": "speed of light in a medium"
+        },
+        {
+          "id": "e-p-k2--target",
+          "because": "Refraction happens because light travels at different speeds in different media.",
+          "on": "refraction",
+          "needs": "speed of light in a medium"
+        },
+        {
+          "id": "e-p-k3--k4",
+          "because": "Snell's law uses the index of refraction of each medium to predict the bend.",
+          "on": "Snell's law",
+          "needs": "index of refraction"
+        },
+        {
+          "id": "e-p-k3--target",
+          "because": "Refraction depends on how much each medium slows light, which the index describes.",
+          "on": "refraction",
+          "needs": "index of refraction"
+        },
+        {
+          "id": "e-p-k4--target",
+          "because": "Refraction is described quantitatively by Snell's law relating angles and indices.",
+          "on": "refraction",
+          "needs": "Snell's law"
+        }
+      ]
+    }
+  ]
+}

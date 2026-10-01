@@ -23,14 +23,16 @@ between the learner's mental model and reality.
 | Default OpenRouter model | `z-ai/glm-5.3-flash` | `src/lib/agent/llm.js` `OPENROUTER_DEFAULT_MODEL` |
 | Default DeepSeek model | `deepseek-v4-flash` | `src/lib/agent/llm.js` `DEEPSEEK_DEFAULT_MODEL` |
 | Generator route that passes | `deepseek-flash` | `.scratch/first-principled-v9/research/01-spike-evidence.md` |
-| Frontier | v9 ticket 04, blocked on applying the proposed thresholds | `.scratch/first-principled-v9/map.md` |
+| Frontier | v9 ticket 05, the RealityMap adapter, unblocked | `.scratch/first-principled-v9/map.md` |
 | Gold words | laptop, battery, photosynthesis, recursion | `eval/map-quality/gold.js` |
-| Gold result under the honest gate | **0 to 2 of 4 pass**, across six runs 2026-09-29 to 2026-10-01 | `03-generality-evidence.md` |
-| Generality, 20 words across 5 categories | **1 of 20 pass**, no failure clustering by category | `03-generality-evidence.md` |
-| Gold node count | **4 to 9**, still uncontrolled, now under a real gate | `02-realization-evidence.md` |
+| Gold maps against the gate | **all four pass**, asserted by `claims.test.js` | `04-derived-threshold-application.md` |
+| Gold result under the honest gate | **0 to 2 of 4 pass**, across eight runs 2026-09-29 to 2026-10-01 | `04-derived-threshold-application.md` |
+| Generality, 20 words across 5 categories | **1 of 20 before the floor change, 2 of 20 after**, no failure clustering by category | `04-derived-threshold-application.md` |
+| Largest failure mode | **crown invariant, 6 of 20**: the model judges candidates as resting on the whole target | `03-generality-evidence.md` |
+| Gate floors | `MIN_NODES` 4, `MIN_TRUNK_NODES` 3, both derived from the hand-written maps | `src/lib/agent/pairwise/topology.js` |
 | Realization | ships, not in prod | `src/lib/agent/pairwise/realize.js` |
 | Live generator in prod | v7 three-stage (`realityMap.js`) | `src/api/agent.js` |
-| Checks | `npm test` (446), `npm run lint`, `npm run typecheck` | all green 2026-10-01 |
+| Checks | `npm test` (448), `npm run lint`, `npm run typecheck` | all green 2026-10-01 |
 
 Three of those rows are enforced by a test
 (`src/claims.test.js`). If you change the model in `llm.js` without
@@ -39,13 +41,16 @@ updating this file, `npm test` fails and tells you.
 ## The one-paragraph version of where we are
 
 The v9 pairwise generator is the live direction. It has an inventory
-call, 55 local pair judgments, pure-code topology selection, and now a
+call, 55 local pair judgments, pure-code topology selection, and a
 realization call that writes learner-facing copy for a shape code has
-already chosen. **The gate was broken and is now fixed**: it used to
-report a 2-node, 1-edge stub as a pass, so the recorded 4 of 4 was
-partly measuring nothing. With `MIN_TRUNK_NODES`, `MIN_NODES`, and a
-crown invariant enforced, the honest rate is **1 to 2 of 4**. The
-previous number was the bug, not a regression.
+already chosen. **The gate was broken twice and is now fixed both times.**
+It used to report a 2-node, 1-edge stub as a pass, so the recorded 4 of 4
+was partly measuring nothing. The floors added to fix that then rejected
+two of the four hand-written gold maps, so the gate was fitted to the
+acceptance runs in the other direction. Both are closed: the floors are
+derived from `eval/map-quality/gold.js`, all four hand-written maps pass,
+and a test asserts it every run. The honest rate is **0 to 2 of 4** across
+eight runs. Both earlier numbers were the bug, not the regression.
 
 None of it is in prod. Prod still runs the v7 three-stage generator,
 retained and battle-tested but known to produce list-shaped maps.
@@ -53,11 +58,14 @@ retained and battle-tested but known to produce list-shaped maps.
 **What is fixed and what is not.** The cause of the short trunks was the
 inventory, identified by reading the candidate labels: the prompt asked
 for concepts "directly" necessary to the target and got ten parts of a
-laptop, all at one level. That prompt is fixed. What is not fixed is
-run-to-run variance, and it is now visible per run instead of hidden
-behind a green check. **Ticket 03 measured it and did not fix it.** The
-generator's spread on identical code and route is now 0 of 4 to 2 of 4 on
-the gold four and 1 of 20 across five categories.
+laptop, all at one level. That prompt is fixed. The gate is fixed: all
+four hand-written gold maps pass it and a test says so on every run.
+**What is not fixed is the model's semantics.** Asked whether the typed
+target rests on a candidate, it often answers that the candidate rests on
+the target, and the crown invariant correctly rejects the result. That is
+now the largest single failure mode at 6 of 20 words, and it is a class
+v6 and v7 both died of. Run-to-run variance is wider than any effect
+measured so far: 0 of 4 twice in a row on the gold set, minutes apart.
 
 ## The three findings that should drive every future decision
 
@@ -114,119 +122,157 @@ acceptance. So the 2026-09-29 free-route run reported a "pass" for
 `laptop` that was actually a 2-node, 1-edge tree.
 
 Ticket 02 replaced the preferences with three acceptance rules, all
-exported from `topology.js` and all enforced: `MIN_TRUNK_NODES` is 4
-and is applied *before* trunk scoring, `MIN_NODES` is 5 on the published
-tree, and a crown invariant rejects any selected edge resting on the
-target. `MAX_NODES` stays a cap at 10 and was not changed. The honest
-gold rate went from a recorded 4 of 4 to **1 to 2 of 4**.
+enforced: `MIN_TRUNK_NODES` applied *before* trunk scoring, `MIN_NODES` on
+the published tree, and a crown invariant rejecting any selected edge
+resting on the target. `MAX_NODES` stayed a cap at 10. The honest gold
+rate went from a recorded 4 of 4 to 1 to 2 of 4. **Both floors were then
+wrong by one and are now 4 and 3**; see the correction below.
 
 The tempting move at that point is to relax a threshold until the
 number recovers. That is precisely the v7 failure: the gate gets fitted
 to the failure it was meant to catch.
 
-**Correction, 2026-09-29, completed 2026-10-01:** the gate was partly
-fitted anyway. Measured against `eval/map-quality/gold.js`, the
-hand-written maps that define a good Dependence Tree: `recursion` at 4
-nodes fails `MIN_NODES` = 5, and `battery` at 4 nodes with a depth-2 trunk
-fails `MIN_TRUNK_NODES` = 4. Two of the four maps a human wrote on purpose
-are rejected by the gate written to judge them.
+**Correction, 2026-09-29, closed 2026-10-01:** the gate *was* partly
+fitted. Measured against `eval/map-quality/gold.js`, the hand-written
+maps that define a good Dependence Tree: `recursion` at 4 nodes with a
+3-node trunk failed `MIN_NODES` = 5 and `MIN_TRUNK_NODES` = 4, and
+`battery` likewise. Two of the four maps a human wrote on purpose were
+rejected by the gate written to judge them.
 
 Ticket 03 re-derived every threshold from the hand-written maps and
-corrected the record. **The two floors are wrong by one, and neither has
-product lineage.** `MIN_NODES` = 5 was added because the gold runs were
-failing; its derivation from the maps is 4. `MIN_TRUNK_NODES` = 4 had
-lineage as ticket 01's `TRUNK_MIN` scoring preference, but ticket 02
-promoted it to an acceptance rule and the promotion is what broke it: as a
-preference it chose among adequate trunks, as a floor it rejects `battery`.
-Its derivation from the maps is 3. An earlier version of this file claimed
-all three "came from the product rather than from the score". For
-`MIN_NODES` that was false and it is now stated as false. `MAX_NODES`,
-`MAX_PATH_NODES` and the crown invariant **do** have product lineage and
-are unchanged; the crown invariant is additionally satisfied by all four
-hand-written maps, which have zero edges resting on the crown.
+ticket 04 applied the derivation. **Both floors were wrong by one and
+neither had product lineage.** `MIN_NODES` = 5 was added because the gold
+runs were failing; its derivation is 4. `MIN_TRUNK_NODES` = 4 had lineage
+as ticket 01's `TRUNK_MIN` scoring preference, but ticket 02 promoted it
+to an acceptance rule and the promotion is what broke it: as a preference
+it chose among adequate trunks, as a floor it rejected `battery`. Its
+derivation is 3. An earlier version of this file claimed all three
+"came from the product rather than from the score". For `MIN_NODES` that
+was false and it is now stated as false.
 
-Ticket 03 also found that `MAX_FANIN_PER_TRUNK_NODE` = 2 is not exported
-from `topology.js`, so no test can assert on it, and that it would clip the
-canonical `laptop` fixture, whose max fan-in is 3. Proposed values with
-their derivation: `.scratch/first-principled-v9/research/03-generality-evidence.md`,
-section 3. **Not applied.** Whether a 4-node map is a rabbit hole is a
-product decision for a human, and it is open.
+The human decision that authorised it, made 2026-10-01: **a 4-node map
+is a rabbit hole.** The hand-written maps are the definition, so the
+floors take their derived values. Current state:
+
+| Constant | Value | Derivation |
+| --- | --- | --- |
+| `MIN_NODES` | 4 | smallest node count in a hand-written map (`recursion`, `battery`) |
+| `MIN_TRUNK_NODES` | 3 | smallest trunk in a hand-written map (`recursion`, `battery`) |
+| `MAX_FANIN_PER_TRUNK_NODE` | 3 | highest fan-in in a hand-written map (`laptop`, `recursion`). Was 2, which clipped `laptop`. Now exported. |
+| `TRUNK_MAX` | 8 | deepest hand-written trunk (`laptop`). Was 7. Now exported. |
+| `MAX_NODES` | 10 | deepest hand-written map is 8; headroom above it is correct |
+| `MAX_PATH_NODES` | 8 | exactly the deepest hand-written trunk |
+| crown invariant | on | all four hand-written maps have zero edges resting on the crown |
+
+**All four hand-written gold maps pass the gate**, and
+`src/claims.test.js` asserts it on every run by walking the imported maps
+with the same traversal `selectTopology` uses, so it measures rather than
+transcribes. Mutation-checked: setting `MIN_NODES` back to 5 fails it by
+name (`recursion is a hand-written gold map with 4 nodes`). That
+assertion is the thing to break first if anyone tries to make the score
+look better. A second assertion fails if any numeric constant in
+`topology.js` is unexported, because `MAX_FANIN_PER_TRUNK_NODE` and
+`TRUNK_MAX` were module-private for a whole session and nothing could
+assert on either.
+
+Reproduce the whole table offline, with no model call:
+`.scratch/first-principled-v9/research/03-runs/derive-thresholds.mjs`.
 
 **Consequence:** a gate must reject the degenerate case by
 construction, and the acceptance test must include a case that fails
-it. `topology.test.js` now carries "a 2-node graph is not a tree", "a
-trunk shorter than the minimum is rejected, with its length named", and
-"nothing may rest on the target: the crown invariant". But a gate that
-rejects the target definition is also wrong. The proposed
-`claims.test.js` assertion that the hand-written gold maps pass the gate is
-recorded in `03-generality-evidence.md` and belongs to the ticket that
-applies the thresholds.
+it - and, now, a case that the target definition must *pass*.
+`topology.test.js` carries "a 2-node graph is not a tree", "a 2-node
+stub is still not a tree", "a trunk shorter than the minimum is rejected,
+with its length named", "the node floor rejects a tree smaller than the
+derived minimum", "nothing may rest on the target: the crown invariant",
+and one test named "RETIRED PREMISE: a bare four-node chain now passes,
+and that is the decision", which carries its own reasoning in its comment
+because a retired test that leaves no trace is a lie waiting to be
+re-added.
 
 ## What is known to be broken or missing
 
-Measured 2026-09-29 (`02-realization-evidence.md`) and 2026-10-01
-(`03-generality-evidence.md`).
+Measured 2026-09-29 (`02-realization-evidence.md`), 2026-10-01
+(`03-generality-evidence.md` and `04-derived-threshold-application.md`).
 
-- **The gold four are not the product, and that is now measured.** Twenty
+Ordered by how much it blocks the next ticket.
+
+- **The gate is fixed. Stop treating it as the problem.** All four
+  hand-written gold maps pass it and `src/claims.test.js` asserts that on
+  every run. Both floors were wrong by one until 2026-10-01 and are now at
+  their derived values. See finding 3.
+- **Inversion is the open defect, and it is the biggest one.** On the
+  20-word generality set the largest failure mode is now the **crown
+  invariant at 6 of 20**: asked whether the typed target rests on a
+  candidate, the model frequently answers that the **candidate rests on
+  the target**, which is part-of read as dependence. It rose from 2 of 20
+  when the floors were lowered, because more words survived to be
+  inspected. This is a semantics failure at r2, the class v6 and v7 died
+  of, and it is invisible to any histogram of pair counts.
+  **Do not fix it by escalating the prompts.** Two escalations were
+  measured on 2026-09-29 and reverted the same session; a more demanding
+  inventory made the judgment stage refuse more pairs rather than reach
+  deeper. And ticket 03 measured 14 attempts across 5 words and found the
+  refusals do **not** name the same bridges twice, so a targeted second
+  pass would be building against a signal that is not there.
+- **Run-to-run variance is larger than any effect measured so far.** Gold
+  set: 0 of 4 twice on 2026-10-01, minutes apart, with different failure
+  modes; 0 to 2 of 4 across eight runs on identical code. Generality set:
+  1 of 20 before the floor change, 2 of 20 after, which is **inside**
+  that spread. **A single run of anything measures nothing.** Anything
+  proposed on the strength of one run is not measured.
+- **Frame failures are the second-largest pre-topology loss.** 4 of 20
+  words never reach topology: an echoed `type` field with no `judgments`
+  array, unexpected top-level `pair_id`/`relation`, invalid `jump` values,
+  and `inventory concept must match the request`. `normalizePairBatch`
+  was built to coerce four recorded shapes and these are not all of them.
+  **Read the raw reply before adding a coercion.** Per the Contract law in
+  `docs/DESIGN.md`, stage 3 may repair the frame and never the content,
+  and guessing from a validator's error string is how a content defect
+  gets coerced away.
+- **The gold four are not the product, and that is measured.** Twenty
   words across five categories, 4 each, one attempt each on
-  `deepseek-flash` on 2026-10-01: **1 of 20 passed.** The failures do
-  **not** cluster by category. Every category produced at least two
-  distinct failure modes, and the physical-mechanism category, which is
-  what the gold four are made of, produced two of the six
-  `no target-to-foundation path` failures and no passes. The single pass,
-  `supply chain`, is institutional. So there is **no unwritten domain
-  boundary** and no product decision is owed to a human on that question.
-  The gold four were an unlucky draw. Full cross-tabulation in
-  `03-generality-evidence.md` section 1.
-- **The gate rejects two of the four hand-written gold maps.** Both floors
-  are wrong by one and neither has product lineage: `MIN_NODES` = 5 against
-  a derivation of 4, `MIN_TRUNK_NODES` = 4 against a derivation of 3.
-  Proposed, with the derivation and a reopened product question, in
-  `03-generality-evidence.md` section 3. **Not applied.** See finding 3.
-- **`MAX_FANIN_PER_TRUNK_NODE` = 2 is not exported** from `topology.js`, so
-  no test can assert on it, and it would clip the canonical `laptop`
-  fixture (max fan-in 3). New, 2026-10-01.
-- **The generator does not reliably clear the gate.** 0 to 2 of 4 on the
-  gold four across six runs on identical code and route, and 1 of 20
-  across categories. Node count on a given word swings 4 to 9. Two
-  identical gold runs on 2026-10-01, minutes apart, both returned 0 of 4
-  with different failure modes, so "nothing changed" is now a recorded
-  measurement and the variance is the finding.
+  `deepseek-flash`: 1 of 20 before the floor change, 2 of 20 after. The
+  failures do **not** cluster by category. Every category produced at
+  least two distinct failure modes, and the physical-mechanism category,
+  which is what the gold four are made of, produced two of the six
+  `no target-to-foundation path` failures and no passes in the first
+  run. The single pass in that run, `supply chain`, is institutional. So
+  there is **no unwritten domain boundary** and no product decision is owed
+  on that question. Full cross-tabulation in `03-generality-evidence.md`
+  section 1.
 - **The inventory is often one level deep.** The 2026-09-29 laptop run
   returned ten parts of a laptop, all peers of the target. The prompt
-  asked for concepts "directly" necessary to the target and got
-  exactly that. Fixed in the prompt. Two escalations of that demand
-  were measured and reverted the same day, because a more demanding
-  inventory made the judgment stage refuse more pairs rather than reach
-  deeper. Do not retry them without new evidence.
-- **`tgtOK` 0 is inversion, not withheld bridges.** This replaces the
-  recorded "judgment sparsity" theory, which was inherited and is now
-  measured false: across 14 attempts on five failing words, `tgtBig` was 0
-  on 15 of the 20 generality words and 0 on every word that failed at
-  `tgtOK` 0. The model answers the target's pairs by judging each
-  **candidate** as resting on the whole target, part-of read as dependence,
-  or by returning `NONE` with the rationale "inflation as a whole does not
-  rest on money supply alone". The `TOO_LARGE` rationales, where they
-  appear at all, name different intermediates on every run because the
-  inventory is redrawn per run, so they cannot recur. Per the ticket's kill
-  criteria, no targeted second pass is built. 2026-10-01.
-- **The crown invariant fires on live data.** One photosynthesis run of
-  four on 2026-09-29 produced two selected edges resting on the target. On
-  2026-10-01 it fired twice in the 20-word set (`refraction`, `git
-  commit`) and on five of the 14 diagnostic attempts. The gate catches it,
-  which is the fix working; the model behaviour is not addressed, and the
-  inversion above is its cause.
-- **A fourth frame failure shape exists.** `battery` failed the inventory
-  stage on 2026-10-01 with `inventory concept must match the request`. It
-  is not in the four shapes `normalizePairBatch` was built to coerce, and
-  it is not a coercion candidate without reading the raw reply first.
-- **Trunks bottom out above ground.** A realized `recursion` tree
-  bottoms out at "stack frame", which is not a foundation a reader could
-  arrive at without prior knowledge. The four-node floor is met and the
-  map is walkable, but it is a walk inside a closed loop.
+  asked for concepts "directly" necessary to the target and got exactly
+  that. Fixed in the prompt. Two escalations of that demand were measured
+  and reverted the same day. Do not retry without new evidence.
+- **A max fan-in floor is proposed and not applied.** Lowering
+  `MIN_NODES` retired the node floor's second duty, rejecting maps with no
+  side prerequisites. Measured against the hand-written maps, the property
+  that separates `battery` (one node with two dependents) from a bare
+  four-node chain (one dependent everywhere) is **max fan-in**, 2 to 3
+  against 1, not node count. Not applied: it is a new acceptance rule and
+  ticket 04's authority was a derivation, not an invention.
+  `.scratch/first-principled-v9/research/04-derived-threshold-application.md`.
+- **The node floor is now the only thing rejecting a bare chain, and it
+  no longer does.** A four-node path with no side prerequisite passes.
+  That is the decision, not an oversight, and the test that records it is
+  named "RETIRED PREMISE" so nobody re-adds the old expectation by
+  accident.
+- **Every realized tree is a spine.** The trunk runs the full height and
+  side edges are rare. The 2026-10-01 `natural selection` tree is 6 nodes,
+  9 warrants, and **all six on the trunk**, so there is nothing to
+  explore sideways. Compare the hand-written `laptop`, an 8-node spine
+  with a shortcut edge running alongside it. Same shape as the missing
+  side prerequisites recorded on 2026-09-29, now on a second category.
 - **Realization has never been in prod.** It ships with the boundary
   enforced (a hallucinated id is a gate failure, not a dropped row) but
   nothing calls it except `scripts/gold-words.mjs`.
+- **Trunks still bottom out above ground sometimes.** The 2026-09-29
+  `recursion` tree bottomed out at "stack frame", which is not a
+  foundation. The 2026-10-01 `natural selection` tree bottomed out at
+  "heritability of traits", which is one, so this is word-dependent and
+  unmeasured as a rate.
 - **18.5 MB of `.scratch/first-principled-v7/research/_sources/` was
   scraped vendor HTML.** Imported by nothing, cited by no measurement.
   **Deleted 2026-09-29**, repo working size 113.9 MB to 95.4 MB. It was
@@ -254,7 +300,7 @@ drift cannot silently mislead the next session again.
 ## How to work in this repo
 
 ```bash
-npm test                      # 446 tests, the real safety net
+npm test                      # 448 tests, the real safety net
 npm run typecheck             # JSDoc types over src/
 npm run lint                  # anti-slop
 node scripts/gold-words.mjs   # run the acceptance set, see the table
@@ -285,11 +331,13 @@ is how the inversion recorded above was diagnosed. Deriving every gate
 constant from the hand-written gold maps, offline and with no model call,
 is
 `.scratch/first-principled-v9/research/03-runs/derive-thresholds.mjs`.
+Run it before touching a threshold; it prints the live values beside the
+values the hand-written maps imply.
 
 Read before you build: `docs/FALSIFIED.md`, then
 `.scratch/first-principled-v9/map.md`, then
-`.scratch/first-principled-v9/research/02-realization-evidence.md` and
-`03-generality-evidence.md`.
+`.scratch/first-principled-v9/research/04-derived-threshold-application.md`
+and `03-generality-evidence.md`.
 
 ## Where the pieces live
 

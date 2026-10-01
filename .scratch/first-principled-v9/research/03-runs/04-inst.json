@@ -1,0 +1,476 @@
+﻿{
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "results": [
+    {
+      "word": "parliament",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9317,
+      "promptTokens": 5588,
+      "completionTokens": 3951,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "dropped the echoed type field",
+        "renamed envelope key \"pairs\" to \"judgments\"",
+        "keyed-object envelope lifted to an array"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "majority voting rule",
+        "representative assembly",
+        "legislative procedure",
+        "quorum requirement",
+        "committee system",
+        "motion and amendment process",
+        "separation of powers",
+        "constituency representation",
+        "public deliberation",
+        "written constitution"
+      ],
+      "relations": {
+        "NONE": 41,
+        "A_RESTS_ON_B": 7,
+        "B_RESTS_ON_A": 7
+      },
+      "jumps": {
+        "n/a": 41,
+        "SMALL": 8,
+        "TOO_LARGE": 6
+      },
+      "targetPrereqs": 2,
+      "targetPairsTooLarge": 5,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "representative assembly",
+          "needs": "committee system",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "representative assembly",
+          "needs": "constituency representation",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "representative assembly",
+          "needs": "parliament",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "legislative procedure",
+          "needs": "committee system",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "legislative procedure",
+          "needs": "motion and amendment process",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "parliament",
+          "needs": "legislative procedure",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "quorum requirement",
+          "needs": "motion and amendment process",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "parliament",
+          "needs": "quorum requirement",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [
+        {
+          "on": "target",
+          "needs": "committee system",
+          "jump": "TOO_LARGE",
+          "why": "Parliament relies on committee system as a core component, but many other parts needed for full understanding."
+        },
+        {
+          "on": "target",
+          "needs": "motion and amendment process",
+          "jump": "TOO_LARGE",
+          "why": "Parliament relies on motion and amendment process as a core component, but many other parts needed for full understanding."
+        },
+        {
+          "on": "target",
+          "needs": "separation of powers",
+          "jump": "TOO_LARGE",
+          "why": "Parliament relies on separation of powers as a core component, but many other parts needed for full understanding."
+        },
+        {
+          "on": "target",
+          "needs": "constituency representation",
+          "jump": "TOO_LARGE",
+          "why": "Parliament relies on constituency representation as a core component, but many other parts needed for full understanding."
+        },
+        {
+          "on": "target",
+          "needs": "public deliberation",
+          "jump": "TOO_LARGE",
+          "why": "Parliament relies on public deliberation as a core component, but many other parts needed for full understanding."
+        }
+      ],
+      "errors": [
+        "crown invariant broken: 1 selected edge rests on the target, so the map has no single top (p-k2--target)"
+      ]
+    },
+    {
+      "word": "supply chain",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9914,
+      "promptTokens": 5583,
+      "completionTokens": 4186,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "keyed-object envelope lifted to an array",
+        "keyed-object envelope lifted to an array"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "inventory holding cost",
+        "order lead time",
+        "reorder point",
+        "bullwhip effect",
+        "economic order quantity",
+        "logistics network",
+        "vendor-managed inventory",
+        "demand forecasting",
+        "stockout",
+        "distribution center"
+      ],
+      "relations": {
+        "A_RESTS_ON_B": 5,
+        "NONE": 41,
+        "B_RESTS_ON_A": 9
+      },
+      "jumps": {
+        "SMALL": 10,
+        "n/a": 41,
+        "TOO_LARGE": 4
+      },
+      "targetPrereqs": 4,
+      "targetPairsTooLarge": 4,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "distribution center",
+          "needs": "logistics network",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "supply chain",
+          "needs": "distribution center",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "order lead time",
+          "needs": "reorder point",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "order lead time",
+          "needs": "economic order quantity",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "supply chain",
+          "needs": "order lead time",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "supply chain",
+          "needs": "reorder point",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "supply chain",
+          "needs": "bullwhip effect",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "economic order quantity",
+          "needs": "inventory holding cost",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "inventory holding cost",
+          "needs": "supply chain",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "vendor-managed inventory",
+          "needs": "demand forecasting",
+          "confidence": "MEDIUM",
+          "selected": false
+        }
+      ],
+      "refusals": [
+        {
+          "on": "target",
+          "needs": "economic order quantity",
+          "jump": "TOO_LARGE",
+          "why": "EOQ is a component method; supply chain subsumes it via missing inventory-management bridge."
+        },
+        {
+          "on": "target",
+          "needs": "logistics network",
+          "jump": "TOO_LARGE",
+          "why": "Logistics network is a supply chain component, but direct entailment needs missing whole-part bridge."
+        },
+        {
+          "on": "target",
+          "needs": "vendor-managed inventory",
+          "jump": "TOO_LARGE",
+          "why": "VMI is a supply chain practice, yet direct component-of dependency lacks intermediate concept."
+        },
+        {
+          "on": "target",
+          "needs": "demand forecasting",
+          "jump": "TOO_LARGE",
+          "why": "Forecasting is a supply chain function, but direct rests-on needs missing planning bridge."
+        }
+      ],
+      "errors": [
+        "crown invariant broken: 3 selected edges rest on the target, so the map has no single top (p-k1--target, p-k1--target, p-k1--target)"
+      ]
+    },
+    {
+      "word": "contract",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 10259,
+      "promptTokens": 5763,
+      "completionTokens": 4828,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "keyed-object envelope lifted to an array",
+        "keyed-object envelope lifted to an array",
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "offer and acceptance",
+        "consideration",
+        "promissory estoppel",
+        "mutual assent",
+        "legally binding promise",
+        "remedies for breach",
+        "statute of frauds",
+        "freedom of contract",
+        "breach of contract",
+        "void vs voidable contract"
+      ],
+      "relations": {
+        "NONE": 40,
+        "A_RESTS_ON_B": 14,
+        "B_RESTS_ON_A": 1
+      },
+      "jumps": {
+        "n/a": 40,
+        "SMALL": 11,
+        "TOO_LARGE": 4
+      },
+      "targetPrereqs": 0,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "offer and acceptance",
+          "needs": "contract",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "consideration",
+          "needs": "legally binding promise",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "promissory estoppel",
+          "needs": "legally binding promise",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "mutual assent",
+          "needs": "contract",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "legally binding promise",
+          "needs": "statute of frauds",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "legally binding promise",
+          "needs": "contract",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "breach of contract",
+          "needs": "remedies for breach",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "remedies for breach",
+          "needs": "contract",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "statute of frauds",
+          "needs": "contract",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "freedom of contract",
+          "needs": "contract",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "breach of contract",
+          "needs": "contract",
+          "confidence": "MEDIUM",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "no target-to-foundation path: judgments do not connect the target to a demonstrable leaf"
+      ]
+    },
+    {
+      "word": "inflation",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 10601,
+      "promptTokens": 6018,
+      "completionTokens": 4691,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "keyed-object envelope lifted to an array"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "consumer price index basket",
+        "price of a single good over time",
+        "money supply growth",
+        "quantity theory of money",
+        "aggregate demand and supply",
+        "central bank interest rate setting",
+        "expectations of future prices",
+        "wage-price spiral",
+        "purchasing power of a dollar",
+        "nominal versus real values"
+      ],
+      "relations": {
+        "NONE": 49,
+        "A_RESTS_ON_B": 2,
+        "B_RESTS_ON_A": 4
+      },
+      "jumps": {
+        "n/a": 49,
+        "SMALL": 5,
+        "TOO_LARGE": 1
+      },
+      "targetPrereqs": 1,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "nominal versus real values",
+          "needs": "purchasing power of a dollar",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "quantity theory of money",
+          "needs": "money supply growth",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "purchasing power of a dollar",
+          "needs": "money supply growth",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "inflation",
+          "needs": "money supply growth",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "purchasing power of a dollar",
+          "needs": "quantity theory of money",
+          "confidence": "MEDIUM",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "degenerate trunk: longest target-to-foundation path is 2 nodes, below the 3-node minimum"
+      ]
+    }
+  ]
+}

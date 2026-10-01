@@ -14,16 +14,44 @@ export const MAX_NODES = 10;
 export const MAX_PATH_NODES = 8;
 /**
  * Acceptance thresholds, not preferences. A tree that misses either is
- * `ok: false`, never a smaller "pass". Both existed as scoring input
- * before (TRUNK_MIN) or not at all (MIN_NODES), which is how a 2-node
- * stub was reported as a pass on 2026-09-29. See
- * `.scratch/first-principled-v9/research/01-spike-evidence.md`.
+ * `ok: false`, never a smaller "pass".
+ *
+ * Both floors are derived from the hand-written gold maps in
+ * `eval/map-quality/gold.js`, which are the definition of what a good
+ * Dependence Tree is. Measured 2026-10-01 by
+ * `.scratch/first-principled-v9/research/03-runs/derive-thresholds.mjs`:
+ * the smallest node count any hand-written map has is 4 (`recursion`,
+ * `battery`) and the smallest trunk is 3 (`recursion`, `battery`).
+ *
+ * These values were wrong by one before 2026-10-01 and the gate rejected
+ * two of the four hand-written maps. `MIN_NODES` = 5 had no derivation at
+ * all; its only recorded reason was that the gold runs were failing.
+ * `MIN_TRUNK_NODES` = 4 was ticket 01's `TRUNK_MIN` scoring preference,
+ * and promoting a preference to an acceptance floor is what broke it: as
+ * a preference it chose among adequate trunks, as a floor it rejected
+ * `battery`. See `docs/FALSIFIED.md`.
  */
-export const MIN_NODES = 5;
-export const MIN_TRUNK_NODES = 4;
+export const MIN_NODES = 4;
+export const MIN_TRUNK_NODES = 3;
 const TRUNK_MIN = MIN_TRUNK_NODES;
-const TRUNK_MAX = 7;
-const MAX_FANIN_PER_TRUNK_NODE = 2;
+/**
+ * Scoring preferences, not acceptance rules. They choose among trees the
+ * acceptance rules already admitted; they can never reject one.
+ *
+ * Both were derived from the same hand-written maps. The deepest
+ * hand-written trunk is 8 (`laptop`), so `TRUNK_MAX` = 7 was demoting the
+ * canonical fixture out of the preferred range on `lengthBonus`. Both
+ * were module-private until 2026-10-01, which meant no test could assert
+ * on either one.
+ */
+export const TRUNK_MAX = 8;
+/**
+ * Direct fan-in cap per trunk node. Derived: the highest fan-in in any
+ * hand-written map is 3 (`laptop` and `recursion` both have it), so the
+ * previous value of 2 clipped the canonical fixture. Exported for the
+ * same reason as `TRUNK_MAX`.
+ */
+export const MAX_FANIN_PER_TRUNK_NODE = 3;
 
 /**
  * @typedef {object} SelectorInput

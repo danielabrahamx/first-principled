@@ -217,26 +217,72 @@ test("a 2-node graph is not a tree", () => {
 });
 
 test("a trunk shorter than the minimum is rejected, with its length named", () => {
-  // Three nodes including the target: a stub chain, not a walk.
-  const candidates = [candidate("k1"), candidate("k2")];
+  // Four nodes, so the node floor is cleared, and every node sits one hop
+  // from the target, so the longest walk is 2 and the trunk floor is not.
+  // Both floors have to be reachable independently or one of them is
+  // untested: with the floors at 4 and 3, a 3-node fixture fails on nodes
+  // before it ever reaches the trunk check.
+  const candidates = [candidate("k1"), candidate("k2"), candidate("k3")];
   const judgments = [
     judgment("k1", TARGET_ID, "B_RESTS_ON_A"),
-    judgment("k1", "k2", "A_RESTS_ON_B"),
+    judgment("k2", TARGET_ID, "B_RESTS_ON_A"),
+    judgment("k3", TARGET_ID, "B_RESTS_ON_A"),
   ];
   const result = selectTopology({ concept: "laptop", candidates, judgments });
   assert.equal(result.ok, false);
   assert.ok(!result.ok);
-  assert.match(result.reason, /longest target-to-foundation path is 3 nodes/);
+  assert.match(result.reason, /longest target-to-foundation path is 2 nodes/);
   assert.ok(
     result.reason.includes(String(MIN_TRUNK_NODES)),
     "the diagnostic must name the minimum it failed"
   );
 });
 
-test("a chain with no fan-in is rejected on the node minimum", () => {
-  // The trunk floor is satisfied and there are no side prerequisites, so
-  // the published tree is a path. That is the other half of the same
-  // defect: the map is too small to be a rabbit hole.
+test("the node floor rejects a tree smaller than the derived minimum", () => {
+  // Three nodes including the target. The trunk floor is met, so this is
+  // the node floor doing its own work and naming itself.
+  const candidates = [candidate("k1"), candidate("k2")];
+  const judgments = [
+    judgment("k1", TARGET_ID, "B_RESTS_ON_A"),
+    judgment("k1", "k2", "A_RESTS_ON_B"),
+  ];
+  const result = selectTopology({ concept: "battery", candidates, judgments });
+  assert.equal(result.ok, false);
+  assert.ok(!result.ok);
+  assert.match(result.reason, /degenerate tree: 3 nodes selected/);
+  assert.ok(result.reason.includes(String(MIN_NODES)));
+});
+
+test("a 2-node stub is still not a tree", () => {
+  // The 2026-09-29 defect, still guarded after the floors moved. One hop
+  // from the target and nothing else is not a Dependence Tree at any
+  // threshold, so this fixture has to fail at every setting of MIN_NODES
+  // and MIN_TRUNK_NODES.
+  const candidates = [candidate("k1")];
+  const judgments = [judgment("k1", TARGET_ID, "B_RESTS_ON_A")];
+  const result = selectTopology({ concept: "laptop", candidates, judgments });
+  assert.equal(result.ok, false);
+  assert.ok(!result.ok);
+});
+
+test("RETIRED PREMISE: a bare four-node chain now passes, and that is the decision", () => {
+  // 2026-10-01. This fixture was "a chain with no fan-in is rejected on
+  // the node minimum", and it was rejected because 4 < MIN_NODES = 5.
+  // The product decision was that a 4-node map IS a rabbit hole, so
+  // MIN_NODES dropped to 4 and the premise stopped being true. Keeping a
+  // red test here would have been dishonest and keeping a green one that
+  // asserted the old rejection would have been worse.
+  //
+  // The real consequence is that the node floor was carrying a second
+  // duty it no longer carries: rejecting a map with no side prerequisites.
+  // Measured against the hand-written maps, the property that separates
+  // `battery` (4 nodes, 2 dependents at one node) from this bare chain
+  // (4 nodes, 1 dependent everywhere) is max fan-in, not node count. All
+  // four hand-written maps have max fan-in 2 to 3; a pure chain has 1.
+  // That rule is NOT applied here. It is recorded in
+  // `.scratch/first-principled-v9/research/04-derived-threshold-application.md`
+  // as a proposal for the next ticket, because it is a new acceptance
+  // rule and this ticket applies a derivation rather than inventing one.
   const candidates = [candidate("k1"), candidate("k2"), candidate("k3")];
   const judgments = [
     judgment("k1", TARGET_ID, "B_RESTS_ON_A"),
@@ -244,10 +290,9 @@ test("a chain with no fan-in is rejected on the node minimum", () => {
     judgment("k2", "k3", "A_RESTS_ON_B"),
   ];
   const result = selectTopology({ concept: "battery", candidates, judgments });
-  assert.equal(result.ok, false);
-  assert.ok(!result.ok);
-  assert.match(result.reason, /degenerate tree: 4 nodes selected/);
-  assert.ok(result.reason.includes(String(MIN_NODES)));
+  assert.ok(result.ok, "a 4-node chain is a 4-node map, and 4-node maps were ruled acceptable");
+  assert.equal(result.nodes.length, 4);
+  assert.ok(result.trunk.length >= MIN_TRUNK_NODES);
 });
 
 test("the trunk floor is a floor, not a preference", () => {

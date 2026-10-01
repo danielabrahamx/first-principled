@@ -37,24 +37,39 @@ pairwise generator ships as a spike under `src/lib/agent/pairwise/`
 plus `scripts/gold-words.mjs`; nothing in the runtime imports it yet,
 and prod still runs the v7 three-stage path.
 
-**v9 status:** Tickets 01 and 02 are resolved and a GO. All four gold
-words (laptop, battery, photosynthesis, recursion) pass on
-`deepseek-flash`, one predeclared attempt each, 5 calls per word. Before
-the 2026-09-29 envelope coercion, 0 of 4 passed. Record:
-`.scratch/first-principled-v9/research/01-spike-evidence.md`.
+**v9 status:** Tickets 01, 02, 03 and 04 are resolved. 01 and 02 are a
+GO on `deepseek-flash`. 03 was research and changed no code; 04 applied
+the thresholds 03 derived. Record:
+`.scratch/first-principled-v9/research/01-spike-evidence.md`,
+`03-generality-evidence.md`, `04-derived-threshold-application.md`.
 
 **Read `docs/STATUS.md` "Known to be broken" before planning.** The
-load-bearing items as of 2026-10-01. **The gold four are not the
-product, and that is measured**: 20 words across 5 categories, 1 of 20
-passed, and the failures do not cluster by category, so there is no
-domain boundary to escalate. **The gate rejects two of the four
-hand-written gold maps**: both floors are wrong by one, `MIN_NODES` 5
-against a derivation of 4 and `MIN_TRUNK_NODES` 4 against a derivation
-of 3, and ticket 03 proposed the corrections without applying them.
-**Run-to-run variance is the open problem**: 0 to 2 of 4 across six runs
-on identical code. Records:
-`.scratch/first-principled-v9/research/02-realization-evidence.md` and
-`03-generality-evidence.md`.
+load-bearing items as of 2026-10-01, in order.
+
+1. **The gate is fixed. Do not treat it as the problem.** All four
+   hand-written gold maps pass it and `src/claims.test.js` asserts that on
+   every run by walking the imported maps. `MIN_NODES` = 4,
+   `MIN_TRUNK_NODES` = 3, `MAX_FANIN_PER_TRUNK_NODE` = 3, `TRUNK_MAX` = 8,
+   all derived from `eval/map-quality/gold.js`. Reproduce the table with
+   `node .scratch/first-principled-v9/research/03-runs/derive-thresholds.mjs`,
+   which is offline and needs no model call.
+2. **Inversion is the open defect: 6 of 20 words, the largest failure
+   mode.** The model answers the target's pairs by judging each
+   *candidate* as resting on the *whole target*, part-of read as
+   dependence, so the crown invariant correctly rejects the map.
+   **Do not escalate the prompts for this.** Two escalations were measured
+   on 2026-09-29 and reverted the same day, and ticket 03 measured 14
+   attempts across 5 words and found the refusals never name the same
+   bridge twice.
+3. **Run-to-run variance is wider than any effect measured so far.** The
+   gold set returned 0 of 4 twice on 2026-10-01, minutes apart, with
+   different failure modes. The 20-word set went 1 of 20 to 2 of 20 across
+   a real code change, which is inside that spread. **One run measures
+   nothing.**
+4. **A max fan-in floor is proposed and deliberately not applied.** Lowering
+   `MIN_NODES` retired the node floor's second duty. The property that
+   separates `battery` from a bare four-node chain is max fan-in, 2 to 3
+   against 1, not node count. It needs a ticket of its own.
 
 **Blocker (2026-09-29, resolved):** a dead local OpenRouter key was
 replaced. `openrouter/free`, `stealth/space-bunny-alpha`,
@@ -63,14 +78,11 @@ replaced. `openrouter/free`, `stealth/space-bunny-alpha`,
 Generator route stays `deepseek-flash`: on `stealth/space-bunny-alpha`
 the same code passes only 2 of 4 gold words and returns 2-node trees.
 
-Next: ticket 04, the RealityMap adapter. **It is blocked on a human
-decision, not on code.** Ticket 03 left one question open: two of the
-four hand-written gold maps are 4 nodes with a 3-node trunk, so either a
-4-node map is an acceptable Dependence Tree and both floors drop, or the
-hand-written maps are underspecified and should grow. Ticket 03 also left
-three floor corrections unapplied on purpose. Do not apply them and do not
-adapt a map against this gate without answering the product question
-first. One ticket per session.
+Next: ticket 05, the RealityMap adapter, and it is **not blocked**. It
+assembles a generated selection into a `RealityMap` through the existing
+r5 rung; the seam was never the obstacle. Read item 2 above first, because
+the adapter inherits whatever the generator produces, including the 6 in
+20 inverted maps. One ticket per session.
 
 ## Golden rules
 
@@ -100,7 +112,7 @@ first. One ticket per session.
 ## The loop that works
 
 ```bash
-npm test                        # 446 tests: the real safety net
+npm test                        # 448 tests: the real safety net
 npm run typecheck               # JSDoc types over src/
 npm run lint                    # anti-slop
 node scripts/gold-words.mjs     # the acceptance set; exit 1 on any failure
@@ -134,8 +146,8 @@ and never a new architecture. See "The Contract pattern" in
   rejected for pair judgment: 1 of 3 real pairs correct, no rationale.
   The next
   HITL ticket is
-  [04 - RealityMap adapter and generated-map gate](.scratch/first-principled-v9/map.md)
-  (to be written), blocked on the gate product decision described above.
+  [05 - RealityMap adapter and generated-map gate](.scratch/first-principled-v9/map.md)
+  (to be written), unblocked since ticket 04 applied the thresholds.
 - No DB, no auth, no agent framework (Mastra/LangGraph is v2).
 - Home is the Tree. v6 parks Tutor from the chrome (engine stays). There
   is no Chat page and no learner-map tab. How it works lives in the header.

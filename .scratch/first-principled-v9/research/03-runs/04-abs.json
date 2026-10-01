@@ -1,0 +1,309 @@
+﻿{
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "results": [
+    {
+      "word": "entropy",
+      "ok": false,
+      "stage": "pairs",
+      "calls": 5,
+      "coercions": [
+        "keyed-object envelope lifted to an array",
+        "keyed-object envelope lifted to an array"
+      ],
+      "errors": [
+        "batch 2: pair batch has unexpected top-level field \"pair_id\"; pair batch has unexpected top-level field \"relation\""
+      ],
+      "dump": []
+    },
+    {
+      "word": "debt",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9980,
+      "promptTokens": 5438,
+      "completionTokens": 4369,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "promise to repay later",
+        "IOU note",
+        "interest payment",
+        "loan agreement",
+        "credit score",
+        "fractional reserve",
+        "money creation by banks",
+        "barter exchange",
+        "promissory note",
+        "default consequence"
+      ],
+      "relations": {
+        "NONE": 36,
+        "B_RESTS_ON_A": 9,
+        "SAME_CONCEPT": 1,
+        "A_RESTS_ON_B": 9
+      },
+      "jumps": {
+        "n/a": 37,
+        "TOO_LARGE": 13,
+        "SMALL": 5
+      },
+      "targetPrereqs": 0,
+      "targetPairsTooLarge": 5,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "IOU note",
+          "needs": "debt",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "promise to repay later",
+          "needs": "debt",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "loan agreement",
+          "needs": "default consequence",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "fractional reserve",
+          "needs": "money creation by banks",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "promissory note",
+          "needs": "debt",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [
+        {
+          "on": "target",
+          "needs": "default consequence",
+          "jump": "TOO_LARGE",
+          "why": "Debt cannot be fully understood without default consequence, but a bridge concept is missing."
+        },
+        {
+          "on": "target",
+          "needs": "interest payment",
+          "jump": "TOO_LARGE",
+          "why": "Debt as a whole does not conceptually rest on interest payment; many debts exist without interest."
+        },
+        {
+          "on": "target",
+          "needs": "loan agreement",
+          "jump": "TOO_LARGE",
+          "why": "Debt as a whole does not rest on the concept of a loan agreement; informal debts exist without contracts."
+        },
+        {
+          "on": "target",
+          "needs": "fractional reserve",
+          "jump": "TOO_LARGE",
+          "why": "Debt can exist without fractional reserve banking, but modern debt systems often rest on it; direction is uncertain and a bridge is missing."
+        },
+        {
+          "on": "target",
+          "needs": "money creation by banks",
+          "jump": "TOO_LARGE",
+          "why": "Debt can exist in non-monetary forms, but monetary debt depends on money creation; a bridge is missing."
+        }
+      ],
+      "errors": [
+        "no target-to-foundation path: judgments do not connect the target to a demonstrable leaf"
+      ]
+    },
+    {
+      "word": "justice",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9775,
+      "promptTokens": 5813,
+      "completionTokens": 4183,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "dropped the echoed type field",
+        "dropped the echoed type field"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "Reciprocity in exchange",
+        "Distributive fairness judgments",
+        "Retributive punishment",
+        "Restorative practices",
+        "Procedural due process",
+        "Impartiality and bias suppression",
+        "Social contract",
+        "Equality before the law",
+        "Moral development stages",
+        "Utilitarian calculus"
+      ],
+      "relations": {
+        "NONE": 49,
+        "A_RESTS_ON_B": 6
+      },
+      "jumps": {
+        "n/a": 49,
+        "TOO_LARGE": 1,
+        "SMALL": 5
+      },
+      "targetPrereqs": 0,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "Distributive fairness judgments",
+          "needs": "justice",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Procedural due process",
+          "needs": "justice",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Impartiality and bias suppression",
+          "needs": "justice",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Social contract",
+          "needs": "justice",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Equality before the law",
+          "needs": "justice",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "no target-to-foundation path: judgments do not connect the target to a demonstrable leaf"
+      ]
+    },
+    {
+      "word": "argument",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 9235,
+      "promptTokens": 5733,
+      "completionTokens": 3958,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "dropped the echoed type field",
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array",
+        "keyed-object envelope lifted to an array"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "function call",
+        "value binding",
+        "parameter",
+        "expression evaluation",
+        "command-line invocation",
+        "natural language sentence",
+        "predicate-argument structure",
+        "mathematical function",
+        "inference rule",
+        "input-output relation"
+      ],
+      "relations": {
+        "A_RESTS_ON_B": 8,
+        "B_RESTS_ON_A": 4,
+        "NONE": 43
+      },
+      "jumps": {
+        "TOO_LARGE": 6,
+        "SMALL": 6,
+        "n/a": 43
+      },
+      "targetPrereqs": 0,
+      "targetPairsTooLarge": 1,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "function call",
+          "needs": "value binding",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "function call",
+          "needs": "parameter",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "mathematical function",
+          "needs": "input-output relation",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "value binding",
+          "needs": "parameter",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "parameter",
+          "needs": "mathematical function",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "predicate-argument structure",
+          "needs": "natural language sentence",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [
+        {
+          "on": "target",
+          "needs": "parameter",
+          "jump": "TOO_LARGE",
+          "why": "Argument is a broader concept; parameter is a specific placeholder, but dependency direction is reverse and jump too large."
+        }
+      ],
+      "errors": [
+        "no target-to-foundation path: judgments do not connect the target to a demonstrable leaf"
+      ]
+    }
+  ]
+}

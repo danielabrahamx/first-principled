@@ -205,21 +205,58 @@ relationships are the point, would open a rabbit hole.
   2026-10-01, minutes apart, both returned 0 of 4 with different failure
   modes, so run-to-run variance is the finding, not a defect in the
   measurement.
+- 2026-10-01 **Ticket 04 applies the ticket 03 derivation and the gate
+  dispute is closed.** Daniel answered the product question ticket 03
+  reopened the same day: a 4-node map **is** a rabbit hole, so the
+  hand-written maps are the definition and the floors take their derived
+  values. `MIN_NODES` 5 to **4**, `MIN_TRUNK_NODES` 4 to **3**,
+  `MAX_FANIN_PER_TRUNK_NODE` 2 to **3** (which had been clipping the
+  canonical `laptop` fixture) and `TRUNK_MAX` 7 to **8**. The last two were
+  module-private, so nothing could assert on either; both are exported now
+  and a test fails if a future threshold is not. `MAX_NODES`,
+  `MAX_PATH_NODES` and the crown invariant unchanged and confirmed derived.
+  **All four hand-written gold maps pass the gate**, and
+  `src/claims.test.js` asserts it by walking the imported maps rather than
+  transcribing sizes, mutation-checked by setting `MIN_NODES` back to 5 and
+  watching it name `recursion`. No prompt, coercion or validator changed.
+  Record: `research/04-derived-threshold-application.md`.
+- 2026-10-01 **the floors were never the binding constraint, and applying
+  them proved it.** Gold set 0 of 4 before and 0 of 4 after. The 20-word
+  generality set went 1 of 20 to 2 of 20, which is **inside** the recorded
+  variance and is not claimed as an improvement. What moved is the failure
+  mix: degenerate trunk 7 to 3, **crown invariant 2 to 6**. Words that
+  stopped failing the trunk floor started failing the crown invariant,
+  which is the inversion ticket 03 measured. The gate got weaker on one
+  axis and the real defect got louder on another. **Inversion is now the
+  open problem at 6 of 20 words**, and ticket 05 does not fix it. Ticket
+  03 already recorded that no targeted second pass should be built, and the
+  two prompt escalations from 2026-09-29 were reverted and must not be
+  retried without new evidence.
+- 2026-10-01 ticket 04 retired the test "a chain with no fan-in is
+  rejected on the node minimum" and recorded the consequence rather than
+  hiding it: the node floor was carrying a second duty, rejecting maps with
+  no side prerequisites. Measured against the hand-written maps the
+  property that separates `battery` from a bare four-node chain is **max
+  fan-in** (2 to 3 against 1), not node count. **Proposed, not applied** -
+  it is a new acceptance rule and ticket 04's authority was a derivation
+  Daniel had already answered, not an invention.
 
 ## Open frontier
 
+- [05 - RealityMap adapter and generated-map gate](issues/05-realitymap-adapter.md) (to be written). **Next, and no longer blocked.** The gate dispute is closed: all four hand-written gold maps pass it, and `src/claims.test.js` asserts that on every run. It assembles a generated selection into a `RealityMap` through the existing r5 rung; the seam was never the obstacle.
+- The open problem is **not** the gate any more. It is the inversion: the model judges candidates as resting on the whole typed target, so 6 of 20 words in the 2026-10-01 run died on the crown invariant. That is a semantics failure at r2 and it is the largest single failure mode. Ticket 05 does not fix it, and the two prompt escalations that were tried and reverted on 2026-09-29 must not be retried without new evidence. See [04](issues/04-apply-derived-gate-thresholds.md) for the two proposals left unapplied.
+- [04 - Apply the derived gate thresholds](issues/04-apply-derived-gate-thresholds.md) is resolved (2026-10-01). Do not rewrite it.
 - [03 - Generality and gate provenance](issues/03-generality-and-gate-provenance.md) is resolved (2026-10-01, research only, no code changed). Do not rewrite it.
-- [04 - RealityMap adapter and generated-map gate](issues/04-realitymap-adapter.md) (to be written). **Blocked** on 03: the thresholds must be applied, and the human product decision ticket 03 reopened must be answered first. Two of the four hand-written gold maps are 4 nodes with a 3-node trunk, so either a 4-node map is an acceptable Dependence Tree and both floors drop to 4 and 3, or the hand-written maps are underspecified and should grow. Adapting a map with a disputed gate bakes the dispute into the assembly layer.
 - [02 - Surface realization and honesty](issues/02-surface-realization-and-honesty.md) is resolved (2026-09-29). Do not rewrite it.
 - [01 - Pairwise falsification spike](issues/01-pairwise-falsification-spike.md) is resolved (2026-09-29, GO). Do not rewrite it.
 
 ## Not yet specified
 
-- Ticket 03 onward (RealityMap adapter and generated-map gate, transport
-  hardening, job integration, Chapel edge-history adapter, delete the
-  killed runtime, live gold acceptance and Danny walk) graduate from a
-  Ticket 02 result.
-- Whether ticket numbering stays 03-08 per the Part B sequence.
+- Tickets after 05 (transport hardening, job integration, Chapel
+  edge-history adapter, delete the killed runtime, live gold acceptance
+  and Danny walk). They graduate from a working adapter, so writing any of
+  them now is writing against an assembly layer that does not exist.
+- Whether 06 renumbers again when the max fan-in rule is decided.
 
 ## Out of scope
 
@@ -236,12 +273,13 @@ relationships are the point, would open a rabbit hole.
 01 pairwise falsification spike (inventory + pairs + topology, local CLI)
 01 -> 02 surface realization and honesty
 02 -> 03 generality and gate provenance        (renumbered 2026-09-29)
-03 -> 04 RealityMap adapter and generated-map gate
-04 -> 05 transport hardening
-05 -> 06 job integration (atomic init switch)
-06 -> 07 Chapel edge-history adapter
-07 -> 08 delete the killed runtime
-08 -> 09 live gold acceptance and Danny walk
+03 -> 04 apply the derived gate thresholds    (inserted 2026-10-01)
+04 -> 05 RealityMap adapter and generated-map gate
+05 -> 06 transport hardening
+06 -> 07 job integration (atomic init switch)
+07 -> 08 Chapel edge-history adapter
+08 -> 09 delete the killed runtime
+09 -> 10 live gold acceptance and Danny walk
 ```
 
 Ticket 03 was inserted on 2026-09-29 and the downstream sequence
@@ -249,6 +287,10 @@ shifted. Only the adapter had actually been named before that, so the
 renumber touched no written ticket. It went in ahead of the adapter
 because the adapter is blocked on a disputed gate, and a ticket that
 documents the dispute is cheaper to write than one that argues about it
-inside a build. Ticket 03 was worked on 2026-10-01 and answered its
-questions without changing the gate, so the sequence is unchanged and
-ticket 04 is still first.
+inside a build.
+
+Ticket 03 was worked on 2026-10-01 and changed no threshold. Daniel
+answered the product question it reopened the same day, so the applying
+ticket took number **04** and the adapter shifted to **05**. The renumber
+touched no written ticket, because the adapter had never been written.
+Same pattern as the 03 insert, one level down.

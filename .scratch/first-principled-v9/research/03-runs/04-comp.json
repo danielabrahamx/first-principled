@@ -1,0 +1,393 @@
+﻿{
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "results": [
+    {
+      "word": "memory allocation",
+      "ok": false,
+      "stage": "topology",
+      "calls": 4,
+      "elapsedMs": 7685,
+      "promptTokens": 4615,
+      "completionTokens": 3731,
+      "pairs": 45,
+      "batches": 3,
+      "coercions": [
+        "keyed-object envelope lifted to an array",
+        "dropped the echoed type field",
+        "dropped the echoed type field"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 9,
+      "inventory": [
+        "physical address space",
+        "virtual memory",
+        "page table",
+        "memory management unit (MMU)",
+        "heap data structure",
+        "pointer",
+        "stack memory",
+        "malloc and free",
+        "memory fragmentation"
+      ],
+      "relations": {
+        "NONE": 30,
+        "A_RESTS_ON_B": 5,
+        "B_RESTS_ON_A": 10
+      },
+      "jumps": {
+        "n/a": 30,
+        "SMALL": 14,
+        "TOO_LARGE": 1
+      },
+      "targetPrereqs": 5,
+      "targetPairsTooLarge": 1,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "physical address space",
+          "needs": "memory allocation",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "virtual memory",
+          "needs": "page table",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "virtual memory",
+          "needs": "memory management unit (MMU)",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "virtual memory",
+          "needs": "memory allocation",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "page table",
+          "needs": "memory management unit (MMU)",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "memory allocation",
+          "needs": "page table",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "malloc and free",
+          "needs": "heap data structure",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "memory fragmentation",
+          "needs": "heap data structure",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "memory allocation",
+          "needs": "heap data structure",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "malloc and free",
+          "needs": "pointer",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "memory allocation",
+          "needs": "stack memory",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "memory fragmentation",
+          "needs": "malloc and free",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "memory allocation",
+          "needs": "malloc and free",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "memory allocation",
+          "needs": "memory fragmentation",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [
+        {
+          "on": "target",
+          "needs": "pointer",
+          "jump": "TOO_LARGE",
+          "why": "Memory allocation often uses pointers to manage allocated memory, but the dependency requires intermediate concepts like addresses and indirection."
+        }
+      ],
+      "errors": [
+        "crown invariant broken: 2 selected edges rest on the target, so the map has no single top (p-k1--target, p-k2--target)"
+      ]
+    },
+    {
+      "word": "hash table",
+      "ok": false,
+      "stage": "pairs",
+      "calls": 5,
+      "coercions": [
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array"
+      ],
+      "errors": [
+        "batch 3: pair batch has unexpected top-level field \"type\"; pair batch reply must contain a judgments array"
+      ],
+      "dump": []
+    },
+    {
+      "word": "DNS resolution",
+      "ok": false,
+      "stage": "pairs",
+      "calls": 5,
+      "coercions": [
+        "dropped the echoed type field",
+        "keyed-object envelope lifted to an array",
+        "keyed-object envelope lifted to an array",
+        "keyed-object envelope lifted to an array"
+      ],
+      "errors": [
+        "batch 3: judgment \"p-k3--k9\" has invalid jump; judgment \"p-k4--k5\" has invalid jump"
+      ],
+      "dump": []
+    },
+    {
+      "word": "git commit",
+      "ok": false,
+      "stage": "topology",
+      "calls": 5,
+      "elapsedMs": 10572,
+      "promptTokens": 6138,
+      "completionTokens": 4797,
+      "pairs": 55,
+      "batches": 4,
+      "coercions": [
+        "keyed-object envelope lifted to an array",
+        "keyed-object envelope lifted to an array",
+        "keyed-object envelope lifted to an array"
+      ],
+      "nodes": 0,
+      "edges": 0,
+      "trunk": 0,
+      "trunkPath": "",
+      "candidates": 10,
+      "inventory": [
+        "Git repository",
+        "Git object database",
+        "Snapshot tree",
+        "Parent pointer",
+        "Cryptographic hash function",
+        "Working directory",
+        "Staging area",
+        "Commit message",
+        "Commit hash",
+        "Version control system"
+      ],
+      "relations": {
+        "NONE": 28,
+        "B_RESTS_ON_A": 16,
+        "A_RESTS_ON_B": 11
+      },
+      "jumps": {
+        "n/a": 28,
+        "SMALL": 27
+      },
+      "targetPrereqs": 6,
+      "targetPairsTooLarge": 0,
+      "droppedCandidates": 0,
+      "droppedJudgments": 0,
+      "graph": [
+        {
+          "on": "git commit",
+          "needs": "Snapshot tree",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "git commit",
+          "needs": "Parent pointer",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Git repository",
+          "needs": "Version control system",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Git repository",
+          "needs": "Git object database",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Git repository",
+          "needs": "Snapshot tree",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Git repository",
+          "needs": "Parent pointer",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Git repository",
+          "needs": "Cryptographic hash function",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Working directory",
+          "needs": "Git repository",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Git repository",
+          "needs": "Staging area",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Commit message",
+          "needs": "Git repository",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Commit hash",
+          "needs": "Git repository",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Git repository",
+          "needs": "git commit",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Git object database",
+          "needs": "Version control system",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Snapshot tree",
+          "needs": "Version control system",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Parent pointer",
+          "needs": "Version control system",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "Cryptographic hash function",
+          "needs": "Version control system",
+          "confidence": "MEDIUM",
+          "selected": false
+        },
+        {
+          "on": "git commit",
+          "needs": "Version control system",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Git object database",
+          "needs": "Snapshot tree",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Git object database",
+          "needs": "Parent pointer",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Git object database",
+          "needs": "Cryptographic hash function",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Commit hash",
+          "needs": "Git object database",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Git object database",
+          "needs": "git commit",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Commit hash",
+          "needs": "Cryptographic hash function",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "git commit",
+          "needs": "Cryptographic hash function",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "git commit",
+          "needs": "Staging area",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "Commit hash",
+          "needs": "Commit message",
+          "confidence": "HIGH",
+          "selected": false
+        },
+        {
+          "on": "git commit",
+          "needs": "Commit message",
+          "confidence": "HIGH",
+          "selected": false
+        }
+      ],
+      "refusals": [],
+      "errors": [
+        "crown invariant broken: 3 selected edges rest on the target, so the map has no single top (p-k2--target, p-k1--target, p-k2--target)"
+      ]
+    }
+  ]
+}
