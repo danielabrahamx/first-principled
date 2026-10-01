@@ -1,0 +1,117 @@
+Work ticket 05 in C:\Users\danie\first-principled. It is written and
+waiting at .scratch/first-principled-v9/issues/05-realitymap-adapter.md
+Read it first.
+
+Read in this order before anything:
+  docs/STATUS.md          current truth. If it disagrees with the code, the
+                          code is right.
+  docs/FALSIFIED.md       nine versions killed. Read before proposing
+                          anything.
+  docs/DESIGN.md          the stack and the four-part LLM Contract.
+  .scratch/first-principled-v9/map.md
+  .scratch/first-principled-v9/issues/05-realitymap-adapter.md
+  AGENTS.md
+
+THE GOAL. Mission is immutable: reduce the cognitive distance between the
+learner's mental model and reality. The learner types a word, the agent
+builds a Dependence Tree, a Socratic conversation probes the learner.
+The Tree is the product. Nothing is in prod: prod still runs the v7
+three-stage generator, which is falsified and retained only for its
+Chapel chrome, transport, and MMG shapes. Do not touch it.
+
+WHERE WE ARE. The v9 pairwise generator works and is not in prod. Local
+pair judgments plus pure-code topology selection plus one realization
+call, on deepseek-flash, 6 model calls per word, about 10s. One human
+has walked two trees, recursion and natural selection, and both were
+followable.
+
+THE GATE IS FIXED. Do not treat it as the problem. All four hand-written
+gold maps in eval/map-quality/gold.js pass it and src/claims.test.js
+asserts that on every run by walking the imported maps. MIN_NODES = 4,
+MIN_TRUNK_NODES = 3, MAX_FANIN_PER_TRUNK_NODE = 3, TRUNK_MAX = 8, all
+derived from the hand-written maps. Reproduce the table offline with
+  node .scratch/first-principled-v9/research/03-runs/derive-thresholds.mjs
+which needs no model call. If anything in this ticket makes you want to
+change a threshold, that is the v7 failure. Do not.
+
+DO NOT REDO THESE. All measured, do not spend the session on them.
+- Generality across 20 words and 5 categories is done: 1 of 20 before
+  the floor change, 2 of 20 after, and the failures do NOT cluster by
+  category. There is no domain boundary. Record:
+  .scratch/first-principled-v9/research/03-generality-evidence.md
+- Inversion is diagnosed and closed as a fix. Asked whether the target
+  rests on a candidate, the model answers that the CANDIDATE rests on the
+  target, part-of read as dependence, so the crown invariant correctly
+  rejects the map. 6 of 20 words. 14 attempts across 5 words showed the
+  refusals never name the same missing bridge twice, so no targeted
+  second pass should be built. Two prompt escalations were measured on
+  2026-09-29 and reverted the same day. Do not retry any of it.
+- The 18.5 MB of scraped vendor HTML is deleted. Do not look for it.
+
+THE ONE THING MOST LIKELY TO GO WRONG. Not the seam. It is tempting to
+write an adapter that is forgiving, because 14 of 20 words fail the gate
+and a forgiving adapter would make the numbers look better. That is
+exactly the fitted-to-the-fixture mistake this repo has already made
+once, on MIN_NODES. The adapter's job is to assemble a selection the
+generator accepted. Given a selection selectTopology returned ok:false
+for, it must fail honestly and return the reason. It must NOT drop the
+offending edges, must NOT reach into droppedJudgments for replacements,
+and must NOT reinterpret the selection. Salvaging a rejected selection is
+the v7 pattern. The gold rate is 0 to 2 of 4 across eight runs; an
+adapter that lifts it by inventing structure has cost more than it
+measured.
+
+THE SECOND THING, AND IT IS NOT OBVIOUS. The v9 generator produces NO
+ObservationRecord. Every basis in eval/map-quality/gold.js is a real
+discovery the adapter did not make. So a generated map has role absent
+and basis absent, and Chapel arrow-hover history will be EMPTY for v9
+maps until ticket 08. Do not synthesise a basis to fill the field.
+UNKNOWN is legal and absent is honest. Confirm the empty-hover
+consequence on a real run rather than assuming it, and write down what
+you find.
+
+FOUR QUESTIONS, IN THIS ORDER. The ticket lists them in full.
+1. What is a layer? selectTopology returns ranks, computed as leaves 0
+   and every other node one above its deepest prerequisite. The
+   RealityMap wants ordered contiguous layers. Is rank the layer, or can
+   a rank gap appear?
+2. Does layer contiguity hold? validateRealityMap rejects any layer with
+   no edge to a strictly lower layer, and MAX_REALITY_LAYERS is 12.
+   Ranks are computed over the selected nodes so it should hold by
+   construction, but prove it on a real run. A failure here is silent
+   until the frontend draws it.
+3. What does honesty look like with no history? See above.
+4. What EdgeType does a Dependence edge get? Pair judgments are
+   dependence only; EdgeType allows six. depends-on for all of them is the
+   only defensible answer, but state it as a decision rather than leaving
+   it implicit in the code.
+
+THE LOOP.
+  npm test                        448 tests, must stay green
+  npm run typecheck
+  npm run lint
+  node scripts/gold-words.mjs     the acceptance set, exit 1 on failure
+  node scripts/gold-words.mjs --dump   inventories, edge graphs, refusals,
+                                       realized copy
+
+IF YOU ARE STUCK. Run one word and read the whole dump:
+  node scripts/gold-words.mjs --words monarchy --dump
+The diagnostics table, the inventory and the edge list are the
+measurement. The candidate labels are how the last diagnosis was made.
+
+RULES. One ticket per session; this one is the ticket. Commit and push
+before you finish. Docs update in the SAME commit as the code they
+describe. Never commit .env or any key. Single dashes only, never em
+dashes or en dashes. No emojis. Windows and PowerShell. Cite the run, the
+file and the date for every decision you act on. An uncited decision is
+the thing that killed v7.
+
+DONE MEANS. The adapter exists, its output passes validateRealityMap with
+zero errors on every real run, every edge traces to one accepted pair
+judgment with a test saying so, role and basis are absent with a test
+saying so, an ok:false selection returns a named failure and not a map,
+gold-words.mjs prints the assembled map's node count, layer count and
+validator verdict per word, npm test and typecheck and lint green, the
+before and after gold numbers both recorded, docs updated in the same
+commit. Ticket 05 says Status: resolved. A line in the map's Decisions so
+far. Everything committed and pushed.
